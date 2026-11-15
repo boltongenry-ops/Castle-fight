@@ -1,0 +1,1 @@
+using System;using System.IO;static class LauncherFixturePlayer {[STAThread]static void Main(string[] args){File.WriteAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"fixture-arguments.txt"),string.Join(" ",args));}}

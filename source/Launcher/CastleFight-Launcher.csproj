@@ -23,9 +23,13 @@
     <Reference Include="System.Security" />
     <Reference Include="System.IO.Compression" />
     <Compile Include="Launcher.cs" />
+    <Compile Include="LauncherTheme.cs" />
     <Compile Include="UpdateCore.cs" />
     <EmbeddedResource Include="..\..\UnityProject\Assets\Resources\LoadingBackground.png">
       <LogicalName>LauncherBackdrop</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="..\..\UnityProject\Assets\SourceAssets\pcui\WarcraftRussian.ttf">
+      <LogicalName>LauncherHeading</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
