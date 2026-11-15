@@ -35,6 +35,7 @@ public static class FinalRaceScenarios {
         C(new UltimateLoadout(slots,n=>0).Draw().SequenceEqual(first),"A fresh round restores all consumed draw groups");
     }
     static void Nerubian(){
+        PoisonRefresh(catalog,human,report);
         M();C(m.BaseKinds.Length==10&&catalog["lines"].Count()==18,"Nerubian full catalog: ten base, seven upgrades and native brood helper");C(m.TeamNerubian[0]&&!m.TeamHuman[0]&&m.TeamHuman[1],"Nerubian player and Human bot keep separate aspects");
         var front=U("nN01");var chamber=H("hNB1");chamber.mana=20;Call("TickFinalBuilding",chamber);m.FlushFinalBirths();var children=m.Units.Where(u=>m.Lines[u.kind].unit=="nN04").ToArray();C(children.Length==3&&children.All(u=>u.summoned&&u.noBounty&&u.summonLeft==16),"Brood creates three native timed spiderlings at the mobile front");C(chamber.mana==0&&children.All(u=>Math.Abs(u.position.x-front.position.x)<=1.1f),"Brood pays twenty mana and uses front anchor");
         for(int i=0;i<6;i++){chamber.mana=100;chamber.spellTimers.Clear();Call("TickFinalBuilding",chamber);m.FlushFinalBirths();}C(m.NerubBroodCount(0)==12,"All native brood sources share the twelve-spiderling cap");chamber.mana=20;chamber.spellTimers.Clear();Call("TickFinalBuilding",chamber);C(chamber.mana==20,"Full brood cap prevents mana spending");
@@ -50,6 +51,21 @@ public static class FinalRaceScenarios {
         M();var nurse=U("nN0A");nurse.mana=45;nurse.castPause=0;guard=U("nN01",0,at+Vector2.right*2);guard.hp=50;m.ApplyEffect(guard,"AUN5",1);C(m.Cast(nurse,"ANH2",guard.id)&&nurse.mana==0,"Cleansing cocoon pays forty-five mana");C(!guard.effects.Any(e=>e.id=="AUN5")&&m.Stat(guard,"armor")==3,"Upgraded cocoon removes one hostile poison and gives temporary armor");Call("TickEffects",guard,3f);C(Near(guard.hp,200)&&m.Stat(guard,"armor")==0,"Cocoon restores native one hundred fifty HP over three seconds");
         M();var acid=H("hNC1");acid.mana=14;targets=Enumerable.Range(0,5).Select(i=>D(1,at+Vector2.right*100+Vector2.up*i*.5f)).ToArray();var isolated=D(1,at+Vector2.left*100);Call("TickFinalBuilding",acid);C(acid.mana==0&&targets.Count(u=>u.effects.Any(e=>e.id=="AUAc"))==4&&isolated.effects.Count==0,"Global acid chooses an actual enemy cluster and caps four victims");C(targets.Take(4).All(u=>Near(u.hp,9965)&&m.Stat(u,"damage")==0),"Acid impact is thirty-five without accidental weapon damage buff");
         M();var plague=H("hNL1");plague.mana=32;victim=D();Call("TickFinalBuilding",plague);C(victim.effects.Any(e=>e.id=="AUPs")&&plague.mana==0,"Plague applies native global debuff for thirty-two mana");m.DamageUnit(victim,100000,0,"chaos",true,true);m.FlushFinalBirths();C(m.NerubBroodCount(0)==1&&m.Units.Last().summonLeft==12,"Plague death creates one twelve-second spiderling, not four");
+    }
+    public static void PoisonRefresh(JObject own,JObject other,Action<bool,string> check){
+        catalog=own;human=other;report=check;
+        M();m.Aspects[0]=1;var victim=D();m.ApplyEffect(victim,"AUN5",0);
+        for(int i=0;i<8;i++){Call("TickEffects",victim,.25f);m.ApplyEffect(victim,"AUN5",0);}
+        C(Near(victim.hp,9973),"Quarter-second poison refreshes retain two full neurotoxin ticks");
+        C(victim.effects.Count==1&&Near(victim.effects[0].left,5)&&Near(HumanMatch.F(victim.effects[0].config,"dps"),13.5f),"Refreshing poison keeps one effect, full duration and a single aspect multiplier");
+        Call("TickEffects",victim,.5f);m.ApplyEffect(victim,"AUN5",0);Call("TickEffects",victim,.5f);
+        C(Near(victim.hp,9959.5f),"Refreshing halfway through a tick preserves fractional time");
+        Call("TickEffects",victim,.25f);m.ApplyEffect(victim,"AUN4",0);Call("TickEffects",victim,.75f);
+        C(Near(victim.hp,9946),"Rejected weaker poison does not reset the stronger poison tick");
+        M();victim=D();m.ApplyEffect(victim,"AUN4",0);Call("TickEffects",victim,.75f);m.ApplyEffect(victim,"AUN4",0);Call("TickEffects",victim,.25f);
+        C(Near(victim.hp,9996),"Ordinary poison also retains its tick across refreshes");
+        Call("TickEffects",victim,5f);float hp=victim.hp;m.ApplyEffect(victim,"AUN4",0);Call("TickEffects",victim,.25f);
+        C(Near(victim.hp,hp),"Expired poison starts a fresh tick on reapplication");
     }
     static void Pandaren(){
         M();C(m.BaseKinds.Length==11&&catalog["lines"].Count()==21,"Pandaren full catalog: eleven base, seven upgrades and three spirits");var fighter=U("nP01");fighter.hp=fighter.maxHp=1000;fighter.armor=0;m.Lines[fighter.kind].armorType="normal";m.DamageUnit(fighter,100,1,"normal",false);C(Near(fighter.hp,920)&&Near(m.PandaStagger(fighter),20),"Stagger delays twenty percent of post-mitigation damage");fighter.armor=100;fighter.spellResist=1;Call("TickPandaDebt",fighter,1f);C(Near(fighter.hp,915)&&Near(m.PandaStagger(fighter),15),"Debt pays already mitigated damage without a second armor/resistance pass");fighter.pandaSplit=true;Call("TickPandaDebt",fighter,1f);C(Near(fighter.hp,915),"Invulnerability pauses debt repayment");fighter.pandaSplit=false;Call("TickPandaDebt",fighter,3f);C(Near(fighter.hp,900)&&m.PandaStagger(fighter)==0,"Debt repays exactly once over four active seconds");

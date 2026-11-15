@@ -1,0 +1,64 @@
+"""Preserve a verified published player, replacing only compatible game code and its supplement.
+
+Only for code-only changes; not for scene/base-resource updates. Run AFTER the
+Unity scripts-only build, then package the result. Unknown generated files are
+archived outside the player instead of shipped or deleted.
+"""
+import argparse
+import concurrent.futures
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import zipfile
+
+
+def sha(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    for name in ('build', 'reference', 'reference-index', 'mono', 'compat-check', 'archive'):
+        p.add_argument('--' + name, type=Path, required=True)
+    p.add_argument('--version', required=True)
+    args = p.parse_args()
+    index = json.loads(args.reference_index.read_text())['windows']
+    assert args.reference.stat().st_size == index['size'] and sha(args.reference) == index['sha256']
+    expected = {row['path']: row for row in index['files']}
+    game = 'CastleFightMap_Data/Managed/Assembly-CSharp.dll'
+    supplement = 'CastleFightMap_Data/StreamingAssets/Frontend/centaur-028.windows'
+    keep = {game, supplement}
+    for name in expected:
+        assert (args.build / name).resolve().is_relative_to(args.build.resolve())
+    assert args.version.encode('utf-16le') in (args.build / game).read_bytes(), 'Visible game version missing'
+    with zipfile.ZipFile(args.reference) as source, tempfile.TemporaryDirectory() as work:
+        old = Path(work) / 'Assembly-CSharp.dll'
+        old.write_bytes(source.read(game))
+        subprocess.run([str(args.mono), str(args.compat_check), str(old), str((args.build / game).resolve())], check=True)
+        def matches(name):
+            target = args.build / name
+            return target.is_file() and target.stat().st_size == expected[name]['size'] and sha(target) == expected[name]['sha256']
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as ex:
+            restore = [name for name, ok in zip(expected, ex.map(matches, expected)) if name not in keep and not ok]
+        for name in restore:
+            target = args.build / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with source.open(name) as stream, target.open('wb') as output:
+                shutil.copyfileobj(stream, output, 1024 * 1024)
+            assert matches(name), name
+        extras = [p for p in args.build.rglob('*') if p.is_file() and p.relative_to(args.build).as_posix() not in expected]
+        for path in extras:
+            target = args.archive / path.relative_to(args.build)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            assert not target.exists(), 'Archive collision'
+            shutil.move(path, target)
+        assert sha(args.build / game) != expected[game]['sha256'], 'Game code was not updated'
+        print('CODE_ONLY_PLAYER_PASS preserved=' + str(len(expected) - len(keep)) + ' restored=' + str(len(restore)) + ' archived=' + str(len(extras)))
+
+
+if __name__ == '__main__':
+    main()

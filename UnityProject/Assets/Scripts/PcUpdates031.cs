@@ -36,9 +36,18 @@ public sealed partial class PcGame {
             else try{var data=JObject.Parse(request.downloadHandler.text);if((int?)data["schema"]!=1)throw new FormatException();availableRelease=data;bool newer=Release031.Newer((string)data["version"],Version);updateStatus=newer?"Доступна версия "+(string)data["version"]:"Установлена актуальная версия "+Version;if(automatic&&newer&&page==Page.Main)showUpdatePanel=true;}catch(Exception){updateStatus="Не удалось прочитать сведения об обновлении.";}
         }checkingRelease=false;
     }
+    static string ApkUpdatePath(){
+#if UNITY_ANDROID && !UNITY_EDITOR
+        using(var unity=new AndroidJavaClass("com.unity3d.player.UnityPlayer"))using(var activity=unity.GetStatic<AndroidJavaObject>("currentActivity"))using(var installer=new AndroidJavaClass("com.castlefight.updates.UpdateProvider"))
+            return installer.CallStatic<string>("downloadPath",activity);
+#else
+        return Path.Combine(Application.temporaryCachePath,"castle-fight-update.apk");
+#endif
+    }
     IEnumerator DownloadApkUpdate(){
         var apk=availableRelease?["android"];if(downloadingUpdate||!Release031.ValidApk(apk))yield break;
-        downloadingUpdate=true;updateCancelled=false;string folder=Application.temporaryCachePath;Directory.CreateDirectory(folder);string final=Path.Combine(folder,"castle-fight-update.apk"),partial=final+".part";long size=(long)apk["size"];string hash=(string)apk["sha256"];
+        string final=ApkUpdatePath();Directory.CreateDirectory(Path.GetDirectoryName(final));
+        downloadingUpdate=true;updateCancelled=false;string partial=final+".part";long size=(long)apk["size"];string hash=(string)apk["sha256"];
         if(File.Exists(final)&&new FileInfo(final).Length==size){var verify=Task.Run(()=>Release031.Hash(final));while(!verify.IsCompleted)yield return null;if(!verify.IsFaulted&&verify.Result==hash){downloadedUpdate=final;downloadingUpdate=false;OpenAndroidInstaller();yield break;}}
         if(File.Exists(partial)&&new FileInfo(partial).Length>size)File.Delete(partial);
         bool complete=false;

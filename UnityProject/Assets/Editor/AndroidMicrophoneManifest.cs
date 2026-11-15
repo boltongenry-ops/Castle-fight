@@ -17,7 +17,12 @@ public sealed class AndroidMicrophoneManifest : IPostGenerateGradleAndroidProjec
         entry.SetAttribute("value",ns,"true");
         bool install=false;foreach(XmlNode node in manifest.SelectNodes("uses-permission"))if(node.Attributes?["name",ns]?.Value=="android.permission.REQUEST_INSTALL_PACKAGES")install=true;
         if(!install){var p=doc.CreateElement("uses-permission");p.SetAttribute("name",ns,"android.permission.REQUEST_INSTALL_PACKAGES");manifest.AppendChild(p);}
-        var provider=doc.CreateElement("provider");provider.SetAttribute("name",ns,"com.castlefight.updates.UpdateProvider");provider.SetAttribute("authorities",ns,"${applicationId}.updates");provider.SetAttribute("exported",ns,"false");provider.SetAttribute("grantUriPermissions",ns,"true");app.AppendChild(provider);doc.Save(file);
+        XmlElement provider=null;
+        foreach(XmlNode node in app.SelectNodes("provider"))if(node.Attributes?["name",ns]?.Value=="com.castlefight.updates.UpdateProvider"){
+            if(provider==null)provider=(XmlElement)node;else app.RemoveChild(node);
+        }
+        if(provider==null){provider=doc.CreateElement("provider");app.AppendChild(provider);}
+        provider.SetAttribute("name",ns,"com.castlefight.updates.UpdateProvider");provider.SetAttribute("authorities",ns,"${applicationId}.updates");provider.SetAttribute("exported",ns,"false");provider.SetAttribute("grantUriPermissions",ns,"true");doc.Save(file);
     }
 }
 #endif

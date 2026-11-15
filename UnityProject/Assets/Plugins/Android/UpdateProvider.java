@@ -11,6 +11,7 @@ import java.io.*;
 import java.util.Arrays;
 public final class UpdateProvider extends ContentProvider {
     private static File apk(Context c){return new File(c.getCacheDir(),"castle-fight-update.apk");}
+    public static String downloadPath(Context c){return apk(c).getAbsolutePath();}
     public static boolean canInstall(Context c){return Build.VERSION.SDK_INT<26||c.getPackageManager().canRequestPackageInstalls();}
     private static Signature[] signatures(PackageInfo info){return Build.VERSION.SDK_INT>=28?info.signingInfo.getApkContentsSigners():info.signatures;}
     public static String validate(Context c,String path){try{

@@ -21,10 +21,14 @@ public sealed partial class HumanMatch {
     }
     void ApplyEffectData(Unit u,JObject c,int sourceTeam) {
         if(u==null||u.hp<=0)return;c=NerubStatus(u,c,sourceTeam);string id=(string)c["id"],group=(string)c["stack_group"]??id;float strength=F(c,"stack_strength",F(c,"dps"));
-        if(u.effects.Any(e=>e.group==group&&e.strength>strength))return;u.effects.RemoveAll(e=>e.id==id||e.group==group);
+        if(u.effects.Any(e=>e.group==group&&e.strength>strength))return;
+        // Refreshing the same poison extends its duration without postponing its next damage tick.
+        var previous=(string)c["kind"]=="poison"&&F(c,"dps")>0?u.effects.FirstOrDefault(e=>e.id==id&&e.sourceTeam==sourceTeam&&e.left>0):null;
+        float dotTick=previous?.dotTick??0;
+        u.effects.RemoveAll(e=>e.id==id||e.group==group);
         bool shortControl=Lines[u.kind].armorType=="hero"||u.abilities.Any(a=>(string)Abilities[a]?["kind"]=="resistant_skin");
         float duration=NorthernStatusDuration(u,c,sourceTeam,F(c,shortControl?"hero_duration":"duration",F(c,"duration")));
-        u.effects.Add(new Effect {id=id,group=group,left=duration,lifetime=duration,config=(JObject)c.DeepClone(),sourceTeam=sourceTeam<0?u.team:sourceTeam,power=F(c,"power"),armor=F(c,"armor"),haste=F(c,"haste"),speed=F(c,"speed")-F(c,"slow"),strength=strength,incoming=F(c,"incoming"),root=(bool?)c["root"]??false,ground=(bool?)c["ground"]??false});
+        u.effects.Add(new Effect {id=id,group=group,left=duration,lifetime=duration,dotTick=dotTick,config=(JObject)c.DeepClone(),sourceTeam=sourceTeam<0?u.team:sourceTeam,power=F(c,"power"),armor=F(c,"armor"),haste=F(c,"haste"),speed=F(c,"speed")-F(c,"slow"),strength=strength,incoming=F(c,"incoming"),root=(bool?)c["root"]??false,ground=(bool?)c["ground"]??false});
     }
     void TickEffects(Unit u,float dt){foreach(var e in u.effects.ToArray()){float step=Mathf.Min(dt,Mathf.Max(0,e.left));e.left-=dt;var c=e.config;
         if(F(c,"dps")>0){e.dotTick+=step;float interval=Mathf.Max(.05f,F(c,"interval",1));float due=e.left<=0?e.dotTick:Mathf.Floor(e.dotTick/interval)*interval;if(due>0){e.dotTick-=due;DamageUnit(u,F(c,"dps")*due,e.sourceTeam,(string)c["damage_type"]??"magic",true,false,null,false,(bool?)c["ignore_armor"]==true,F(c,"minimum_hp"));if(u.hp<=0)return;}}

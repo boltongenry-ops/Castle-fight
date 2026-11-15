@@ -22,7 +22,20 @@ public static class BuildMobileContent {
     static string Sha(string p){using(var f=File.OpenRead(p))using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(f)).Replace("-","").ToLowerInvariant();}
     static void Move(string a,string b){if(!AssetDatabase.IsValidFolder(a))return;if(AssetDatabase.IsValidFolder(b))throw new Exception("Both content source folders exist; recover before building: "+a);string error=AssetDatabase.MoveAsset(a,b);if(error!="")throw new Exception(error);}
     [MenuItem("Castle Fight/Restore Android content source folders")]
-    public static void Restore(){Move(Source,"Assets/Resources");Move(Streaming,"Assets/StreamingAssets");AssetDatabase.Refresh();}
+    public static void Restore(){
+        // The performance-test package creates a new Resources folder while the originals are moved.
+        const string resources="Assets/Resources";
+        if(AssetDatabase.IsValidFolder(Source)&&Directory.Exists(resources)){
+            var generated=Directory.GetFiles(resources,"*",SearchOption.AllDirectories);
+            var allowed=new[]{"PerformanceTestRunInfo.json","PerformanceTestRunInfo.json.meta","PerformanceTestRunSettings.json","PerformanceTestRunSettings.json.meta"};
+            if(Directory.GetDirectories(resources).Length==0&&generated.All(p=>allowed.Contains(Path.GetFileName(p)))){
+                string archive="Builds/AndroidBuildTelemetry/"+DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");Directory.CreateDirectory(archive);
+                foreach(string file in generated)File.Move(file,Path.Combine(archive,Path.GetFileName(file)));
+                AssetDatabase.DeleteAsset(resources);
+            }
+        }
+        Move(Source,resources);Move(Streaming,"Assets/StreamingAssets");AssetDatabase.Refresh();
+    }
     public static void ResumePlayer(){
         string previous=PlayerSettings.bundleVersion;
         try {
@@ -39,8 +52,8 @@ public static class BuildMobileContent {
         string previous=PlayerSettings.bundleVersion;
         try{
             Move("Assets/Resources",Source);Move("Assets/StreamingAssets",Streaming);
-            PlayerSettings.bundleVersion="0.32.0";PlayerSettings.Android.bundleVersionCode=Math.Max(16,PlayerSettings.Android.bundleVersionCode);
-            var result=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/MobileBootstrap/Startup.unity"},target=BuildTarget.Android,locationPathName="Builds/MapAndroid/CastleFight-Android-OnlineAssets.apk",assetBundleManifestPath=Output+"/ContentAndroid021.manifest",options=BuildOptions.CompressWithLz4});
+            PlayerSettings.bundleVersion="0.32.1";PlayerSettings.Android.bundleVersionCode=Math.Max(17,PlayerSettings.Android.bundleVersionCode);
+            var result=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/MobileBootstrap/Startup.unity"},target=BuildTarget.Android,locationPathName="Builds/MapAndroid/CastleFight-Android-OnlineAssets.apk",assetBundleManifestPath=File.Exists(Output+"/ContentAndroid021.manifest")?Output+"/ContentAndroid021.manifest":null,options=BuildOptions.CompressWithLz4});
             if(result.summary.result!=BuildResult.Succeeded)throw new Exception("Small Android rebuild failed: "+result.summary.result);
             Debug.Log("CF_ANDROID_CONTENT_PLAYER_PASS apkBytes="+result.summary.totalSize);
         }finally{PlayerSettings.bundleVersion=previous;Restore();AssetDatabase.SaveAssets();}
