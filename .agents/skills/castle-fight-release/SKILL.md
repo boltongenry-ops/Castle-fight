@@ -110,3 +110,11 @@ python3 tools/finalize_windows_code_update.py --version NEW_VERSION \
 ```
 
 The current packager reuses original compressed bytes only when the source file SHA-256 matches the authenticated previous index. Changed files are compressed anew. It regenerates ZIP headers/central directory/footer and decompresses/hashes every final entry. This uses CPython ZipFile internal writing fields and must be revalidated after Python upgrades. Recompressing unchanged multi-GiB resources is unnecessary and was a major delay during this release.
+
+## GitHub upload authentication observation
+
+During 0.32.1 publication the platform-injected GH_TOKEN successfully read/wrote api.github.com and pushed the release tag, but uploads.github.com returned HTTP 401 Bad credentials. Changing Authorization from token to Bearer did not help; POSTing an asset through api.github.com returned 404. Do not assume release creation or Git push establishes release-asset upload access. Do not extract proxy-held credentials or blindly retry uploads.
+
+A supported fallback is normal GitHub CLI device authentication in a separate private GH_CONFIG_DIR outside the repository, with GH_TOKEN unset ONLY for that CLI subprocess. Start `gh auth login --hostname github.com --git-protocol https --web`; answer No to reconfiguring Git so the working platform Git proxy stays intact. Give the user github.com/login/device and the one-time user code, never request a token/password in chat. Keep the login process running. After authorization check login completion and retry one small release asset before the large portable. Use the authenticated config directory for uploads. If local keyring storage is unavailable, disclose any plaintext fallback and restrict file permissions; never include that directory in Git or release assets.
+
+A draft release and remote v0.32.1 tag were created while this upload issue was being resolved. Main's live release.json was deliberately NOT pushed while assets were missing. Before resuming inspect the existing draft/assets to avoid duplicate creation or accidental overwrite. The tag points to source commit 0a02f454; later skill-only documentation commits do not change the built code.
