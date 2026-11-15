@@ -29,7 +29,7 @@ notes='''Лаунчер Windows с проверкой и докачкой фай
 Android APK устанавливается поверх предыдущего, с тем же пакетом и подписью. Первая загрузка ресурсов требует интернета. На физическом телефоне этот выпуск не проверялся.
 '''
 (stage/'notes.md').write_text(notes,'utf-8')
-run(['git','add','README.md','.gitignore','source','tools','CENTAUR-ASSET-CREDITS.ru.md'])
+run(['git','add','README.md','.gitignore','.gitattributes','AGENTS.md','OPEN-PROJECT.ru.md','UnityProject','unity-assets.json','source','tools','CENTAUR-ASSET-CREDITS.ru.md'])
 if run(['git','status','--porcelain']):run(['git','commit','-m','Add Castle Fight editable source and distribution instructions'])
 run(['git','push','-u','origin','main'])
 present=subprocess.run(['gh','release','view',TAG,'--repo',REPO],capture_output=True).returncode==0
