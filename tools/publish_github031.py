@@ -22,7 +22,7 @@ with zipfile.ZipFile(exe) as archive,exe.open('rb') as stream:
 index=dict(schema=1,version=V,windows=dict(url=BASE+exe.name,size=exe.stat().st_size,sha256=sha(exe),entryPoint='CastleFightMap.exe',files=files),android=dict(url=BASE+'CastleFight-Android.apk',size=apk.stat().st_size,sha256=sha(apk),versionCode=15,minimumPlayerVersion=V,contentManifest=BASE+'content-android.json'),launcher=dict(url=BASE+launcher.name,size=launcher.stat().st_size,sha256=sha(launcher)))
 (stage/'release.json').write_text(json.dumps(index,ensure_ascii=False,indent=2),'utf-8')
 checksums=''.join(sha(p)+'  '+p.name+'\n' for p in [exe,launcher,stage/'CastleFight-Android.apk',stage/'content-android.json']);(stage/'SHA256SUMS.txt').write_text(checksums,'utf-8')
-notes='''Лаунчер Windows с проверкой и докачкой файлов, входом в общий сетевой аккаунт. Android: отдельная загрузка ресурсов и обновление APK из игры с системным подтверждением.
+notes='''Лаунчер Windows с проверкой и докачкой файлов, входом в общий сетевой аккаунт или гостевым запуском. Android: отдельная загрузка ресурсов и обновление APK из игры с системным подтверждением.
 
 Легендарные бойцы панд и кентавров перенесены в цепочки улучшений; добавлены легендарные специальные постройки и цены в дереве. Упорядочено строительство. Синяя полоса маны под HP, регенерация и таймеры заклинаний на иконках.
 
@@ -36,7 +36,7 @@ present=subprocess.run(['gh','release','view',TAG,'--repo',REPO],capture_output=
 if not present:run(['gh','release','create',TAG,'--repo',REPO,'--draft','--title','Castle Fight '+V,'--notes-file',stage/'notes.md'])
 for p in [launcher,stage/'CastleFight-Android.apk',stage/'content-android.json',stage/'release.json',stage/'SHA256SUMS.txt',exe]:
  print('GITHUB_UPLOAD',p.name,p.stat().st_size,flush=True);run(['gh','release','upload',TAG,p,'--repo',REPO,'--clobber'])
-assets=json.loads(run(['gh','api',f'repos/{REPO}/releases/tags/{TAG}']))['assets'];byname={a['name']:a for a in assets}
+assets=next(r for r in json.loads(run(['gh','api',f'repos/{REPO}/releases'])) if r['tag_name']==TAG)['assets'];byname={a['name']:a for a in assets}
 for p in [exe,launcher,stage/'CastleFight-Android.apk',stage/'content-android.json']:
  row=byname[p.name];assert row['size']==p.stat().st_size
  if row.get('digest'):assert row['digest']=='sha256:'+sha(p)
@@ -48,6 +48,8 @@ with urllib.request.urlopen(request,timeout=30) as response:
  assert response.status==206;blob=response.read();assert len(blob)==row['compressedSize']
 import zlib
 assert hashlib.sha256(zlib.decompress(blob,-15) if row['method']==8 else blob).hexdigest()==row['sha256']
-shutil.copy2(stage/'release.json',G/'release.json');run(['git','add','release.json']);run(['git','commit','-m','Publish verified Castle Fight '+V+' update channel']);run(['git','push','origin','main'])
+shutil.copy2(stage/'release.json',G/'release.json');run(['git','add','release.json']);
+if run(['git','status','--porcelain']):run(['git','commit','-m','Publish verified Castle Fight '+V+' update channel'])
+run(['git','push','origin','main'])
 report=dict(status='PASS',repository='https://github.com/'+REPO,release='https://github.com/'+REPO+'/releases/tag/'+TAG,files=len(files),githubRange206=True,assetDigestsVerified=True,portableSha256=sha(exe),apkSha256=sha(apk),launcherSha256=sha(launcher))
 (O/'Validation/Launcher031/github-release-verification.json').write_text(json.dumps(report,indent=2),'utf-8');print(json.dumps(report),flush=True)
