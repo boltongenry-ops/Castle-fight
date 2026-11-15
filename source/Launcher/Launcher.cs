@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
@@ -37,6 +37,14 @@ static class Program {
             }
             Application.Run(new LauncherForm(args.Length==2&&args[0]=="--preview"?args[1]:null));return 0;
         }catch(Exception e){if(args.Length>0){Console.Error.WriteLine(e.GetBaseException().Message);return 1;}MessageBox.Show(e.Message,"Castle Fight");return 1;}
+    }
+}
+static class SessionHandoff {
+    internal static string Create(string home,bool guest,string token,string nickname){
+        string folder=Path.Combine(home,"Launcher","Sessions");Directory.CreateDirectory(folder);string path=Path.Combine(folder,Guid.NewGuid().ToString("N")+".json");
+        using(File.Create(path)){}
+        var access=new FileSecurity();access.SetAccessRuleProtection(true,false);access.AddAccessRule(new FileSystemAccessRule(WindowsIdentity.GetCurrent().User,FileSystemRights.FullControl,AccessControlType.Allow));File.SetAccessControl(path,access);
+        File.WriteAllText(path,new JavaScriptSerializer().Serialize(new{endpoint="wss://45-15-156-101.fatmetal.net/play",token=guest?"":token,nickname=guest?"Гость":nickname,guest=guest}));return path;
     }
 }
 sealed class LauncherForm:Form {
@@ -104,8 +112,7 @@ sealed class LauncherForm:Form {
         if(ready==null||busy)return;
         try{
             string args="";if(token!=""||asGuest){
-                string folder=Path.Combine(Program.Home,"Launcher","Sessions");Directory.CreateDirectory(folder);string path=Path.Combine(folder,Guid.NewGuid().ToString("N")+".json");File.WriteAllText(path,json.Serialize(new{endpoint=Endpoint,token=asGuest?"":token,nickname=asGuest?"Гость":nickname,guest=asGuest}));
-                var access=new FileSecurity();access.SetAccessRuleProtection(true,false);access.AddAccessRule(new FileSystemAccessRule(WindowsIdentity.GetCurrent().User,FileSystemRights.FullControl,AccessControlType.Allow));File.SetAccessControl(path,access);args="--launcher-session=\""+path+"\"";
+                string path=SessionHandoff.Create(Program.Home,asGuest,token,nickname);args="--launcher-session=\""+path+"\"";
             }
             Process.Start(new ProcessStartInfo(core.Target(ready.windows.entryPoint),args){WorkingDirectory=core.Root,UseShellExecute=false});Close();
         }catch(Exception e){status.Text="Не удалось запустить игру: "+e.GetBaseException().Message;}
