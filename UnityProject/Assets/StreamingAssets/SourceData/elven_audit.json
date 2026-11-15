@@ -1,0 +1,501 @@
+{
+  "date": "2026-10-24",
+  "version": "0.6.8-dev",
+  "scope": {
+    "objects": 24,
+    "skills": 43,
+    "source_objects": 28,
+    "source_checks": 638
+  },
+  "status": "PASS_WITH_ENGINE_LIMITS",
+  "errors": [],
+  "remaining": [],
+  "models": [
+    {
+      "id": "h00P",
+      "model": "res://assets/models_races/elven_union.glb",
+      "source": "units\\critters\\HighElfPeasant\\HighElfPeasant.mdx",
+      "exists": true,
+      "source_sha256": "0163678ea9edbf0284604014cf220bf5ccabc171ca74d9b3161c74bdd9ade19c",
+      "extracted_sha256": "0163678ea9edbf0284604014cf220bf5ccabc171ca74d9b3161c74bdd9ade19c",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand -2",
+        "Stand - 3",
+        "Stand - 4",
+        "Stand Gold",
+        "Stand Lumber",
+        "Attack",
+        "Attack Gold",
+        "Attack Lumber",
+        "Attack -2",
+        "Walk",
+        "Walk Gold",
+        "Walk Lumber",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Stand Ready",
+        "Stand Ready Gold",
+        "Stand Ready Lumber",
+        "Stand Work",
+        "Stand Work Gold",
+        "Stand Work Lumber"
+      ]
+    },
+    {
+      "id": "h059",
+      "model": "res://assets/models_lines/h059_b.glb",
+      "source": "Doodads\\Dungeon\\Props\\AzsharaStatue\\AzsharaStatue.mdx",
+      "exists": true,
+      "source_sha256": "0d47da44869708a28e03a5904d9efef0ccf9682543926b04cf020f6664ee59e2",
+      "extracted_sha256": "0d47da44869708a28e03a5904d9efef0ccf9682543926b04cf020f6664ee59e2",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Death"
+      ]
+    },
+    {
+      "id": "h00Z",
+      "model": "res://assets/models_lines/h00Z_b.glb",
+      "source": "buildings\\other\\ArcaneObservatory\\ArcaneObservatory.mdx",
+      "exists": true,
+      "source_sha256": "602f09ff562f5fa67a9911a3a8976cfbfa00da6314cf269e4bc0139a4fe4d735",
+      "extracted_sha256": "602f09ff562f5fa67a9911a3a8976cfbfa00da6314cf269e4bc0139a4fe4d735",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h014",
+      "model": "res://assets/models_lines/h014_b.glb",
+      "source": "buildings\\other\\ElvenGuardMagicTower\\ElvenGuardMagicTower.mdx",
+      "exists": true,
+      "source_sha256": "4b8f488f3bb30c3f81b2b4b7df91cc2f53731257ae21b4af4ccc9cd2fcab07e1",
+      "extracted_sha256": "4b8f488f3bb30c3f81b2b4b7df91cc2f53731257ae21b4af4ccc9cd2fcab07e1",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait",
+        "Birth Upgrade First",
+        "Stand Upgrade First",
+        "Portrait Upgrade First",
+        "Birth Upgrade Second",
+        "Stand Upgrade Second",
+        "Portrait Upgrade Second",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h09X",
+      "model": "res://assets/models_lines/h09X_b.glb",
+      "source": "Doodads\\Dalaran\\Terrain\\DalaranBuilding\\DalaranBuilding0.mdx",
+      "exists": true,
+      "source_sha256": "54687235392a92c1791de59bdcf362117469b06bdb3c4fe878d323dd97686d0a",
+      "extracted_sha256": "54687235392a92c1791de59bdcf362117469b06bdb3c4fe878d323dd97686d0a",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h00X",
+      "model": "res://assets/models_lines/h00X_b.glb",
+      "source": "Doodads\\Dalaran\\Terrain\\DalaranVioletCitadel\\DalaranVioletCitadel.mdx",
+      "exists": true,
+      "source_sha256": "f94ce07fbed1cbc17fb7158baa538e8b8873fed7e0c342bc53b95cc265e3572b",
+      "extracted_sha256": "f94ce07fbed1cbc17fb7158baa538e8b8873fed7e0c342bc53b95cc265e3572b",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h00W",
+      "model": "res://assets/models_lines/h00W_u.glb",
+      "source": "units\\human\\Priest\\Priest.mdx",
+      "exists": true,
+      "source_sha256": "5d58a0f6bd9339934c6248ec3c05669968dcb3a0f2274fbc8ebe62142fc41db2",
+      "extracted_sha256": "5d58a0f6bd9339934c6248ec3c05669968dcb3a0f2274fbc8ebe62142fc41db2",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Walk",
+        "Death",
+        "Decay Flesh",
+        "Stand - 4",
+        "Spell Attack",
+        "Stand - 2",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h07B",
+      "model": "res://assets/models_lines/h07B_u.glb",
+      "source": "units\\human\\Sorceress\\Sorceress.mdx",
+      "exists": true,
+      "source_sha256": "6cfb1d8f402f724ba39f1f81038466f12c588d95bfd29c0a19924294d1e5d9c0",
+      "extracted_sha256": "6cfb1d8f402f724ba39f1f81038466f12c588d95bfd29c0a19924294d1e5d9c0",
+      "source_matches": true,
+      "sequences": [
+        "Stand 1",
+        "Spell Attack",
+        "Walk",
+        "Stand 2",
+        "Stand 3",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Stand Victory",
+        "Stand Channel"
+      ]
+    },
+    {
+      "id": "h00V",
+      "model": "res://assets/models_lines/h00V_b.glb",
+      "source": "buildings\\other\\MageTower\\MageTower.mdx",
+      "exists": true,
+      "source_sha256": "30d44d180e90184e24db488038a38ef9d774d3041998d15b329b64417df04405",
+      "extracted_sha256": "30d44d180e90184e24db488038a38ef9d774d3041998d15b329b64417df04405",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h00U",
+      "model": "res://assets/models_lines/h00U_u.glb",
+      "source": "units\\human\\BloodElfSpellThief\\BloodElfSpellThief.mdx",
+      "exists": true,
+      "source_sha256": "1ed6c888b5870d1bff0000a28dd038aba67ff9bff969cd0718976303312b57a5",
+      "extracted_sha256": "1ed6c888b5870d1bff0000a28dd038aba67ff9bff969cd0718976303312b57a5",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Walk",
+        "Attack",
+        "Stand Ready",
+        "Spell",
+        "Stand - 2",
+        "Death",
+        "decay flesh",
+        "decay Bone",
+        "Stand Defend",
+        "Walk Defend",
+        "Attack Defend"
+      ]
+    },
+    {
+      "id": "h00T",
+      "model": "res://assets/models_lines/h00T_b.glb",
+      "source": "buildings\\other\\ElvenFarm\\ElvenFarm.mdx",
+      "exists": true,
+      "source_sha256": "86f31de366d96e8ecd6ec917a462230372f116e13f784aefb7c042d761c24e2b",
+      "extracted_sha256": "86f31de366d96e8ecd6ec917a462230372f116e13f784aefb7c042d761c24e2b",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h03F",
+      "model": "res://assets/models_lines/h03F_b.glb",
+      "source": "buildings\\other\\ElvenVillageBuilding3\\ElvenVillageBuilding3.mdx",
+      "exists": true,
+      "source_sha256": "27d639e72dfc405e1a8b80a0886ec2d6a7c44f89cada842f46b2d0f47a1cb933",
+      "extracted_sha256": "27d639e72dfc405e1a8b80a0886ec2d6a7c44f89cada842f46b2d0f47a1cb933",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "n00Y",
+      "model": "res://assets/models_lines/n00Y_u.glb",
+      "source": "units\\other\\BloodElfLieutenant\\BloodElfLieutenant.mdx",
+      "exists": true,
+      "source_sha256": "e9f3078aab16716d4babbe1c8cacfeb11086ab4fdb27cbd90755079f7fc28306",
+      "extracted_sha256": "e9f3078aab16716d4babbe1c8cacfeb11086ab4fdb27cbd90755079f7fc28306",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand Victory",
+        "Stand - 4",
+        "Attack - 1",
+        "Attack - 2",
+        "Walk",
+        "Stand Defend",
+        "Walk Defend",
+        "Death",
+        "Decay Flesh",
+        "Attack Defend",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "n006",
+      "model": "res://assets/models_lines/n006_u.glb",
+      "source": "units\\other\\BloodElfLieutenant\\BloodElfLieutenant.mdx",
+      "exists": true,
+      "source_sha256": "e9f3078aab16716d4babbe1c8cacfeb11086ab4fdb27cbd90755079f7fc28306",
+      "extracted_sha256": "e9f3078aab16716d4babbe1c8cacfeb11086ab4fdb27cbd90755079f7fc28306",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand Victory",
+        "Stand - 4",
+        "Attack - 1",
+        "Attack - 2",
+        "Walk",
+        "Stand Defend",
+        "Walk Defend",
+        "Death",
+        "Decay Flesh",
+        "Attack Defend",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h008",
+      "model": "res://assets/models_lines/h008_b.glb",
+      "source": "buildings\\other\\MagicVault\\MagicVault.mdx",
+      "exists": true,
+      "source_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "extracted_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h08X",
+      "model": "res://assets/models_lines/h08X_b.glb",
+      "source": "buildings\\other\\ElvenVillageBuilding6\\ElvenVillageBuilding6.mdx",
+      "exists": true,
+      "source_sha256": "3c6dd6aa7a716461766e34c7f3db64a9a9e7fee45c2745a7451ce3a3443393ee",
+      "extracted_sha256": "3c6dd6aa7a716461766e34c7f3db64a9a9e7fee45c2745a7451ce3a3443393ee",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h08Y",
+      "model": "res://assets/models_lines/h08Y_b.glb",
+      "source": "buildings\\other\\ElvenVillageBuilding6\\ElvenVillageBuilding6.mdx",
+      "exists": true,
+      "source_sha256": "3c6dd6aa7a716461766e34c7f3db64a9a9e7fee45c2745a7451ce3a3443393ee",
+      "extracted_sha256": "3c6dd6aa7a716461766e34c7f3db64a9a9e7fee45c2745a7451ce3a3443393ee",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "n023",
+      "model": "res://assets/models_lines/n023_u.glb",
+      "source": "units\\creeps\\SylvanusWindrunner\\SylvanusWindrunner.mdx",
+      "exists": true,
+      "source_sha256": "bafc1e9fd695ac311bb09f2dae2c2e8d2f7e7b9781e2a42c00fa056d545dc4e8",
+      "extracted_sha256": "bafc1e9fd695ac311bb09f2dae2c2e8d2f7e7b9781e2a42c00fa056d545dc4e8",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 5",
+        "Death",
+        "Attack - 1",
+        "Attack - 2",
+        "Spell",
+        "Walk",
+        "Dissipate",
+        "Stand Hit",
+        "Stand Victory",
+        "Stand Ready"
+      ]
+    },
+    {
+      "id": "n022",
+      "model": "res://assets/models_lines/n022_u.glb",
+      "source": "units\\creeps\\HighElfArcher\\HighElfArcher.mdx",
+      "exists": true,
+      "source_sha256": "7faa7a8992b7bf49d77bca4555ddf1559cd90907e93aeaf7ae306e22996cf4b3",
+      "extracted_sha256": "7faa7a8992b7bf49d77bca4555ddf1559cd90907e93aeaf7ae306e22996cf4b3",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 5",
+        "Death",
+        "Attack - 1",
+        "Attack - 2",
+        "Walk",
+        "Stand Hit",
+        "Stand Victory",
+        "Stand Ready",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h070",
+      "model": "res://assets/models_lines/h070_b.glb",
+      "source": "buildings\\human\\HumanShipyard\\HumanShipyard.mdx",
+      "exists": true,
+      "source_sha256": "00444bcb059522e15f85baec51f6ba7ba076f6a48674857228618bbe0e76f56d",
+      "extracted_sha256": "00444bcb059522e15f85baec51f6ba7ba076f6a48674857228618bbe0e76f56d",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "portrait -1",
+        "Stand Work",
+        "Death"
+      ]
+    },
+    {
+      "id": "e005",
+      "model": "res://assets/models_lines/e005_u.glb",
+      "source": "units\\nightelf\\Ballista\\Ballista.mdx",
+      "exists": true,
+      "source_sha256": "3ec5d73012a557383c9cb0a8fc35d1a525f46c50aee1fcefd04b2b90508ae443",
+      "extracted_sha256": "3ec5d73012a557383c9cb0a8fc35d1a525f46c50aee1fcefd04b2b90508ae443",
+      "source_matches": true,
+      "sequences": [
+        "walk",
+        "Stand",
+        "Attack",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h06Y",
+      "model": "res://assets/models_lines/h06Y_b.glb",
+      "source": "buildings\\other\\Waygate\\Waygate.mdx",
+      "exists": true,
+      "source_sha256": "475cece698f8c54978fd3e81fa3420cf89a795fa1ff31990a194cf0262603adf",
+      "extracted_sha256": "475cece698f8c54978fd3e81fa3420cf89a795fa1ff31990a194cf0262603adf",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Alternate",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "n01Y",
+      "model": "res://assets/models_lines/n01Y_u.glb",
+      "source": "units\\creeps\\WindSerpent\\WindSerpent.mdx",
+      "exists": true,
+      "source_sha256": "4c18f06317ca0c36044732a1bbdf6c26cb46fa4cde9d95690bc8b8753089b209",
+      "extracted_sha256": "4c18f06317ca0c36044732a1bbdf6c26cb46fa4cde9d95690bc8b8753089b209",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 5",
+        "Stand - 4",
+        "Walk",
+        "Walk - 2",
+        "Stand Victory",
+        "attack",
+        "Spell",
+        "Death",
+        "Portrait"
+      ]
+    },
+    {
+      "id": "h005",
+      "model": "res://assets/models_lines/h005_b.glb",
+      "source": "buildings\\other\\Frostmourne\\Frostmourne.mdx",
+      "exists": true,
+      "source_sha256": "b96c1829c3cad1d34fdc281ed9c48f3fa497be60c472559f05e0b1aed08891c6",
+      "extracted_sha256": "b96c1829c3cad1d34fdc281ed9c48f3fa497be60c472559f05e0b1aed08891c6",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand Portrait",
+        "Stand Third",
+        "Stand Second",
+        "Death"
+      ]
+    }
+  ],
+  "source_audit": "elven_source_audit.json",
+  "native_mana": {
+    "h00Z": {
+      "capacity": 13,
+      "start": 0,
+      "regen": 1
+    },
+    "h07B": {
+      "capacity": 200,
+      "start": 140,
+      "regen": 1.5
+    },
+    "h00W": {
+      "capacity": 250,
+      "start": 180,
+      "regen": 3
+    },
+    "n01Y": {
+      "capacity": 200,
+      "start": 125,
+      "regen": 1
+    }
+  },
+  "limits": [
+    "No original WC3 runtime or physical Android comparison.",
+    "Barrage total of five confirmed by user; exact native secondary selection/range and Phoenix Fire building/buff behavior require a measured Warcraft III 1.26a comparison.",
+    "Particle billboard/atlas/ribbon and missile Death remain renderer limitations."
+  ],
+  "android": {
+    "exported": false,
+    "physical_device_tested": false,
+    "last_build": "0.6.7"
+  }
+}

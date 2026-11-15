@@ -1,0 +1,55 @@
+{
+  "date": "2026-10-24",
+  "status": "PASS",
+  "checks": 117,
+  "errors": [],
+  "source": {
+    "file": "C:\\Users\\Darkness\\Desktop\\castle fight\\Objects\\war3map.w3t",
+    "sha256": "f39078ef5a17131d7f52275fec1518662c78d6200db49217a646c5b9bcedea10",
+    "jass_sha256": "bb78eff577728f08d9fd2c1a228c2a2026770fc82ef87f67503490d5d716eaba"
+  },
+  "sale_ids": [
+    "I009",
+    "I00A",
+    "I008",
+    "I007",
+    "I005",
+    "I001",
+    "I003",
+    "I004",
+    "I006"
+  ],
+  "handlers": [
+    {
+      "name": "bk",
+      "body": "function bk takes unit Bk,integer ck returns integer\r\nlocal integer KO=0\r\nlocal integer vI=0\r\nloop\r\nif(GetItemTypeId(UnitItemInSlot(Bk,KO))==ck)then\r\nset vI=vI+1\r\nendif\r\nset KO=KO+1\r\nexitwhen KO>=5\r\nendloop\r\nreturn vI\r\nendfunction"
+    },
+    {
+      "name": "Ck",
+      "body": "function Ck takes unit Bk,integer ck,integer dk returns nothing\r\nlocal integer KO=0\r\nlocal integer vI=0\r\nlocal integer rc=0\r\nloop\r\nif(GetItemTypeId(UnitItemInSlot(Bk,KO))==ck)then\r\ncall RemoveItem(UnitRemoveItemFromSlot(Bk,KO))\r\nif(rc==0)then\r\ncall UnitAddItemById(Bk,dk)\r\nendif\r\nset rc=rc+1\r\nendif\r\nset KO=KO+1\r\nexitwhen KO>=5\r\nendloop\r\nendfunction"
+    },
+    {
+      "name": "Dk",
+      "body": "function Dk takes nothing returns nothing\r\nlocal integer MI\r\nlocal unit u=GetTriggerUnit()\r\nlocal player p=GetOwningPlayer(u)\r\nlocal item it=GetManipulatedItem()\r\nlocal integer yR=GetItemTypeId(it)\r\nif(yR=='I004')then\r\nif(Zr)then\r\nset MI=GetPlayerId(p)\r\nset Wi[MI]=Wi[MI]+($5DC)\r\ncall AdjustPlayerStateBJ(1,p,PLAYER_STATE_RESOURCE_FOOD_CAP)\r\nelse\r\ncall AdjustPlayerStateBJ($5DC,p,PLAYER_STATE_RESOURCE_GOLD)\r\ncall DisplayTextToPlayer(p,.0,.0,\"|cffFF0000You can't increase your Legendaries limit! No Legendaries is activated!|r\")\r\nendif\r\nelseif(yR=='I008')then\r\nset MI=GetPlayerId(p)\r\nset Wi[MI]=Wi[MI]+(600)\r\nset u=CreateUnitAtLoc(p,'e008',jr,.0)\r\ncall UnitAddAbility(u,'A06D')\r\ncall UnitApplyTimedLife(u,'BTLF',29.)\r\nelseif(yR=='I007')then\r\nset MI=GetPlayerId(p)\r\nset Wi[MI]=Wi[MI]+($578)\r\nset u=CreateUnitAtLoc(p,'e008',jr,.0)\r\ncall UnitAddAbility(u,'A06C')\r\ncall UnitApplyTimedLife(u,'BTLF',29.)\r\nelseif(yR=='I001')then\r\nset MI=GetPlayerId(p)\r\nset Wi[MI]=Wi[MI]+($96)\r\nif(bk(u,'I001')==4)then\r\ncall Ck(u,'I001','I002')\r\nendif\r\nelseif(yR=='I005')then\r\nset MI=GetPlayerId(p)\r\nset Wi[MI]=Wi[MI]+($96)\r\nelseif(yR=='I003')then\r\nset MI=GetPlayerId(p)\r\nset Wi[MI]=Wi[MI]+(650)\r\nelseif(yR=='I00A')then\r\nset MI=GetPlayerId(p)\r\nset Wi[MI]=Wi[MI]+(600)\r\nelseif(yR=='I009')then\r\nset MI=GetPlayerId(p)\r\nset Wi[MI]=Wi[MI]+(500)\r\nelseif(yR=='I006')then\r\nif(Dr>=$F)then\r\nset MI=GetPlayerId(p)\r\nset Wi[MI]=Wi[MI]+(550)\r\nelse\r\ncall RemoveItem(it)\r\ncall AdjustPlayerStateBJ(550,p,PLAYER_STATE_RESOURCE_GOLD)\r\ncall DisplayTextToPlayer(p,.0,.0,\"|cffFF0000Orb of Lightning can be obtained only after 15 minutes of the game!|r\")\r\nendif\r\nelseif(yR=='I000')then\r\ncall DR(p)\r\ncall RemoveItem(it)\r\ncall DestroyEffect(AddSpecialEffectTarget(\"Abilities\\\\Spells\\\\Other\\\\Transmute\\\\PileofGold.mdl\",u,\"origin\"))\r\ncall Nk(GetPlayerId(p))\r\nendif\r\nset it=null\r\nset u=null\r\nendfunction"
+    },
+    {
+      "name": "qk",
+      "body": "function qk takes unit u,real tx,real ty returns nothing\r\nlocal unit c=CreateUnit(GetOwningPlayer(u),'e008',tx,ty,.0)\r\ncall UnitAddAbility(c,'A02G')\r\ncall IssueImmediateOrderById(c,$D012D)\r\ncall UnitApplyTimedLife(c,'BTLF',1.)\r\nset c=null\r\nendfunction"
+    },
+    {
+      "name": "Qk",
+      "body": "function Qk takes unit u,integer sk returns nothing\r\nlocal player p=GetOwningPlayer(u)\r\nif(sk==0)then\r\nset sk='I008'\r\nelseif(sk==1)then\r\nset sk='I007'\r\nelseif(sk==2)then\r\nset sk='I006'\r\nelseif(sk==3)then\r\nset sk='I003'\r\nelseif(sk==4)then\r\nset sk='I004'\r\nelseif(sk==5)then\r\nset sk='I005'\r\nelseif(sk==6)then\r\nset sk='I00A'\r\nelseif(sk==7)then\r\nset sk='I001'\r\nelseif(sk==8)then\r\nset sk='I009'\r\nendif\r\ncall IssueNeutralImmediateOrderById(p,oa[ea[GetPlayerId(p)]],sk)\r\nendfunction"
+    },
+    {
+      "name": "Sk",
+      "body": "function Sk takes nothing returns nothing\r\nlocal unit u=GetTriggerUnit()\r\nlocal integer tk=GetSpellAbilityId()\r\nif(IsUnitType(u,UNIT_TYPE_STRUCTURE))then\r\nif(tk=='A09A')then\r\ncall yC(u,(Gv[GetUnitPointValue((u))]))\r\nelseif(tk=='A0EK')then\r\ncall ab(u,GetSpellTargetUnit())\r\nelse\r\ncall VI(u)\r\nendif\r\nelseif(tk=='A005')then\r\ncall pk(u,GetSpellTargetX(),GetSpellTargetY())\r\nelseif(tk=='A08Y')then\r\ncall qk(u,GetSpellTargetX(),GetSpellTargetY())\r\nelseif(tk>='IBA0' and tk<='IBA8')then\r\ncall Qk(u,tk-'IBA0')\r\nelse\r\ncall OI(u,tk,GetSpellTargetUnit())\r\nendif\r\nset u=null\r\nendfunction"
+    }
+  ],
+  "overrides": [
+    "I001 retains previously requested port price300 gold/no lumber; I002 craft price1200 equivalent."
+  ],
+  "limits": [
+    "Exact arithmetic of compatible damage auras and native stock initial filling/tick order need original engine verification.",
+    "Damage powerups use29s source lifetime; native aura linger toward the tooltip30s remains unmeasured."
+  ]
+}

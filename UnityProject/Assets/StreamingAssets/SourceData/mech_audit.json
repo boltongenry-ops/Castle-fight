@@ -1,0 +1,777 @@
+{
+  "date": "2026-10-24",
+  "version": "0.6.8-dev",
+  "scope": {
+    "objects": 39,
+    "skills": 59,
+    "source_objects": 55,
+    "source_checks": 1609
+  },
+  "status": "PASS_WITH_KNOWN_PROTOTYPE_AND_ENGINE_LIMITS",
+  "errors": [],
+  "remaining": [
+    "A072"
+  ],
+  "prototype": "A072: object preserved, no race registration in three original scripts; existing port launch retained, not verified as original.",
+  "models": [
+    {
+      "id": "h06P",
+      "model": "res://assets/models_races/mech_coalition.glb",
+      "source": "Units\\Creeps\\HeroTinker\\HeroTinker.mdx",
+      "exists": true,
+      "source_sha256": "0db3a5ff27e2ccf04894aae4796381927e7c36a39637240da1caccbfce8ef0ef",
+      "extracted_sha256": "0db3a5ff27e2ccf04894aae4796381927e7c36a39637240da1caccbfce8ef0ef",
+      "source_matches": true,
+      "sequences": [
+        "Walk",
+        "Stand",
+        "Stand - 2",
+        "death",
+        "Dissipate",
+        "Attack - 1",
+        "Stand Ready",
+        "Spell One",
+        "Spell Two",
+        "Spell Three",
+        "Spell Slam",
+        "Morph",
+        "Morph Alternate",
+        "Walk Alternate",
+        "Stand Alternate",
+        "Stand Alternate - 2",
+        "Attack Alternate - 1",
+        "Spell One Alternate",
+        "Spell Two Alternate",
+        "Spell Three Alternate",
+        "Spell Slam Alternate",
+        "Death Alternate",
+        "Decay Alternate"
+      ]
+    },
+    {
+      "id": "h09T",
+      "model": "res://assets/models_lines/h09T_b.glb",
+      "source": "Doodads\\Cityscape\\Props\\City_Oblisk\\City_Oblisk.mdx",
+      "exists": true,
+      "source_sha256": "cb73d8ee8f7ee7d0c1fc87ebad6b480bbba2ee08a4c7b1ae18eaaf9a76501cad",
+      "extracted_sha256": "cb73d8ee8f7ee7d0c1fc87ebad6b480bbba2ee08a4c7b1ae18eaaf9a76501cad",
+      "source_matches": true,
+      "sequences": [
+        "Stand"
+      ]
+    },
+    {
+      "id": "h069",
+      "model": "res://assets/models_lines/h069_b.glb",
+      "source": "Doodads\\LordaeronSummer\\Terrain\\Barricade\\Barricade1.mdx",
+      "exists": true,
+      "source_sha256": "bb0d6132fcf4ef3aa19bd65482398e7ca08b4354678dd075d56502199067dad2",
+      "extracted_sha256": "bb0d6132fcf4ef3aa19bd65482398e7ca08b4354678dd075d56502199067dad2",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Death"
+      ]
+    },
+    {
+      "id": "h100",
+      "model": "res://assets/models_lines/h100_b.glb",
+      "source": "HumanPlant.mdx",
+      "exists": true,
+      "source_sha256": "ec21670937fe8c86d9ea017095bf961e46a0022e0806c93a9dd38ebee9b7d83f",
+      "extracted_sha256": "ec21670937fe8c86d9ea017095bf961e46a0022e0806c93a9dd38ebee9b7d83f",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "n01U",
+      "model": "res://assets/models_lines/n01U_u.glb",
+      "source": "Units\\Creeps\\HeroTinkerRobot\\HeroTinkerRobot.mdx",
+      "exists": true,
+      "source_sha256": "4f9d3625bd4b8ca9a6ead4b13395236abe46bd9ca7d7a02d3a61a88aea63cacf",
+      "extracted_sha256": "4f9d3625bd4b8ca9a6ead4b13395236abe46bd9ca7d7a02d3a61a88aea63cacf",
+      "source_matches": true,
+      "sequences": [
+        "Stand Walk Portrait",
+        "Attack",
+        "death",
+        "Birth"
+      ]
+    },
+    {
+      "id": "h06J",
+      "model": "res://assets/models_lines/h06J_b.glb",
+      "source": "Doodads\\Cityscape\\Props\\CrystalShield\\CrystalShield.mdx",
+      "exists": true,
+      "source_sha256": "4d983e1c0434a6502c639e7e0226cca8fb172566087f5758fb0b647286694363",
+      "extracted_sha256": "4d983e1c0434a6502c639e7e0226cca8fb172566087f5758fb0b647286694363",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h05R",
+      "model": "res://assets/models_lines/h05R_b.glb",
+      "source": "buildings\\other\\PowerGenerator\\PowerGenerator.mdx",
+      "exists": true,
+      "source_sha256": "626e4dfeab9533bc7fc3df8c4a638440d288f3a689cad142e3030b7cfcbd3432",
+      "extracted_sha256": "626e4dfeab9533bc7fc3df8c4a638440d288f3a689cad142e3030b7cfcbd3432",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait-1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h05T",
+      "model": "res://assets/models_lines/h05T_b.glb",
+      "source": "buildings\\human\\Blacksmith\\Blacksmith.mdx",
+      "exists": true,
+      "source_sha256": "ad736275546039bf95219259cf3f15b4be569d50daf224de8b7f9098a6d2672b",
+      "extracted_sha256": "ad736275546039bf95219259cf3f15b4be569d50daf224de8b7f9098a6d2672b",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h09P",
+      "model": "res://assets/models_lines/h09P_b.glb",
+      "source": "buildings\\human\\Blacksmith\\Blacksmith.mdx",
+      "exists": true,
+      "source_sha256": "ad736275546039bf95219259cf3f15b4be569d50daf224de8b7f9098a6d2672b",
+      "extracted_sha256": "ad736275546039bf95219259cf3f15b4be569d50daf224de8b7f9098a6d2672b",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "z003",
+      "model": "res://assets/models_lines/z003_u.glb",
+      "source": "Units\\Critters\\ChaosSpaceOrc\\ChaosSpaceOrc.mdx",
+      "exists": true,
+      "source_sha256": "f5a22f9f597b2da086f638ee0a7209f7f34146f6c08e560debb590d74583458a",
+      "extracted_sha256": "f5a22f9f597b2da086f638ee0a7209f7f34146f6c08e560debb590d74583458a",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Attack",
+        "Death",
+        "Decay Flesh",
+        "Walk",
+        "Stand Ready",
+        "Spell",
+        "Portrait",
+        "Decay"
+      ]
+    },
+    {
+      "id": "z002",
+      "model": "res://assets/models_lines/z002_u.glb",
+      "source": "Units\\Critters\\ChaosSpaceOrc\\ChaosSpaceOrc.mdx",
+      "exists": true,
+      "source_sha256": "f5a22f9f597b2da086f638ee0a7209f7f34146f6c08e560debb590d74583458a",
+      "extracted_sha256": "f5a22f9f597b2da086f638ee0a7209f7f34146f6c08e560debb590d74583458a",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Attack",
+        "Death",
+        "Decay Flesh",
+        "Walk",
+        "Stand Ready",
+        "Spell",
+        "Portrait",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h05U",
+      "model": "res://assets/models_lines/h05U_b.glb",
+      "source": "buildings\\human\\HumanLumbermill\\HumanLumbermill.mdx",
+      "exists": true,
+      "source_sha256": "d0edb9210fef017d268fb423a759da88229f697cd8c738b7b26f0310912b0b02",
+      "extracted_sha256": "d0edb9210fef017d268fb423a759da88229f697cd8c738b7b26f0310912b0b02",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand Work",
+        "Stand",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h06Z",
+      "model": "res://assets/models_lines/h06Z_b.glb",
+      "source": "buildings\\other\\Tavern\\Tavern.mdx",
+      "exists": true,
+      "source_sha256": "4bb763854ed852c0835c2f791a57bbdad50bd8c689403194969b89b8604d430e",
+      "extracted_sha256": "4bb763854ed852c0835c2f791a57bbdad50bd8c689403194969b89b8604d430e",
+      "source_matches": true,
+      "sequences": [
+        "Stand 1",
+        "Stand Work",
+        "Portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "n02J",
+      "model": "res://assets/models_lines/n02J_u.glb",
+      "source": "Goliath3.mdx",
+      "exists": true,
+      "source_sha256": "aac1e51ea65249a847ab05b98b5b46f2d29c9651828ef4063e4f5f572ff2b0fa",
+      "extracted_sha256": "aac1e51ea65249a847ab05b98b5b46f2d29c9651828ef4063e4f5f572ff2b0fa",
+      "source_matches": true,
+      "sequences": [
+        "walk",
+        "Stand",
+        "Stand-2",
+        "Stand-3",
+        "Attack",
+        "Spell",
+        "Death",
+        "Stand Ready"
+      ]
+    },
+    {
+      "id": "n01T",
+      "model": "res://assets/models_lines/n01T_u.glb",
+      "source": "units\\creeps\\IronGolem\\IronGolem.mdx",
+      "exists": true,
+      "source_sha256": "b224269ba9bd1a2c00c5c6d1bea4eb9757bda8f8c38b29228d7e0774e8ce6611",
+      "extracted_sha256": "b224269ba9bd1a2c00c5c6d1bea4eb9757bda8f8c38b29228d7e0774e8ce6611",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Stand 3",
+        "Stand 4",
+        "Stand Ready",
+        "Attack",
+        "Walk",
+        "Death"
+      ]
+    },
+    {
+      "id": "h05M",
+      "model": "res://assets/models_lines/h05M_b.glb",
+      "source": "buildings\\other\\AmmoDump\\AmmoDump.mdx",
+      "exists": true,
+      "source_sha256": "85822393832d0d811710c0bd012f635c607a3976cb6bb9c4344a12073c07e8a7",
+      "extracted_sha256": "85822393832d0d811710c0bd012f635c607a3976cb6bb9c4344a12073c07e8a7",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "portrait -1",
+        "Stand Work",
+        "Death"
+      ]
+    },
+    {
+      "id": "n01V",
+      "model": "res://assets/models_lines/n01V_u.glb",
+      "source": "units\\creeps\\GoblinSapper\\GoblinSapper.mdx",
+      "exists": true,
+      "source_sha256": "689aee54cbce3bfcd4e49b073e4f10f5447878ca0c74c8b75cdcb227d77577a0",
+      "extracted_sha256": "689aee54cbce3bfcd4e49b073e4f10f5447878ca0c74c8b75cdcb227d77577a0",
+      "source_matches": true,
+      "sequences": [
+        "Walk",
+        "Stand",
+        "Stand - 2",
+        "death spell",
+        "death",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h05J",
+      "model": "res://assets/models_lines/h05J_b.glb",
+      "source": "buildings\\human\\ArcaneSanctum\\ArcaneSanctum.mdx",
+      "exists": true,
+      "source_sha256": "99c13e317b6f40c853239655f6473d6d089138818f2d1deeed30a8821158af56",
+      "extracted_sha256": "99c13e317b6f40c853239655f6473d6d089138818f2d1deeed30a8821158af56",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand Work",
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h09L",
+      "model": "res://assets/models_lines/h09L_b.glb",
+      "source": "buildings\\human\\ArcaneSanctum\\ArcaneSanctum.mdx",
+      "exists": true,
+      "source_sha256": "99c13e317b6f40c853239655f6473d6d089138818f2d1deeed30a8821158af56",
+      "extracted_sha256": "99c13e317b6f40c853239655f6473d6d089138818f2d1deeed30a8821158af56",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand Work",
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h06R",
+      "model": "res://assets/models_lines/h06R_u.glb",
+      "source": "units\\human\\Gyrocopter\\Gyrocopter.mdx",
+      "exists": true,
+      "source_sha256": "f24b31c7d367e551602ce076b4aedf83aa8d443429af7ca97e690c3d1723cc1b",
+      "extracted_sha256": "f24b31c7d367e551602ce076b4aedf83aa8d443429af7ca97e690c3d1723cc1b",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Stand 3",
+        "Stand 4",
+        "Walk",
+        "Attack two",
+        "Walk 3",
+        "Attack one",
+        "Death"
+      ]
+    },
+    {
+      "id": "h06Q",
+      "model": "res://assets/models_lines/h06Q_u.glb",
+      "source": "units\\human\\Gyrocopter\\Gyrocopter.mdx",
+      "exists": true,
+      "source_sha256": "f24b31c7d367e551602ce076b4aedf83aa8d443429af7ca97e690c3d1723cc1b",
+      "extracted_sha256": "f24b31c7d367e551602ce076b4aedf83aa8d443429af7ca97e690c3d1723cc1b",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Stand 3",
+        "Stand 4",
+        "Walk",
+        "Attack two",
+        "Walk 3",
+        "Attack one",
+        "Death"
+      ]
+    },
+    {
+      "id": "h05V",
+      "model": "res://assets/models_lines/h05V_b.glb",
+      "source": "Units\\Creeps\\HeroTinkerFactory\\HeroTinkerFactory.mdx",
+      "exists": true,
+      "source_sha256": "2294702587cc6178750930c575f41cfde1d5a89afd2ac8921c15be8b78d360ef",
+      "extracted_sha256": "2294702587cc6178750930c575f41cfde1d5a89afd2ac8921c15be8b78d360ef",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "h097",
+      "model": "res://assets/models_lines/h097_b.glb",
+      "source": "Units\\Creeps\\HeroTinkerFactory\\HeroTinkerFactory.mdx",
+      "exists": true,
+      "source_sha256": "2294702587cc6178750930c575f41cfde1d5a89afd2ac8921c15be8b78d360ef",
+      "extracted_sha256": "2294702587cc6178750930c575f41cfde1d5a89afd2ac8921c15be8b78d360ef",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "n024",
+      "model": "res://assets/models_lines/n024_u.glb",
+      "source": "units\\creeps\\GolemStatue\\GolemStatue.mdx",
+      "exists": true,
+      "source_sha256": "2b3c8bddf516b8598eeaff6ea734908b209f5fc16086f32dde0200dd83166ea4",
+      "extracted_sha256": "2b3c8bddf516b8598eeaff6ea734908b209f5fc16086f32dde0200dd83166ea4",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Stand 3",
+        "Stand Ready",
+        "Attack",
+        "Attack spell",
+        "Spell Slam",
+        "Sleep",
+        "Walk",
+        "Birth",
+        "Death",
+        "decay",
+        "Portrait"
+      ]
+    },
+    {
+      "id": "n01X",
+      "model": "res://assets/models_lines/n01X_u.glb",
+      "source": "units\\creeps\\GolemStatue\\GolemStatue.mdx",
+      "exists": true,
+      "source_sha256": "2b3c8bddf516b8598eeaff6ea734908b209f5fc16086f32dde0200dd83166ea4",
+      "extracted_sha256": "2b3c8bddf516b8598eeaff6ea734908b209f5fc16086f32dde0200dd83166ea4",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Stand 3",
+        "Stand Ready",
+        "Attack",
+        "Attack spell",
+        "Spell Slam",
+        "Sleep",
+        "Walk",
+        "Birth",
+        "Death",
+        "decay",
+        "Portrait"
+      ]
+    },
+    {
+      "id": "h05X",
+      "model": "res://assets/models_lines/h05X_b.glb",
+      "source": "buildings\\undead\\UndeadShipyard\\UndeadShipyard.mdx",
+      "exists": true,
+      "source_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "extracted_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h09J",
+      "model": "res://assets/models_lines/h09J_b.glb",
+      "source": "buildings\\undead\\UndeadShipyard\\UndeadShipyard.mdx",
+      "exists": true,
+      "source_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "extracted_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h06U",
+      "model": "res://assets/models_lines/h06U_u.glb",
+      "source": "Units\\Creeps\\HeroTinker\\HeroTinker.mdx",
+      "exists": true,
+      "source_sha256": "0db3a5ff27e2ccf04894aae4796381927e7c36a39637240da1caccbfce8ef0ef",
+      "extracted_sha256": "0db3a5ff27e2ccf04894aae4796381927e7c36a39637240da1caccbfce8ef0ef",
+      "source_matches": true,
+      "sequences": [
+        "Walk",
+        "Stand",
+        "Stand - 2",
+        "death",
+        "Dissipate",
+        "Attack - 1",
+        "Stand Ready",
+        "Spell One",
+        "Spell Two",
+        "Spell Three",
+        "Spell Slam",
+        "Morph",
+        "Morph Alternate",
+        "Walk Alternate",
+        "Stand Alternate",
+        "Stand Alternate - 2",
+        "Attack Alternate - 1",
+        "Spell One Alternate",
+        "Spell Two Alternate",
+        "Spell Three Alternate",
+        "Spell Slam Alternate",
+        "Death Alternate",
+        "Decay Alternate"
+      ]
+    },
+    {
+      "id": "n025",
+      "model": "res://assets/models_lines/n025_u.glb",
+      "source": "units\\creeps\\GoblinLandMine\\GoblinLandMine.mdx",
+      "exists": true,
+      "source_sha256": "a6a1c06c902cd7c7a95360cd4cd8557d9451f3bae16a3df086727d10a34b4c7d",
+      "extracted_sha256": "a6a1c06c902cd7c7a95360cd4cd8557d9451f3bae16a3df086727d10a34b4c7d",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait -1",
+        "Death Spell",
+        "Death"
+      ]
+    },
+    {
+      "id": "h09I",
+      "model": "res://assets/models_lines/h09I_b.glb",
+      "source": "buildings\\undead\\UndeadShipyard\\UndeadShipyard.mdx",
+      "exists": true,
+      "source_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "extracted_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h099",
+      "model": "res://assets/models_lines/h099_u.glb",
+      "source": "units\\human\\WarWagon\\WarWagon.mdx",
+      "exists": true,
+      "source_sha256": "446027a272c02b8d1e89ae03780fd8bd192aacf4d59234dc36c0296710268892",
+      "extracted_sha256": "446027a272c02b8d1e89ae03780fd8bd192aacf4d59234dc36c0296710268892",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Walk",
+        "Walk 2",
+        "Attack",
+        "Stand Ready",
+        "Death",
+        "Portrait"
+      ]
+    },
+    {
+      "id": "h09B",
+      "model": "res://assets/models_lines/h09B_b.glb",
+      "source": "buildings\\undead\\UndeadShipyard\\UndeadShipyard.mdx",
+      "exists": true,
+      "source_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "extracted_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h09H",
+      "model": "res://assets/models_lines/h09H_b.glb",
+      "source": "buildings\\undead\\UndeadShipyard\\UndeadShipyard.mdx",
+      "exists": true,
+      "source_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "extracted_sha256": "99b67d2152ce5e1a10bb082e37732c1e348fa93b79b8efeb6ba3f69be3a7f0f4",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h098",
+      "model": "res://assets/models_lines/h098_u.glb",
+      "source": "units\\human\\WarWagon\\WarWagon.mdx",
+      "exists": true,
+      "source_sha256": "446027a272c02b8d1e89ae03780fd8bd192aacf4d59234dc36c0296710268892",
+      "extracted_sha256": "446027a272c02b8d1e89ae03780fd8bd192aacf4d59234dc36c0296710268892",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Walk",
+        "Walk 2",
+        "Attack",
+        "Stand Ready",
+        "Death",
+        "Portrait"
+      ]
+    },
+    {
+      "id": "h06S",
+      "model": "res://assets/models_lines/h06S_u.glb",
+      "source": "units\\human\\WarWagon\\WarWagon.mdx",
+      "exists": true,
+      "source_sha256": "446027a272c02b8d1e89ae03780fd8bd192aacf4d59234dc36c0296710268892",
+      "extracted_sha256": "446027a272c02b8d1e89ae03780fd8bd192aacf4d59234dc36c0296710268892",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Walk",
+        "Walk 2",
+        "Attack",
+        "Stand Ready",
+        "Death",
+        "Portrait"
+      ]
+    },
+    {
+      "id": "h06T",
+      "model": "res://assets/models_lines/h06T_u.glb",
+      "source": "units\\human\\WarWagon\\WarWagon.mdx",
+      "exists": true,
+      "source_sha256": "446027a272c02b8d1e89ae03780fd8bd192aacf4d59234dc36c0296710268892",
+      "extracted_sha256": "446027a272c02b8d1e89ae03780fd8bd192aacf4d59234dc36c0296710268892",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Walk",
+        "Walk 2",
+        "Attack",
+        "Stand Ready",
+        "Death",
+        "Portrait"
+      ]
+    },
+    {
+      "id": "h008",
+      "model": "res://assets/models_lines/h008_b.glb",
+      "source": "buildings\\other\\MagicVault\\MagicVault.mdx",
+      "exists": true,
+      "source_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "extracted_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h05L",
+      "model": "res://assets/models_lines/h05L_b.glb",
+      "source": "buildings\\other\\TowerDefenseTower\\TowerDefenseTower.mdx",
+      "exists": true,
+      "source_sha256": "00bf0b49d196e03d9ae9207e16deae0a602408dd17abe1259dc82b5de2d6baa0",
+      "extracted_sha256": "00bf0b49d196e03d9ae9207e16deae0a602408dd17abe1259dc82b5de2d6baa0",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Birth Upgrade",
+        "Death",
+        "Decay",
+        "Stand First Attack Ready",
+        "Portrait First",
+        "Stand First Attack Ready Upgrade",
+        "Portrait First Upgrade",
+        "Stand Second Attack Ready",
+        "Portrait Second",
+        "Stand Second Attack Ready Upgrade",
+        "Portrait Second Upgrade",
+        "Stand Third Attack Ready",
+        "Portrait Third",
+        "Stand Third Attack Ready Upgrade",
+        "Portrait Third Upgrade",
+        "Stand Fourth Attack Ready",
+        "Portrait Fourth",
+        "Stand Fourth Attack Ready Upgrade",
+        "Portrait Fourth Upgrade",
+        "Stand Fifth Attack Ready",
+        "Portrait Fifth",
+        "Stand Fifth Attack Ready Upgrade",
+        "Portrait Fifth Upgrade"
+      ]
+    },
+    {
+      "id": "h06K",
+      "model": "res://assets/models_lines/h06K_b.glb",
+      "source": "Doodads\\Ruins\\Props\\DalaranVioletCitadelRuin\\DalaranVioletCitadelRuin.mdx",
+      "exists": true,
+      "source_sha256": "0853057e07de94260966bed97f5c0ed096817a9168911f9b2952c5d029f7e00f",
+      "extracted_sha256": "0853057e07de94260966bed97f5c0ed096817a9168911f9b2952c5d029f7e00f",
+      "source_matches": true,
+      "sequences": [
+        "Stand"
+      ]
+    }
+  ],
+  "source_audit": "mech_source_audit.json",
+  "native_mana": {
+    "h06U": {
+      "capacity": 100,
+      "start": 30,
+      "regen": 4
+    },
+    "h06J": {
+      "capacity": 10,
+      "start": 0,
+      "regen": 1
+    },
+    "h05R": {
+      "capacity": 10,
+      "start": 0,
+      "regen": 1
+    },
+    "h09T": {
+      "capacity": 0,
+      "start": 0,
+      "regen": 0
+    },
+    "h100": {
+      "capacity": 0,
+      "start": 0,
+      "regen": 0
+    }
+  },
+  "limits": [
+    "No original WC3 runtime or physical Android comparison.",
+    "Original damage event is pre-HP-commit; port callbacks use post-damage HP. Enumeration order, dummy acceptance, self-destruct auto-order, aura cadence/linger and native channel phase require original-engine measurement.",
+    "Particle billboard/atlas/ribbon and missile Death remain renderer limitations."
+  ],
+  "android": {
+    "exported": false,
+    "physical_device_tested": false,
+    "last_build": "0.6.7"
+  }
+}

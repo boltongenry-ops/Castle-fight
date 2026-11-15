@@ -1,0 +1,1003 @@
+{
+  "date": "2026-10-23",
+  "version": "0.6.8-dev",
+  "scope": "All Nature objects and transitive skills; source parameter and runtime-path audit",
+  "source": {
+    "file": "C:/Users/Darkness/Desktop/castle fight/dd.j",
+    "sha256": "bb78eff577728f08d9fd2c1a228c2a2026770fc82ef87f67503490d5d716eaba",
+    "isr2_label": "WESTRING_AEVAL_ISR2=Снижение урона",
+    "stock_bracers": {
+      "Name": "Рунные браслеты",
+      "Hotkey": "R",
+      "Tip": "Рунные браслеты (|cffffcc00R|r)",
+      "Ubertip": "Уменьшение урона, наносимого герою заклинаниями, на <AIsr,DataB1,%>%.",
+      "Description": "Уменьшение урона, наносимого герою заклинаниями."
+    },
+    "shaman_handlers": [
+      "function zF takes nothing returns nothing\r\nlocal unit c=CreateUnit(GetOwningPlayer(kv),'e008',GetUnitX(kv),GetUnitY(kv),.0)\r\ncall UnitAddAbility(c,'A0AW')\r\ncall IssueTargetOrderById(c,$D00C0,Kv)\r\ncall UnitApplyTimedLife(c,'BTLF',2.)\r\nset c=kv\r\ncall TriggerSleepAction(.8)\r\ncall cB(c)\r\nset c=null\r\nendfunction",
+      "function ZF takes nothing returns nothing\r\nlocal unit c=CreateUnit(GetOwningPlayer(kv),'e008',GetUnitX(kv),GetUnitY(kv),.0)\r\ncall UnitAddAbility(c,'A0AX')\r\ncall IssueTargetOrderById(c,$D00C0,Kv)\r\ncall UnitApplyTimedLife(c,'BTLF',2.)\r\nset c=kv\r\ncall TriggerSleepAction(.8)\r\ncall cB(c)\r\nset c=null\r\nendfunction"
+    ]
+  },
+  "objects": [
+    {
+      "id": "h01A",
+      "name": "Строитель",
+      "building": false,
+      "hp": 220,
+      "armor": 0,
+      "speed_wc3": 550,
+      "weapons": [],
+      "abilities": [
+        "A06E",
+        "Aeth",
+        "AInv",
+        "A005",
+        "A001",
+        "Ahrp",
+        "Avul"
+      ]
+    },
+    {
+      "id": "h002",
+      "name": "Кладка паучьих яиц",
+      "building": true,
+      "hp": 1300,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "h00Q",
+      "name": "h00Q",
+      "building": true,
+      "hp": 1400,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "h00R",
+      "name": "h00R",
+      "building": true,
+      "hp": 1700,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "n01W",
+      "name": "n01W",
+      "building": false,
+      "hp": 800,
+      "armor": 6,
+      "speed_wc3": 330,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,item,ward",
+          "can_air": false,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 100,
+          "range": 3.3333333333333335,
+          "cooldown": 1.5,
+          "attack_type": "pierce",
+          "missile": "",
+          "weapon_type": "normal",
+          "splash": {},
+          "damage_point": 0.5,
+          "backswing": 0.3,
+          "missile_speed": 0,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A0AS",
+        "A0AU",
+        "A0AT",
+        "A0AV",
+        "A09H"
+      ]
+    },
+    {
+      "id": "n01N",
+      "name": "n01N",
+      "building": false,
+      "hp": 500,
+      "armor": 4,
+      "speed_wc3": 330,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,item,ward",
+          "can_air": false,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 70,
+          "range": 3.3333333333333335,
+          "cooldown": 1.2999999523162842,
+          "attack_type": "pierce",
+          "missile": "",
+          "weapon_type": "normal",
+          "splash": {},
+          "damage_point": 0.5,
+          "backswing": 0.3,
+          "missile_speed": 0,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A0AQ",
+        "A0AR",
+        "A0AP",
+        "A09H"
+      ]
+    },
+    {
+      "id": "n00T",
+      "name": "n00T",
+      "building": false,
+      "hp": 150,
+      "armor": 0,
+      "speed_wc3": 330,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,item,ward",
+          "can_air": false,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 11.5,
+          "range": 3.3333333333333335,
+          "cooldown": 0.75,
+          "attack_type": "pierce",
+          "missile": "",
+          "weapon_type": "normal",
+          "splash": {},
+          "damage_point": 0.5,
+          "backswing": 0.3,
+          "missile_speed": 0,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A09H"
+      ]
+    },
+    {
+      "id": "n00U",
+      "name": "Чёрный паук",
+      "building": false,
+      "hp": 250,
+      "armor": 1,
+      "speed_wc3": 330,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,item,ward",
+          "can_air": false,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 30.5,
+          "range": 3.3333333333333335,
+          "cooldown": 1,
+          "attack_type": "pierce",
+          "missile": "",
+          "weapon_type": "normal",
+          "splash": {},
+          "damage_point": 0.5,
+          "backswing": 0.3,
+          "missile_speed": 0,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A0AO",
+        "A09H"
+      ]
+    },
+    {
+      "id": "h00Y",
+      "name": "Хижина фурболгов",
+      "building": true,
+      "hp": 1200,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "h012",
+      "name": "h012",
+      "building": true,
+      "hp": 1400,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "n028",
+      "name": "n028",
+      "building": false,
+      "hp": 650,
+      "armor": 3,
+      "speed_wc3": 280,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,air,item,ward",
+          "can_air": true,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 72.5,
+          "range": 15,
+          "cooldown": 1.399999976158142,
+          "attack_type": "magic",
+          "missile": "Abilities\\Weapons\\LichMissile\\LichMissile.mdl",
+          "weapon_type": "missile",
+          "splash": {},
+          "damage_point": 0.3,
+          "backswing": 0.3,
+          "missile_speed": 40,
+          "missile_arc": 0.15,
+          "missile_homing": true
+        }
+      ],
+      "abilities": [
+        "A0CV",
+        "A0C2",
+        "A0C1"
+      ]
+    },
+    {
+      "id": "n026",
+      "name": "Шаман фурболгов",
+      "building": false,
+      "hp": 450,
+      "armor": 1,
+      "speed_wc3": 280,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,air,item,ward",
+          "can_air": true,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 52.5,
+          "range": 13.333333333333334,
+          "cooldown": 1.399999976158142,
+          "attack_type": "magic",
+          "missile": "Abilities\\Weapons\\VengeanceMissile\\VengeanceMissile.mdl",
+          "weapon_type": "missile",
+          "splash": {},
+          "damage_point": 0.3,
+          "backswing": 0.3,
+          "missile_speed": 40,
+          "missile_arc": 0.15,
+          "missile_homing": true
+        }
+      ],
+      "abilities": [
+        "A0CV",
+        "A0C0"
+      ]
+    },
+    {
+      "id": "h013",
+      "name": "Ancient of Growth",
+      "building": true,
+      "hp": 1300,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": [
+        "Atol"
+      ]
+    },
+    {
+      "id": "h01H",
+      "name": "h01H",
+      "building": true,
+      "hp": 1600,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": [
+        "Atol"
+      ]
+    },
+    {
+      "id": "h01J",
+      "name": "h01J",
+      "building": true,
+      "hp": 2000,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": [
+        "A06V",
+        "Atol"
+      ]
+    },
+    {
+      "id": "e00C",
+      "name": "e00C",
+      "building": false,
+      "hp": 1000,
+      "armor": 7,
+      "speed_wc3": 290,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,air,item,ward",
+          "can_air": true,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 145,
+          "range": 18.333333333333332,
+          "cooldown": 2.0999999046325684,
+          "attack_type": "chaos",
+          "missile": "Abilities\\Weapons\\BlackKeeperMissile\\BlackKeeperMissile.mdl",
+          "weapon_type": "missile",
+          "splash": {},
+          "damage_point": 0.3,
+          "backswing": 0.7,
+          "missile_speed": 33.333333333333336,
+          "missile_arc": 0.15,
+          "missile_homing": true
+        }
+      ],
+      "abilities": [
+        "A070",
+        "A0BV",
+        "A06V",
+        "A03Q",
+        "A0BX",
+        "A06Z",
+        "A0BW",
+        "A0B0",
+        "A07H"
+      ]
+    },
+    {
+      "id": "e00D",
+      "name": "e00D",
+      "building": false,
+      "hp": 400,
+      "armor": 5,
+      "speed_wc3": 270,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,item,ward",
+          "can_air": false,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 30,
+          "range": 3.3333333333333335,
+          "cooldown": 1.5,
+          "attack_type": "pierce",
+          "missile": "",
+          "weapon_type": "normal",
+          "splash": {},
+          "damage_point": 0.467,
+          "backswing": 0.533,
+          "missile_speed": 0,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A07G",
+        "A0BK"
+      ]
+    },
+    {
+      "id": "e009",
+      "name": "e009",
+      "building": false,
+      "hp": 700,
+      "armor": 5,
+      "speed_wc3": 300,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,air,item,ward",
+          "can_air": true,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 90,
+          "range": 15,
+          "cooldown": 1.2000000476837158,
+          "attack_type": "pierce",
+          "missile": "Abilities\\Weapons\\SorceressMissile\\SorceressMissile.mdl",
+          "weapon_type": "missile",
+          "splash": {},
+          "damage_point": 0.3,
+          "backswing": 0.7,
+          "missile_speed": 33.333333333333336,
+          "missile_arc": 0.15,
+          "missile_homing": true
+        }
+      ],
+      "abilities": [
+        "A0CV",
+        "A03Q",
+        "A0BU",
+        "A0BT",
+        "A0AZ"
+      ]
+    },
+    {
+      "id": "e006",
+      "name": "Дриада",
+      "building": false,
+      "hp": 500,
+      "armor": 3,
+      "speed_wc3": 310,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,air,item,ward",
+          "can_air": true,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 60,
+          "range": 13.333333333333334,
+          "cooldown": 1.600000023841858,
+          "attack_type": "pierce",
+          "missile": "Abilities\\Weapons\\Dryadmissile\\Dryadmissile.mdl",
+          "weapon_type": "missile",
+          "splash": {},
+          "damage_point": 0.3,
+          "backswing": 0.7,
+          "missile_speed": 33.333333333333336,
+          "missile_arc": 0.15,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A0CV",
+        "A03Q",
+        "A004",
+        "A0AY"
+      ]
+    },
+    {
+      "id": "h023",
+      "name": "Древень дремы",
+      "building": true,
+      "hp": 1300,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "h024",
+      "name": "h024",
+      "building": true,
+      "hp": 1500,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "n02B",
+      "name": "n02B",
+      "building": false,
+      "hp": 1100,
+      "armor": 10,
+      "speed_wc3": 270,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,item,ward",
+          "can_air": false,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 115,
+          "range": 4.266666666666667,
+          "cooldown": 2,
+          "attack_type": "normal",
+          "missile": "",
+          "weapon_type": "normal",
+          "splash": {},
+          "damage_point": 0.63,
+          "backswing": 0.67,
+          "missile_speed": 0,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A03Q",
+        "A0C4",
+        "A0C5",
+        "A0BZ",
+        "A0B4",
+        "A0B2"
+      ]
+    },
+    {
+      "id": "n029",
+      "name": "Медведь",
+      "building": false,
+      "hp": 675,
+      "armor": 5,
+      "speed_wc3": 270,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,item,ward",
+          "can_air": false,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 85,
+          "range": 4.266666666666667,
+          "cooldown": 1.75,
+          "attack_type": "normal",
+          "missile": "",
+          "weapon_type": "normal",
+          "splash": {},
+          "damage_point": 0.63,
+          "backswing": 0.67,
+          "missile_speed": 0,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A0C4",
+        "A0C5",
+        "A0BY",
+        "A0B1",
+        "A0B3"
+      ]
+    },
+    {
+      "id": "h027",
+      "name": "Насест изумрудного дракона",
+      "building": true,
+      "hp": 1400,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "n02A",
+      "name": "Изумрудный дракон",
+      "building": false,
+      "hp": 700,
+      "armor": 5,
+      "speed_wc3": 330,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "air,debris,ground,item,structure,ward",
+          "can_air": true,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 65,
+          "range": 8.333333333333334,
+          "cooldown": 1.399999976158142,
+          "attack_type": "chaos",
+          "missile": "Abilities\\Weapons\\GreenDragonMissile\\GreenDragonMissile.mdl",
+          "weapon_type": "msplash",
+          "splash": {
+            "full": 1.6666666666666667,
+            "half": 3.3333333333333335,
+            "quarter": 5,
+            "half_factor": 0.699999988079071,
+            "quarter_factor": 0.4000000059604645,
+            "targets": "air,debris,enemies,ground,item,structure,ward"
+          },
+          "damage_point": 0.94,
+          "backswing": 0.56,
+          "missile_speed": 50,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A03Q"
+      ]
+    },
+    {
+      "id": "h028",
+      "name": "Монолит",
+      "building": true,
+      "hp": 1600,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "e00F",
+      "name": "Горный великан",
+      "building": false,
+      "hp": 800,
+      "armor": 8,
+      "speed_wc3": 250.00000000000003,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "ground,structure,debris,tree,wall,item,ward",
+          "can_air": false,
+          "can_ground": true,
+          "can_structure": true,
+          "damage": 150,
+          "range": 4.266666666666667,
+          "cooldown": 1.7999999523162842,
+          "attack_type": "normal",
+          "missile": "",
+          "weapon_type": "normal",
+          "splash": {},
+          "damage_point": 0.49,
+          "backswing": 1,
+          "missile_speed": 0,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A0CF",
+        "A03Q",
+        "A0BF",
+        "A0BC",
+        "A0BE",
+        "A0BJ",
+        "A0BI",
+        "A0BH"
+      ]
+    },
+    {
+      "id": "n02D",
+      "name": "Ancient Protector",
+      "building": true,
+      "hp": 1600,
+      "armor": 8,
+      "speed_wc3": 0,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "air,enemies,ground",
+          "can_air": true,
+          "can_ground": true,
+          "can_structure": false,
+          "damage": 105,
+          "range": 23.333333333333332,
+          "cooldown": 1.5,
+          "attack_type": "siege",
+          "missile": "Abilities\\Weapons\\AncientProtectorMissile\\AncientProtectorMissile.mdl",
+          "weapon_type": "msplash",
+          "splash": {
+            "full": 2.5,
+            "half": 4.166666666666667,
+            "quarter": 5.833333333333333,
+            "half_factor": 0.800000011920929,
+            "quarter_factor": 0.550000011920929,
+            "targets": "enemies"
+          },
+          "damage_point": 0.6000000238418579,
+          "backswing": 0.4000000059604645,
+          "missile_speed": 25,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A0BN",
+        "A09A"
+      ]
+    },
+    {
+      "id": "h02A",
+      "name": "Ancient of Gale",
+      "building": true,
+      "hp": 900,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": [
+        "A0BO",
+        "A07E"
+      ]
+    },
+    {
+      "id": "n02E",
+      "name": "n02E",
+      "building": false,
+      "hp": 500,
+      "armor": 0,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": [
+        "Aloc",
+        "A0CE",
+        "Atdg",
+        "Atwa",
+        "Aasl"
+      ]
+    },
+    {
+      "id": "h02C",
+      "name": "Ancient Guardian",
+      "building": true,
+      "hp": 1000,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": [
+        "A0BM",
+        "A07E"
+      ]
+    },
+    {
+      "id": "h02D",
+      "name": "Ancient of Wonders",
+      "building": true,
+      "hp": 1500,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": [
+        "A0BS",
+        "A06V"
+      ]
+    },
+    {
+      "id": "h06B",
+      "name": "h06B",
+      "building": false,
+      "hp": 50,
+      "armor": 0,
+      "speed_wc3": 350,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "air,enemies,ground",
+          "can_air": true,
+          "can_ground": true,
+          "can_structure": false,
+          "damage": 1,
+          "range": 1.5,
+          "cooldown": 1,
+          "attack_type": "spells",
+          "missile": "",
+          "weapon_type": "normal",
+          "splash": {},
+          "damage_point": 0.5,
+          "backswing": 0.5,
+          "missile_speed": 0,
+          "missile_arc": 0,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "ACmi",
+        "Awha",
+        "Arav",
+        "A0BV",
+        "A07G",
+        "A0EM"
+      ]
+    },
+    {
+      "id": "h071",
+      "name": "Энигма",
+      "building": true,
+      "hp": 1300,
+      "armor": 5,
+      "speed_wc3": 0,
+      "weapons": [],
+      "abilities": []
+    },
+    {
+      "id": "e00G",
+      "name": "Провидец",
+      "building": false,
+      "hp": 950,
+      "armor": 8,
+      "speed_wc3": 310,
+      "weapons": [
+        {
+          "slot": 1,
+          "targets": "debris,enemies,item,structure,ward",
+          "can_air": false,
+          "can_ground": false,
+          "can_structure": true,
+          "damage": 130,
+          "range": 33.333333333333336,
+          "cooldown": 4,
+          "attack_type": "chaos",
+          "missile": "Abilities\\Weapons\\SpiritOfVengeanceMissile\\SpiritOfVengeanceMissile.mdl",
+          "weapon_type": "missile",
+          "splash": {},
+          "damage_point": 0.3,
+          "backswing": 0.7,
+          "missile_speed": 33.333333333333336,
+          "missile_arc": 0.15,
+          "missile_homing": false
+        },
+        {
+          "slot": 2,
+          "targets": "air,enemies,ground",
+          "can_air": true,
+          "can_ground": true,
+          "can_structure": false,
+          "damage": 91,
+          "range": 16.666666666666668,
+          "cooldown": 1,
+          "attack_type": "chaos",
+          "missile": "Abilities\\Weapons\\SpiritOfVengeanceMissile\\SpiritOfVengeanceMissile.mdl",
+          "weapon_type": "missile",
+          "splash": {},
+          "damage_point": 0,
+          "backswing": 0,
+          "missile_speed": 33.333333333333336,
+          "missile_arc": 0.15000000596046448,
+          "missile_homing": false
+        }
+      ],
+      "abilities": [
+        "A0CV",
+        "A0FV",
+        "Adtg"
+      ]
+    }
+  ],
+  "reproduction": [
+    {
+      "unit": "n026",
+      "ability": "A0C0",
+      "heal": 200,
+      "seconds": 10,
+      "before_attack": 10552.5,
+      "after_attack": 52.5
+    },
+    {
+      "unit": "n028",
+      "ability": "A0C1",
+      "heal": 400,
+      "seconds": 10,
+      "before_attack": 29072.5,
+      "after_attack": 72.5
+    }
+  ],
+  "native_resistance": [
+    {
+      "id": "A0FN",
+      "source_reduction": 0.5,
+      "runtime_reduction": 0.5
+    },
+    {
+      "id": "A0FJ",
+      "source_reduction": 0.699999988079071,
+      "runtime_reduction": 0.699999988079071
+    },
+    {
+      "id": "A0FI",
+      "source_reduction": 0.6000000238418579,
+      "runtime_reduction": 0.6000000238418579
+    },
+    {
+      "id": "A0FH",
+      "source_reduction": 0.5,
+      "runtime_reduction": 0.5
+    },
+    {
+      "id": "A0CF",
+      "source_reduction": 0.5,
+      "runtime_reduction": 0.5
+    },
+    {
+      "id": "A0BV",
+      "source_reduction": 1,
+      "runtime_reduction": 1
+    },
+    {
+      "id": "A0AZ",
+      "source_reduction": 0.20000000298023224,
+      "runtime_reduction": 0.20000000298023224
+    },
+    {
+      "id": "A0AY",
+      "source_reduction": 0.15000000596046448,
+      "runtime_reduction": 0.15000000596046448
+    },
+    {
+      "id": "A0AN",
+      "source_reduction": 0.25,
+      "runtime_reduction": 0.25
+    },
+    {
+      "id": "A0AL",
+      "source_reduction": 0.15000000596046448,
+      "runtime_reduction": 0.15000000596046448
+    },
+    {
+      "id": "A0AI",
+      "source_reduction": 0.8999999761581421,
+      "runtime_reduction": 0.8999999761581421
+    },
+    {
+      "id": "A0AH",
+      "source_reduction": 0.699999988079071,
+      "runtime_reduction": 0.699999988079071
+    },
+    {
+      "id": "A093",
+      "source_reduction": 0.30000001192092896,
+      "runtime_reduction": 0.30000001192092896
+    },
+    {
+      "id": "A08O",
+      "source_reduction": 0.800000011920929,
+      "runtime_reduction": 0.800000011920929
+    },
+    {
+      "id": "A08K",
+      "source_reduction": 0.8999999761581421,
+      "runtime_reduction": 0.8999999761581421
+    },
+    {
+      "id": "A08C",
+      "source_reduction": 0.5,
+      "runtime_reduction": 0.5
+    },
+    {
+      "id": "AY05",
+      "source_reduction": 0.20000000298023224,
+      "runtime_reduction": 0.20000000298023224
+    },
+    {
+      "id": "AY07",
+      "source_reduction": 0.20000000298023224,
+      "runtime_reduction": 0.20000000298023224
+    },
+    {
+      "id": "AIsr",
+      "source_reduction": 0.33,
+      "runtime_reduction": 0.33
+    }
+  ],
+  "remaining": [],
+  "ported_bear_events": [
+    {
+      "name": "SG",
+      "body": "function SG takes unit v returns nothing\r\nlocal unit vb\r\nif(GetRandomInt(0,99)<$F)then\r\nset vb=CreateUnit(GetOwningPlayer(v),'e008',GetUnitX(v),GetUnitY(v),.0)\r\ncall UnitAddAbility(vb,'A0B7')\r\ncall IssueTargetOrderById(vb,$D0062,v)\r\ncall UnitApplyTimedLife(vb,'BTLF',2.)\r\nset vb=CreateUnit(GetOwningPlayer(v),'e008',GetUnitX(v),GetUnitY(v),.0)\r\ncall UnitAddAbility(vb,'A0B5')\r\ncall IssueTargetOrderById(vb,$D0085,v)\r\ncall UnitApplyTimedLife(vb,'BTLF',2.)\r\nset vb=null\r\nendif\r\nendfunction"
+    },
+    {
+      "name": "tG",
+      "body": "function tG takes unit v returns nothing\r\nlocal unit vb\r\nif(GetRandomInt(0,99)<20)then\r\nset vb=CreateUnit(GetOwningPlayer(v),'e008',GetUnitX(v),GetUnitY(v),.0)\r\ncall UnitAddAbility(vb,'A0B8')\r\ncall IssueTargetOrderById(vb,$D0062,v)\r\ncall UnitApplyTimedLife(vb,'BTLF',2.)\r\nset vb=CreateUnit(GetOwningPlayer(v),'e008',GetUnitX(v),GetUnitY(v),.0)\r\ncall UnitAddAbility(vb,'A0B6')\r\ncall IssueTargetOrderById(vb,$D0085,v)\r\ncall UnitApplyTimedLife(vb,'BTLF',2.)\r\nset vb=null\r\nendif\r\nendfunction"
+    },
+    {
+      "name": "dg",
+      "body": "function dg takes unit u returns nothing\r\ncall UnitRemoveAbility(u,'A0C4')\r\ncall SetUnitMoveSpeed(u,370.)\r\ncall xd(u)\r\ncall TriggerSleepAction(5.)\r\ncall SetUnitMoveSpeed(u,270.)\r\ncall UnitRemoveBuffs(u,true,true)\r\ncall IssueImmediateOrderById(u,$D0019)\r\ncall UnitAddAbility(u,'Asla')\r\ncall UnitAddAbility(u,'A0C7')\r\ncall UnitAddAbility(u,'A0C8')\r\ncall TriggerSleepAction(10.)\r\ncall UnitRemoveAbility(u,'Asla')\r\ncall UnitRemoveAbility(u,'A0C7')\r\ncall cB(u)\r\nendfunction"
+    },
+    {
+      "name": "Dg",
+      "body": "function Dg takes unit u returns nothing\r\ncall UnitRemoveAbility(u,'A0C4')\r\ncall SetUnitMoveSpeed(u,370.)\r\ncall xd(u)\r\ncall TriggerSleepAction(5.)\r\ncall SetUnitMoveSpeed(u,270.)\r\ncall UnitRemoveBuffs(u,true,true)\r\ncall IssueImmediateOrderById(u,$D0019)\r\ncall UnitAddAbility(u,'Asla')\r\ncall UnitAddAbility(u,'A0C6')\r\ncall TriggerSleepAction(10.)\r\ncall UnitRemoveAbility(u,'Asla')\r\ncall UnitRemoveAbility(u,'A0C6')\r\ncall cB(u)\r\nendfunction"
+    }
+  ],
+  "source_parameter_audit": "nature_source_audit.json",
+  "runtime_results": "docs/NATURE_FULL_RESULTS.json",
+  "not_verified": [
+    "Frame-by-frame parity with a running Warcraft map",
+    "OnePlus 9RT frame rate and large-battle memory",
+    "Exact native Atwa target ordering/pathing; boundary spirit spawning approved by user 2026-10-23"
+  ],
+  "resistance_errors": []
+}

@@ -1,0 +1,656 @@
+{
+  "date": "2026-10-24",
+  "version": "0.6.8-dev",
+  "scope": {
+    "objects": 29,
+    "skills": 49,
+    "source_objects": 30,
+    "source_checks": 588
+  },
+  "status": "PASS_WITH_ENGINE_LIMITS",
+  "errors": [],
+  "remaining": [],
+  "models": [
+    {
+      "id": "h00E",
+      "model": "res://assets/models_races/naga_faction.glb",
+      "source": "units\\creeps\\MurgulSlave\\MurgulSlave.mdx",
+      "exists": true,
+      "source_sha256": "971c22bfb807980c71a481805771da2e115d22a390e8830c4117ec2d797591de",
+      "extracted_sha256": "971c22bfb807980c71a481805771da2e115d22a390e8830c4117ec2d797591de",
+      "source_matches": true,
+      "sequences": [
+        "walk",
+        "Stand Swim",
+        "Stand -2",
+        "Walk Swim",
+        "Stand",
+        "Attack -2",
+        "Stand -3",
+        "Attack -1",
+        "Attack Swim",
+        "Death Swim",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "decay swim",
+        "Stand Ready Swim",
+        "Stand Ready",
+        "Stand Victory",
+        "Stand Work",
+        "Stand Work Swim",
+        "Stand Lumber",
+        "Attack Lumber",
+        "Walk Lumber",
+        "Stand Ready Lumber",
+        "Stand Work Lumber",
+        "Stand Gold",
+        "Attack Gold",
+        "Walk Gold",
+        "Stand Ready Gold",
+        "Stand Work Gold"
+      ]
+    },
+    {
+      "id": "h01Z",
+      "model": "res://assets/models_lines/h01Z_b.glb",
+      "source": "buildings\\other\\FountainOfLifeDefiled\\FountainOfLifeDefiled.mdx",
+      "exists": true,
+      "source_sha256": "af1770f9fb74112111f7c93b4fe5954cb1c77ff102545227526cc83a1558e8e1",
+      "extracted_sha256": "af1770f9fb74112111f7c93b4fe5954cb1c77ff102545227526cc83a1558e8e1",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "n00S",
+      "model": "res://assets/models_lines/n00S_u.glb",
+      "source": "Units\\Naga\\NagaSummoner\\NagaSummoner.mdx",
+      "exists": true,
+      "source_sha256": "8a6895cbbbceaecb0383b1a1acbddfc75ac1eb82921af722aaeb45fe06775366",
+      "extracted_sha256": "8a6895cbbbceaecb0383b1a1acbddfc75ac1eb82921af722aaeb45fe06775366",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Walk",
+        "Stand Ready",
+        "Attack - 1",
+        "Death",
+        "Spell",
+        "Walk Swim",
+        "Stand Swim",
+        "Stand Swim - 2",
+        "Attack Swim",
+        "Stand Ready Swim",
+        "Death Swim",
+        "Spell Swim",
+        "Decay Swim",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "n00W",
+      "model": "res://assets/models_lines/n00W_u.glb",
+      "source": "Units\\Creeps\\Lobstrokkblue\\Lobstrokkblue.mdx",
+      "exists": true,
+      "source_sha256": "e7d51275a26dc22ee2b04d79cc50acf4eb1c935dc361ebaf72346fbf0ff5a724",
+      "extracted_sha256": "e7d51275a26dc22ee2b04d79cc50acf4eb1c935dc361ebaf72346fbf0ff5a724",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Walk",
+        "Death",
+        "Attack",
+        "Spell",
+        "Decay Flesh",
+        "Decay Bones"
+      ]
+    },
+    {
+      "id": "h00N",
+      "model": "res://assets/models_lines/h00N_b.glb",
+      "source": "buildings\\naga\\TidalGuardian\\TidalGuardian.mdx",
+      "exists": true,
+      "source_sha256": "dc2108c2882496126e3151782651b71a451f4d1ba1d9eed349485a059636b960",
+      "extracted_sha256": "dc2108c2882496126e3151782651b71a451f4d1ba1d9eed349485a059636b960",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand - 3",
+        "Portrait",
+        "Stand - 2",
+        "Stand - 4",
+        "Stand - 5",
+        "Stand Ready - 2",
+        "Stand Ready",
+        "Stand - 1",
+        "Attack",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h00M",
+      "model": "res://assets/models_lines/h00M_b.glb",
+      "source": "buildings\\naga\\AltarOfDepths\\AltarOfDepths.mdx",
+      "exists": true,
+      "source_sha256": "07380c939ec11c4adcfdb112a596dc53754e18f8054c451f48c09396c42a4ce2",
+      "extracted_sha256": "07380c939ec11c4adcfdb112a596dc53754e18f8054c451f48c09396c42a4ce2",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "stand",
+        "stand work",
+        "portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "h00J",
+      "model": "res://assets/models_lines/h00J_b.glb",
+      "source": "Doodads\\Cityscape\\Props\\FountainRuined\\FountainRuined.mdx",
+      "exists": true,
+      "source_sha256": "4f7b1473275f0c927b1484d20433e255019c4a2848c433eea9128417ac00abf1",
+      "extracted_sha256": "4f7b1473275f0c927b1484d20433e255019c4a2848c433eea9128417ac00abf1",
+      "source_matches": true,
+      "sequences": [
+        "Stand"
+      ]
+    },
+    {
+      "id": "h05F",
+      "model": "res://assets/models_lines/h05F_b.glb",
+      "source": "Doodads\\Cityscape\\Props\\City_Fountain\\City_Fountain.mdx",
+      "exists": true,
+      "source_sha256": "7d34d79b90b4d0c93079e3d1e3b4c9f70d5acd7782c1107a79208497d468abb4",
+      "extracted_sha256": "7d34d79b90b4d0c93079e3d1e3b4c9f70d5acd7782c1107a79208497d468abb4",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2"
+      ]
+    },
+    {
+      "id": "n01P",
+      "model": "res://assets/models_lines/n01P_u.glb",
+      "source": "Units\\Creeps\\Hydra\\Hydra.mdx",
+      "exists": true,
+      "source_sha256": "a55625e569f689bfab0b979fc91288ae6e39f724473304b693b191ea2833a87f",
+      "extracted_sha256": "a55625e569f689bfab0b979fc91288ae6e39f724473304b693b191ea2833a87f",
+      "source_matches": true,
+      "sequences": [
+        "Walk",
+        "Stand",
+        "Attack",
+        "Spell",
+        "Spell Slam",
+        "Death",
+        "Stand 2",
+        "Walk Swim",
+        "Stand Swim",
+        "Attack Swim",
+        "Spell Slam Swim",
+        "Death Swim",
+        "Decay Swim",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "n01Q",
+      "model": "res://assets/models_lines/n01Q_u.glb",
+      "source": "Units\\Creeps\\Hydra\\Hydra.mdx",
+      "exists": true,
+      "source_sha256": "a55625e569f689bfab0b979fc91288ae6e39f724473304b693b191ea2833a87f",
+      "extracted_sha256": "a55625e569f689bfab0b979fc91288ae6e39f724473304b693b191ea2833a87f",
+      "source_matches": true,
+      "sequences": [
+        "Walk",
+        "Stand",
+        "Attack",
+        "Spell",
+        "Spell Slam",
+        "Death",
+        "Stand 2",
+        "Walk Swim",
+        "Stand Swim",
+        "Attack Swim",
+        "Spell Slam Swim",
+        "Death Swim",
+        "Decay Swim",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "n01R",
+      "model": "res://assets/models_lines/n01R_u.glb",
+      "source": "Units\\Creeps\\Hydra\\Hydra.mdx",
+      "exists": true,
+      "source_sha256": "a55625e569f689bfab0b979fc91288ae6e39f724473304b693b191ea2833a87f",
+      "extracted_sha256": "a55625e569f689bfab0b979fc91288ae6e39f724473304b693b191ea2833a87f",
+      "source_matches": true,
+      "sequences": [
+        "Walk",
+        "Stand",
+        "Attack",
+        "Spell",
+        "Spell Slam",
+        "Death",
+        "Stand 2",
+        "Walk Swim",
+        "Stand Swim",
+        "Attack Swim",
+        "Spell Slam Swim",
+        "Death Swim",
+        "Decay Swim",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "n004",
+      "model": "res://assets/models_lines/n004_u.glb",
+      "source": "units\\naga\\SnapDragon\\SnapDragon.mdx",
+      "exists": true,
+      "source_sha256": "ecdc76c485899e91876d768b048bb5e5037dc8e48e5295eacdd890beaaa01d56",
+      "extracted_sha256": "ecdc76c485899e91876d768b048bb5e5037dc8e48e5295eacdd890beaaa01d56",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Walk",
+        "Stand Ready",
+        "Attack",
+        "Stand - 2",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Stand Swim",
+        "Walk Swim",
+        "Attack Swim",
+        "Morph Swim",
+        "Stand Alternate Swim",
+        "Morph Alternate Swim",
+        "Death Swim",
+        "Decay Swim"
+      ]
+    },
+    {
+      "id": "h01B",
+      "model": "res://assets/models_lines/h01B_b.glb",
+      "source": "buildings\\naga\\TempleofTides\\TempleofTides.mdx",
+      "exists": true,
+      "source_sha256": "737ea556c9bd6e4a1a5661dbd8a7cd1d0c94045980f9b10c929cec0726ca82d7",
+      "extracted_sha256": "737ea556c9bd6e4a1a5661dbd8a7cd1d0c94045980f9b10c929cec0726ca82d7",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "n007",
+      "model": "res://assets/models_lines/n007_u.glb",
+      "source": "Units\\Creeps\\DragonSeaTurtleRange\\DragonSeaTurtleRange.mdx",
+      "exists": true,
+      "source_sha256": "023ea7fb6729900c9e064fa062f8c1de8acc9709292e022a5436a58c0ad3e732",
+      "extracted_sha256": "023ea7fb6729900c9e064fa062f8c1de8acc9709292e022a5436a58c0ad3e732",
+      "source_matches": true,
+      "sequences": [
+        "Stand Swim",
+        "Walk Swim",
+        "Death Swim",
+        "Decay Swim",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Walk",
+        "Stand",
+        "Stand -2",
+        "Attack Spell",
+        "Attack Spell Swim"
+      ]
+    },
+    {
+      "id": "h00I",
+      "model": "res://assets/models_lines/h00I_b.glb",
+      "source": "buildings\\other\\NerubianZiggurat\\NerubianZiggurat.mdx",
+      "exists": true,
+      "source_sha256": "15cb5d70cbbfcd1f8cd89188b30973a693d8f376612d503fb4e187a9ef30a45b",
+      "extracted_sha256": "15cb5d70cbbfcd1f8cd89188b30973a693d8f376612d503fb4e187a9ef30a45b",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h00G",
+      "model": "res://assets/models_lines/h00G_b.glb",
+      "source": "buildings\\naga\\CoralBed\\CoralBed.mdx",
+      "exists": true,
+      "source_sha256": "3b3d82082811baa08bde813eeee6389cca2ebfb1096e51253bbd33d1a315e847",
+      "extracted_sha256": "3b3d82082811baa08bde813eeee6389cca2ebfb1096e51253bbd33d1a315e847",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "stand",
+        "portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "h020",
+      "model": "res://assets/models_lines/h020_b.glb",
+      "source": "buildings\\other\\MurlocHut1\\MurlocHut1.mdx",
+      "exists": true,
+      "source_sha256": "936eded5aee14409ee70b5c6cb0312680f6176c3a4c4a201fcbad6eba6148f2b",
+      "extracted_sha256": "936eded5aee14409ee70b5c6cb0312680f6176c3a4c4a201fcbad6eba6148f2b",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "h021",
+      "model": "res://assets/models_lines/h021_b.glb",
+      "source": "buildings\\other\\Merchant\\Merchant.mdx",
+      "exists": true,
+      "source_sha256": "0ffbe677aad6bd704516fc9c8e09fe362d96ff7b8f8b0b138763b2f60bfb05e7",
+      "extracted_sha256": "0ffbe677aad6bd704516fc9c8e09fe362d96ff7b8f8b0b138763b2f60bfb05e7",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand Work",
+        "Death",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h022",
+      "model": "res://assets/models_lines/h022_b.glb",
+      "source": "buildings\\other\\Merchant\\Merchant.mdx",
+      "exists": true,
+      "source_sha256": "0ffbe677aad6bd704516fc9c8e09fe362d96ff7b8f8b0b138763b2f60bfb05e7",
+      "extracted_sha256": "0ffbe677aad6bd704516fc9c8e09fe362d96ff7b8f8b0b138763b2f60bfb05e7",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand Work",
+        "Death",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "n00K",
+      "model": "res://assets/models_lines/n00K_u.glb",
+      "source": "units\\creeps\\MurlocNightcrawler\\MurlocNightcrawler_V1.mdx",
+      "exists": true,
+      "source_sha256": "84a2e8e940cb0a176114dd78c2938adcdf486756bf6f16256f51ce04a0d29423",
+      "extracted_sha256": "84a2e8e940cb0a176114dd78c2938adcdf486756bf6f16256f51ce04a0d29423",
+      "source_matches": true,
+      "sequences": [
+        "Stand 2",
+        "Walk",
+        "Stand",
+        "Attack - 2",
+        "Stand -3",
+        "Attack Swim Spell - 1",
+        "Walk Swim",
+        "Walk Swim - 2",
+        "Stand Swim",
+        "Attack - 1",
+        "Spell - 1",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Death Swim",
+        "Decay Swim"
+      ]
+    },
+    {
+      "id": "n00J",
+      "model": "res://assets/models_lines/n00J_u.glb",
+      "source": "units\\creeps\\MurlocFlesheater\\MurlocFlesheater_V1.mdx",
+      "exists": true,
+      "source_sha256": "3eb012f86bd44cb0b6ecfecf21c943f5edb4cd3eea0c6e7b44e348271419eb42",
+      "extracted_sha256": "3eb012f86bd44cb0b6ecfecf21c943f5edb4cd3eea0c6e7b44e348271419eb42",
+      "source_matches": true,
+      "sequences": [
+        "Stand 2",
+        "Walk",
+        "Stand",
+        "Attack - 2",
+        "Stand -3",
+        "Attack Swim Spell - 1",
+        "Walk Swim",
+        "Walk Swim - 2",
+        "Stand Swim",
+        "Attack - 1",
+        "Spell - 1",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Death Swim",
+        "Decay Swim"
+      ]
+    },
+    {
+      "id": "n00I",
+      "model": "res://assets/models_lines/n00I_u.glb",
+      "source": "units\\creeps\\MurlocMutant\\MurlocMutant_V1.mdx",
+      "exists": true,
+      "source_sha256": "abebd611c365d91d5e11464edb2b444bee1ceb47c0553d4b9a4948c5d60cf269",
+      "extracted_sha256": "abebd611c365d91d5e11464edb2b444bee1ceb47c0553d4b9a4948c5d60cf269",
+      "source_matches": true,
+      "sequences": [
+        "Stand 2",
+        "Walk",
+        "Stand",
+        "Attack - 2",
+        "Stand -3",
+        "Attack Swim Spell - 1",
+        "Walk Swim",
+        "Walk Swim - 2",
+        "Stand Swim",
+        "Attack - 1",
+        "Spell - 1",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Death Swim",
+        "Decay Swim"
+      ]
+    },
+    {
+      "id": "h008",
+      "model": "res://assets/models_lines/h008_b.glb",
+      "source": "buildings\\other\\MagicVault\\MagicVault.mdx",
+      "exists": true,
+      "source_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "extracted_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h01Y",
+      "model": "res://assets/models_lines/h01Y_b.glb",
+      "source": "buildings\\naga\\ShrineOfAshjara\\ShrineOfAshjara.mdx",
+      "exists": true,
+      "source_sha256": "77ce7ad4ebe1cb2ec86b4139656ed1ba094f900ffb877079c443b2e08ca66a90",
+      "extracted_sha256": "77ce7ad4ebe1cb2ec86b4139656ed1ba094f900ffb877079c443b2e08ca66a90",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "stand",
+        "stand work",
+        "portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "n00H",
+      "model": "res://assets/models_lines/n00H_u.glb",
+      "source": "units\\naga\\WindSerpent\\WindSerpent.mdx",
+      "exists": true,
+      "source_sha256": "356d40a4b44e48f61ed9197ccd40ae00d058bb23956904b4e5d925f56d00ae1f",
+      "extracted_sha256": "356d40a4b44e48f61ed9197ccd40ae00d058bb23956904b4e5d925f56d00ae1f",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand Channel",
+        "Walk",
+        "Walk - 2",
+        "attack",
+        "Spell",
+        "Death"
+      ]
+    },
+    {
+      "id": "h00F",
+      "model": "res://assets/models_lines/h00F_b.glb",
+      "source": "buildings\\naga\\SpawningGrounds\\SpawningGrounds.mdx",
+      "exists": true,
+      "source_sha256": "465dea98b692dab335e1fcc9c92585071c89d98cacb5d8b2b00d36949cb6d313",
+      "extracted_sha256": "465dea98b692dab335e1fcc9c92585071c89d98cacb5d8b2b00d36949cb6d313",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "stand",
+        "stand work",
+        "portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "h032",
+      "model": "res://assets/models_lines/h032_b.glb",
+      "source": "buildings\\naga\\SpawningGrounds\\SpawningGrounds.mdx",
+      "exists": true,
+      "source_sha256": "465dea98b692dab335e1fcc9c92585071c89d98cacb5d8b2b00d36949cb6d313",
+      "extracted_sha256": "465dea98b692dab335e1fcc9c92585071c89d98cacb5d8b2b00d36949cb6d313",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "stand",
+        "stand work",
+        "portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "n00X",
+      "model": "res://assets/models_lines/n00X_u.glb",
+      "source": "units\\naga\\NagaMyrmidon\\NagaMyrmidon.mdx",
+      "exists": true,
+      "source_sha256": "af7b6bc3595d22bb8737dd8e2da24e3655a769c8073627e423a770e8fedccc20",
+      "extracted_sha256": "af7b6bc3595d22bb8737dd8e2da24e3655a769c8073627e423a770e8fedccc20",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Walk",
+        "Stand Ready",
+        "Attack -1",
+        "Attack - 2",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Stand Swim",
+        "Walk Swim",
+        "Stand Ready Swim",
+        "Attack Swim",
+        "Death Swim",
+        "Decay Swim",
+        "MORPH swim",
+        "stand swim alternate",
+        "morph swim alternate",
+        "Spell Swim",
+        "Stand - 2",
+        "Spell"
+      ]
+    },
+    {
+      "id": "n002",
+      "model": "res://assets/models_lines/n002_u.glb",
+      "source": "units\\naga\\NagaRoyalGuard\\NagaRoyalGuard.mdx",
+      "exists": true,
+      "source_sha256": "ecc79f59586f04ef11cf1e6c6126ef6b3001b34af8d2fd86054b7c6b0a7aed34",
+      "extracted_sha256": "ecc79f59586f04ef11cf1e6c6126ef6b3001b34af8d2fd86054b7c6b0a7aed34",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Walk",
+        "Stand Ready",
+        "Attack -1",
+        "Attack - 2",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Stand Swim",
+        "Walk Swim",
+        "Stand Ready Swim",
+        "Attack Swim",
+        "Death Swim",
+        "Decay Swim",
+        "MORPH swim",
+        "stand swim alternate",
+        "morph swim alternate",
+        "Spell Swim",
+        "Stand - 2",
+        "Spell"
+      ]
+    }
+  ],
+  "source_audit": "naga_source_audit.json",
+  "native_mana": {
+    "h00M": {
+      "capacity": 17,
+      "start": 0,
+      "regen": 1
+    },
+    "h00I": {
+      "capacity": 11,
+      "start": 0,
+      "regen": 1
+    },
+    "n00S": {
+      "capacity": 300,
+      "start": 225,
+      "regen": 2
+    }
+  },
+  "limits": [
+    "No original WC3 runtime or physical Android comparison.",
+    "Native purge recovery cadence, charm targeting failures and shared aura/buff interactions require original-engine confirmation.",
+    "Particle billboard/atlas/ribbon and missile Death remain renderer limitations."
+  ],
+  "android": {
+    "exported": false,
+    "physical_device_tested": false,
+    "last_build": "0.6.7"
+  }
+}

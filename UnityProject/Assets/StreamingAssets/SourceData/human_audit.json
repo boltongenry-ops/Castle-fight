@@ -1,0 +1,645 @@
+{
+  "date": "2026-10-23",
+  "version": "0.6.8-dev",
+  "scope": {
+    "objects": 28,
+    "skills": 46,
+    "source_objects": 31,
+    "source_checks": 571
+  },
+  "status": "PASS_WITH_ENGINE_LIMITS",
+  "errors": [],
+  "remaining": [],
+  "models": [
+    {
+      "id": "h00C",
+      "model": "res://assets/models_races/human_alliance.glb",
+      "source": "units\\human\\Peasant\\Peasant.mdx",
+      "exists": true,
+      "source_sha256": "072ef5f90f96bd737e569d6e6ae4bcdcb8e11f4144d47d2377ce806575f6b58a",
+      "extracted_sha256": "072ef5f90f96bd737e569d6e6ae4bcdcb8e11f4144d47d2377ce806575f6b58a",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand -2",
+        "Stand - 3",
+        "Stand - 4",
+        "Stand Gold",
+        "Stand Lumber",
+        "Attack",
+        "Attack Gold",
+        "Attack Lumber",
+        "Attack -2",
+        "Walk",
+        "Walk Gold",
+        "Walk Lumber",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Stand Ready",
+        "Stand Ready Gold",
+        "Stand Ready Lumber",
+        "Stand Work",
+        "Stand Work Gold",
+        "Stand Work Lumber"
+      ]
+    },
+    {
+      "id": "h05G",
+      "model": "res://assets/models_lines/h05G_b.glb",
+      "source": "buildings\\human\\AltarofKings\\AltarofKings.mdx",
+      "exists": true,
+      "source_sha256": "a2c26baf43551d08394caee8f892628e8d2a4ceefff36113b15b143f8e0652e5",
+      "extracted_sha256": "a2c26baf43551d08394caee8f892628e8d2a4ceefff36113b15b143f8e0652e5",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h037",
+      "model": "res://assets/models_lines/h037_b.glb",
+      "source": "buildings\\human\\TownHall\\TownHall.mdx",
+      "exists": true,
+      "source_sha256": "0b5362c1833ff31a4c335cab721a63483abc1e185285d5b91df8b8a0b098cc49",
+      "extracted_sha256": "0b5362c1833ff31a4c335cab721a63483abc1e185285d5b91df8b8a0b098cc49",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait -1",
+        "Birth Upgrade First",
+        "Stand Upgrade First",
+        "Stand Work Upgrade First",
+        "Portrait Upgrade First",
+        "Birth Upgrade Second",
+        "Stand Upgrade Second",
+        "Stand Work Upgrade Second",
+        "Portrait Upgrade Second",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h038",
+      "model": "res://assets/models_lines/h038_b.glb",
+      "source": "buildings\\human\\TownHall\\TownHall.mdx",
+      "exists": true,
+      "source_sha256": "0b5362c1833ff31a4c335cab721a63483abc1e185285d5b91df8b8a0b098cc49",
+      "extracted_sha256": "0b5362c1833ff31a4c335cab721a63483abc1e185285d5b91df8b8a0b098cc49",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait -1",
+        "Birth Upgrade First",
+        "Stand Upgrade First",
+        "Stand Work Upgrade First",
+        "Portrait Upgrade First",
+        "Birth Upgrade Second",
+        "Stand Upgrade Second",
+        "Stand Work Upgrade Second",
+        "Portrait Upgrade Second",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h072",
+      "model": "res://assets/models_lines/h072_b.glb",
+      "source": "Doodads\\Dalaran\\Props\\KingThrone\\KingThrone.mdx",
+      "exists": true,
+      "source_sha256": "8a69bf14253a14b03b9a0d7bda2ca89ce50a4f49c2cbad92859b3aa309084707",
+      "extracted_sha256": "8a69bf14253a14b03b9a0d7bda2ca89ce50a4f49c2cbad92859b3aa309084707",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Death"
+      ]
+    },
+    {
+      "id": "h074",
+      "model": "res://assets/models_lines/h074_u.glb",
+      "source": "units\\human\\ArthaswithSword\\ArthaswithSword.mdx",
+      "exists": true,
+      "source_sha256": "56fbc3ac24eb1d2d7b49f09aa2326ed003f37ac3a7e9f1f090cd7cf378db80c6",
+      "extracted_sha256": "56fbc3ac24eb1d2d7b49f09aa2326ed003f37ac3a7e9f1f090cd7cf378db80c6",
+      "source_matches": true,
+      "sequences": [
+        "Base",
+        "Stand - 1",
+        "Stand - 2",
+        "Stand Ready",
+        "Attack - 1",
+        "Attack - 2",
+        "Death",
+        "Stand Victory",
+        "Spell",
+        "Stand Channel",
+        "Dissipate",
+        "Walk",
+        "Stand Fifth",
+        "Stand Fourth"
+      ]
+    },
+    {
+      "id": "h03C",
+      "model": "res://assets/models_lines/h03C_u.glb",
+      "source": "units\\creeps\\LordGarithos\\LordGarithos.mdx",
+      "exists": true,
+      "source_sha256": "f182190703dacfba2f3ec412b08e7dce618e6118edd98315a790e9308c4db5e3",
+      "extracted_sha256": "f182190703dacfba2f3ec412b08e7dce618e6118edd98315a790e9308c4db5e3",
+      "source_matches": true,
+      "sequences": [
+        "Walk",
+        "Stand -1",
+        "Stand -2",
+        "Stand -3",
+        "Stand -4",
+        "Attack -1",
+        "Attack -2",
+        "Death",
+        "Decay Flesh",
+        "Stand Ready",
+        "Spell",
+        "Decay Bone",
+        "Dissipate"
+      ]
+    },
+    {
+      "id": "h03B",
+      "model": "res://assets/models_lines/h03B_u.glb",
+      "source": "units\\human\\Knight\\Knight.mdx",
+      "exists": true,
+      "source_sha256": "fd342464612c3f555d9369406a4c9e2f4ad62e2fd23f4ba5ea6f1e5069b78d0a",
+      "extracted_sha256": "fd342464612c3f555d9369406a4c9e2f4ad62e2fd23f4ba5ea6f1e5069b78d0a",
+      "source_matches": true,
+      "sequences": [
+        "Walk",
+        "Stand -1",
+        "Stand -2",
+        "Stand -3",
+        "Stand -4",
+        "Attack -1",
+        "Attack -2",
+        "Death",
+        "Decay Flesh",
+        "Stand Ready",
+        "Stand Victory",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h015",
+      "model": "res://assets/models_lines/h015_b.glb",
+      "source": "buildings\\human\\GryphonAviary\\GryphonAviary.mdx",
+      "exists": true,
+      "source_sha256": "1515ce1ffa34017b19ef8d7e673c3ad63ada1c30fd63038099a5aae0557c7237",
+      "extracted_sha256": "1515ce1ffa34017b19ef8d7e673c3ad63ada1c30fd63038099a5aae0557c7237",
+      "source_matches": true,
+      "sequences": [
+        "birth",
+        "stand",
+        "Stand Work",
+        "portrait",
+        "death",
+        "decay"
+      ]
+    },
+    {
+      "id": "h016",
+      "model": "res://assets/models_lines/h016_u.glb",
+      "source": "units\\human\\GryphonRider\\GryphonRider.mdx",
+      "exists": true,
+      "source_sha256": "d0bdc9aae22661dee0886474c3cf8a2cd3e51fa6051d8f31edb55de48a6ed3e2",
+      "extracted_sha256": "d0bdc9aae22661dee0886474c3cf8a2cd3e51fa6051d8f31edb55de48a6ed3e2",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Walk",
+        "Walk - 2",
+        "Attack",
+        "Death"
+      ]
+    },
+    {
+      "id": "h010",
+      "model": "res://assets/models_lines/h010_b.glb",
+      "source": "buildings\\other\\HornOfCenarius\\HornOfCenarius.mdx",
+      "exists": true,
+      "source_sha256": "94cd87516b94d5d328a61fb5edbe45898395f9412d229c49fa58441c2cb3432e",
+      "extracted_sha256": "94cd87516b94d5d328a61fb5edbe45898395f9412d229c49fa58441c2cb3432e",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Second",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h00K",
+      "model": "res://assets/models_lines/h00K_b.glb",
+      "source": "buildings\\human\\ArcaneVault\\ArcaneVault.mdx",
+      "exists": true,
+      "source_sha256": "78a67d4f961c35e013cbb1a82d08a6fbfdce03e21cc5c7fd7308bf6a453ecf0f",
+      "extracted_sha256": "78a67d4f961c35e013cbb1a82d08a6fbfdce03e21cc5c7fd7308bf6a453ecf0f",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "n005",
+      "model": "res://assets/models_lines/n005_u.glb",
+      "source": "units\\creeps\\Medivh\\Medivh.mdx",
+      "exists": true,
+      "source_sha256": "87955c3e5ede86f316f0eb709108d3d12062b808e16489574b41b0449060d1b1",
+      "extracted_sha256": "87955c3e5ede86f316f0eb709108d3d12062b808e16489574b41b0449060d1b1",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Walk",
+        "Death",
+        "Dissipate",
+        "Stand First",
+        "Spell Attack",
+        "Stand Second",
+        "Stand third",
+        "Stand Talk First",
+        "Stand Talk Second",
+        "Stand Talk Third",
+        "Stand Talk Fourth",
+        "Stand Alternate -1",
+        "Walk Alternate -2",
+        "Walk Alternate -3",
+        "Stand Alternate",
+        "Stand Alternate -2",
+        "Death Alternate",
+        "Walk Alternate",
+        "Morph",
+        "Morph Alternate",
+        "Attack Alternate"
+      ]
+    },
+    {
+      "id": "h008",
+      "model": "res://assets/models_lines/h008_b.glb",
+      "source": "buildings\\other\\MagicVault\\MagicVault.mdx",
+      "exists": true,
+      "source_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "extracted_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h006",
+      "model": "res://assets/models_lines/h006_b.glb",
+      "source": "buildings\\human\\HumanTower\\HumanTower.mdx",
+      "exists": true,
+      "source_sha256": "f1f4baa31baf2ef81545806210a371d9f4a016d88ecef7a7242f2550b8283512",
+      "extracted_sha256": "f1f4baa31baf2ef81545806210a371d9f4a016d88ecef7a7242f2550b8283512",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand Ready Attack",
+        "Portrait",
+        "Birth Upgrade First Second third",
+        "Stand Upgrade First Ready Attack",
+        "Portrait Upgrade First",
+        "Attack Stand  Ready Upgrade Second",
+        "Stand Upgrade Second",
+        "Portrait Upgrade Second",
+        "Stand Upgrade Third Attack Ready",
+        "Portrait Upgrade Third",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h004",
+      "model": "res://assets/models_lines/h004_b.glb",
+      "source": "buildings\\human\\Workshop\\Workshop.mdx",
+      "exists": true,
+      "source_sha256": "47693b218c2c97fdd857148de44bc4f52f5dfc42feb5d5f816e574407cbabb30",
+      "extracted_sha256": "47693b218c2c97fdd857148de44bc4f52f5dfc42feb5d5f816e574407cbabb30",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "hmtm",
+      "model": "res://assets/models_lines/hmtm_u.glb",
+      "source": "units\\human\\MortarTeam\\MortarTeam.mdx",
+      "exists": true,
+      "source_sha256": "2d64cb385b4d92ed9cc88bf451ca3fd17e83de519e038412588a351a74eb61f7",
+      "extracted_sha256": "2d64cb385b4d92ed9cc88bf451ca3fd17e83de519e038412588a351a74eb61f7",
+      "source_matches": true,
+      "sequences": [
+        "Walk",
+        "Stand - 3",
+        "Death",
+        "Decay Flesh",
+        "Stand",
+        "Stand - 2",
+        "attack spell",
+        "Stand Ready",
+        "Stand Victory",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h003",
+      "model": "res://assets/models_lines/h003_b.glb",
+      "source": "buildings\\human\\Farm\\Farm.mdx",
+      "exists": true,
+      "source_sha256": "5d43eab618c1484b707d9b5674ce7b9257f55bb9a962ba2b280584b07a253129",
+      "extracted_sha256": "5d43eab618c1484b707d9b5674ce7b9257f55bb9a962ba2b280584b07a253129",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h0A1",
+      "model": "res://assets/models_lines/h0A1_b.glb",
+      "source": "buildings\\human\\Farm\\Farm.mdx",
+      "exists": true,
+      "source_sha256": "5d43eab618c1484b707d9b5674ce7b9257f55bb9a962ba2b280584b07a253129",
+      "extracted_sha256": "5d43eab618c1484b707d9b5674ce7b9257f55bb9a962ba2b280584b07a253129",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h05C",
+      "model": "res://assets/models_lines/h05C_u.glb",
+      "source": "units\\human\\Rifleman\\Rifleman.mdx",
+      "exists": true,
+      "source_sha256": "f08bbf59f57b4fce8ac1554a74ce03afd25d3de84eb7838bb9e7af5fa9e2b2d1",
+      "extracted_sha256": "f08bbf59f57b4fce8ac1554a74ce03afd25d3de84eb7838bb9e7af5fa9e2b2d1",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Attack",
+        "Death",
+        "Decay Flesh",
+        "Walk",
+        "Stand Ready",
+        "Spell",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h05D",
+      "model": "res://assets/models_lines/h05D_b.glb",
+      "source": "Doodads\\LordaeronSummer\\Structures\\Inn\\Inn.mdx",
+      "exists": true,
+      "source_sha256": "d00e5f63e166e70274702f98858f8290fdd67b3db19de0e711361bb4d10cfb48",
+      "extracted_sha256": "d00e5f63e166e70274702f98858f8290fdd67b3db19de0e711361bb4d10cfb48",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Death"
+      ]
+    },
+    {
+      "id": "h0A2",
+      "model": "res://assets/models_lines/h0A2_u.glb",
+      "source": "units\\human\\Rifleman\\Rifleman.mdx",
+      "exists": true,
+      "source_sha256": "f08bbf59f57b4fce8ac1554a74ce03afd25d3de84eb7838bb9e7af5fa9e2b2d1",
+      "extracted_sha256": "f08bbf59f57b4fce8ac1554a74ce03afd25d3de84eb7838bb9e7af5fa9e2b2d1",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Attack",
+        "Death",
+        "Decay Flesh",
+        "Walk",
+        "Stand Ready",
+        "Spell",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "hrif",
+      "model": "res://assets/models_lines/hrif_u.glb",
+      "source": "units\\human\\Rifleman\\Rifleman.mdx",
+      "exists": true,
+      "source_sha256": "f08bbf59f57b4fce8ac1554a74ce03afd25d3de84eb7838bb9e7af5fa9e2b2d1",
+      "extracted_sha256": "f08bbf59f57b4fce8ac1554a74ce03afd25d3de84eb7838bb9e7af5fa9e2b2d1",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Attack",
+        "Death",
+        "Decay Flesh",
+        "Walk",
+        "Stand Ready",
+        "Spell",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h000",
+      "model": "res://assets/models_lines/h000_b.glb",
+      "source": "buildings\\human\\HumanBarracks\\HumanBarracks.mdx",
+      "exists": true,
+      "source_sha256": "971df0d1631e64164fa7cb41c9b1ac04e91b24825ba5bfc9611610614d14e452",
+      "extracted_sha256": "971df0d1631e64164fa7cb41c9b1ac04e91b24825ba5bfc9611610614d14e452",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand 2",
+        "Stand Work",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h039",
+      "model": "res://assets/models_lines/h039_b.glb",
+      "source": "buildings\\human\\TownHall\\TownHall.mdx",
+      "exists": true,
+      "source_sha256": "0b5362c1833ff31a4c335cab721a63483abc1e185285d5b91df8b8a0b098cc49",
+      "extracted_sha256": "0b5362c1833ff31a4c335cab721a63483abc1e185285d5b91df8b8a0b098cc49",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait -1",
+        "Birth Upgrade First",
+        "Stand Upgrade First",
+        "Stand Work Upgrade First",
+        "Portrait Upgrade First",
+        "Birth Upgrade Second",
+        "Stand Upgrade Second",
+        "Stand Work Upgrade Second",
+        "Portrait Upgrade Second",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h03A",
+      "model": "res://assets/models_lines/h03A_u.glb",
+      "source": "units\\human\\TheCaptain\\TheCaptain.mdx",
+      "exists": true,
+      "source_sha256": "2e5407185b20f32c77b8ab1e9faba8bf0388fb6d380ea725937d7efe164d2d0b",
+      "extracted_sha256": "2e5407185b20f32c77b8ab1e9faba8bf0388fb6d380ea725937d7efe164d2d0b",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand Victory",
+        "Stand - 4",
+        "Attack - 1",
+        "Attack - 2",
+        "Walk",
+        "Stand Defend",
+        "Walk Defend",
+        "Death",
+        "Decay Flesh",
+        "Attack Defend",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "hfoo",
+      "model": "res://assets/models_lines/hfoo_u.glb",
+      "source": "units\\human\\Footman\\Footman.mdx",
+      "exists": true,
+      "source_sha256": "7ee255776a6e757bd89766354df763201cd0519c488585b7c30151d5e313fc13",
+      "extracted_sha256": "7ee255776a6e757bd89766354df763201cd0519c488585b7c30151d5e313fc13",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand Victory",
+        "Stand - 4",
+        "Attack - 1",
+        "Attack - 2",
+        "Walk",
+        "Stand Defend",
+        "Walk Defend",
+        "Death",
+        "Decay Flesh",
+        "Attack Defend",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h001",
+      "model": "res://assets/models_lines/h001_b.glb",
+      "source": "buildings\\other\\TowerDefenseTower\\TowerDefenseTower.mdx",
+      "exists": true,
+      "source_sha256": "00bf0b49d196e03d9ae9207e16deae0a602408dd17abe1259dc82b5de2d6baa0",
+      "extracted_sha256": "00bf0b49d196e03d9ae9207e16deae0a602408dd17abe1259dc82b5de2d6baa0",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Birth Upgrade",
+        "Death",
+        "Decay",
+        "Stand First Attack Ready",
+        "Portrait First",
+        "Stand First Attack Ready Upgrade",
+        "Portrait First Upgrade",
+        "Stand Second Attack Ready",
+        "Portrait Second",
+        "Stand Second Attack Ready Upgrade",
+        "Portrait Second Upgrade",
+        "Stand Third Attack Ready",
+        "Portrait Third",
+        "Stand Third Attack Ready Upgrade",
+        "Portrait Third Upgrade",
+        "Stand Fourth Attack Ready",
+        "Portrait Fourth",
+        "Stand Fourth Attack Ready Upgrade",
+        "Portrait Fourth Upgrade",
+        "Stand Fifth Attack Ready",
+        "Portrait Fifth",
+        "Stand Fifth Attack Ready Upgrade",
+        "Portrait Fifth Upgrade"
+      ]
+    }
+  ],
+  "source_audit": "human_source_audit.json",
+  "native_mana": {
+    "h010": {
+      "capacity": 10,
+      "start": 0,
+      "regen": 1
+    },
+    "h074": {
+      "capacity": 200,
+      "start": 100,
+      "regen": 1.3300000429153442
+    },
+    "h03B": {
+      "capacity": 200,
+      "start": 150,
+      "regen": 2
+    },
+    "h03C": {
+      "capacity": 300,
+      "start": 200,
+      "regen": 2.5
+    }
+  },
+  "limits": [
+    "No original WC3 frame-by-frame runtime comparison or physical Android test.",
+    "Native Defend reflection edge cases, artillery fire pulse boundaries and prayer timing need original-engine confirmation.",
+    "Wizard pf retreat/rest and temporary mana aura removal are ported; navigation uses Godot paths, and the requested150 damage/5s ground-only balance remains. Native eh low-health recovery is outside this transferred cycle.",
+    "Native LightningData texture/width/duration are used, but strip scrolling is a port renderer rather than original spline/noise behavior.",
+    "Buff artwork comes from clean w3h because the current export does not contain w3h or a current binary w3a; shared Inner Fire/Prayer buff interactions need runtime comparison."
+  ],
+  "android": {
+    "exported": false,
+    "physical_device_tested": false,
+    "last_build": "0.6.7"
+  }
+}

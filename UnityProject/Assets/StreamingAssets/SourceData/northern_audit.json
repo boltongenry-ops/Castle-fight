@@ -1,0 +1,618 @@
+{
+  "date": "2026-10-24",
+  "version": "0.6.8-dev",
+  "scope": {
+    "objects": 29,
+    "skills": 58,
+    "source_objects": 33,
+    "source_checks": 964
+  },
+  "status": "PASS_WITH_ENGINE_LIMITS",
+  "errors": [],
+  "remaining": [],
+  "models": [
+    {
+      "id": "h017",
+      "model": "res://assets/models_races/northern_realms.glb",
+      "source": "units\\critters\\VillagerMan1\\VillagerMan1.mdx",
+      "exists": true,
+      "source_sha256": "e6f5bc22c85e665e25ca779b6bf744dc30b4773814cd6e74af3b1f819048e5d2",
+      "extracted_sha256": "e6f5bc22c85e665e25ca779b6bf744dc30b4773814cd6e74af3b1f819048e5d2",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand -2",
+        "Stand - 3",
+        "Stand - 4",
+        "Attack",
+        "Stand Work",
+        "Walk",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Stand Ready",
+        "Stand Flesh First",
+        "Stand Flesh Second"
+      ]
+    },
+    {
+      "id": "h047",
+      "model": "res://assets/models_lines/h047_b.glb",
+      "source": "Doodads\\Underground\\Plants\\ShroomsBlue\\ShroomsBlue.mdx",
+      "exists": true,
+      "source_sha256": "dbf7347d3fa9330dcad6429b79bf3fd9919eb9615bce39df6a41d763ec501fc5",
+      "extracted_sha256": "dbf7347d3fa9330dcad6429b79bf3fd9919eb9615bce39df6a41d763ec501fc5",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "stand hit",
+        "death",
+        "Birth",
+        "Spell EatTree"
+      ]
+    },
+    {
+      "id": "h048",
+      "model": "res://assets/models_lines/h048_b.glb",
+      "source": "Doodads\\Icecrown\\Props\\IceCrownObelisk\\IceCrownObelisk1.mdx",
+      "exists": true,
+      "source_sha256": "8ce9f479aecc36223bfa920fcfe5f899620e7043b2cbecde6d0f2a0a17b722d6",
+      "extracted_sha256": "8ce9f479aecc36223bfa920fcfe5f899620e7043b2cbecde6d0f2a0a17b722d6",
+      "source_matches": true,
+      "sequences": [
+        "Stand"
+      ]
+    },
+    {
+      "id": "h03L",
+      "model": "res://assets/models_lines/h03L_b.glb",
+      "source": "doodads\\cinematic\\IcecrownObelisk\\IcecrownObelisk.mdx",
+      "exists": true,
+      "source_sha256": "fe3005c7363df99bbe908adb3bae1dbc1c68e18103673cf61f3b297d9253e989",
+      "extracted_sha256": "fe3005c7363df99bbe908adb3bae1dbc1c68e18103673cf61f3b297d9253e989",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "stand work",
+        "stand alternate",
+        "portrait"
+      ]
+    },
+    {
+      "id": "h03O",
+      "model": "res://assets/models_lines/h03O_b.glb",
+      "source": "buildings\\other\\IceCrownTreasureBox\\IceCrownTreasureBox.mdx",
+      "exists": true,
+      "source_sha256": "d05586e0d3dc1245406b4dbe9fa643ce497138da0605ee3a9b1f9285b0697624",
+      "extracted_sha256": "d05586e0d3dc1245406b4dbe9fa643ce497138da0605ee3a9b1f9285b0697624",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand Portrait",
+        "Stand Third",
+        "Stand Second",
+        "Death"
+      ]
+    },
+    {
+      "id": "h049",
+      "model": "res://assets/models_lines/h049_b.glb",
+      "source": "Doodads\\Icecrown\\Rocks\\Ice_SnowRock\\Ice_SnowRock9.mdx",
+      "exists": true,
+      "source_sha256": "3a55bb759652751d571d37ce4e8c38d57362bb83c8dcd6700ae46218d641696d",
+      "extracted_sha256": "3a55bb759652751d571d37ce4e8c38d57362bb83c8dcd6700ae46218d641696d",
+      "source_matches": true,
+      "sequences": [
+        "Stand"
+      ]
+    },
+    {
+      "id": "h04F",
+      "model": "res://assets/models_lines/h04F_b.glb",
+      "source": "Doodads\\Icecrown\\Rocks\\Ice_SnowRock\\Ice_SnowRock4.mdx",
+      "exists": true,
+      "source_sha256": "a8db26ba4dda3d0995c594b6a4520756a4565ebd48878ae370a546efe11afe1e",
+      "extracted_sha256": "a8db26ba4dda3d0995c594b6a4520756a4565ebd48878ae370a546efe11afe1e",
+      "source_matches": true,
+      "sequences": [
+        "Stand"
+      ]
+    },
+    {
+      "id": "h03W",
+      "model": "res://assets/models_lines/h03W_b.glb",
+      "source": "Doodads\\Icecrown\\Rocks\\Glacier\\Glacier7.mdx",
+      "exists": true,
+      "source_sha256": "75b7e8db9dd1b6bbef594e562cce2a42aeffd8214258c9e078c9d748594918eb",
+      "extracted_sha256": "75b7e8db9dd1b6bbef594e562cce2a42aeffd8214258c9e078c9d748594918eb",
+      "source_matches": true,
+      "sequences": [
+        "Stand"
+      ]
+    },
+    {
+      "id": "n016",
+      "model": "res://assets/models_lines/n016_u.glb",
+      "source": "Units\\Creeps\\MagnataurBlue\\MagnataurBlue.mdx",
+      "exists": true,
+      "source_sha256": "c6b5010e2f89a7e7bbdd9f5530d2df217f51b61fbad15c2418812f78ca1be6d6",
+      "extracted_sha256": "c6b5010e2f89a7e7bbdd9f5530d2df217f51b61fbad15c2418812f78ca1be6d6",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 3",
+        "Walk",
+        "Stand",
+        "Walk Fast",
+        "Stand - 2",
+        "Attack - 2",
+        "Spell Slam",
+        "Attack",
+        "Death",
+        "Dissipate",
+        "Decay Flesh",
+        "Decay Bone",
+        "Stand Channel",
+        "Attack - 3",
+        "Spell Attack two"
+      ]
+    },
+    {
+      "id": "n018",
+      "model": "res://assets/models_lines/n018_u.glb",
+      "source": "units\\creeps\\PolarBear\\PolarBear.mdx",
+      "exists": true,
+      "source_sha256": "dcb1a28971bc7f57b6ce79e09f200b6a7b14993496b22f9064ce74033c089823",
+      "extracted_sha256": "dcb1a28971bc7f57b6ce79e09f200b6a7b14993496b22f9064ce74033c089823",
+      "source_matches": true,
+      "sequences": [
+        "Decay Flesh",
+        "Stand",
+        "Walk",
+        "Stand - 3",
+        "Stand - 2",
+        "Attack - 2",
+        "Attack",
+        "Walk Swim",
+        "Stand Swim",
+        "Attack Swim",
+        "Death",
+        "Death Swim",
+        "Decay Bone",
+        "Decay Swim"
+      ]
+    },
+    {
+      "id": "n017",
+      "model": "res://assets/models_lines/n017_u.glb",
+      "source": "units\\creeps\\WhiteWolf\\WhiteWolf.mdx",
+      "exists": true,
+      "source_sha256": "afc15d4ee1ade3bbda88117c261facc4d6fc50e67ba72cd85f68b33331e0be8d",
+      "extracted_sha256": "afc15d4ee1ade3bbda88117c261facc4d6fc50e67ba72cd85f68b33331e0be8d",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Walk",
+        "Spell Slam",
+        "Attack - 1",
+        "Stand - 3",
+        "Attack - 2",
+        "Birth",
+        "Attack Slam",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h03T",
+      "model": "res://assets/models_lines/h03T_b.glb",
+      "source": "Doodads\\Northrend\\Rocks\\North_IceClaw\\North_IceClaw3.mdx",
+      "exists": true,
+      "source_sha256": "286c7b5341cb43537744f7a2b5bd79c7f227ff41a18fe5f10b839d1940a424a5",
+      "extracted_sha256": "286c7b5341cb43537744f7a2b5bd79c7f227ff41a18fe5f10b839d1940a424a5",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "stand hit",
+        "death",
+        "birth"
+      ]
+    },
+    {
+      "id": "h043",
+      "model": "res://assets/models_lines/h043_b.glb",
+      "source": "Doodads\\Northrend\\Rocks\\North_IceClaw\\North_IceClaw8.mdx",
+      "exists": true,
+      "source_sha256": "453cae459fff5f190792f40976f7679fc59da047dd4b09e5af18213dcda4dba6",
+      "extracted_sha256": "453cae459fff5f190792f40976f7679fc59da047dd4b09e5af18213dcda4dba6",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "stand hit",
+        "death",
+        "birth"
+      ]
+    },
+    {
+      "id": "n013",
+      "model": "res://assets/models_lines/n013_u.glb",
+      "source": "units\\creeps\\WendigoShaman\\WendigoShaman.mdx",
+      "exists": true,
+      "source_sha256": "0145e70a2d6e9c74f07be432daa6a54e757af8bf70dc9bd53f8b634ffc93853a",
+      "extracted_sha256": "0145e70a2d6e9c74f07be432daa6a54e757af8bf70dc9bd53f8b634ffc93853a",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Stand 3",
+        "Attack Spell Slam",
+        "Stand Ready",
+        "Attack Slam",
+        "Attack Slam - 2",
+        "Walk",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "n012",
+      "model": "res://assets/models_lines/n012_u.glb",
+      "source": "units\\creeps\\Wendigo\\Wendigo.mdx",
+      "exists": true,
+      "source_sha256": "084bc1363933155a348a8dce311da117d74f1e77a51aba9d872501898703adba",
+      "extracted_sha256": "084bc1363933155a348a8dce311da117d74f1e77a51aba9d872501898703adba",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Stand 3",
+        "Attack Spell Slam",
+        "Stand Ready",
+        "Attack Slam",
+        "Attack Slam - 2",
+        "Walk",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h03S",
+      "model": "res://assets/models_lines/h03S_b.glb",
+      "source": "buildings\\human\\TownHall\\TownHall.mdx",
+      "exists": true,
+      "source_sha256": "0b5362c1833ff31a4c335cab721a63483abc1e185285d5b91df8b8a0b098cc49",
+      "extracted_sha256": "0b5362c1833ff31a4c335cab721a63483abc1e185285d5b91df8b8a0b098cc49",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait -1",
+        "Birth Upgrade First",
+        "Stand Upgrade First",
+        "Stand Work Upgrade First",
+        "Portrait Upgrade First",
+        "Birth Upgrade Second",
+        "Stand Upgrade Second",
+        "Stand Work Upgrade Second",
+        "Portrait Upgrade Second",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "n014",
+      "model": "res://assets/models_lines/n014_u.glb",
+      "source": "units\\human\\Jaina\\Jaina.mdx",
+      "exists": true,
+      "source_sha256": "83432819c000648a327d899dc3b1e7688393f7356e362b02fac90dee5b73d211",
+      "extracted_sha256": "83432819c000648a327d899dc3b1e7688393f7356e362b02fac90dee5b73d211",
+      "source_matches": true,
+      "sequences": [
+        "Stand -1",
+        "Stand Second",
+        "Stand Victory",
+        "Attack -1",
+        "Spell",
+        "Dissipate",
+        "Walk",
+        "Death"
+      ]
+    },
+    {
+      "id": "h03K",
+      "model": "res://assets/models_lines/h03K_b.glb",
+      "source": "buildings\\other\\IceTrollHut1\\IceTrollHut1.mdx",
+      "exists": true,
+      "source_sha256": "e13a0bf61232cb17db7d94f73b136e2e3fc9ab0b6cc9750a84183cb8a1a5533b",
+      "extracted_sha256": "e13a0bf61232cb17db7d94f73b136e2e3fc9ab0b6cc9750a84183cb8a1a5533b",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "h03J",
+      "model": "res://assets/models_lines/h03J_b.glb",
+      "source": "buildings\\other\\IceTrollHut0\\IceTrollHut0.mdx",
+      "exists": true,
+      "source_sha256": "29c3d03d7e9cf94273e8558a97603305b64c1ff16b90f5a96c65e06b2b97d928",
+      "extracted_sha256": "29c3d03d7e9cf94273e8558a97603305b64c1ff16b90f5a96c65e06b2b97d928",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "o00A",
+      "model": "res://assets/models_lines/o00A_u.glb",
+      "source": "units\\orc\\WitchDoctor\\WitchDoctor.mdx",
+      "exists": true,
+      "source_sha256": "dcef2f4eafa99bcf6047130483be06a53be3e30148d38dedb65c7922ff985b70",
+      "extracted_sha256": "dcef2f4eafa99bcf6047130483be06a53be3e30148d38dedb65c7922ff985b70",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 4",
+        "Attack - 1",
+        "Spell",
+        "Death",
+        "Decay Flesh",
+        "Walk",
+        "Stand Victory",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "n015",
+      "model": "res://assets/models_lines/n015_u.glb",
+      "source": "units\\creeps\\IceTrollShadowPriest\\IceTrollShadowPriest.mdx",
+      "exists": true,
+      "source_sha256": "c05021212e300f0fbf316fc1cf19fbe02e0d858de25184b41b034d224419d344",
+      "extracted_sha256": "c05021212e300f0fbf316fc1cf19fbe02e0d858de25184b41b034d224419d344",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 4",
+        "Attack - 1",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Walk - 1",
+        "Spell"
+      ]
+    },
+    {
+      "id": "h03Q",
+      "model": "res://assets/models_lines/h03Q_b.glb",
+      "source": "buildings\\other\\TowerDefenseTower\\TowerDefenseTower.mdx",
+      "exists": true,
+      "source_sha256": "00bf0b49d196e03d9ae9207e16deae0a602408dd17abe1259dc82b5de2d6baa0",
+      "extracted_sha256": "00bf0b49d196e03d9ae9207e16deae0a602408dd17abe1259dc82b5de2d6baa0",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Birth Upgrade",
+        "Death",
+        "Decay",
+        "Stand First Attack Ready",
+        "Portrait First",
+        "Stand First Attack Ready Upgrade",
+        "Portrait First Upgrade",
+        "Stand Second Attack Ready",
+        "Portrait Second",
+        "Stand Second Attack Ready Upgrade",
+        "Portrait Second Upgrade",
+        "Stand Third Attack Ready",
+        "Portrait Third",
+        "Stand Third Attack Ready Upgrade",
+        "Portrait Third Upgrade",
+        "Stand Fourth Attack Ready",
+        "Portrait Fourth",
+        "Stand Fourth Attack Ready Upgrade",
+        "Portrait Fourth Upgrade",
+        "Stand Fifth Attack Ready",
+        "Portrait Fifth",
+        "Stand Fifth Attack Ready Upgrade",
+        "Portrait Fifth Upgrade"
+      ]
+    },
+    {
+      "id": "h008",
+      "model": "res://assets/models_lines/h008_b.glb",
+      "source": "buildings\\other\\MagicVault\\MagicVault.mdx",
+      "exists": true,
+      "source_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "extracted_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h03U",
+      "model": "res://assets/models_lines/h03U_b.glb",
+      "source": "Doodads\\Icecrown\\Structures\\Igloo\\Igloo.mdx",
+      "exists": true,
+      "source_sha256": "6251ed6b9b4c1f8ee9b237eca237d94967e34ccefb913fa7397cfc4136034010",
+      "extracted_sha256": "6251ed6b9b4c1f8ee9b237eca237d94967e34ccefb913fa7397cfc4136034010",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "h06L",
+      "model": "res://assets/models_lines/h06L_b.glb",
+      "source": "Doodads\\Icecrown\\Terrain\\ClearIceRock\\ClearIceRock0.mdx",
+      "exists": true,
+      "source_sha256": "67fa5e0c7d7c3b8a6a7b995b3d21af8248209b0086bfdbc6170670faf62cb84f",
+      "extracted_sha256": "67fa5e0c7d7c3b8a6a7b995b3d21af8248209b0086bfdbc6170670faf62cb84f",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "Stand Hit",
+        "Death Alternate",
+        "death"
+      ]
+    },
+    {
+      "id": "n02I",
+      "model": "res://assets/models_lines/n02I_u.glb",
+      "source": "Units\\Creeps\\tuskarLord\\tuskarLord.mdx",
+      "exists": true,
+      "source_sha256": "aa2e90a04650098fdc6ba086ebc3deaf28b0d07d166733a94b4e2a09e40375f1",
+      "extracted_sha256": "aa2e90a04650098fdc6ba086ebc3deaf28b0d07d166733a94b4e2a09e40375f1",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Stand 3",
+        "Spell - OgreMagi Only",
+        "Stand Ready",
+        "Attack",
+        "Attack 2",
+        "Attack Slam - OgreLord Only",
+        "Sleep",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Walk"
+      ]
+    },
+    {
+      "id": "n011",
+      "model": "res://assets/models_lines/n011_u.glb",
+      "source": "Units\\Creeps\\tuskarRanged\\tuskarRanged.mdx",
+      "exists": true,
+      "source_sha256": "1e6be0a1faa4b2ed57c4e2680a710cd866812893acf873f14321f151bc9dd41f",
+      "extracted_sha256": "1e6be0a1faa4b2ed57c4e2680a710cd866812893acf873f14321f151bc9dd41f",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand 2",
+        "Stand 3",
+        "Spell - OgreMagi Only",
+        "Stand Ready",
+        "Attack",
+        "Attack 2",
+        "Attack Slam - OgreLord Only",
+        "Sleep",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Walk"
+      ]
+    },
+    {
+      "id": "h03I",
+      "model": "res://assets/models_lines/h03I_b.glb",
+      "source": "buildings\\other\\DragonBuildingBlue\\DragonBuildingBlue.mdx",
+      "exists": true,
+      "source_sha256": "13ebe7b395c839072572c390b6abd27e312b774a85e9ad08b666386eb2bac2c8",
+      "extracted_sha256": "13ebe7b395c839072572c390b6abd27e312b774a85e9ad08b666386eb2bac2c8",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand Work",
+        "Stand Work - 2",
+        "Portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "n010",
+      "model": "res://assets/models_lines/n010_u.glb",
+      "source": "units\\creeps\\AzureDragon\\AzureDragon.mdx",
+      "exists": true,
+      "source_sha256": "f792b64b4b0edf6a6303987f2e6a243cec8784dd7956ee91fe3b545771fc7d99",
+      "extracted_sha256": "f792b64b4b0edf6a6303987f2e6a243cec8784dd7956ee91fe3b545771fc7d99",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Attack 1",
+        "Stand - 3",
+        "Walk",
+        "Walk - 2",
+        "Death",
+        "Spell Devour"
+      ]
+    }
+  ],
+  "source_audit": "northern_source_audit.json",
+  "native_mana": {
+    "h047": {
+      "capacity": 13,
+      "start": 0,
+      "regen": 1
+    },
+    "h048": {
+      "capacity": 15,
+      "start": 0,
+      "regen": 1
+    },
+    "h03L": {
+      "capacity": 18,
+      "start": 0,
+      "regen": 1
+    },
+    "h03O": {
+      "capacity": 38,
+      "start": 0,
+      "regen": 1
+    },
+    "n014": {
+      "capacity": 320,
+      "start": 240,
+      "regen": 3
+    },
+    "n015": {
+      "capacity": 250,
+      "start": 150,
+      "regen": 1.5
+    },
+    "o00A": {
+      "capacity": 300,
+      "start": 200,
+      "regen": 2
+    },
+    "n016": {
+      "capacity": 100,
+      "start": 75,
+      "regen": 1
+    },
+    "n013": {
+      "capacity": 100,
+      "start": 75,
+      "regen": 1
+    }
+  },
+  "limits": [
+    "No original WC3 runtime or physical Android comparison.",
+    "User confirmed legendary Tuskarr total5. Native Frost Armor/Freeze Breath edge interactions, winter Phoenix Fire/control cast cadence and modifiers require original-engine measurement.",
+    "Particle billboard/atlas/ribbon and missile Death remain renderer limitations."
+  ],
+  "android": {
+    "exported": false,
+    "physical_device_tested": false,
+    "last_build": "0.6.7"
+  }
+}

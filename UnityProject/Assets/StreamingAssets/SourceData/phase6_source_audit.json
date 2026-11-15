@@ -1,0 +1,368 @@
+{
+  "sources": {
+    "export": "C:/Users/Darkness/Desktop/castle fight/dd.j",
+    "clean": "C:/Games/WarcraftIII 1.26a/projects/castlefight-clean/src/war3map.j",
+    "jngp": "C:/Users/Darkness/Downloads/Jass New Gen Pack Rebuild/war3map.j"
+  },
+  "handlers": {
+    "A01Y": [
+      {
+        "name": "LG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit u=GetSummonedUnit()\nlocal integer wR=GetUnitTypeId(u)\nif ( wR == 'u004' ) then\ncall cB(ReplaceUnitBJ(u, Kn[GetRandomInt(0, 2)], 2))\nelseif ( wR == 'u008' ) then\ncall cB(ReplaceUnitBJ(u, Kn[GetRandomInt(0, 6)], 2))\nelseif ( wR == 'u00E' ) then\nset wR=GetRandomInt(0, 7)\nif ( wR == 0 ) then\nset wR=7\nelse\nset wR=GetRandomInt(3, 6)\nendif\ncall cB(ReplaceUnitBJ(u, Kn[wR], 2))\ncall UnitAddAbility(bj_lastReplacedUnit, 'A088')\ncall UnitAddAbility(bj_lastReplacedUnit, 'A089')\nendif\nset u=null\n"
+      },
+      {
+        "name": "MG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": false,
+        "jngp_matches_export": true,
+        "body": "call CFUndeadForces_RegisterTrainTargets()\ncall CFUndeadForces_InitEconomyScalars()\ncall CFUndeadForces_RegisterUnitCasts()\ncall CFUndeadForces_InitSkeletonPools()\ncall CFUndeadForces_InitSummonTransformTrigger()\n"
+      }
+    ],
+    "A05L": [
+      {
+        "name": "LG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit u=GetSummonedUnit()\nlocal integer wR=GetUnitTypeId(u)\nif ( wR == 'u004' ) then\ncall cB(ReplaceUnitBJ(u, Kn[GetRandomInt(0, 2)], 2))\nelseif ( wR == 'u008' ) then\ncall cB(ReplaceUnitBJ(u, Kn[GetRandomInt(0, 6)], 2))\nelseif ( wR == 'u00E' ) then\nset wR=GetRandomInt(0, 7)\nif ( wR == 0 ) then\nset wR=7\nelse\nset wR=GetRandomInt(3, 6)\nendif\ncall cB(ReplaceUnitBJ(u, Kn[wR], 2))\ncall UnitAddAbility(bj_lastReplacedUnit, 'A088')\ncall UnitAddAbility(bj_lastReplacedUnit, 'A089')\nendif\nset u=null\n"
+      },
+      {
+        "name": "MG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": false,
+        "jngp_matches_export": true,
+        "body": "call CFUndeadForces_RegisterTrainTargets()\ncall CFUndeadForces_InitEconomyScalars()\ncall CFUndeadForces_RegisterUnitCasts()\ncall CFUndeadForces_InitSkeletonPools()\ncall CFUndeadForces_InitSummonTransformTrigger()\n"
+      }
+    ],
+    "vampire": [
+      {
+        "name": "mk",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": false,
+        "jngp_matches_export": true,
+        "body": "\tlocal unit u=GetTriggerUnit()\n\tlocal unit k=GetKillingUnit()\n\tcall CFNerubHandleDeath(u)\n\tif ( IsUnitType(u, UNIT_TYPE_SAPPER) ) then\n\t\tcall CFSapperDeath_UnregisterTrackedSummon(u)\n\t\tif ( k != null and not IsUnitType(k, UNIT_TYPE_STRUCTURE) ) then\n\t\t\tcall CFSapperDeath_HandleVictimReactions(u , k)\n\t\tendif\n\t\tcall CFSapperDeath_HandleResurrectionAndHealing(u)\n\telseif ( IsUnitType(u, UNIT_TYPE_STRUCTURE) ) then\n\t\tcall CFStructureDeath_HandleSpecialBuildingDeath(u)\n\t\tcall CFStructureDeath_HandleKillScore(GetKillingUnit())\n\tendif\n\tset k=null\n\tset u=null\n"
+      },
+      {
+        "name": "mG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local real x=GetUnitX(d)\nlocal real y=GetUnitY(d)\ncall CreateUnit(GetOwningPlayer(k), yR, x, y, .0)\ncall RemoveUnit(d)\ncall DestroyEffect(AddSpecialEffect(\"Abilities\\\\Spells\\\\Items\\\\AIam\\\\AIamTarget.mdl\", x, y))\n"
+      }
+    ],
+    "A00K": [
+      {
+        "name": "pf",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit u=CreateUnit(GetOwningPlayer(kv), 'e008', GetUnitX(kv), GetUnitY(kv), .0)\ncall UnitAddAbility(u, 'A0F9')\ncall IssueTargetOrderById(u, $D0102, Kv)\ncall UnitApplyTimedLife(u, 'BTLF', 1.)\nset u=kv\ncall UnitRemoveAbility(u, 'A00F')\ncall UnitAddAbility(u, 'A07I')\ncall TriggerSleepAction(.3)\ncall xd(u)\ncall TriggerSleepAction(5.)\nif ( GetUnitAbilityLevel(u, 'A00F') <= 0 ) then\ncall IssueImmediateOrderById(u, $D0019)\ncall TriggerSleepAction(6.6)\nif ( GetUnitAbilityLevel(u, 'A00F') <= 0 ) then\ncall UnitAddAbility(u, 'A00F')\ncall UnitRemoveAbility(u, 'A07I')\ncall UnitAddAbility(u, 'A0EZ')\ncall cB(u)\nendif\nendif\nset u=null\n"
+      }
+    ],
+    "A057": [
+      {
+        "name": "Ef",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "\tset Bv=GetOwningPlayer(Hv)\n\tcall GroupEnumUnitsInRect(Nv, gg_rct_MapArea, vr)\n\tset bj_groupRandomConsidered=0\n\tset bj_groupRandomCurrentPick=null\n\tcall ForGroup(Nv, function GroupPickRandomUnitEnum)\n\tif ( bj_groupRandomCurrentPick == null ) then\n\t\treturn\n\tendif\n\tcall DestroyEffect(AddSpecialEffectTarget(\"Abilities\\\\Spells\\\\Undead\\\\DeathPact\\\\DeathPactTarget.mdl\", bj_groupRandomCurrentPick, \"origin\"))\n\tif not Rd(bj_groupRandomCurrentPick) then\n\t\tcall UnitDamageTarget(Hv, bj_groupRandomCurrentPick, 200., true, false, ATTACK_TYPE_NORMAL, DAMAGE_TYPE_SONIC, WEAPON_TYPE_WHOKNOWS)\n\tendif\n"
+      }
+    ],
+    "A09X": [
+      {
+        "name": "sF",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit c\nset Bv=GetOwningPlayer(Hv)\ncall GroupEnumUnitsInRect(Nv, gg_rct_MapArea, vr)\nset bj_groupRandomConsidered=0\nset bj_groupRandomCurrentPick=null\ncall ForGroup(Nv, function GroupPickRandomUnitEnum)\nif ( bj_groupRandomCurrentPick == null ) then\nreturn\nendif\nset c=CreateUnit(GetOwningPlayer(Hv), 'e008', GetUnitX(Hv), GetUnitY(Hv), .0)\ncall UnitAddAbility(c, 'A00P')\ncall UnitShareVision(bj_groupRandomCurrentPick, Bv, true)\ncall IssueTargetOrderById(c, $D00FA, bj_groupRandomCurrentPick)\ncall UnitShareVision(bj_groupRandomCurrentPick, Bv, false)\ncall UnitApplyTimedLife(c, 'BTLF', 20.)\nset c=null\n"
+      }
+    ],
+    "A01Q": [
+      {
+        "name": "HG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local real x\nlocal real y\ncall GroupEnumUnitsInRect(Nv, gg_rct_MapArea, kn)\nset bj_groupRandomConsidered=0\nset bj_groupRandomCurrentPick=null\ncall ForGroup(Nv, function GroupPickRandomUnitEnum)\nif ( bj_groupRandomCurrentPick == null ) then\nreturn\nendif\nset x=GetUnitX(bj_groupRandomCurrentPick)\nset y=GetUnitY(bj_groupRandomCurrentPick)\ncall DestroyEffect(AddSpecialEffect(\"Abilities\\\\Spells\\\\Items\\\\AIam\\\\AIamTarget.mdl\", x, y))\nif ( GetRandomInt(0, 99) < $A ) then\ncall cB(CreateUnit(GetOwningPlayer(Hv), Kn[3], x, y, .0))\nelse\ncall cB(CreateUnit(GetOwningPlayer(Hv), Kn[GetRandomInt(0, 2)], x, y, .0))\nendif\ncall RemoveUnit(bj_groupRandomCurrentPick)\n"
+      },
+      {
+        "name": "hG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit u=GetFilterUnit()\nlocal boolean iN=GetWidgetLife(u) < .405 and IsUnitType(u, UNIT_TYPE_SAPPER) and not IsUnitType(u, UNIT_TYPE_UNDEAD)\nset u=null\nreturn iN\n"
+      }
+    ],
+    "A05U": [
+      {
+        "name": "jG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local real x\nlocal real y\ncall GroupEnumUnitsInRect(Nv, gg_rct_MapArea, kn)\nset bj_groupRandomConsidered=0\nset bj_groupRandomCurrentPick=null\ncall ForGroup(Nv, function GroupPickRandomUnitEnum)\nif ( bj_groupRandomCurrentPick == null ) then\nreturn\nendif\nset x=GetUnitX(bj_groupRandomCurrentPick)\nset y=GetUnitY(bj_groupRandomCurrentPick)\ncall DestroyEffect(AddSpecialEffect(\"Abilities\\\\Spells\\\\Items\\\\AIam\\\\AIamTarget.mdl\", x, y))\nif ( GetRandomInt(0, 99) < $A ) then\ncall cB(CreateUnit(GetOwningPlayer(Hv), Kn[7], x, y, .0))\nelse\ncall cB(CreateUnit(GetOwningPlayer(Hv), Kn[GetRandomInt(1, 6)], x, y, .0))\nendif\ncall RemoveUnit(bj_groupRandomCurrentPick)\n"
+      },
+      {
+        "name": "hG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit u=GetFilterUnit()\nlocal boolean iN=GetWidgetLife(u) < .405 and IsUnitType(u, UNIT_TYPE_SAPPER) and not IsUnitType(u, UNIT_TYPE_UNDEAD)\nset u=null\nreturn iN\n"
+      }
+    ],
+    "A04J": [
+      {
+        "name": "Yg",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local real x\nlocal real y\nlocal unit c\nlocal fogmodifier vb\nset Bv=GetOwningPlayer(Hv)\ncall GroupEnumUnitsInRect(Nv, gg_rct_MapArea, pa)\nset bj_groupRandomConsidered=0\nset bj_groupRandomCurrentPick=null\ncall ForGroup(Nv, function GroupPickRandomUnitEnum)\nif ( bj_groupRandomCurrentPick == null ) then\nreturn\nendif\nset x=GetUnitX(Hv)\nset y=GetUnitY(Hv)\ncall DestroyEffect(AddSpecialEffect(\"Objects\\\\Spawnmodels\\\\Naga\\\\NagaDeath\\\\NagaDeath.mdl\", x, y))\nset c=CreateUnit(Bv, 'h04G', x, y, .0)\ncall UnitApplyTimedLife(c, 'BTLF', 20.)\nif ( Kr ) then\ncall IssueTargetOrderById(c, $D000F, bj_groupRandomCurrentPick)\nelse\nset vb=CreateFogModifierRadius(Bv, FOG_OF_WAR_VISIBLE, GetUnitX(bj_groupRandomCurrentPick), GetUnitY(bj_groupRandomCurrentPick), 128., true, false)\ncall FogModifierStart(vb)\ncall IssueTargetOrderById(c, $D000F, bj_groupRandomCurrentPick)\ncall TriggerSleepAction(.1)\ncall DestroyFogModifier(vb)\nset vb=null\nendif\nset c=null\n"
+      },
+      {
+        "name": "yg",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit u=GetFilterUnit()\nlocal boolean iN=GetWidgetLife(u) > .405 and IsUnitEnemy(u, Bv) and IsUnitType(u, UNIT_TYPE_STRUCTURE) and GetPlayerId(GetOwningPlayer(u)) < $C and GetUnitTypeId(u) != 'hcas' and GetUnitTypeId(u) != 'h06M' and GetUnitAbilityLevel(u, 'B01K') <= 0\nset u=null\nreturn iN\n"
+      }
+    ],
+    "A04L": [
+      {
+        "name": "zg",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local real x\nlocal real y\nlocal unit c\nlocal fogmodifier vb\nset Bv=GetOwningPlayer(Hv)\ncall GroupEnumUnitsInRect(Nv, gg_rct_MapArea, pa)\nset bj_groupRandomConsidered=0\nset bj_groupRandomCurrentPick=null\ncall ForGroup(Nv, function GroupPickRandomUnitEnum)\nif ( bj_groupRandomCurrentPick == null ) then\nreturn\nendif\nset x=GetUnitX(Hv)\nset y=GetUnitY(Hv)\ncall DestroyEffect(AddSpecialEffect(\"Objects\\\\Spawnmodels\\\\Naga\\\\NagaDeath\\\\NagaDeath.mdl\", x, y))\nset c=CreateUnit(Bv, 'h04H', x, y, .0)\ncall UnitApplyTimedLife(c, 'BTLF', 20.)\nif ( Kr ) then\ncall IssueTargetOrderById(c, $D000F, bj_groupRandomCurrentPick)\nelse\nset vb=CreateFogModifierRadius(Bv, FOG_OF_WAR_VISIBLE, GetUnitX(bj_groupRandomCurrentPick), GetUnitY(bj_groupRandomCurrentPick), 128., true, false)\ncall FogModifierStart(vb)\ncall IssueTargetOrderById(c, $D000F, bj_groupRandomCurrentPick)\ncall TriggerSleepAction(.1)\ncall DestroyFogModifier(vb)\nset vb=null\nendif\nset c=null\n"
+      },
+      {
+        "name": "yg",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit u=GetFilterUnit()\nlocal boolean iN=GetWidgetLife(u) > .405 and IsUnitEnemy(u, Bv) and IsUnitType(u, UNIT_TYPE_STRUCTURE) and GetPlayerId(GetOwningPlayer(u)) < $C and GetUnitTypeId(u) != 'hcas' and GetUnitTypeId(u) != 'h06M' and GetUnitAbilityLevel(u, 'B01K') <= 0\nset u=null\nreturn iN\n"
+      }
+    ],
+    "A04U": [
+      {
+        "name": "Vf",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local integer i=0\nlocal real x\nlocal real y\nlocal real an\nset Bv=GetOwningPlayer(Hv)\ncall GroupEnumUnitsInRect(Nv, gg_rct_MapArea, zo)\nset bj_groupRandomConsidered=0\nset bj_groupRandomCurrentPick=null\ncall ForGroup(Nv, function GroupPickRandomUnitEnum)\nif ( bj_groupRandomCurrentPick == null ) then\nreturn\nendif\nset x=GetUnitX(bj_groupRandomCurrentPick)\nset y=GetUnitY(bj_groupRandomCurrentPick)\nloop\nset an=60. * I2R(i)\ncall UnitApplyTimedLife(CreateUnit(Bv, Ea, x + 64. * Cos(an * bj_DEGTORAD), y + 64. * Sin(an * bj_DEGTORAD), 360. - an), 'BTLF', 9.)\nset i=i + 1\nexitwhen i >= 6\nendloop\n"
+      }
+    ],
+    "A08B": [
+      {
+        "name": "hg",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local integer id=ea[GetPlayerId(GetOwningPlayer(Hv))]\nset la[id]=la[id] + 1\ncall DestroyEffect(AddSpecialEffect(\"Abilities\\\\Spells\\\\Items\\\\TomeOfRetraining\\\\TomeOfRetrainingCaster.mdl\", GetUnitX(Hv), GetUnitY(Hv)))\nif ( not IsTriggerEnabled(La) ) then\ncall EnableTrigger(La)\nendif\n"
+      },
+      {
+        "name": "Gg",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit u=GetTriggerUnit()\nlocal player p\nlocal integer id\nlocal real vb\nlocal real TD\nif ( IsUnitType(u, UNIT_TYPE_STRUCTURE) or ( not IsUnitType(GetTriggerUnit(), UNIT_TYPE_SAPPER) ) or GetUnitAbilityLevel(u, 'A08H') > 0 ) then\nset u=null\nset u=null\nreturn\nendif\nset p=GetOwningPlayer(u)\nset id=ea[GetPlayerId(p)]\nif ( la[id] > 0 ) then\nset vb=GetUnitX(u)\nset TD=GetUnitY(u)\ncall DestroyEffect(AddSpecialEffect(\"Abilities\\\\Spells\\\\Items\\\\AIda\\\\AIdaCaster.mdl\", vb, TD))\nset u=CreateUnit(p, 'e008', vb, TD, .0)\ncall UnitAddAbility(u, 'A08A')\ncall IssueImmediateOrderById(u, $D012D)\ncall UnitApplyTimedLife(u, 'BTLF', 1.)\nset la[id]=la[id] - 1\nif ( la[0] <= 0 and la[1] <= 0 ) then\ncall DisableTrigger(La)\nendif\nendif\nset u=null\n"
+      }
+    ],
+    "A04I": [
+      {
+        "name": "vG",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit u=Hv\nlocal real x=GetUnitX(u)\nlocal real y=GetUnitY(u)\nlocal player p=GetOwningPlayer(u)\nlocal real an=ea[GetPlayerId(p)] * 180.\nlocal integer i=0\nlocal unit c\ncall SetUnitAnimation(u, \"death\")\ncall TriggerSleepAction(1.5)\ncall TimerStart(Pa, .04, true, function Zg)\nloop\nset c=CreateUnit(p, 'h08U', x, y, ModuloReal(an + GetRandomReal(- 55., 55.) + 360., 360.))\nif ( wr ) then\ncall UnitRemoveAbility(c, 'A080')\ncall UnitAddAbility(c, 'A084')\nendif\nset qa[Qa]=c\nset Qa=Qa + 1\nset i=i + 1\nexitwhen i > 2\nendloop\nset c=null\ncall EnableWeatherEffect(sa, true)\ncall TriggerSleepAction(3.7)\ncall SetUnitAnimation(u, \"stand\")\ncall TriggerSleepAction(2.6)\ncall EnableWeatherEffect(sa, false)\nset u=null\n"
+      },
+      {
+        "name": "Zg",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local integer i=0\nlocal real x\nlocal real y\nlocal real an\nlocal unit u\nlocal unit c\nlocal integer vb\nloop\nexitwhen i >= Qa\nset u=qa[i]\nset an=GetUnitFacing(u)\nset x=GetUnitX(u) + 10. * Cos(an * bj_DEGTORAD)\nif ( x >= ta or x <= Sa or GetWidgetLife(u) < .405 ) then\ncall RemoveUnit(u)\nset Qa=Qa - 1\nset qa[i]=qa[Qa]\nelse\nset y=GetUnitY(u) + 10. * Sin(an * bj_DEGTORAD)\nif ( y >= ua or y <= Ta ) then\nset y=GetUnitY(u) + 30. * Sin(( 360. - an ) * bj_DEGTORAD)\ncall SetUnitFacing(u, 360. - an)\nendif\ncall SetUnitX(u, x)\ncall SetUnitY(u, y)\nset vb=GetUnitUserData(u) + 1\nif ( vb > 50 ) then\nset vb=0\nset Bv=GetOwningPlayer(u)\ncall GroupEnumUnitsInRange(Nv, x, y, 700., vr)\nset bj_groupRandomConsidered=0\nset bj_groupRandomCurrentPick=null\ncall ForGroup(Nv, function GroupPickRandomUnitEnum)\nif ( bj_groupRandomCurrentPick != null ) then\nif ( IsUnitType(bj_groupRandomCurrentPick, UNIT_TYPE_FLYING) ) then\nset c=CreateUnit(GetOwningPlayer(Hv), 'e008', GetUnitX(bj_groupRandomCurrentPick), GetUnitY(bj_groupRandomCurrentPick), .0)\ncall UnitAddAbility(c, 'A082')\ncall UnitShareVision(bj_groupRandomCurrentPick, Bv, true)\ncall IssueTargetOrderById(c, $D007F, bj_groupRandomCurrentPick)\ncall UnitShareVision(bj_groupRandomCurrentPick, Bv, false)\ncall UnitApplyTimedLife(c, 'BTLF', 2.)\nelse\nset c=CreateUnit(GetOwningPlayer(Hv), 'e008', GetUnitX(bj_groupRandomCurrentPick), GetUnitY(bj_groupRandomCurrentPick), .0)\ncall UnitAddAbility(c, 'A083')\ncall UnitShareVision(bj_groupRandomCurrentPick, Bv, true)\ncall IssueTargetOrderById(c, $D007F, bj_groupRandomCurrentPick)\ncall UnitShareVision(bj_groupRandomCurrentPick, Bv, false)\ncall UnitApplyTimedLife(c, 'BTLF', 2.)\nset c=CreateUnit(GetOwningPlayer(Hv), 'e008', GetUnitX(bj_groupRandomCurrentPick), GetUnitY(bj_groupRandomCurrentPick), .0)\ncall UnitAddAbility(c, 'A04H')\ncall UnitShareVision(bj_groupRandomCurrentPick, Bv, true)\ncall IssueTargetOrderById(c, $D00CB, bj_groupRandomCurrentPick)\ncall UnitShareVision(bj_groupRandomCurrentPick, Bv, false)\ncall UnitApplyTimedLife(c, 'BTLF', 16.)\nendif\nendif\nendif\ncall SetUnitUserData(u, vb)\nset i=i + 1\nendif\nendloop\nif ( Qa == 0 ) then\ncall PauseTimer(Pa)\nendif\nset u=null\nset c=null\n"
+      }
+    ],
+    "A0BO": [
+      {
+        "name": "Vg",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local unit c\nset Bv=GetOwningPlayer(Hv)\ncall GroupEnumUnitsInRect(Nv, gg_rct_MapArea, vr)\nset bj_groupRandomConsidered=0\nset bj_groupRandomCurrentPick=null\ncall ForGroup(Nv, function GroupPickRandomUnitEnum)\nif ( bj_groupRandomCurrentPick == null ) then\nreturn\nendif\nset c=CreateUnit(Bv, 'e008', GetUnitX(bj_groupRandomCurrentPick), GetUnitY(bj_groupRandomCurrentPick), .0)\ncall UnitAddAbility(c, Ga)\ncall IssuePointOrderById(c, $D0275, GetUnitX(bj_groupRandomCurrentPick), GetUnitY(bj_groupRandomCurrentPick))\ncall UnitApplyTimedLife(c, 'BTLF', 5.)\nset c=null\n"
+      }
+    ],
+    "A0BS": [
+      {
+        "name": "ag",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local player p=GetOwningPlayer(Hv)\nlocal integer SA=2 * ea[GetPlayerId(p)]\nlocal integer i=0\nlocal integer j=0\nlocal unit u\nloop\nset u=sA(SA + j)\ncall UnitRemoveAbility(u, 'Awha')\ncall SetUnitOwner(u, p, false)\ncall UnitAddType(u, UNIT_TYPE_SAPPER)\ncall cB(u)\ncall UnitApplyTimedLife(u, 'BTLF', 42.)\nset j=j + 1\nif ( j > 1 ) then\nset j=0\nendif\nset i=i + 1\ncall TriggerSleepAction(.3)\nexitwhen i >= 6\nendloop\nset u=null\n"
+      },
+      {
+        "name": "sA",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local integer i=SA * 5\nlocal integer j=( SA + 1 ) * 5\nloop\nif ( Ue[i] != null ) then\nset ye=Ue[i]\nset Ue[i]=null\nreturn ye\nendif\nset i=i + 1\nexitwhen i >= 20\nendloop\nreturn null\n"
+      }
+    ],
+    "A0E1": [
+      {
+        "name": "ib",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local integer GI=GetPlayerId(GetOwningPlayer(kv))\nlocal integer i=GetRandomInt(0, 99)\nif ( i < 50 ) then\ncall SetUnitAnimation(kv, \"spell slam\")\ncall TI(kv , 2 + zx[GI * 6 + 3] / 3 , 2 + zx[GI * 6 + 5] / 2 , 75. * IMinBJ(1 + zx[GI * 6 + 1], 4))\nelse\ncall SetUnitAnimation(kv, \"spell throw\")\ncall JR(kv , 5 + zx[GI * 6 + 4] * 2 , 75. * IMinBJ(1 + zx[GI * 6 + 2], 4) , IMaxBJ(IMinBJ(zx[GI * 6 + 5] / 4, 3), 1))\nendif\n"
+      },
+      {
+        "name": "TI",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local player p=GetOwningPlayer(u)\nlocal real an=GetUnitFacing(u)\nlocal integer i=0\nlocal boolean wI=Xe == 0\nlocal real WI=( an + 90. ) * bj_DEGTORAD\nlocal real yI=- 50. * I2R(uI / 2) + 50. * ModuloInteger(uI + 1, 2) / 2.\nlocal real x=GetUnitX(u) + 30. * CosBJ(an)\nlocal real y=GetUnitY(u) + 30. * SinBJ(an)\nlocal real YI=Sin(WI)\nset WI=Cos(WI)\nloop\nset oe[Xe]=CreateUnit(p, 'h03H', x + yI * WI, y + yI * YI, an)\nset re[Xe]=400.\nset ie[Xe]=UI\nset ae[Xe]=0\nset ne[Xe]=null\nset Ve[Xe]=KR\nset Ee[Xe]=false\nset yI=yI + ( 50. )\nset Xe=Xe + 1\nset i=i + 1\nexitwhen i >= uI\nendloop\nset Ee[Xe - 1]=true\nif ( wI ) then\ncall TimerStart(xe, .03, true, function tI)\nendif\n"
+      },
+      {
+        "name": "JR",
+        "available": {
+          "export": true,
+          "clean": true,
+          "jngp": true
+        },
+        "clean_matches_export": true,
+        "jngp_matches_export": true,
+        "body": "local player p=GetOwningPlayer(u)\nlocal real an=GetUnitFacing(u) - 45.\nlocal real LR=an + 90.\nlocal real x=GetUnitX(u)\nlocal real y=GetUnitY(u)\nlocal integer i=0\nloop\nset T[Z]=CreateUnit(p, 'h068', x, y, GetRandomReal(an, LR))\nset U[Z]=500.\nset W[Z]=KR\nset Y[Z]=lR\nif ( Z == 0 ) then\ncall TimerStart(S, .03, true, function jR)\nendif\nset Z=Z + 1\nset i=i + 1\ncall TriggerSleepAction(.04)\nexitwhen i >= kR\nendloop\n"
+      }
+    ]
+  },
+  "nerubian": {
+    "CFNerubProcessBroodStructures": "\tlocal unit u\n\tloop\n\t\tset u=FirstOfGroup(CFNerubBroodStructures)\n\t\texitwhen u == null\n\t\tcall GroupRemoveUnit(CFNerubBroodStructures, u)\n\t\tif ( GetWidgetLife(u) > .405 ) then\n\t\t\tcall GroupAddUnit(CFNerubBroodStructures, u)\n\t\t\tif ( CFNerubCooldownReady(u , CFNerubCooldownKeyBrood) ) then\n\t\t\t\tset Hv=u\n\t\t\t\tcall ag()\n\t\t\t\tcall CFNerubStartCooldown(u , CFNerubCooldownKeyBrood , 14.)\n\t\t\tendif\n\t\tendif\n\t\tset u=null\n\tendloop\n",
+    "CFNerubProcessAcidStructures": "\tlocal unit u\n\tloop\n\t\tset u=FirstOfGroup(CFNerubAcidStructures)\n\t\texitwhen u == null\n\t\tcall GroupRemoveUnit(CFNerubAcidStructures, u)\n\t\tif ( GetWidgetLife(u) > .405 ) then\n\t\t\tcall GroupAddUnit(CFNerubAcidStructures, u)\n\t\t\tif ( CFNerubCooldownReady(u , CFNerubCooldownKeyAcid) ) then\n\t\t\t\tset Hv=u\n\t\t\t\tcall Vg()\n\t\t\t\tcall CFNerubStartCooldown(u , CFNerubCooldownKeyAcid , 12.)\n\t\t\tendif\n\t\tendif\n\t\tset u=null\n\tendloop\n",
+    "CFNerubProcessPlagueStructures": "\tlocal unit u\n\tloop\n\t\tset u=FirstOfGroup(CFNerubPlagueStructures)\n\t\texitwhen u == null\n\t\tcall GroupRemoveUnit(CFNerubPlagueStructures, u)\n\t\tif ( GetWidgetLife(u) > .405 ) then\n\t\t\tcall GroupAddUnit(CFNerubPlagueStructures, u)\n\t\t\tif ( CFNerubCooldownReady(u , CFNerubCooldownKeyPlague) ) then\n\t\t\t\tset Hv=u\n\t\t\t\tcall wb()\n\t\t\t\tcall CFNerubStartCooldown(u , CFNerubCooldownKeyPlague , 35.)\n\t\t\tendif\n\t\tendif\n\t\tset u=null\n\tendloop\n"
+  },
+  "castle": {
+    "base": "hcas",
+    "hp": 5000,
+    "armor": 5,
+    "armor_type": "fortified",
+    "hp_regen": 0.5,
+    "regen_type": "always",
+    "collision_wc3": 172
+  },
+  "targeting": {
+    "castle_march": "call IssuePointOrderByIdLoc(u,$D000F,Gi[ea[GetPlayerId(GetOwningPlayer(u))]])\n",
+    "ai_radius_wc3": 700,
+    "source": "JASS cB/CB attack-move to Gi; xC/TC and related AI selectors search nearby units in radius 700. Close structure acquisition is kept separate from this unit radius."
+  }
+}

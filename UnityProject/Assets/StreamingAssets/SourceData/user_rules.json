@@ -1,0 +1,119 @@
+{
+  "source": "User descriptions and Castle Fight FAQ, 2026-10-21; local dd.j for omitted parameters",
+  "abilities": {
+    "A00K": {
+      "kind": "warlock_blast",
+      "name": "Магический взрыв",
+      "description": "Магический взрыв: 150 урона наземным врагам в радиусе 370 вокруг цели, перезарядка 5 с. Баланс порта по просьбе игрока 22.10.2026. В исходной карте A0F9: 270 урона и радиус 370.",
+      "cd": 5,
+      "mana": 0,
+      "range": 26.6666666667,
+      "area": 12.333333333333334,
+      "power": 150,
+      "provisional": false,
+      "targets": "ground,enemy"
+    },
+    "A01K": {
+      "kind": "holy_power",
+      "name": "Святая сила",
+      "description": "За 7 маны: +50% скорости атаки союзным бойцам в радиусе 500 на 60 с; повторное применение обновляет время. dd.j lf/Kf и A016.",
+      "cd": 1,
+      "mana": 7,
+      "range": 16.666666666666668,
+      "haste": 0.5,
+      "duration": 60
+    },
+    "A06R": {
+      "kind": "chaos_gift",
+      "description": "Случайный враг: взрыв без награды; смерть с наградой; 500 урона; +400 здоровья и +25 урона с полным исцелением; Hex; Banish; оглушение 6 с и 200 магического урона; превращение в союзную Мутацию; либо ничего. Каждое действие — 10%, ничего — 20% (dd.j tD). Перезарядка 10 с.",
+      "cd": 10,
+      "mana": 0,
+      "range": 3333.3
+    },
+    "A01W": {
+      "kind": "map_erase",
+      "description": "Убивает всех врагов одного случайно выбранного типа. Перезарядка по уровням: 50 / 37,5 / 25 с.",
+      "cd": 50,
+      "cd_by_building": {
+        "h01M": 50,
+        "h01W": 37.5,
+        "h01X": 25
+      },
+      "mana": 0,
+      "range": 3333.3
+    },
+    "A01J": {
+      "kind": "eruption",
+      "description": "Область вокруг случайного врага: 100 магического урона/с в течение 2,75 с. Одновременно поражает максимум 6 целей. Здания получают 40% урона. Перезарядка 12 с.",
+      "cd": 12,
+      "mana": 0,
+      "range": 3333.3,
+      "area": 10.8333333333,
+      "duration": 2.75,
+      "dps": 100,
+      "target_limit": 6,
+      "building_factor": 0.4
+    },
+    "A01E": {
+      "kind": "hell_fist",
+      "description": "Случайное вражеское здание: 400 хаотического урона и остановка работы. До 20-й минуты — 360 с и 1 урон/с; затем 480/2, с 25-й — 729/3, с 35-й — 1200/4 (dd.j zD, A0EU/A0FE). Редко выбирает легендарные здания или замок. Предварительно: шанс редкой цели 1%, повторной цели 20%. Перезарядка 40 с.",
+      "cd": 40,
+      "mana": 0,
+      "range": 3333.3,
+      "power": 400,
+      "rare_chance": 0.01,
+      "repeat_chance": 0.2
+    },
+    "A015": {
+      "count": 5,
+      "target_limit_confirmed": true,
+      "provisional": false,
+      "user_confirmation": "2026-10-24: до 5 целей в радиусе; если целей меньше, поражает всех доступных; если больше, максимум пять."
+    },
+    "A03N": {
+      "count": 3,
+      "target_limit_confirmed": true,
+      "provisional": false,
+      "user_confirmation": "2026-10-24: улучшенные лучницы тёмных эльфов поражают до 3 и 7 целей соответственно, отдельными стрелами."
+    },
+    "A03O": {
+      "count": 7,
+      "target_limit_confirmed": true,
+      "provisional": false,
+      "user_confirmation": "2026-10-24: улучшенные лучницы тёмных эльфов поражают до 3 и 7 целей соответственно, отдельными стрелами."
+    },
+    "A0FL": {
+      "count": 5,
+      "target_limit_confirmed": true,
+      "provisional": false,
+      "user_confirmation": "2026-10-24: легендарный морж из улучшенного иглу поражает до 5 целей — подтверждено пользователем."
+    }
+  },
+  "notes": [
+    "Building spell mana in the original map encodes a cooldown. The port uses explicit seconds and does not charge that cooldown twice.",
+    "Warlock targeting range provisionally uses native acquisition 800; damage, area and cooldown follow the user approximation.",
+    "Eraser cooldown is interpreted as subtracting 12.5 seconds per upgrade.",
+    "Hell's Fist rare/repeat probabilities are provisional; stage durations and DOT are native.",
+    "Bounty dd.j dR/CR/cR/DR: warning at 40s then every40s; coin 4s later, lifetime4.75s, gold=floor((boxes+4)*0.25*(8+3*wave)).",
+    "Blink has native zero cooldown and mana. Destination is clamped to the playable map; walls can be crossed.",
+    "Rescue Strike: one use per builder per round; 700 area; 4444 chaos followed by4444 spell damage from dd.j pk.",
+    "Human audit 2026-10-23 corrects the earlier provisional Holy Power radius/permanence: lf enumerates 500; A016 lasts 60 seconds. Wizard 150/5s ground-only user balance remains intentional."
+  ],
+  "elemental_confirmations": {
+    "generator": {
+      "automatic": true,
+      "radius_wc3": 500,
+      "manual_target": false,
+      "native_flat_mana_regen": [
+        0.15,
+        0.3
+      ],
+      "confirmed": "2026-10-24"
+    },
+    "link": {
+      "same_rawcode_heals_more": true,
+      "other_type_multiplier": 0.3,
+      "confirmed": "2026-10-24"
+    }
+  }
+}

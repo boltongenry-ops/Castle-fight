@@ -1,0 +1,218 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!29 &1
+OcclusionCullingSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_OcclusionBakeSettings:
+    smallestOccluder: 5
+    smallestHole: 0.25
+    backfaceThreshold: 100
+  m_SceneGUID: 00000000000000000000000000000000
+  m_OcclusionCullingData: {fileID: 0}
+--- !u!104 &2
+RenderSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 10
+  m_Fog: 0
+  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_FogMode: 3
+  m_FogDensity: 0.01
+  m_LinearFogStart: 0
+  m_LinearFogEnd: 300
+  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
+  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
+  m_AmbientIntensity: 1
+  m_AmbientMode: 0
+  m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_HaloStrength: 0.5
+  m_FlareStrength: 1
+  m_FlareFadeSpeed: 3
+  m_HaloTexture: {fileID: 0}
+  m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
+  m_DefaultReflectionMode: 0
+  m_DefaultReflectionResolution: 128
+  m_ReflectionBounces: 1
+  m_ReflectionIntensity: 1
+  m_CustomReflection: {fileID: 0}
+  m_Sun: {fileID: 0}
+  m_UseRadianceAmbientProbe: 0
+--- !u!157 &3
+LightmapSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
+  m_GISettings:
+    serializedVersion: 2
+    m_BounceScale: 1
+    m_IndirectOutputScale: 1
+    m_AlbedoBoost: 1
+    m_EnvironmentLightingMode: 0
+    m_EnableBakedLightmaps: 1
+    m_EnableRealtimeLightmaps: 0
+  m_LightmapEditorSettings:
+    serializedVersion: 12
+    m_Resolution: 2
+    m_BakeResolution: 40
+    m_AtlasSize: 1024
+    m_AO: 0
+    m_AOMaxDistance: 1
+    m_CompAOExponent: 1
+    m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
+    m_Padding: 2
+    m_LightmapParameters: {fileID: 0}
+    m_LightmapsBakeMode: 1
+    m_TextureCompression: 1
+    m_ReflectionCompression: 2
+    m_MixedBakeMode: 2
+    m_BakeBackend: 2
+    m_PVRSampling: 1
+    m_PVRDirectSampleCount: 32
+    m_PVRSampleCount: 512
+    m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 256
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 1
+    m_PVRDenoiserTypeDirect: 2
+    m_PVRDenoiserTypeIndirect: 2
+    m_PVRDenoiserTypeAO: 2
+    m_PVRFilterTypeDirect: 0
+    m_PVRFilterTypeIndirect: 0
+    m_PVRFilterTypeAO: 0
+    m_PVREnvironmentMIS: 1
+    m_PVRCulling: 1
+    m_PVRFilteringGaussRadiusDirect: 1
+    m_PVRFilteringGaussRadiusIndirect: 1
+    m_PVRFilteringGaussRadiusAO: 1
+    m_PVRFilteringAtrousPositionSigmaDirect: 0.5
+    m_PVRFilteringAtrousPositionSigmaIndirect: 2
+    m_PVRFilteringAtrousPositionSigmaAO: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
+  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightingSettings: {fileID: 0}
+--- !u!196 &4
+NavMeshSettings:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_BuildSettings:
+    serializedVersion: 3
+    agentTypeID: 0
+    agentRadius: 0.5
+    agentHeight: 2
+    agentSlope: 45
+    agentClimb: 0.4
+    ledgeDropHeight: 0
+    maxJumpAcrossDistance: 0
+    minRegionArea: 2
+    manualCellSize: 0
+    cellSize: 0.16666667
+    manualTileSize: 0
+    tileSize: 256
+    buildHeightMesh: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
+    debug:
+      m_Flags: 0
+  m_NavMeshData: {fileID: 0}
+--- !u!1 &1751774937
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1751774939}
+  - component: {fileID: 1751774938}
+  m_Layer: 0
+  m_Name: Castle Fight Lab
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1751774938
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1751774937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc513a0de247db14494142aa85955152, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CastleFight.BattleLab
+  models:
+  - {fileID: 4332587747498395280, guid: 2c47ca53db77eee4095a62fc946a9696, type: 3}
+  - {fileID: 7374745519139907755, guid: b93ab656b188ef84a98b79c91500e3bc, type: 3}
+  groundTextures:
+  - {fileID: 2800000, guid: 598d918dadfa4134d9455af0190b52a2, type: 3}
+  - {fileID: 2800000, guid: cc13e07a152096446b8662e768aaf9f9, type: 3}
+  - {fileID: 2800000, guid: 977d7fdfac27e6741855509b11e4183d, type: 3}
+  - {fileID: 2800000, guid: d9b558ffb84cd7141869492d1b817d48, type: 3}
+  - {fileID: 2800000, guid: cdd784757535ad0468fc4961315c6449, type: 3}
+  - {fileID: 2800000, guid: 05e4edca411de5b48813ed631a43e505, type: 3}
+  - {fileID: 2800000, guid: 451e7b50b5e4b354484ae2c5d74a2538, type: 3}
+  - {fileID: 2800000, guid: 49027b9bbdba31a478f9ff1575eab8c7, type: 3}
+  - {fileID: 2800000, guid: 907cdd63f203e7742b5aac8f57fa053e, type: 3}
+  groundMaterial: {fileID: 2100000, guid: ea55d97bf1a82cc439bdaf0fbb7ccc6b, type: 2}
+  particleMaterial: {fileID: 2100000, guid: c018194af972e5f4987a7190f6de663a, type: 2}
+  unitCount: 300
+  blueClips:
+  - {fileID: 7400000, guid: c29d99922c0e85747866aef18fa65310, type: 2}
+  - {fileID: 7400000, guid: 26b5c04e65c454c47b8cb48beac7d01d, type: 2}
+  - {fileID: 7400000, guid: e1012c211a0d3b948a9675ae47c51089, type: 2}
+  - {fileID: 7400000, guid: 8d5ff4c68dec4ee46b1108e8a8b533ce, type: 2}
+  - {fileID: 7400000, guid: 054f2db6c45dad94f9bb3e0095cd16fd, type: 2}
+  - {fileID: 7400000, guid: c31eb427213fd8e44a08626adf1f0b07, type: 2}
+  - {fileID: 7400000, guid: 499452e056f694f4f9bc68de873a293d, type: 2}
+  - {fileID: 7400000, guid: 4ad4c08ecfe1f6c4380c96c869ffea00, type: 2}
+  - {fileID: 7400000, guid: 0136fb78550971c4fa510ec891963bbb, type: 2}
+  - {fileID: 7400000, guid: ec6c05d526e0b194c805969cc2f48427, type: 2}
+  - {fileID: 7400000, guid: 00cd8b1d27ad4ca45be55b81ef6b0ff5, type: 2}
+  - {fileID: 7400000, guid: 5ed1e7a65b0be524494a78d0aa18487c, type: 2}
+  - {fileID: 7400000, guid: cbce3ac1cd7acf74cb23f1498288de0f, type: 2}
+  - {fileID: 7400000, guid: 07493fd486a92fa4da5de3a598973f92, type: 2}
+  - {fileID: 7400000, guid: 7bfe8034075a3d8438183ac5081afecc, type: 2}
+  redClips:
+  - {fileID: 7400000, guid: 1532d6d3dfc7b304cbb0713cfa94eb75, type: 2}
+  - {fileID: 7400000, guid: f72157f7597e9a74ea458884ef2906c5, type: 2}
+  - {fileID: 7400000, guid: 2db5dec428bdbf54e8c8e34c41ca33b4, type: 2}
+  - {fileID: 7400000, guid: e64b7ead64eb7bf4982931164fb0b919, type: 2}
+  - {fileID: 7400000, guid: ac8ab3bfb86bccc4b82d9f99db5b72a2, type: 2}
+  - {fileID: 7400000, guid: b10f4dbde657ee34b9d4e065930d2b8e, type: 2}
+  - {fileID: 7400000, guid: c0e03d25bd03958428ac624ec2d45e29, type: 2}
+  - {fileID: 7400000, guid: 6f16a0b5aa0062a409956a4d8c395f8e, type: 2}
+  - {fileID: 7400000, guid: fdf19ee139fc5354a9e0f955110d9f65, type: 2}
+  - {fileID: 7400000, guid: 082b284f974304f41866af686ec987b7, type: 2}
+  - {fileID: 7400000, guid: 20c6bcc040e98c741b19f402fa2a0999, type: 2}
+  - {fileID: 7400000, guid: c5e3164948e718149a2491c081d2f78a, type: 2}
+  - {fileID: 7400000, guid: c1703ecf88df2f946a56f9a2d1dd2ce6, type: 2}
+  - {fileID: 7400000, guid: e240af813d2597f4cb23472cd19d5051, type: 2}
+  - {fileID: 7400000, guid: 5b2f2c8aa166e1647b381d1fffe8d771, type: 2}
+--- !u!4 &1751774939
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1751774937}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1660057539 &9223372036854775807
+SceneRoots:
+  m_ObjectHideFlags: 0
+  m_Roots:
+  - {fileID: 1751774939}

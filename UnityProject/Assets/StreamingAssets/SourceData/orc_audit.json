@@ -1,0 +1,720 @@
+{
+  "date": "2026-10-23",
+  "version": "0.6.8-dev",
+  "scope": {
+    "objects": 34,
+    "skills": 51,
+    "source_objects": 36,
+    "source_checks": 660
+  },
+  "status": "PASS_WITH_ENGINE_LIMITS",
+  "errors": [],
+  "remaining": [],
+  "models": [
+    {
+      "id": "h019",
+      "model": "res://assets/models_races/orcish_horde.glb",
+      "source": "units\\orc\\Peon\\Peon.mdx",
+      "exists": true,
+      "source_sha256": "0c55af81eb7ec150fa8bc911437ce07e9119e574501aac3a9d145488035e5716",
+      "extracted_sha256": "0c55af81eb7ec150fa8bc911437ce07e9119e574501aac3a9d145488035e5716",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Walk",
+        "Attack",
+        "Stand Work",
+        "attack gold",
+        "stand work gold",
+        "Attack Lumber",
+        "Stand Work Lumber",
+        "Attack - 2",
+        "Stand Ready",
+        "Stand Ready Gold",
+        "Stand Ready Lumber",
+        "Stand - itch head",
+        "Stand - Talk gesture",
+        "Stand - Stretch",
+        "Death",
+        "Walk Lumber",
+        "Walk Gold",
+        "Stand Gold",
+        "Stand Lumber",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h02R",
+      "model": "res://assets/models_lines/h02R_b.glb",
+      "source": "buildings\\orc\\TaurenTotem\\TaurenTotem.mdx",
+      "exists": true,
+      "source_sha256": "9402444f4a5f088342591ef54a8136089c627856cdd6b764b742a6da390e0b2c",
+      "extracted_sha256": "9402444f4a5f088342591ef54a8136089c627856cdd6b764b742a6da390e0b2c",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand Work",
+        "Birth",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h02P",
+      "model": "res://assets/models_lines/h02P_b.glb",
+      "source": "buildings\\other\\Mercenary\\Mercenary.mdx",
+      "exists": true,
+      "source_sha256": "39db669adacc7e225911021cc102f9b42e24191ec24fa9728240dd0a9dc42ee9",
+      "extracted_sha256": "39db669adacc7e225911021cc102f9b42e24191ec24fa9728240dd0a9dc42ee9",
+      "source_matches": true,
+      "sequences": [
+        "Stand 1",
+        "Stand Work",
+        "Portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "o009",
+      "model": "res://assets/models_lines/o009_u.glb",
+      "source": "units\\orc\\WyvernRider\\WyvernRider.mdx",
+      "exists": true,
+      "source_sha256": "c413b7327820f9b526529fd4503a297475e5b5d4727dff78615946b9fa210f9a",
+      "extracted_sha256": "c413b7327820f9b526529fd4503a297475e5b5d4727dff78615946b9fa210f9a",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand Victory",
+        "Stand - 4",
+        "Walk",
+        "Walk - 2",
+        "attack",
+        "Spell",
+        "Death",
+        "Stand Hit"
+      ]
+    },
+    {
+      "id": "h02K",
+      "model": "res://assets/models_lines/h02K_b.glb",
+      "source": "buildings\\other\\PigFarm\\PigFarm.mdx",
+      "exists": true,
+      "source_sha256": "42c4991552532b972f07c568192a737aac7b3d9c6cc7442757322103d8ce4b3a",
+      "extracted_sha256": "42c4991552532b972f07c568192a737aac7b3d9c6cc7442757322103d8ce4b3a",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h092",
+      "model": "res://assets/models_lines/h092_b.glb",
+      "source": "buildings\\other\\PigFarm\\PigFarm.mdx",
+      "exists": true,
+      "source_sha256": "42c4991552532b972f07c568192a737aac7b3d9c6cc7442757322103d8ce4b3a",
+      "extracted_sha256": "42c4991552532b972f07c568192a737aac7b3d9c6cc7442757322103d8ce4b3a",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "o00B",
+      "model": "res://assets/models_lines/o00B_u.glb",
+      "source": "units\\orc\\KotoBeast\\KotoBeast.mdx",
+      "exists": true,
+      "source_sha256": "5833f03969673bcb5fbae781da7b7bf49ea3a7d550746f3639641c3824190006",
+      "extracted_sha256": "5833f03969673bcb5fbae781da7b7bf49ea3a7d550746f3639641c3824190006",
+      "source_matches": true,
+      "sequences": [
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Spell Slam",
+        "Stand Channel - 3",
+        "Stand Channel - 1",
+        "Walk",
+        "oldStand",
+        "oldStand -2",
+        "Walk Channel Fast",
+        "Walk Fast",
+        "Walk Channel",
+        "Attack",
+        "Spell Puke"
+      ]
+    },
+    {
+      "id": "h035",
+      "model": "res://assets/models_lines/h035_b.glb",
+      "source": "buildings\\other\\PigFarm\\PigFarm.mdx",
+      "exists": true,
+      "source_sha256": "42c4991552532b972f07c568192a737aac7b3d9c6cc7442757322103d8ce4b3a",
+      "extracted_sha256": "42c4991552532b972f07c568192a737aac7b3d9c6cc7442757322103d8ce4b3a",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "o008",
+      "model": "res://assets/models_lines/o008_u.glb",
+      "source": "units\\demon\\ChaosKotoBeast\\ChaosKotoBeast.mdx",
+      "exists": true,
+      "source_sha256": "85b402ce96629fcd0164ca21fac978b21886f5b99cee8bcd47806a52145fc208",
+      "extracted_sha256": "85b402ce96629fcd0164ca21fac978b21886f5b99cee8bcd47806a52145fc208",
+      "source_matches": true,
+      "sequences": [
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Spell Slam",
+        "Stand Channel - 3",
+        "Stand Channel - 1",
+        "Walk",
+        "oldStand",
+        "oldStand -2",
+        "Walk Channel Fast",
+        "Walk Fast",
+        "Walk Channel",
+        "Attack",
+        "Spell Puke"
+      ]
+    },
+    {
+      "id": "h036",
+      "model": "res://assets/models_lines/h036_b.glb",
+      "source": "buildings\\other\\PigFarm\\PigFarm.mdx",
+      "exists": true,
+      "source_sha256": "42c4991552532b972f07c568192a737aac7b3d9c6cc7442757322103d8ce4b3a",
+      "extracted_sha256": "42c4991552532b972f07c568192a737aac7b3d9c6cc7442757322103d8ce4b3a",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "o006",
+      "model": "res://assets/models_lines/o006_u.glb",
+      "source": "units\\orc\\KotoBeast\\KotoBeast.mdx",
+      "exists": true,
+      "source_sha256": "5833f03969673bcb5fbae781da7b7bf49ea3a7d550746f3639641c3824190006",
+      "extracted_sha256": "5833f03969673bcb5fbae781da7b7bf49ea3a7d550746f3639641c3824190006",
+      "source_matches": true,
+      "sequences": [
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Spell Slam",
+        "Stand Channel - 3",
+        "Stand Channel - 1",
+        "Walk",
+        "oldStand",
+        "oldStand -2",
+        "Walk Channel Fast",
+        "Walk Fast",
+        "Walk Channel",
+        "Attack",
+        "Spell Puke"
+      ]
+    },
+    {
+      "id": "o007",
+      "model": "res://assets/models_lines/o007_u.glb",
+      "source": "units\\orc\\KotoBeastNoRider\\KotoBeastNoRider.mdx",
+      "exists": true,
+      "source_sha256": "44c545ed87b17231c763caf903b5d303fee16fc24162a11ab64c1267bd8262de",
+      "extracted_sha256": "44c545ed87b17231c763caf903b5d303fee16fc24162a11ab64c1267bd8262de",
+      "source_matches": true,
+      "sequences": [
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Spell Slam",
+        "Walk",
+        "Stand",
+        "Stand - 2",
+        "Walk Fast",
+        "Attack"
+      ]
+    },
+    {
+      "id": "h02O",
+      "model": "res://assets/models_lines/h02O_b.glb",
+      "source": "units\\orc\\StasisTotem\\StasisTotem.mdx",
+      "exists": true,
+      "source_sha256": "0cdc39b412c748d25dc93dfa7e8571612d2b675f692200d80e90983543a9663a",
+      "extracted_sha256": "0cdc39b412c748d25dc93dfa7e8571612d2b675f692200d80e90983543a9663a",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Portrait",
+        "Stand",
+        "Death Alternate",
+        "Death",
+        "Stand Alternate"
+      ]
+    },
+    {
+      "id": "h02N",
+      "model": "res://assets/models_lines/h02N_b.glb",
+      "source": "units\\orc\\SerpentWard\\SerpentWard.mdx",
+      "exists": true,
+      "source_sha256": "a91f1de5b9df569e112fbfba475109ba4b3389053b3371bbdd41d467fa223a9d",
+      "extracted_sha256": "a91f1de5b9df569e112fbfba475109ba4b3389053b3371bbdd41d467fa223a9d",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Attack",
+        "Death",
+        "Portrait"
+      ]
+    },
+    {
+      "id": "h029",
+      "model": "res://assets/models_lines/h029_b.glb",
+      "source": "buildings\\orc\\GreatHall\\GreatHall.mdx",
+      "exists": true,
+      "source_sha256": "5add42ef316402d1813432df671c1f436482332c558684fbd3f775ffd3203e3a",
+      "extracted_sha256": "5add42ef316402d1813432df671c1f436482332c558684fbd3f775ffd3203e3a",
+      "source_matches": true,
+      "sequences": [
+        "birth",
+        "Stand Work",
+        "stand",
+        "Death",
+        "Decay",
+        "Stand Upgrade First",
+        "Stand Work Upgrade First",
+        "Stand Upgrade Second",
+        "Stand Work Upgrade Second",
+        "Portrait -1",
+        "Portrait Upgrade First",
+        "Portrait Upgrade Second",
+        "Birth Upgrade First",
+        "Birth Upgrade Second"
+      ]
+    },
+    {
+      "id": "h02U",
+      "model": "res://assets/models_lines/h02U_b.glb",
+      "source": "buildings\\orc\\GreatHall\\GreatHall.mdx",
+      "exists": true,
+      "source_sha256": "5add42ef316402d1813432df671c1f436482332c558684fbd3f775ffd3203e3a",
+      "extracted_sha256": "5add42ef316402d1813432df671c1f436482332c558684fbd3f775ffd3203e3a",
+      "source_matches": true,
+      "sequences": [
+        "birth",
+        "Stand Work",
+        "stand",
+        "Death",
+        "Decay",
+        "Stand Upgrade First",
+        "Stand Work Upgrade First",
+        "Stand Upgrade Second",
+        "Stand Work Upgrade Second",
+        "Portrait -1",
+        "Portrait Upgrade First",
+        "Portrait Upgrade Second",
+        "Birth Upgrade First",
+        "Birth Upgrade Second"
+      ]
+    },
+    {
+      "id": "h031",
+      "model": "res://assets/models_lines/h031_b.glb",
+      "source": "buildings\\orc\\GreatHall\\GreatHall.mdx",
+      "exists": true,
+      "source_sha256": "5add42ef316402d1813432df671c1f436482332c558684fbd3f775ffd3203e3a",
+      "extracted_sha256": "5add42ef316402d1813432df671c1f436482332c558684fbd3f775ffd3203e3a",
+      "source_matches": true,
+      "sequences": [
+        "birth",
+        "Stand Work",
+        "stand",
+        "Death",
+        "Decay",
+        "Stand Upgrade First",
+        "Stand Work Upgrade First",
+        "Stand Upgrade Second",
+        "Stand Work Upgrade Second",
+        "Portrait -1",
+        "Portrait Upgrade First",
+        "Portrait Upgrade Second",
+        "Birth Upgrade First",
+        "Birth Upgrade Second"
+      ]
+    },
+    {
+      "id": "o005",
+      "model": "res://assets/models_lines/o005_u.glb",
+      "source": "units\\orc\\Hellscream\\Hellscream.mdx",
+      "exists": true,
+      "source_sha256": "e06a6a761db5aa7d3fade592329d56c74c55ba295b30b9ca02c0b9c184d32d2c",
+      "extracted_sha256": "e06a6a761db5aa7d3fade592329d56c74c55ba295b30b9ca02c0b9c184d32d2c",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 2",
+        "Attack",
+        "Attack Slam",
+        "Stand - 4",
+        "Death",
+        "Walk",
+        "Stand",
+        "Attack 2",
+        "Stand Ready",
+        "Stand Victory",
+        "Dissipate",
+        "Attack Walk Stand Spin",
+        "Stand First",
+        "Stand Second",
+        "Stand Third",
+        "Stand Fourth"
+      ]
+    },
+    {
+      "id": "o004",
+      "model": "res://assets/models_lines/o004_u.glb",
+      "source": "units\\demon\\ChaosGrunt\\ChaosGrunt.mdx",
+      "exists": true,
+      "source_sha256": "39afe072d5480bc8683705e3110fbbb17e656c2cc230588c3858011424ad002e",
+      "extracted_sha256": "39afe072d5480bc8683705e3110fbbb17e656c2cc230588c3858011424ad002e",
+      "source_matches": true,
+      "sequences": [
+        "walk",
+        "Stand - 1",
+        "Attack - 1",
+        "Death",
+        "Decay Flesh",
+        "Attack - 2",
+        "Stand - 2",
+        "Stand Victory",
+        "Stand - 3",
+        "Spell",
+        "Stand Ready",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "o002",
+      "model": "res://assets/models_lines/o002_u.glb",
+      "source": "units\\orc\\Grunt\\Grunt.mdx",
+      "exists": true,
+      "source_sha256": "d16ef262d319a46a819657d3d522788d8420974dd5b313d50652ee5fa85baa34",
+      "extracted_sha256": "d16ef262d319a46a819657d3d522788d8420974dd5b313d50652ee5fa85baa34",
+      "source_matches": true,
+      "sequences": [
+        "walk",
+        "Stand - 1",
+        "Attack - 1",
+        "Death",
+        "Decay Flesh",
+        "Attack - 2",
+        "Stand - 2",
+        "Stand Victory",
+        "Stand - 3",
+        "Spell",
+        "Stand Ready",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h02B",
+      "model": "res://assets/models_lines/h02B_b.glb",
+      "source": "buildings\\orc\\SpiritLodge\\SpiritLodge.mdx",
+      "exists": true,
+      "source_sha256": "b9be1b708ec3f3d20ff301717a6b1d014b5fc86d9f66f00925ff31067b6cae4a",
+      "extracted_sha256": "b9be1b708ec3f3d20ff301717a6b1d014b5fc86d9f66f00925ff31067b6cae4a",
+      "source_matches": true,
+      "sequences": [
+        "unused",
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h06I",
+      "model": "res://assets/models_lines/h06I_b.glb",
+      "source": "buildings\\orc\\SpiritLodge\\SpiritLodge.mdx",
+      "exists": true,
+      "source_sha256": "b9be1b708ec3f3d20ff301717a6b1d014b5fc86d9f66f00925ff31067b6cae4a",
+      "extracted_sha256": "b9be1b708ec3f3d20ff301717a6b1d014b5fc86d9f66f00925ff31067b6cae4a",
+      "source_matches": true,
+      "sequences": [
+        "unused",
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "o00F",
+      "model": "res://assets/models_lines/o00F_u.glb",
+      "source": "units\\orc\\OrcWarlockGuldan\\OrcWarlockGuldan.mdx",
+      "exists": true,
+      "source_sha256": "e8bdc0e059763fe9d1b964eb75111c17e3100d1c9e784fef103c2a4eb49f60e6",
+      "extracted_sha256": "e8bdc0e059763fe9d1b964eb75111c17e3100d1c9e784fef103c2a4eb49f60e6",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand Ready",
+        "Spell",
+        "Attack -1",
+        "Death",
+        "Walk",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "o003",
+      "model": "res://assets/models_lines/o003_u.glb",
+      "source": "units\\orc\\Shaman\\Shaman.mdx",
+      "exists": true,
+      "source_sha256": "104c028b035aed52668d42d58fca13cf8d1ecf12a347a4c747ae57bec8e42990",
+      "extracted_sha256": "104c028b035aed52668d42d58fca13cf8d1ecf12a347a4c747ae57bec8e42990",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 4",
+        "Attack -1",
+        "Attack -2",
+        "Death",
+        "Walk",
+        "Spell",
+        "Spell 2",
+        "Stand Ready",
+        "Stand Victory",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h02I",
+      "model": "res://assets/models_lines/h02I_b.glb",
+      "source": "buildings\\orc\\WarMill\\WarMill.mdx",
+      "exists": true,
+      "source_sha256": "148fd3c1b369e74846808b690642ad7b1d0fa2db254b4004af90c9a9c3205880",
+      "extracted_sha256": "148fd3c1b369e74846808b690642ad7b1d0fa2db254b4004af90c9a9c3205880",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "o001",
+      "model": "res://assets/models_lines/o001_u.glb",
+      "source": "units\\orc\\catapult\\catapult.mdx",
+      "exists": true,
+      "source_sha256": "c85f4e42b44b29014af72fafcf843eff02fed01758194e1e39d4204ab0951ab5",
+      "extracted_sha256": "c85f4e42b44b29014af72fafcf843eff02fed01758194e1e39d4204ab0951ab5",
+      "source_matches": true,
+      "sequences": [
+        "walk",
+        "Stand",
+        "Attack",
+        "Death",
+        "Decay",
+        "Portrait"
+      ]
+    },
+    {
+      "id": "o000",
+      "model": "res://assets/models_lines/o000_b.glb",
+      "source": "buildings\\orc\\WatchTower\\WatchTower.mdx",
+      "exists": true,
+      "source_sha256": "2dc0315b1cc0d5e78dcaaaf5588d07820449d357918f1607dc9b53cb7ff3593c",
+      "extracted_sha256": "2dc0315b1cc0d5e78dcaaaf5588d07820449d357918f1607dc9b53cb7ff3593c",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h008",
+      "model": "res://assets/models_lines/h008_b.glb",
+      "source": "buildings\\other\\MagicVault\\MagicVault.mdx",
+      "exists": true,
+      "source_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "extracted_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h02H",
+      "model": "res://assets/models_lines/h02H_b.glb",
+      "source": "buildings\\other\\ForestTrollHut1\\ForestTrollHut1.mdx",
+      "exists": true,
+      "source_sha256": "9bb8b5c6441ad1eeb352998edcfdf3d69ed3759f10540f8e1f9b09053163d3c6",
+      "extracted_sha256": "9bb8b5c6441ad1eeb352998edcfdf3d69ed3759f10540f8e1f9b09053163d3c6",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "h05E",
+      "model": "res://assets/models_lines/h05E_b.glb",
+      "source": "buildings\\other\\ForestTrollHut0\\ForestTrollHut0.mdx",
+      "exists": true,
+      "source_sha256": "3daf97ece35a068dd00f3a9ef38771981f9ffc1e5c85e680aa0ee551eb91f663",
+      "extracted_sha256": "3daf97ece35a068dd00f3a9ef38771981f9ffc1e5c85e680aa0ee551eb91f663",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "h06D",
+      "model": "res://assets/models_lines/h06D_b.glb",
+      "source": "buildings\\other\\GnollHut2\\GnollHut2.mdx",
+      "exists": true,
+      "source_sha256": "32012791ab19729325d28572f6bc007403ee8fb07e8215c82c381a02865bca75",
+      "extracted_sha256": "32012791ab19729325d28572f6bc007403ee8fb07e8215c82c381a02865bca75",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Death",
+        "Portrait",
+        "Decay"
+      ]
+    },
+    {
+      "id": "n02G",
+      "model": "res://assets/models_lines/n02G_u.glb",
+      "source": "units\\creeps\\ForestTrollTrapper\\ForestTrollTrapper.mdx",
+      "exists": true,
+      "source_sha256": "37ddd04ec640078eb8d42d852fe0ac88c9a8db2e8b8307be5cdfa121e042f6c9",
+      "extracted_sha256": "37ddd04ec640078eb8d42d852fe0ac88c9a8db2e8b8307be5cdfa121e042f6c9",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand - 3",
+        "oldSpell -Berserk",
+        "Attack - 1",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Walk - 1",
+        "Spell - Entangle"
+      ]
+    },
+    {
+      "id": "n01O",
+      "model": "res://assets/models_lines/n01O_u.glb",
+      "source": "units\\creeps\\DarkTrollTrapper\\DarkTrollTrapper.mdx",
+      "exists": true,
+      "source_sha256": "5e06486ccd2ad3910a231d9dd79644f31d06cb0c5535e67edff48855b16098a1",
+      "extracted_sha256": "5e06486ccd2ad3910a231d9dd79644f31d06cb0c5535e67edff48855b16098a1",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand - 3",
+        "oldSpell -Berserk",
+        "Attack - 1",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Walk - 1",
+        "Spell - Entangle"
+      ]
+    },
+    {
+      "id": "n00V",
+      "model": "res://assets/models_lines/n00V_u.glb",
+      "source": "units\\creeps\\DarkTroll\\DarkTroll.mdx",
+      "exists": true,
+      "source_sha256": "e9027d3d8a50b9697d8847216e2e7b6548613eb5ce85fc50420a3e3bbe11007d",
+      "extracted_sha256": "e9027d3d8a50b9697d8847216e2e7b6548613eb5ce85fc50420a3e3bbe11007d",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Stand - 3",
+        "Spell -Berserk",
+        "Attack - 1",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone",
+        "Walk - 1",
+        "Spell - Entangle"
+      ]
+    }
+  ],
+  "source_audit": "orc_source_audit.json",
+  "native_mana": {
+    "h02R": {
+      "capacity": 11,
+      "start": 0,
+      "regen": 1
+    },
+    "h02O": {
+      "capacity": 45,
+      "start": 0,
+      "regen": 1
+    },
+    "h02N": {
+      "capacity": 15,
+      "start": 0,
+      "regen": 1
+    }
+  },
+  "limits": [
+    "No original WC3 runtime or physical Android comparison.",
+    "Native spell-steal edge cases, artillery fire pulse boundaries and shared native buff interactions require original-engine confirmation.",
+    "Particle billboard/atlas/ribbon and missile Death remain renderer limitations."
+  ],
+  "android": {
+    "exported": false,
+    "physical_device_tested": false,
+    "last_build": "0.6.7"
+  }
+}

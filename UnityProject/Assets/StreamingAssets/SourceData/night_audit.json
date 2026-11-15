@@ -1,0 +1,562 @@
+{
+  "date": "2026-10-24",
+  "version": "0.6.8-dev",
+  "scope": {
+    "objects": 28,
+    "skills": 48,
+    "source_objects": 39,
+    "source_checks": 968
+  },
+  "status": "PASS_WITH_ENGINE_LIMITS",
+  "errors": [],
+  "remaining": [],
+  "models": [
+    {
+      "id": "h089",
+      "model": "res://assets/models_races/night_elfs.glb",
+      "source": "units\\nightelf\\Runner\\Runner.mdx",
+      "exists": true,
+      "source_sha256": "ef76cbc43880ed4fe74fbdbbe0758beb9bc660c6b218f2187bcae3f036520da9",
+      "extracted_sha256": "ef76cbc43880ed4fe74fbdbbe0758beb9bc660c6b218f2187bcae3f036520da9",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 4",
+        "Spell",
+        "Attack",
+        "Walk",
+        "Death",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h07H",
+      "model": "res://assets/models_lines/h07H_b.glb",
+      "source": "buildings\\other\\BridgeObelisk\\BridgeObelisk.mdx",
+      "exists": true,
+      "source_sha256": "ae9e83a4b7691cf7ac6580e718e96dfd75ca473be9960756e8279df74faf2b39",
+      "extracted_sha256": "ae9e83a4b7691cf7ac6580e718e96dfd75ca473be9960756e8279df74faf2b39",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Second",
+        "Portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "h08P",
+      "model": "res://assets/models_lines/h08P_b.glb",
+      "source": "Doodads\\Ashenvale\\Structures\\AshenRuinsBlocks\\AshenRuinsBlocks.mdx",
+      "exists": true,
+      "source_sha256": "ddab9890b5e8eb0338e726697a825b4f05d05ed9ddd57f2c19842417ec6c0381",
+      "extracted_sha256": "ddab9890b5e8eb0338e726697a825b4f05d05ed9ddd57f2c19842417ec6c0381",
+      "source_matches": true,
+      "sequences": [
+        "Stand"
+      ]
+    },
+    {
+      "id": "h073",
+      "model": "res://assets/models_lines/h073_b.glb",
+      "source": "Doodads\\Cityscape\\Props\\CrystalLamp\\CrystalLamp.mdx",
+      "exists": true,
+      "source_sha256": "23e9794ee124da751bfe13b4aa4e060e03794e5db559c1b09caf75594f6adb9d",
+      "extracted_sha256": "23e9794ee124da751bfe13b4aa4e060e03794e5db559c1b09caf75594f6adb9d",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Death"
+      ]
+    },
+    {
+      "id": "h07I",
+      "model": "res://assets/models_lines/h07I_b.glb",
+      "source": "doodads\\cinematic\\IcecrownObelisk\\IcecrownObelisk.mdx",
+      "exists": true,
+      "source_sha256": "fe3005c7363df99bbe908adb3bae1dbc1c68e18103673cf61f3b297d9253e989",
+      "extracted_sha256": "fe3005c7363df99bbe908adb3bae1dbc1c68e18103673cf61f3b297d9253e989",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "stand work",
+        "stand alternate",
+        "portrait"
+      ]
+    },
+    {
+      "id": "h088",
+      "model": "res://assets/models_lines/h088_b.glb",
+      "source": "buildings\\nightelf\\MoonWell\\MoonWell.mdx",
+      "exists": true,
+      "source_sha256": "32c9cc736ae4ebf3d23cc37f46cb6f6ff6f0bb1dbed03d72a8a063dc95921686",
+      "extracted_sha256": "32c9cc736ae4ebf3d23cc37f46cb6f6ff6f0bb1dbed03d72a8a063dc95921686",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Portrait",
+        "Stand",
+        "Death"
+      ]
+    },
+    {
+      "id": "h07D",
+      "model": "res://assets/models_lines/h07D_b.glb",
+      "source": "buildings\\nightelf\\AltarOfElders\\AltarOfElders.mdx",
+      "exists": true,
+      "source_sha256": "aea91f6273499f877deed9df99d9b3d01f38864caf001cf1fea22ea231a706ec",
+      "extracted_sha256": "aea91f6273499f877deed9df99d9b3d01f38864caf001cf1fea22ea231a706ec",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "e00J",
+      "model": "res://assets/models_lines/e00J_u.glb",
+      "source": "units\\nightelf\\MalFurion\\MalFurionNoStag.mdx",
+      "exists": true,
+      "source_sha256": "1b2f3263ff504b1a65145bccacd3861e97da942bdd93e27e2e776bcef022c614",
+      "extracted_sha256": "1b2f3263ff504b1a65145bccacd3861e97da942bdd93e27e2e776bcef022c614",
+      "source_matches": true,
+      "sequences": [
+        "Stand -1",
+        "Stand -2",
+        "Spell",
+        "Attack -1",
+        "Attack -2",
+        "Death",
+        "Dissipate",
+        "Walk"
+      ]
+    },
+    {
+      "id": "e007",
+      "model": "res://assets/models_lines/e007_u.glb",
+      "source": "units\\nightelf\\DruidoftheTalon\\DruidoftheTalon.mdx",
+      "exists": true,
+      "source_sha256": "e78909df299809b4214299c45bd3ce1be1d535beb23cb3769b5d2ce7ce0f2729",
+      "extracted_sha256": "e78909df299809b4214299c45bd3ce1be1d535beb23cb3769b5d2ce7ce0f2729",
+      "source_matches": true,
+      "sequences": [
+        "Stand Alternate -1",
+        "Walk Alternate -2",
+        "Walk Alternate -3",
+        "Stand Alternate",
+        "Stand Alternate -2",
+        "Death Alternate",
+        "Walk Alternate",
+        "Stand -1",
+        "Stand -2",
+        "Spell",
+        "Attack -1",
+        "Attack -2",
+        "Death",
+        "Walk",
+        "Morph",
+        "Morph Alternate",
+        "Attack Alternate",
+        "Spell Alternate",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h07M",
+      "model": "res://assets/models_lines/h07M_b.glb",
+      "source": "Buildings\\Other\\ElvenFishVillageBuilding0\\ElvenFishVillageBuilding0.mdx",
+      "exists": true,
+      "source_sha256": "49cf0cf1079d563afb4bec12cc9f495e1c8dbeb1a83d230206174cbd4503d0b7",
+      "extracted_sha256": "49cf0cf1079d563afb4bec12cc9f495e1c8dbeb1a83d230206174cbd4503d0b7",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h07L",
+      "model": "res://assets/models_lines/h07L_b.glb",
+      "source": "Buildings\\Other\\ElvenFishVillageBuilding1\\ElvenFishVillageBuilding1.mdx",
+      "exists": true,
+      "source_sha256": "fb48d07145282072fccdf90fa6f600f7b13f2a305d1cfebca3442201b976b30a",
+      "extracted_sha256": "fb48d07145282072fccdf90fa6f600f7b13f2a305d1cfebca3442201b976b30a",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "n020",
+      "model": "res://assets/models_lines/n020_u.glb",
+      "source": "units\\creeps\\assassin\\assassin.mdx",
+      "exists": true,
+      "source_sha256": "816f673398944f3cc031f28d93617b948472cec71f2dcde1b535458496e2a773",
+      "extracted_sha256": "816f673398944f3cc031f28d93617b948472cec71f2dcde1b535458496e2a773",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Walk",
+        "Death",
+        "Stand Ready",
+        "Spell blink",
+        "Attack - 1",
+        "Decay Flesh",
+        "Decay Bone",
+        "Stand Victory"
+      ]
+    },
+    {
+      "id": "n01Z",
+      "model": "res://assets/models_lines/n01Z_u.glb",
+      "source": "units\\nightelf\\herowarden\\herowarden.mdx",
+      "exists": true,
+      "source_sha256": "69c87538a861c541329f35877c2c56b0fb54f6434bed63d7176fd6e1f5e5079c",
+      "extracted_sha256": "69c87538a861c541329f35877c2c56b0fb54f6434bed63d7176fd6e1f5e5079c",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Stand - 2",
+        "Walk",
+        "Death",
+        "Stand Ready",
+        "Attack - 2",
+        "Spell Slam",
+        "Spell",
+        "Spell Throw",
+        "Attack - 1",
+        "Dissipate",
+        "Stand Channel"
+      ]
+    },
+    {
+      "id": "h07O",
+      "model": "res://assets/models_lines/h07O_b.glb",
+      "source": "Buildings\\Other\\ElvenFishVillageBuildingRuined2\\ElvenFishVillageBuildingRuined2.mdx",
+      "exists": true,
+      "source_sha256": "76e5078b89e23dd3c5b40fac8767972d11753a1d85803bdc69ced9738abbc573",
+      "extracted_sha256": "76e5078b89e23dd3c5b40fac8767972d11753a1d85803bdc69ced9738abbc573",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h07N",
+      "model": "res://assets/models_lines/h07N_b.glb",
+      "source": "Buildings\\Other\\ElvenFishVillageBuildingRuined0\\ElvenFishVillageBuildingRuined0.mdx",
+      "exists": true,
+      "source_sha256": "27d305ca6ec85c6b2994f219f1c6fb1fccd5d4635ca8a0fb0b1dff2836df6997",
+      "extracted_sha256": "27d305ca6ec85c6b2994f219f1c6fb1fccd5d4635ca8a0fb0b1dff2836df6997",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "e00A",
+      "model": "res://assets/models_lines/e00A_u.glb",
+      "source": "units\\nightelf\\SpiritOfVengeance\\SpiritOfVengeance.mdx",
+      "exists": true,
+      "source_sha256": "2b4ca2645507f97b5ea8d7a5b2da655210ee89e1fd090550abe2d53a814f8a43",
+      "extracted_sha256": "2b4ca2645507f97b5ea8d7a5b2da655210ee89e1fd090550abe2d53a814f8a43",
+      "source_matches": true,
+      "sequences": [
+        "Stand - 1",
+        "Walk",
+        "Death",
+        "Stand Ready",
+        "Attack - 2",
+        "Spell",
+        "Attack - 1",
+        "Portrait - 1",
+        "Portrait - 2",
+        "Portrait Talk - 1"
+      ]
+    },
+    {
+      "id": "e00B",
+      "model": "res://assets/models_lines/e00B_u.glb",
+      "source": "units\\nightelf\\Vengeance\\Vengeance.mdx",
+      "exists": true,
+      "source_sha256": "116afe0f28c1a8cc9f295d056648566b208ecf32c0821e25bd787b4927ddc5e9",
+      "extracted_sha256": "116afe0f28c1a8cc9f295d056648566b208ecf32c0821e25bd787b4927ddc5e9",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 4",
+        "Attack",
+        "Walk",
+        "Death"
+      ]
+    },
+    {
+      "id": "h011",
+      "model": "res://assets/models_lines/h011_b.glb",
+      "source": "buildings\\NightElf\\NightElfShipyard\\NightElfShipyard.mdx",
+      "exists": true,
+      "source_sha256": "52d8df60998e6ec91223d8f680aa9dd0db87775220e1525ff5c4b8338d52a71b",
+      "extracted_sha256": "52d8df60998e6ec91223d8f680aa9dd0db87775220e1525ff5c4b8338d52a71b",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "e002",
+      "model": "res://assets/models_lines/e002_u.glb",
+      "source": "units\\nightelf\\Ballista\\Ballista.mdx",
+      "exists": true,
+      "source_sha256": "3ec5d73012a557383c9cb0a8fc35d1a525f46c50aee1fcefd04b2b90508ae443",
+      "extracted_sha256": "3ec5d73012a557383c9cb0a8fc35d1a525f46c50aee1fcefd04b2b90508ae443",
+      "source_matches": true,
+      "sequences": [
+        "walk",
+        "Stand",
+        "Attack",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h00S",
+      "model": "res://assets/models_lines/h00S_b.glb",
+      "source": "buildings\\other\\ElvenFishVillageBuilding2\\ElvenFishVillageBuilding2.mdx",
+      "exists": true,
+      "source_sha256": "3c6ce332c6faca1612782b895fc47e198dbcfad1c2ba3b667912ac2fc978064f",
+      "extracted_sha256": "3c6ce332c6faca1612782b895fc47e198dbcfad1c2ba3b667912ac2fc978064f",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Portrait -1",
+        "Death",
+        "Decay"
+      ]
+    },
+    {
+      "id": "h03D",
+      "model": "res://assets/models_lines/h03D_b.glb",
+      "source": "buildings\\nightelf\\HuntersHall\\HuntersHall.mdx",
+      "exists": true,
+      "source_sha256": "87bafe4e1cd67bbd5390e49130ddbd68dc32ca1921f1fbdb283978f90dbf4626",
+      "extracted_sha256": "87bafe4e1cd67bbd5390e49130ddbd68dc32ca1921f1fbdb283978f90dbf4626",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "h03E",
+      "model": "res://assets/models_lines/h03E_b.glb",
+      "source": "buildings\\other\\BarrowDens\\BarrowDens.mdx",
+      "exists": true,
+      "source_sha256": "1f38f17460ea790c75d0da89a651e7f0128e4f978df866e9d0f5fd39c29cd8a8",
+      "extracted_sha256": "1f38f17460ea790c75d0da89a651e7f0128e4f978df866e9d0f5fd39c29cd8a8",
+      "source_matches": true,
+      "sequences": [
+        "Birth",
+        "Stand",
+        "Stand Work",
+        "Portrait",
+        "Death"
+      ]
+    },
+    {
+      "id": "e004",
+      "model": "res://assets/models_lines/e004_u.glb",
+      "source": "Units\\Undead\\EvilSylvanas\\EvilSylvanas.mdx",
+      "exists": true,
+      "source_sha256": "c9758547ccd2c2aa9b92d4ac566a94e463466a20e70d132144c2673339db5069",
+      "extracted_sha256": "c9758547ccd2c2aa9b92d4ac566a94e463466a20e70d132144c2673339db5069",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 5",
+        "Spell",
+        "Death",
+        "Attack - 1",
+        "Attack - 2",
+        "Walk",
+        "Stand Ready",
+        "Dissipate"
+      ]
+    },
+    {
+      "id": "e003",
+      "model": "res://assets/models_lines/e003_u.glb",
+      "source": "units\\nightelf\\Shandris\\Shandris.mdx",
+      "exists": true,
+      "source_sha256": "381fe50056c87ed3f02a1f6106b96a33758b723897c06214593babfd32882ed5",
+      "extracted_sha256": "381fe50056c87ed3f02a1f6106b96a33758b723897c06214593babfd32882ed5",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 5",
+        "Death",
+        "Attack - 1",
+        "Attack - 2",
+        "Walk",
+        "Stand Hit",
+        "Stand Victory",
+        "Stand Ready",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "e001",
+      "model": "res://assets/models_lines/e001_u.glb",
+      "source": "units\\nightelf\\Archer\\Archer.mdx",
+      "exists": true,
+      "source_sha256": "eb19fd6a2819d42550808824b418b5587365521e3a923ea728959b3b2c5d1358",
+      "extracted_sha256": "eb19fd6a2819d42550808824b418b5587365521e3a923ea728959b3b2c5d1358",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Stand - 3",
+        "Stand - 5",
+        "Death",
+        "Attack - 1",
+        "Attack - 2",
+        "Walk",
+        "Stand Hit",
+        "Stand Victory",
+        "Stand Ready",
+        "Decay Flesh",
+        "Decay Bone"
+      ]
+    },
+    {
+      "id": "h008",
+      "model": "res://assets/models_lines/h008_b.glb",
+      "source": "buildings\\other\\MagicVault\\MagicVault.mdx",
+      "exists": true,
+      "source_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "extracted_sha256": "baba980828f0f2ef2968aa70e51cf066680818b52c249897f2c172722d4f106c",
+      "source_matches": true,
+      "sequences": [
+        "stand",
+        "Death",
+        "Decay",
+        "Portrait -1"
+      ]
+    },
+    {
+      "id": "h00B",
+      "model": "res://assets/models_lines/h00B_b.glb",
+      "source": "buildings\\other\\FountainOfMana\\FountainOfMana.mdx",
+      "exists": true,
+      "source_sha256": "965f3e5bbd74bc3ed09f611d1c59f0f5ccd28626b638ce3a0f58a115cb56d928",
+      "extracted_sha256": "965f3e5bbd74bc3ed09f611d1c59f0f5ccd28626b638ce3a0f58a115cb56d928",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Portrait -1",
+        "Death"
+      ]
+    },
+    {
+      "id": "e000",
+      "model": "res://assets/models_lines/e000_u.glb",
+      "source": "units\\nightelf\\FaerieDragon\\FaerieDragon.mdx",
+      "exists": true,
+      "source_sha256": "ec22cf6086b096990ed7ef0c0a4c25540400fe370ce8b8dbc625ca9d332b31ed",
+      "extracted_sha256": "ec22cf6086b096990ed7ef0c0a4c25540400fe370ce8b8dbc625ca9d332b31ed",
+      "source_matches": true,
+      "sequences": [
+        "Stand",
+        "Stand - 2",
+        "Walk",
+        "Walk - 2",
+        "Attack Spell",
+        "Stand channel",
+        "Death"
+      ]
+    }
+  ],
+  "source_audit": "night_source_audit.json",
+  "native_mana": {
+    "h07I": {
+      "capacity": 33,
+      "start": 0,
+      "regen": 1
+    },
+    "h07H": {
+      "capacity": 10,
+      "start": 0,
+      "regen": 1
+    },
+    "h08P": {
+      "capacity": 23,
+      "start": 0,
+      "regen": 1
+    },
+    "e007": {
+      "capacity": 200,
+      "start": 125,
+      "regen": 0.800000011920929
+    },
+    "e00J": {
+      "capacity": 300,
+      "start": 175,
+      "regen": 1.2000000476837158
+    },
+    "n01Z": {
+      "capacity": 100,
+      "start": 70,
+      "regen": 0.699999988079071
+    },
+    "n020": {
+      "capacity": 150,
+      "start": 135,
+      "regen": 0.699999988079071
+    }
+  },
+  "limits": [
+    "No original WC3 runtime or physical Android comparison.",
+    "User confirmed archer totals3/7. Native Starfall first pulse/impact cadence, root target order, assassination AI and modifier interactions require original-engine measurement.",
+    "Particle billboard/atlas/ribbon and missile Death remain renderer limitations."
+  ],
+  "android": {
+    "exported": false,
+    "physical_device_tested": false,
+    "last_build": "0.6.7"
+  }
+}

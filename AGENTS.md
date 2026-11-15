@@ -1,0 +1,8 @@
+# Castle Fight repository
+
+- The complete canonical Unity project is `UnityProject`, Unity 6000.6.4f1. Launcher code is `source/Launcher`. The earlier partial `source/Unity` export has been replaced; do not recreate a second copy of game code.
+- Before opening Unity on a new checkout, run `python tools/unity_assets.py restore`. It restores exact animations and archived Reforged source files from this repository's immutable GitHub release packs. All original `.meta` files are in Git; preserve GUIDs when replacing assets.
+- Ordinary models, textures, prefabs, scenes, data and source code are normal Git files. For changes to archived animations/Reforged sources use `python tools/unity_assets.py pack-changes --tag NEW-ASSET-TAG`, upload the resulting ZIPs to that GitHub release, then commit the updated `unity-assets.json`. Keep older immutable packs. Follow `OPEN-PROJECT.ru.md`.
+- `unity-assets.json` is a development-source index. Root `release.json` is the live game/launcher update channel; change it only after new compiled EXE/APK/content files have been tested and published. Source edits alone do not update compiled players.
+- The current published game is 0.31.0. Source migration does not change gameplay or existing releases. Preserve the Android package/signature and existing downloadable-content SHA files; signing keys, personal account data, Library/Builds caches and credentials must never enter this repository.
+- Historical regeneration tools may reference original local Warcraft/Godot archives; opening/editing the already converted project uses the files supplied here. Full GUI builds can use the saved CastleFightMap scene. Do not claim an Android device or clean-machine build test unless actually performed.

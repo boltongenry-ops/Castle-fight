@@ -1,0 +1,3086 @@
+{
+  "native": [
+    {
+      "id": "A09F",
+      "name": "Пламя феникса",
+      "base": "Apxf",
+      "kind": "auto_fire",
+      "references": []
+    },
+    {
+      "id": "A0D9",
+      "name": "Elemental Guard Tower (Discharge)",
+      "base": "Apxf",
+      "kind": "auto_fire",
+      "references": []
+    },
+    {
+      "id": "A001",
+      "name": "Blink [|cffffcc00D|r]",
+      "base": "AEbl",
+      "kind": "manual",
+      "references": [
+        {
+          "function": "CheckPrivilegeBuilder",
+          "line": 12564
+        }
+      ]
+    },
+    {
+      "id": "AFB1",
+      "name": "Feedback",
+      "base": "Afbt",
+      "kind": "feedback",
+      "references": []
+    },
+    {
+      "id": "A005",
+      "name": "Rescue Strike [|cffffcc00V|r]",
+      "base": "ANfs",
+      "kind": "ground_dot",
+      "references": [
+        {
+          "function": "hh",
+          "line": 9942
+        },
+        {
+          "function": "eH",
+          "line": 10193
+        },
+        {
+          "function": "fJ",
+          "line": 12596
+        },
+        {
+          "function": "ak",
+          "line": 13226
+        },
+        {
+          "function": "pk",
+          "line": 13702
+        },
+        {
+          "function": "Sk",
+          "line": 13792
+        }
+      ]
+    },
+    {
+      "id": "A009",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": [
+        {
+          "function": "BloodFiendRandom",
+          "line": 6736
+        }
+      ]
+    },
+    {
+      "id": "A01F",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A02N",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A02X",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A04D",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A05W",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A05Z",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A060",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A063",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A067",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A094",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A0AD",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A0BY",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A0BZ",
+      "name": "Демоническая сила",
+      "base": "ACce",
+      "kind": "cleave",
+      "references": []
+    },
+    {
+      "id": "A00C",
+      "name": "Яд",
+      "base": "Aspo",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "A09W",
+      "name": "Greater Poison Attack",
+      "base": "Aspo",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "A00D",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": [
+        {
+          "function": "BloodFiendRandom",
+          "line": 6736
+        }
+      ]
+    },
+    {
+      "id": "A00V",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A025",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A02L",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A02V",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A02W",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A04E",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A05Y",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A062",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A06F",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A06L",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A0AG",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A0B3",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A0B4",
+      "name": "Смертельный удар",
+      "base": "ACct",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "A0AV",
+      "name": "Паразит (|cffffcc00R|r)",
+      "base": "ACpa",
+      "kind": "debuff",
+      "references": [
+        {
+          "function": "cg",
+          "line": 8451
+        }
+      ]
+    },
+    {
+      "id": "A00T",
+      "name": "Змеиная ловкость",
+      "base": "ACes",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A0CS",
+      "name": "Змеиная ловкость",
+      "base": "ACes",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A0CT",
+      "name": "Змеиная ловкость",
+      "base": "ACes",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A0FA",
+      "name": "Змеиная ловкость",
+      "base": "ACes",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A00U",
+      "name": "Змеиная ловкость",
+      "base": "ACev",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A03P",
+      "name": "Змеиная ловкость",
+      "base": "ACev",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A073",
+      "name": "Змеиная ловкость",
+      "base": "ACev",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A074",
+      "name": "Змеиная ловкость",
+      "base": "ACev",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A0BW",
+      "name": "Змеиная ловкость",
+      "base": "ACev",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A00W",
+      "name": "Волшебный огонь (|cffffcc00R|r)",
+      "base": "ACff",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "A05N",
+      "name": "UND: Mighty Necromancer (carrion swarm)",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A0C2",
+      "name": "NAT: Furbolg Elder Shaman (manaburn orb)",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A012",
+      "name": "Жар Преисподней (постоянное)",
+      "base": "ANpi",
+      "kind": "aura",
+      "references": [
+        {
+          "function": "BloodFiendRandom",
+          "line": 6736
+        }
+      ]
+    },
+    {
+      "id": "AUG3",
+      "name": "Жар Преисподней (постоянное)",
+      "base": "ANpi",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A01A",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": [
+        {
+          "function": "BloodFiendRandom",
+          "line": 6736
+        }
+      ]
+    },
+    {
+      "id": "A026",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A05K",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A068",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A08I",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A08J",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A08Z",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A090",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A09I",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A09J",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A0B1",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A0B2",
+      "name": "Сильный удар",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A01C",
+      "name": "Панцирь с шипами",
+      "base": "ANth",
+      "kind": "spiked",
+      "references": []
+    },
+    {
+      "id": "A01G",
+      "name": "Проклятие (|cffffcc00C|r)",
+      "base": "Acrs",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "A01M",
+      "name": "Замедление (|cffffcc00W|r)",
+      "base": "Aslo",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "A01N",
+      "name": "Боевой дух",
+      "base": "ACac",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "AFR1",
+      "name": "Fear Aura",
+      "base": "ACac",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "AFR2",
+      "name": "Fear Aura",
+      "base": "ACac",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A01R",
+      "name": "Разгром",
+      "base": "ANde",
+      "kind": "demolish",
+      "references": []
+    },
+    {
+      "id": "A0FV",
+      "name": "Разгром",
+      "base": "ANde",
+      "kind": "demolish",
+      "references": []
+    },
+    {
+      "id": "A01S",
+      "name": "Сокрушение",
+      "base": "ACpv",
+      "kind": "pulverize",
+      "references": []
+    },
+    {
+      "id": "A02P",
+      "name": "Сокрушение",
+      "base": "ACpv",
+      "kind": "pulverize",
+      "references": []
+    },
+    {
+      "id": "A059",
+      "name": "Сокрушение",
+      "base": "ACpv",
+      "kind": "pulverize",
+      "references": []
+    },
+    {
+      "id": "A05A",
+      "name": "Сокрушение",
+      "base": "ACpv",
+      "kind": "pulverize",
+      "references": []
+    },
+    {
+      "id": "A091",
+      "name": "Сокрушение",
+      "base": "ACpv",
+      "kind": "pulverize",
+      "references": []
+    },
+    {
+      "id": "A092",
+      "name": "Сокрушение",
+      "base": "ACpv",
+      "kind": "pulverize",
+      "references": []
+    },
+    {
+      "id": "A0BH",
+      "name": "Сокрушение",
+      "base": "ACpv",
+      "kind": "pulverize",
+      "references": []
+    },
+    {
+      "id": "A020",
+      "name": "Poisoned Arrows",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "A034",
+      "name": "Доспехи веры, [|cffffcc00Уровень 1|r]",
+      "base": "AHad",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A03J",
+      "name": "Доспехи веры, [|cffffcc00Уровень 1|r]",
+      "base": "AHad",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A0HZ",
+      "name": "Доспехи веры, [|cffffcc00Уровень 1|r]",
+      "base": "AHad",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "ASH1",
+      "name": "Corruption Aura",
+      "base": "AHad",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "ASH2",
+      "name": "Corruption Aura",
+      "base": "AHad",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A038",
+      "name": "Отравленное оружие",
+      "base": "Aven",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "A0AO",
+      "name": "Отравленное оружие",
+      "base": "Aven",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "A0AP",
+      "name": "Отравленное оружие",
+      "base": "Aven",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "A0AT",
+      "name": "Отравленное оружие",
+      "base": "Aven",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "A03B",
+      "name": "Предмет: повышение скорости боя",
+      "base": "AIs2",
+      "kind": "self_passive",
+      "references": [
+        {
+          "function": "ub",
+          "line": 3572
+        }
+      ]
+    },
+    {
+      "id": "A042",
+      "name": "Чародейская аура",
+      "base": "ACba",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A0CQ",
+      "name": "Аура выносливости, [|cffffcc00Уровень 1|r]",
+      "base": "AOae",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A0CR",
+      "name": "Аура выносливости, [|cffffcc00Уровень 1|r]",
+      "base": "AOae",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A05V",
+      "name": "Аура возмездия, [|cffffcc00Уровень 1|r]",
+      "base": "AEah",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A0AQ",
+      "name": "NAT: Giant Spider (spawn forest spiders)",
+      "base": "Aspy",
+      "kind": "split",
+      "references": []
+    },
+    {
+      "id": "A0AU",
+      "name": "NAT: Brood Mother (spawn giant spiders)",
+      "base": "Aspy",
+      "kind": "split",
+      "references": []
+    },
+    {
+      "id": "A06Z",
+      "name": "Защита от магии",
+      "base": "ANss",
+      "kind": "shield",
+      "references": []
+    },
+    {
+      "id": "A071",
+      "name": "Repair",
+      "base": "Ahrp",
+      "kind": "repair",
+      "references": []
+    },
+    {
+      "id": "A08G",
+      "name": "Repair",
+      "base": "Ahrp",
+      "kind": "repair",
+      "references": []
+    },
+    {
+      "id": "Ahrp",
+      "name": "Ремонтировать (|cffffcc00R|r)",
+      "base": "Ahrp",
+      "kind": "repair",
+      "references": []
+    },
+    {
+      "id": "A07B",
+      "name": "Защита от магии",
+      "base": "Arsk",
+      "kind": "resistant_skin",
+      "references": []
+    },
+    {
+      "id": "A08O",
+      "name": "Уменьшение урона от магии",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A093",
+      "name": "Уменьшение урона от магии",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0AH",
+      "name": "Speel Resist (legendary)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0AI",
+      "name": "Spell Damage Reduction(extreem)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0AL",
+      "name": "HEL: Blademaster (spell resist)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0AN",
+      "name": "HEL: Elder Blademaster (spell resist)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0AY",
+      "name": "NAT: Dryad (spell resist)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0AZ",
+      "name": "NAT: Keeper of the Groove (spell resist)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0BV",
+      "name": "NAT: Ancient Keeper (spell immune)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0CF",
+      "name": "NAT: Mountain Giant (spell resist)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0FH",
+      "name": "water lesser(spell resist)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0FI",
+      "name": "water (spell resist)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A0FJ",
+      "name": "water greater (spell resist)",
+      "base": "AIsr",
+      "kind": "resist",
+      "references": []
+    },
+    {
+      "id": "A09Y",
+      "name": "Каменные доспехи",
+      "base": "Assk",
+      "kind": "hardened",
+      "references": []
+    },
+    {
+      "id": "A09Z",
+      "name": "Каменные доспехи",
+      "base": "Assk",
+      "kind": "hardened",
+      "references": []
+    },
+    {
+      "id": "A0A0",
+      "name": "Каменные доспехи",
+      "base": "Assk",
+      "kind": "hardened",
+      "references": []
+    },
+    {
+      "id": "A0BE",
+      "name": "Каменные доспехи",
+      "base": "Assk",
+      "kind": "hardened",
+      "references": []
+    },
+    {
+      "id": "A0AR",
+      "name": "Паутина (|cffffcc00W|r)",
+      "base": "Aweb",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "A0AS",
+      "name": "Паутина (|cffffcc00W|r)",
+      "base": "Aweb",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "AUW3",
+      "name": "Web",
+      "base": "Aweb",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "A0BI",
+      "name": "Оскорбление (|cffffcc00T|r)",
+      "base": "Atau",
+      "kind": "taunt",
+      "references": []
+    },
+    {
+      "id": "A0BN",
+      "name": "Bash",
+      "base": "AHbh",
+      "kind": "bash",
+      "references": []
+    },
+    {
+      "id": "A0CO",
+      "name": "Сокрушение",
+      "base": "Awar",
+      "kind": "pulverize",
+      "references": []
+    },
+    {
+      "id": "A0CP",
+      "name": "Сокрушение",
+      "base": "Awar",
+      "kind": "pulverize",
+      "references": []
+    },
+    {
+      "id": "AAS0",
+      "name": "Смертельный удар, [|cffffcc00Уровень 1|r]",
+      "base": "AOcr",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "AAS1",
+      "name": "Смертельный удар, [|cffffcc00Уровень 1|r]",
+      "base": "AOcr",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "ABS1",
+      "name": "Смертельный удар, [|cffffcc00Уровень 1|r]",
+      "base": "AOcr",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "ABS2",
+      "name": "Смертельный удар, [|cffffcc00Уровень 1|r]",
+      "base": "AOcr",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "ASB1",
+      "name": "Смертельный удар, [|cffffcc00Уровень 1|r]",
+      "base": "AOcr",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "ASB2",
+      "name": "Смертельный удар, [|cffffcc00Уровень 1|r]",
+      "base": "AOcr",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "AUC1",
+      "name": "Critical Strike",
+      "base": "AOcr",
+      "kind": "critical",
+      "references": []
+    },
+    {
+      "id": "Aakb",
+      "name": "Боевой марш",
+      "base": "Aakb",
+      "kind": "aura",
+      "references": []
+    }
+  ],
+  "triggered": [
+    {
+      "id": "A000",
+      "name": "Луч света",
+      "base": "Apxf",
+      "kind": "auto_fire",
+      "references": []
+    },
+    {
+      "id": "A010",
+      "name": "Пламя феникса",
+      "base": "Apxf",
+      "kind": "auto_fire",
+      "references": []
+    },
+    {
+      "id": "A003",
+      "name": "Выжигание маны",
+      "base": "Afbt",
+      "kind": "feedback",
+      "references": []
+    },
+    {
+      "id": "A014",
+      "name": "Выжигание маны",
+      "base": "Afbt",
+      "kind": "feedback",
+      "references": []
+    },
+    {
+      "id": "A061",
+      "name": "Выжигание маны",
+      "base": "Afbt",
+      "kind": "feedback",
+      "references": []
+    },
+    {
+      "id": "A075",
+      "name": "Выжигание маны",
+      "base": "Afbt",
+      "kind": "feedback",
+      "references": []
+    },
+    {
+      "id": "A076",
+      "name": "Выжигание маны",
+      "base": "Afbt",
+      "kind": "feedback",
+      "references": []
+    },
+    {
+      "id": "A07Z",
+      "name": "Выжигание маны",
+      "base": "Afbt",
+      "kind": "feedback",
+      "references": []
+    },
+    {
+      "id": "A004",
+      "name": "Лечение и укрепление",
+      "base": "Ahea",
+      "kind": "heal",
+      "references": [
+        {
+          "function": "cg",
+          "line": 8451
+        }
+      ]
+    },
+    {
+      "id": "A00X",
+      "name": "Целительная волна",
+      "base": "AChv",
+      "kind": "elven_heal",
+      "references": [
+        {
+          "function": "Hf",
+          "line": 7115
+        }
+      ]
+    },
+    {
+      "id": "A03K",
+      "name": "Лечение и духовное пламя",
+      "base": "Ahea",
+      "kind": "heal",
+      "references": [
+        {
+          "function": "Sf",
+          "line": 7315
+        }
+      ]
+    },
+    {
+      "id": "A0A7",
+      "name": "Целительная волна",
+      "base": "AChv",
+      "kind": "elven_heal",
+      "references": [
+        {
+          "function": "Hf",
+          "line": 7115
+        }
+      ]
+    },
+    {
+      "id": "A0BT",
+      "name": "Лечение хранителя",
+      "base": "Ahea",
+      "kind": "heal",
+      "references": [
+        {
+          "function": "cg",
+          "line": 8451
+        }
+      ]
+    },
+    {
+      "id": "A0C0",
+      "name": "Омоложение",
+      "base": "Arej",
+      "kind": "regen",
+      "references": [
+        {
+          "function": "cg",
+          "line": 8451
+        }
+      ]
+    },
+    {
+      "id": "A0C1",
+      "name": "Сильное омоложение",
+      "base": "Arej",
+      "kind": "regen",
+      "references": [
+        {
+          "function": "cg",
+          "line": 8451
+        }
+      ]
+    },
+    {
+      "id": "A0CG",
+      "name": "Исцеление",
+      "base": "Ahea",
+      "kind": "heal",
+      "references": [
+        {
+          "function": "ug",
+          "line": 8807
+        }
+      ]
+    },
+    {
+      "id": "A0I0",
+      "name": "Молитва",
+      "base": "Ahea",
+      "kind": "human_prayer",
+      "references": [
+        {
+          "function": "Sf",
+          "line": 7315
+        }
+      ]
+    },
+    {
+      "id": "A06A",
+      "name": "Сияющая благодать",
+      "base": "ACct",
+      "kind": "elven_grace",
+      "references": []
+    },
+    {
+      "id": "A06M",
+      "name": "Призыв к оружию",
+      "base": "ACct",
+      "kind": "human_shrine",
+      "references": []
+    },
+    {
+      "id": "A00F",
+      "name": "Чародейская аура, [|cffffcc00Уровень 1|r]",
+      "base": "AHab",
+      "kind": "aura",
+      "references": [
+        {
+          "function": "pf",
+          "line": 7178
+        }
+      ]
+    },
+    {
+      "id": "A00K",
+      "name": "Магический взрыв",
+      "base": "ACpa",
+      "kind": "warlock_blast",
+      "references": [
+        {
+          "function": "Sf",
+          "line": 7315
+        }
+      ]
+    },
+    {
+      "id": "A00M",
+      "name": "Землетрясение",
+      "base": "AHtc",
+      "kind": "naga_quake",
+      "references": []
+    },
+    {
+      "id": "A00O",
+      "name": "Подчинение",
+      "base": "ACch",
+      "kind": "naga_control",
+      "references": []
+    },
+    {
+      "id": "A017",
+      "name": "Сглаз",
+      "base": "AOhx",
+      "kind": "elven_hex",
+      "references": []
+    },
+    {
+      "id": "A01E",
+      "name": "Кулак ада",
+      "base": "ACpa",
+      "kind": "hell_fist",
+      "references": []
+    },
+    {
+      "id": "A01J",
+      "name": "Извержение",
+      "base": "AHfs",
+      "kind": "eruption",
+      "references": []
+    },
+    {
+      "id": "A01K",
+      "name": "Святая сила",
+      "base": "ACpa",
+      "kind": "holy_power",
+      "references": []
+    },
+    {
+      "id": "A01Q",
+      "name": "Поднятие мёртвых",
+      "base": "ACpa",
+      "kind": "undead_raise_building",
+      "references": []
+    },
+    {
+      "id": "A01W",
+      "name": "Стирание",
+      "base": "Awrg",
+      "kind": "map_erase",
+      "references": []
+    },
+    {
+      "id": "A02U",
+      "name": "Очищение",
+      "base": "ACpu",
+      "kind": "naga_purge",
+      "references": [
+        {
+          "function": "Naga___RegisterUnitCasts",
+          "line": 8099
+        },
+        {
+          "function": "wF",
+          "line": 8102
+        }
+      ]
+    },
+    {
+      "id": "A02Z",
+      "name": "Кислотное облако",
+      "base": "ANab",
+      "kind": "orc_acid",
+      "references": []
+    },
+    {
+      "id": "A032",
+      "name": "Глобальный стазис",
+      "base": "Awrg",
+      "kind": "damage",
+      "references": []
+    },
+    {
+      "id": "A033",
+      "name": "Внезапная смерть",
+      "base": "ACpa",
+      "kind": "undead_execute",
+      "references": []
+    },
+    {
+      "id": "A039",
+      "name": "Благословение племени",
+      "base": "AIs2",
+      "kind": "orc_blessing",
+      "references": []
+    },
+    {
+      "id": "A03S",
+      "name": "Боевой рёв",
+      "base": "ACro",
+      "kind": "chaos_roar",
+      "references": [
+        {
+          "function": "of",
+          "line": 6721
+        }
+      ]
+    },
+    {
+      "id": "A044",
+      "name": "Ледяная звезда",
+      "base": "ACfn",
+      "kind": "north_nova",
+      "references": [
+        {
+          "function": "nG",
+          "line": 9120
+        }
+      ]
+    },
+    {
+      "id": "A04I",
+      "name": "Наступление зимы",
+      "base": "ACpa",
+      "kind": "north_winter",
+      "references": []
+    },
+    {
+      "id": "A04J",
+      "name": "Ледяной снаряд",
+      "base": "ACpa",
+      "kind": "north_frost_bolt",
+      "references": []
+    },
+    {
+      "id": "A04L",
+      "name": "Большой ледяной снаряд",
+      "base": "ACpa",
+      "kind": "north_frost_bolt",
+      "references": []
+    },
+    {
+      "id": "A04U",
+      "name": "Тюрьма щупалец",
+      "base": "ACpa",
+      "kind": "corrupted_tentacles",
+      "references": []
+    },
+    {
+      "id": "A057",
+      "name": "Касание боли",
+      "base": "ACpa",
+      "kind": "corrupted_pain",
+      "references": []
+    },
+    {
+      "id": "A05C",
+      "name": "Леденящий крик",
+      "base": "Acht",
+      "kind": "north_howl",
+      "references": [
+        {
+          "function": "nG",
+          "line": 9120
+        }
+      ]
+    },
+    {
+      "id": "A05E",
+      "name": "Громовая поступь",
+      "base": "Awrs",
+      "kind": "north_stomp",
+      "references": [
+        {
+          "function": "nG",
+          "line": 9120
+        }
+      ]
+    },
+    {
+      "id": "A05U",
+      "name": "Великое поднятие мёртвых",
+      "base": "ACpa",
+      "kind": "undead_raise_building",
+      "references": []
+    },
+    {
+      "id": "A06I",
+      "name": "Ловчие сети",
+      "base": "Aens",
+      "kind": "orc_nets",
+      "references": [
+        {
+          "function": "Zb",
+          "line": 3779
+        }
+      ]
+    },
+    {
+      "id": "A06P",
+      "name": "Леденящий выстрел",
+      "base": "AHtb",
+      "kind": "north_mushroom",
+      "references": []
+    },
+    {
+      "id": "A06R",
+      "name": "Дар Хаоса",
+      "base": "ACpa",
+      "kind": "chaos_gift",
+      "references": []
+    },
+    {
+      "id": "A07P",
+      "name": "Гнев деревьев",
+      "base": "AEer",
+      "kind": "night_roots",
+      "references": [
+        {
+          "function": "ug",
+          "line": 8807
+        }
+      ]
+    },
+    {
+      "id": "A07R",
+      "name": "Гнев деревьев",
+      "base": "AEer",
+      "kind": "night_roots",
+      "references": [
+        {
+          "function": "ug",
+          "line": 8807
+        }
+      ]
+    },
+    {
+      "id": "A07U",
+      "name": "Звездопад",
+      "base": "AEsf",
+      "kind": "night_starfall",
+      "references": []
+    },
+    {
+      "id": "A08B",
+      "name": "Лунное благословение",
+      "base": "ACpa",
+      "kind": "night_moonshine",
+      "references": []
+    },
+    {
+      "id": "A08E",
+      "name": "Защита дикой природы",
+      "base": "AIsr",
+      "kind": "night_grant",
+      "references": []
+    },
+    {
+      "id": "A08V",
+      "name": "Солнечный удар",
+      "base": "AHtb",
+      "kind": "elven_solar",
+      "references": [
+        {
+          "function": "Hf",
+          "line": 7115
+        }
+      ]
+    },
+    {
+      "id": "A095",
+      "name": "Постановка мин",
+      "base": "ACpa",
+      "kind": "mech_mines",
+      "references": [
+        {
+          "function": "qF",
+          "line": 7945
+        }
+      ]
+    },
+    {
+      "id": "A09D",
+      "name": "Импульсная граната",
+      "base": "ACpa",
+      "kind": "mech_grenade",
+      "references": [
+        {
+          "function": "qF",
+          "line": 7945
+        }
+      ]
+    },
+    {
+      "id": "A09N",
+      "name": "Синий щит",
+      "base": "ACpa",
+      "kind": "mech_shield",
+      "references": []
+    },
+    {
+      "id": "A09O",
+      "name": "Усиленный щит",
+      "base": "ACpa",
+      "kind": "mech_shield",
+      "references": []
+    },
+    {
+      "id": "A09X",
+      "name": "Цунами",
+      "base": "ACcv",
+      "kind": "naga_tsunami",
+      "references": []
+    },
+    {
+      "id": "A0AE",
+      "name": "Пронзание",
+      "base": "ACmp",
+      "kind": "corrupted_impale",
+      "references": [
+        {
+          "function": "Corrupted___RegisterUnitCasts",
+          "line": 6947
+        },
+        {
+          "function": "Bf",
+          "line": 6950
+        }
+      ]
+    },
+    {
+      "id": "A0BJ",
+      "name": "Оскорбление (|cffffcc00T|r)",
+      "base": "Atau",
+      "kind": "taunt",
+      "references": [
+        {
+          "function": "cg",
+          "line": 8451
+        }
+      ]
+    },
+    {
+      "id": "A0BM",
+      "name": "Изгнание в астрал",
+      "base": "AHbn",
+      "kind": "nature_banish",
+      "references": []
+    },
+    {
+      "id": "A0BO",
+      "name": "Вихрь",
+      "base": "ACpa",
+      "kind": "nature_cyclone",
+      "references": []
+    },
+    {
+      "id": "A0BS",
+      "name": "Зов природы",
+      "base": "ACpa",
+      "kind": "nature_spirits",
+      "references": []
+    },
+    {
+      "id": "A0BX",
+      "name": "Пробуждение рощи",
+      "base": "ACpa",
+      "kind": "nature_trees",
+      "references": [
+        {
+          "function": "cg",
+          "line": 8451
+        }
+      ]
+    },
+    {
+      "id": "A0DV",
+      "name": "Зачарование",
+      "base": "ACpa",
+      "kind": "elemental_enchant",
+      "references": []
+    },
+    {
+      "id": "A0E1",
+      "name": "Первородные стихии",
+      "base": "ACpa",
+      "kind": "elemental_barrage",
+      "references": [
+        {
+          "function": "Elementals___RegisterUnitCasts",
+          "line": 3506
+        },
+        {
+          "function": "sb",
+          "line": 3544
+        }
+      ]
+    },
+    {
+      "id": "A0EI",
+      "name": "Стихийный дождь",
+      "base": "ACpa",
+      "kind": "elemental_rain",
+      "references": []
+    },
+    {
+      "id": "A0FB",
+      "name": "Ловчие сети",
+      "base": "Aens",
+      "kind": "orc_nets",
+      "references": [
+        {
+          "function": "Zb",
+          "line": 3779
+        }
+      ]
+    },
+    {
+      "id": "A0FG",
+      "name": "Метеоритный дождь",
+      "base": "ACpa",
+      "kind": "elemental_rain",
+      "references": []
+    },
+    {
+      "id": "AUAc",
+      "name": "Кислотный дождь",
+      "base": "ACpa",
+      "kind": "nerub_acid",
+      "references": []
+    },
+    {
+      "id": "AUBr",
+      "name": "Зов выводка",
+      "base": "ACpa",
+      "kind": "nerub_brood",
+      "references": []
+    },
+    {
+      "id": "AUPs",
+      "name": "Заражение выводком",
+      "base": "ACpa",
+      "kind": "nerub_plague",
+      "references": []
+    },
+    {
+      "id": "AUE1",
+      "name": "Теневая поступь",
+      "base": "ACev",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "AUE2",
+      "name": "Теневая поступь",
+      "base": "ACev",
+      "kind": "evasion",
+      "references": []
+    },
+    {
+      "id": "A00Z",
+      "name": "Сфера молний",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A01B",
+      "name": "Грозовой молот",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": [
+        {
+          "function": "BloodFiendRandom",
+          "line": 6736
+        }
+      ]
+    },
+    {
+      "id": "A03X",
+      "name": "Ледяные оковы",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A046",
+      "name": "Ледяные оковы",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A048",
+      "name": "Ледяные оковы",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A049",
+      "name": "Ледяные оковы",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A0A9",
+      "name": "Сфера молний",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A0CH",
+      "name": "Разветвлённая молния",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A0CI",
+      "name": "Разветвлённая молния",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A0F0",
+      "name": "Разветвлённая молния",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A0F7",
+      "name": "Разветвлённая молния",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A0FM",
+      "name": "Ледяные оковы",
+      "base": "AIlx",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A01L",
+      "name": "Жар Преисподней (постоянное)",
+      "base": "ANpi",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A01T",
+      "name": "Город разложения",
+      "base": "ANpi",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A05P",
+      "name": "Жар Преисподней (постоянное)",
+      "base": "ANpi",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A05T",
+      "name": "Жар Преисподней (постоянное)",
+      "base": "ANpi",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A06G",
+      "name": "Оформление оружия",
+      "base": "Aasl",
+      "kind": "native_helper",
+      "references": []
+    },
+    {
+      "id": "A015",
+      "name": "Мультивыстрел",
+      "base": "Aroc",
+      "kind": "barrage",
+      "references": []
+    },
+    {
+      "id": "A03N",
+      "name": "Мультивыстрел",
+      "base": "Aroc",
+      "kind": "barrage",
+      "references": []
+    },
+    {
+      "id": "A03O",
+      "name": "Мультивыстрел",
+      "base": "Aroc",
+      "kind": "barrage",
+      "references": []
+    },
+    {
+      "id": "A0FL",
+      "name": "Залп топоров",
+      "base": "Aroc",
+      "kind": "barrage",
+      "references": []
+    },
+    {
+      "id": "A01U",
+      "name": "Похищение души",
+      "base": "ACbh",
+      "kind": "bash",
+      "references": [
+        {
+          "function": "BloodFiendRandom",
+          "line": 6736
+        }
+      ]
+    },
+    {
+      "id": "A01O",
+      "name": "Вампиризм",
+      "base": "ACvp",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A01P",
+      "name": "Вампиризм",
+      "base": "ACvp",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A06N",
+      "name": "Вампиризм",
+      "base": "ACvp",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A01Y",
+      "name": "Оживить мертвых (|cffffcc00R|r)",
+      "base": "Arai",
+      "kind": "undead_raise_unit",
+      "references": []
+    },
+    {
+      "id": "A05L",
+      "name": "Оживить мертвых (|cffffcc00R|r)",
+      "base": "Arai",
+      "kind": "undead_raise_unit",
+      "references": []
+    },
+    {
+      "id": "A085",
+      "name": "Оживить мертвых (|cffffcc00R|r)",
+      "base": "Arai",
+      "kind": "undead_raise_unit",
+      "references": []
+    },
+    {
+      "id": "A05Q",
+      "name": "Отравленное оружие",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "A05S",
+      "name": "Отравленное оружие",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "AUN1",
+      "name": "Разъедающий яд",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "AUN2",
+      "name": "Разъедающий яд",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "AUN3",
+      "name": "Разъедающий яд",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "AUN4",
+      "name": "Разъедающий яд",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "AUN5",
+      "name": "Разъедающий яд",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "AUN6",
+      "name": "Разъедающий яд",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "AUN7",
+      "name": "Разъедающий яд",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "AUPT",
+      "name": "Разъедающий яд",
+      "base": "ACvs",
+      "kind": "poison",
+      "references": []
+    },
+    {
+      "id": "A02C",
+      "name": "Взор порчи",
+      "base": "AHad",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A05F",
+      "name": "Аура разложения",
+      "base": "AHad",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A05G",
+      "name": "Аура разложения",
+      "base": "AHad",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A02I",
+      "name": "Безумие",
+      "base": "Absk",
+      "kind": "kill_frenzy",
+      "references": []
+    },
+    {
+      "id": "A02J",
+      "name": "Горючая смесь",
+      "base": "Abof",
+      "kind": "orc_artillery_fire",
+      "references": []
+    },
+    {
+      "id": "A02K",
+      "name": "Горючая смесь",
+      "base": "Abof",
+      "kind": "human_artillery_fire",
+      "references": []
+    },
+    {
+      "id": "A02M",
+      "name": "Духовное пламя",
+      "base": "Ainf",
+      "kind": "buff",
+      "references": []
+    },
+    {
+      "id": "A03I",
+      "name": "Духовное пламя (|cffffcc00F|r)",
+      "base": "Ainf",
+      "kind": "buff",
+      "references": []
+    },
+    {
+      "id": "A03M",
+      "name": "Духовное пламя (|cffffcc00F|r)",
+      "base": "Ainf",
+      "kind": "buff",
+      "references": []
+    },
+    {
+      "id": "A02S",
+      "name": "Призыв лобстроков",
+      "base": "AOsf",
+      "kind": "summon",
+      "references": []
+    },
+    {
+      "id": "A0BU",
+      "name": "Призыв энтов",
+      "base": "AOsf",
+      "kind": "summon",
+      "references": []
+    },
+    {
+      "id": "A09C",
+      "name": "Адаптация шредера",
+      "base": "AIs2",
+      "kind": "self_passive",
+      "references": [
+        {
+          "function": "Ed",
+          "line": 5459
+        }
+      ]
+    },
+    {
+      "id": "A03C",
+      "name": "Леденящая атака",
+      "base": "Afra",
+      "kind": "frost_attack",
+      "references": []
+    },
+    {
+      "id": "A03G",
+      "name": "Укрыться за щитом",
+      "base": "Adef",
+      "kind": "self_passive",
+      "references": []
+    },
+    {
+      "id": "A03H",
+      "name": "Воскрешение (|cffffcc00R|r)",
+      "base": "AHre",
+      "kind": "resurrect",
+      "references": []
+    },
+    {
+      "id": "A0C4",
+      "name": "Лечебный сон",
+      "base": "ANcl",
+      "kind": "bear_retreat",
+      "references": [
+        {
+          "function": "dg",
+          "line": 8473
+        },
+        {
+          "function": "Dg",
+          "line": 8489
+        },
+        {
+          "function": "nh",
+          "line": 9499
+        }
+      ]
+    },
+    {
+      "id": "A0EK",
+      "name": "Восстановление маны",
+      "base": "ANcl",
+      "kind": "elemental_mana_aura",
+      "references": [
+        {
+          "function": "ab",
+          "line": 3156
+        },
+        {
+          "function": "Eb",
+          "line": 3184
+        },
+        {
+          "function": "Sk",
+          "line": 13792
+        }
+      ]
+    },
+    {
+      "id": "A03Y",
+      "name": "Леденящая атака",
+      "base": "Afrb",
+      "kind": "frost_attack",
+      "references": []
+    },
+    {
+      "id": "A064",
+      "name": "Дыхание холода",
+      "base": "Afrb",
+      "kind": "frost_attack",
+      "references": []
+    },
+    {
+      "id": "A03Z",
+      "name": "Ледяная броня",
+      "base": "ACf2",
+      "kind": "buff",
+      "references": []
+    },
+    {
+      "id": "A040",
+      "name": "Ледяная броня",
+      "base": "ACf2",
+      "kind": "buff",
+      "references": []
+    },
+    {
+      "id": "A04N",
+      "name": "Подчиняющий удар",
+      "base": "AIll",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A04P",
+      "name": "Увечье",
+      "base": "AIll",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A04W",
+      "name": "Разрушительная волна",
+      "base": "AIll",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A054",
+      "name": "Увечье",
+      "base": "AIll",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A0AC",
+      "name": "Увечье",
+      "base": "AIll",
+      "kind": "orb",
+      "references": []
+    },
+    {
+      "id": "A04T",
+      "name": "Аура скверногончей",
+      "base": "AOae",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A04V",
+      "name": "Предсмертный взрыв",
+      "base": "Amnx",
+      "kind": "death_blast",
+      "references": []
+    },
+    {
+      "id": "A04Y",
+      "name": "Предсмертный взрыв",
+      "base": "Amnx",
+      "kind": "death_blast",
+      "references": []
+    },
+    {
+      "id": "A09B",
+      "name": "Предсмертный взрыв шредера",
+      "base": "Amnx",
+      "kind": "mech_death_blast",
+      "references": [
+        {
+          "function": "Ed",
+          "line": 5459
+        }
+      ]
+    },
+    {
+      "id": "A0A3",
+      "name": "Предсмертный взрыв",
+      "base": "Amnx",
+      "kind": "mech_death_blast",
+      "references": []
+    },
+    {
+      "id": "A04Z",
+      "name": "Сфера небытия",
+      "base": "Afak",
+      "kind": "corrupted_annihilation",
+      "references": []
+    },
+    {
+      "id": "A069",
+      "name": "Сфера небытия",
+      "base": "Afak",
+      "kind": "corrupted_annihilation",
+      "references": []
+    },
+    {
+      "id": "A05R",
+      "name": "Чумное облако",
+      "base": "Aap1",
+      "kind": "undead_plague",
+      "references": []
+    },
+    {
+      "id": "A06J",
+      "name": "Разделение гидры",
+      "base": "Aspy",
+      "kind": "split",
+      "references": []
+    },
+    {
+      "id": "AUS2",
+      "name": "Последний выводок",
+      "base": "Aspy",
+      "kind": "split",
+      "references": []
+    },
+    {
+      "id": "A07V",
+      "name": "Аура восстановления",
+      "base": "Amgl",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A09K",
+      "name": "Ремонт техники",
+      "base": "Ahrp",
+      "kind": "mech_repair",
+      "references": []
+    },
+    {
+      "id": "A077",
+      "name": "Стремительность",
+      "base": "AOwk",
+      "kind": "wind_walk",
+      "references": []
+    },
+    {
+      "id": "A078",
+      "name": "Стремительность",
+      "base": "AOwk",
+      "kind": "wind_walk",
+      "references": []
+    },
+    {
+      "id": "A07C",
+      "name": "Порча брони",
+      "base": "AIcb",
+      "kind": "corruption",
+      "references": []
+    },
+    {
+      "id": "A07D",
+      "name": "Порча брони",
+      "base": "AIcb",
+      "kind": "corruption",
+      "references": []
+    },
+    {
+      "id": "A086",
+      "name": "Порча",
+      "base": "AUdd",
+      "kind": "undead_decay",
+      "references": [
+        {
+          "function": "pG",
+          "line": 9338
+        }
+      ]
+    },
+    {
+      "id": "A099",
+      "name": "Самоподрыв",
+      "base": "Asds",
+      "kind": "mech_selfdestruct",
+      "references": []
+    },
+    {
+      "id": "A0A6",
+      "name": "Похищение магии",
+      "base": "Asps",
+      "kind": "orc_spell_steal",
+      "references": []
+    },
+    {
+      "id": "AUMW",
+      "name": "Кокон ловушки",
+      "base": "Aweb",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "AUW1",
+      "name": "Паутина",
+      "base": "Aweb",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "AUW2",
+      "name": "Паутина",
+      "base": "Aweb",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "AUWB",
+      "name": "Паутина",
+      "base": "Aweb",
+      "kind": "debuff",
+      "references": []
+    },
+    {
+      "id": "A0B0",
+      "name": "Аура восстановления",
+      "base": "ACua",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A0B9",
+      "name": "Испепеление",
+      "base": "ANic",
+      "kind": "incinerate",
+      "references": []
+    },
+    {
+      "id": "ANic",
+      "name": "Испепеление",
+      "base": "ANic",
+      "kind": "incinerate",
+      "references": []
+    },
+    {
+      "id": "A0BF",
+      "name": "Каменная стойкость",
+      "base": "AUts",
+      "kind": "spiked",
+      "references": []
+    },
+    {
+      "id": "A0CU",
+      "name": "Иллюзорное отражение",
+      "base": "AOmi",
+      "kind": "elemental_mirror",
+      "references": []
+    },
+    {
+      "id": "A10C",
+      "name": "Обслуживание механизмов",
+      "base": "ACav",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "A10D",
+      "name": "MEC:REGENNN",
+      "base": "AIgx",
+      "kind": "aura",
+      "references": []
+    },
+    {
+      "id": "AUC2",
+      "name": "Укус матриарха",
+      "base": "AOcr",
+      "kind": "critical",
+      "references": []
+    }
+  ],
+  "marker": [
+    {
+      "id": "A0ET",
+      "name": "Связь стихий",
+      "base": "ACct",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A00J",
+      "name": "Книга заклинаний",
+      "base": "Aspb",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "Ed",
+          "line": 5459
+        }
+      ]
+    },
+    {
+      "id": "A013",
+      "name": "Аура замедления",
+      "base": "Aasl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A021",
+      "name": "Аура замедления",
+      "base": "Aasl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A023",
+      "name": "Аура замедления",
+      "base": "Aasl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A024",
+      "name": "Аура замедления",
+      "base": "Aasl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A028",
+      "name": "Erase",
+      "base": "Aasl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A029",
+      "name": "Erase",
+      "base": "Aasl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A02O",
+      "name": "Poison Area",
+      "base": "Aasl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A08P",
+      "name": "Аура замедления",
+      "base": "Aasl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A02A",
+      "name": "Curse Blood Fiend",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A02Y",
+      "name": "Сфера",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A036",
+      "name": "All Damage Aura",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A037",
+      "name": "Armor Aura",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A03V",
+      "name": "Сфера",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A04A",
+      "name": "Сфера",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A04B",
+      "name": "Crystal Aura",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A04C",
+      "name": "Frost Attack",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A04M",
+      "name": "Сфера",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A051",
+      "name": "Сфера",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A053",
+      "name": "Сфера",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A058",
+      "name": "Сфера",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A05O",
+      "name": "Сфера",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A06E",
+      "name": "Rescue Strike Effect",
+      "base": "Asph",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "fJ",
+          "line": 12596
+        },
+        {
+          "function": "pk",
+          "line": 13702
+        }
+      ]
+    },
+    {
+      "id": "A06O",
+      "name": "Сфера",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A06V",
+      "name": "Legendary Unit",
+      "base": "Asph",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "YD",
+          "line": 6572
+        }
+      ]
+    },
+    {
+      "id": "A08N",
+      "name": "Spell Resistance",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A0E5",
+      "name": "ELE: Elemental of Wind (effect)",
+      "base": "Asph",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "Wk",
+          "line": 13843
+        }
+      ]
+    },
+    {
+      "id": "A0E6",
+      "name": "ELE: Greater Elemental of Wind (effect)",
+      "base": "Asph",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A09A",
+      "name": "Показать радиус",
+      "base": "Absk",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "Sk",
+          "line": 13792
+        }
+      ]
+    },
+    {
+      "id": "A03Q",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "Ab",
+          "line": 3234
+        },
+        {
+          "function": "pb",
+          "line": 3521
+        },
+        {
+          "function": "nh",
+          "line": 9499
+        }
+      ]
+    },
+    {
+      "id": "A03U",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A07E",
+      "name": "Оформление постройки",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A07G",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "mk",
+          "line": 13607
+        }
+      ]
+    },
+    {
+      "id": "A07H",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "mk",
+          "line": 13607
+        },
+        {
+          "function": "zk",
+          "line": 13866
+        }
+      ]
+    },
+    {
+      "id": "A07J",
+      "name": "Непредсказуемая кровь",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "uk",
+          "line": 13814
+        }
+      ]
+    },
+    {
+      "id": "A07K",
+      "name": "Обращение в вампира",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A07M",
+      "name": "Автоматический ремонт",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "CB",
+          "line": 4016
+        },
+        {
+          "function": "cd",
+          "line": 5524
+        },
+        {
+          "function": "jd",
+          "line": 5614
+        },
+        {
+          "function": "ld",
+          "line": 5656
+        },
+        {
+          "function": "rk",
+          "line": 13203
+        },
+        {
+          "function": "mk",
+          "line": 13607
+        }
+      ]
+    },
+    {
+      "id": "A07O",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A08X",
+      "name": "Похищение жизни",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A09H",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "Kd",
+          "line": 5645
+        },
+        {
+          "function": "ld",
+          "line": 5656
+        }
+      ]
+    },
+    {
+      "id": "A0C5",
+      "name": "Ответная ярость",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "jd",
+          "line": 5614
+        },
+        {
+          "function": "vh",
+          "line": 9456
+        },
+        {
+          "function": "nh",
+          "line": 9499
+        }
+      ]
+    },
+    {
+      "id": "A0CV",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "EB",
+          "line": 3884
+        }
+      ]
+    },
+    {
+      "id": "A0DS",
+      "name": "Elemental Building",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "ab",
+          "line": 3156
+        },
+        {
+          "function": "Kk",
+          "line": 13581
+        },
+        {
+          "function": "mk",
+          "line": 13607
+        }
+      ]
+    },
+    {
+      "id": "A0DW",
+      "name": "Сила земли",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "nh",
+          "line": 9499
+        }
+      ]
+    },
+    {
+      "id": "A0DX",
+      "name": "Ответная молния",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "nh",
+          "line": 9499
+        }
+      ]
+    },
+    {
+      "id": "A0DZ",
+      "name": "Призыв пламени",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "jd",
+          "line": 5614
+        },
+        {
+          "function": "ld",
+          "line": 5656
+        },
+        {
+          "function": "ok",
+          "line": 13198
+        }
+      ]
+    },
+    {
+      "id": "A0E0",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A0EZ",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "hB",
+          "line": 4099
+        },
+        {
+          "function": "jd",
+          "line": 5614
+        },
+        {
+          "function": "pf",
+          "line": 7178
+        },
+        {
+          "function": "eh",
+          "line": 9467
+        },
+        {
+          "function": "nh",
+          "line": 9499
+        }
+      ]
+    },
+    {
+      "id": "A0F5",
+      "name": "Стихийная связь",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "mk",
+          "line": 13607
+        }
+      ]
+    },
+    {
+      "id": "A0FK",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "EB",
+          "line": 3884
+        },
+        {
+          "function": "XB",
+          "line": 3891
+        }
+      ]
+    },
+    {
+      "id": "A0FO",
+      "name": "Канал (|cffffcc00C|r)",
+      "base": "ANcl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "ld",
+          "line": 5656
+        }
+      ]
+    },
+    {
+      "id": "A070",
+      "name": "Лунный чакрум",
+      "base": "Amgl",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "Xd",
+          "line": 5469
+        },
+        {
+          "function": "Od",
+          "line": 5483
+        },
+        {
+          "function": "ld",
+          "line": 5656
+        },
+        {
+          "function": "UD",
+          "line": 6485
+        },
+        {
+          "function": "PG",
+          "line": 9345
+        }
+      ]
+    },
+    {
+      "id": "A07W",
+      "name": "Луч света",
+      "base": "Amgl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A09U",
+      "name": "Энергетический разряд",
+      "base": "Amgl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A0EX",
+      "name": "Discharge",
+      "base": "Amgl",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A07Y",
+      "name": "Сфера",
+      "base": "Asp1",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A0BC",
+      "name": "Вырвать дерево (|cffffcc00W|r)",
+      "base": "Agra",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "A0DY",
+      "name": "Разделение пламени",
+      "base": "ANlm",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "AInv",
+      "name": "Предметы",
+      "base": "AInv",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "Adtg",
+      "name": "Ясновидение",
+      "base": "Adtg",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "Aeth",
+      "name": "Дух",
+      "base": "Aeth",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "Aloc",
+      "name": "Москиты",
+      "base": "Aloc",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "Ej",
+          "line": 11369
+        }
+      ]
+    },
+    {
+      "id": "Atol",
+      "name": "Превращение Древа Жизни",
+      "base": "Atol",
+      "kind": "marker",
+      "references": []
+    },
+    {
+      "id": "Avul",
+      "name": "Неуязвимый",
+      "base": "Avul",
+      "kind": "marker",
+      "references": [
+        {
+          "function": "eB",
+          "line": 3810
+        },
+        {
+          "function": "xB",
+          "line": 3819
+        },
+        {
+          "function": "OB",
+          "line": 3898
+        },
+        {
+          "function": "od",
+          "line": 5396
+        },
+        {
+          "function": "Nd",
+          "line": 5512
+        },
+        {
+          "function": "bF",
+          "line": 7636
+        },
+        {
+          "function": "cF",
+          "line": 7663
+        },
+        {
+          "function": "Jg",
+          "line": 8614
+        },
+        {
+          "function": "xh",
+          "line": 9475
+        },
+        {
+          "function": "pk",
+          "line": 13702
+        }
+      ]
+    }
+  ],
+  "pending": [
+    {
+      "id": "A072",
+      "name": "Ядерная ракета",
+      "base": "ACpa",
+      "kind": "triggered",
+      "references": []
+    }
+  ]
+}

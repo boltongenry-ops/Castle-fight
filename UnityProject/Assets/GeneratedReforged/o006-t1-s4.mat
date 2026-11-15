@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: CastleFight/ReforgedUnit
+  m_Shader: {fileID: 4800000, guid: 48c637f782de4d34e96ca01f7e87f828, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: 2450
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _EmissionMap:
+        m_Texture: {fileID: 2800000, guid: 8a97f09ec6bf46847bd36df865c6579b, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: 64b54199c664cee4bb32ba2e3cf832d5, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _NormalMap:
+        m_Texture: {fileID: 2800000, guid: 52f19caaa61c1f5428a0d9535fdff548, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _ORMMap:
+        m_Texture: {fileID: 2800000, guid: babf6182ffe72c742b7466477b94f098, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _TeamMask:
+        m_Texture: {fileID: 2800000, guid: 8906bf4eb506341459b681ffbb97c5a2, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _Cutoff: 0.75
+    - _DstBlend: 0
+    - _HasNormal: 1
+    - _HasORM: 1
+    - _NativeAlpha: 1
+    - _SrcBlend: 1
+    - _Unlit: 0
+    - _ZWrite: 1
+    m_Colors:
+    - _TeamColor: {r: 0.85, g: 0.08, b: 0.06, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

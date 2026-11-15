@@ -1,0 +1,303 @@
+[
+  {
+    "expected": {
+      "coins": [],
+      "config": {
+        "fog": true
+      },
+      "effects": [
+        {
+          "kind": "hit"
+        }
+      ],
+      "elapsed": 0.0,
+      "huts": [],
+      "projectiles": [],
+      "units": [
+        {
+          "hp": [
+            100,
+            100
+          ],
+          "id": 1,
+          "state": {
+            "obsolete": 1,
+            "slow": 0
+          }
+        }
+      ]
+    },
+    "wire": {
+      "coins": [],
+      "config": {
+        "fog": true
+      },
+      "effects": [
+        {
+          "kind": "hit"
+        }
+      ],
+      "elapsed": 0.0,
+      "full": true,
+      "huts": [],
+      "projectiles": [],
+      "seq": 1,
+      "type": "snapshot",
+      "units": [
+        {
+          "hp": [
+            100,
+            100
+          ],
+          "id": 1,
+          "state": {
+            "obsolete": 1,
+            "slow": 0
+          }
+        }
+      ]
+    }
+  },
+  {
+    "expected": {
+      "coins": [],
+      "config": {
+        "fog": false,
+        "new": {
+          "hello": "world"
+        }
+      },
+      "effects": [],
+      "elapsed": 0.1,
+      "huts": [],
+      "projectiles": [],
+      "units": [
+        {
+          "hp": [
+            75,
+            100
+          ],
+          "id": 1,
+          "state": {
+            "slow": 0.5
+          }
+        },
+        {
+          "hp": [
+            60,
+            60
+          ],
+          "id": 2
+        }
+      ]
+    },
+    "wire": {
+      "base": 1,
+      "effects": [],
+      "patch": {
+        "remove": [],
+        "set": {
+          "config": {
+            "$": {
+              "remove": [],
+              "set": {
+                "fog": false,
+                "new": {
+                  "=": {
+                    "hello": "world"
+                  }
+                }
+              }
+            }
+          },
+          "elapsed": 0.1
+        }
+      },
+      "seq": 2,
+      "tables": {
+        "units": {
+          "remove": [],
+          "update": [
+            {
+              "id": 1,
+              "patch": {
+                "remove": [],
+                "set": {
+                  "hp": [
+                    75,
+                    100
+                  ],
+                  "state": {
+                    "$": {
+                      "remove": [
+                        "obsolete"
+                      ],
+                      "set": {
+                        "slow": 0.5
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "id": 2,
+              "new": {
+                "hp": [
+                  60,
+                  60
+                ],
+                "id": 2
+              }
+            }
+          ]
+        }
+      },
+      "type": "snapshot_delta"
+    }
+  },
+  {
+    "expected": {
+      "coins": [],
+      "effects": [],
+      "elapsed": 0.2,
+      "huts": [],
+      "projectiles": [],
+      "units": [
+        {
+          "hp": [
+            60,
+            60
+          ],
+          "id": 2
+        }
+      ]
+    },
+    "wire": {
+      "base": 2,
+      "effects": [],
+      "patch": {
+        "remove": [
+          "config"
+        ],
+        "set": {
+          "elapsed": 0.2
+        }
+      },
+      "seq": 3,
+      "tables": {
+        "units": {
+          "remove": [
+            1
+          ],
+          "update": []
+        }
+      },
+      "type": "snapshot_delta"
+    }
+  },
+  {
+    "expected": {
+      "coins": [],
+      "effects": [
+        {
+          "kind": "death"
+        }
+      ],
+      "elapsed": 0.3,
+      "huts": [],
+      "projectiles": [],
+      "units": [
+        {
+          "hp": [
+            60,
+            60
+          ],
+          "id": 2,
+          "state": {
+            "new": true
+          }
+        }
+      ]
+    },
+    "wire": {
+      "base": 3,
+      "effects": [
+        {
+          "kind": "death"
+        }
+      ],
+      "patch": {
+        "remove": [],
+        "set": {
+          "elapsed": 0.3
+        }
+      },
+      "seq": 4,
+      "tables": {
+        "units": {
+          "remove": [],
+          "update": [
+            {
+              "id": 2,
+              "patch": {
+                "remove": [],
+                "set": {
+                  "state": {
+                    "=": {
+                      "new": true
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "type": "snapshot_delta"
+    }
+  },
+  {
+    "expected": {
+      "coins": [],
+      "effects": [],
+      "elapsed": 6,
+      "huts": [],
+      "projectiles": [],
+      "units": [
+        {
+          "hp": [
+            60,
+            60
+          ],
+          "id": 2,
+          "state": {
+            "new": true
+          }
+        }
+      ]
+    },
+    "wire": {
+      "coins": [],
+      "effects": [],
+      "elapsed": 6,
+      "full": true,
+      "huts": [],
+      "projectiles": [],
+      "seq": 5,
+      "type": "snapshot",
+      "units": [
+        {
+          "hp": [
+            60,
+            60
+          ],
+          "id": 2,
+          "state": {
+            "new": true
+          }
+        }
+      ]
+    }
+  }
+]

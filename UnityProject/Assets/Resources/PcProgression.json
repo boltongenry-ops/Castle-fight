@@ -1,0 +1,230 @@
+{
+  "challenges": [
+    {
+      "id": "five_pillars",
+      "title": "Пять опор",
+      "description": "Победите орков, имея не больше пяти построек одновременно. Улучшения разрешены.",
+      "race": "Human Alliance",
+      "opponent": "Orcish Horde",
+      "max_buildings": 5,
+      "reward": 100
+    },
+    {
+      "id": "no_legends",
+      "title": "Без легенд",
+      "description": "Победите северян без легендарных построек у обеих сторон.",
+      "race": "Night Elfs",
+      "opponent": "Northern Realms",
+      "no_legends": true,
+      "reward": 100
+    },
+    {
+      "id": "mixed_army",
+      "title": "Сборная армия",
+      "description": "Высший строитель против Хаоса: соедините случайные линии разных рас.",
+      "race": "Ultimate Builder",
+      "opponent": "Chaos Legions",
+      "reward": 100
+    },
+    {
+      "id": "jade_horde",
+      "title": "Хмель против Орды",
+      "description": "Выиграйте за пандаренов у орков, располагая максимум шестью постройками.",
+      "race": "Pandaren Order",
+      "opponent": "Orcish Horde",
+      "max_buildings": 6,
+      "reward": 120
+    },
+    {
+      "id": "web_and_ice",
+      "title": "Паутина и лёд",
+      "description": "Одолейте северян нерубами без легендарных построек.",
+      "race": "Nerubian Swarm",
+      "opponent": "Northern Realms",
+      "no_legends": true,
+      "reward": 120
+    },
+    {
+      "id": "tide_and_fire",
+      "title": "Прилив и пламя",
+      "description": "Остановите Хаос армией наг при помощи не более шести построек.",
+      "race": "Naga Faction",
+      "opponent": "Chaos Legions",
+      "max_buildings": 6,
+      "reward": 120
+    },
+    {
+      "id": "iron_and_bone",
+      "title": "Железо против костей",
+      "description": "Победите нежить механизмами без легендарных построек.",
+      "race": "Mech Coalition",
+      "opponent": "Undead Forces",
+      "no_legends": true,
+      "reward": 120
+    },
+    {
+      "id": "wild_defense",
+      "title": "Дикая оборона",
+      "description": "Сдержите осквернённых силами природы, имея не больше пяти построек.",
+      "race": "Nature Force",
+      "opponent": "Corrupted Conglomerate",
+      "max_buildings": 5,
+      "reward": 140
+    },
+    {
+      "id": "elemental_siege",
+      "title": "Осада стихий",
+      "description": "Победите людей за элементалей без легендарных построек.",
+      "race": "Elementals' Universe",
+      "opponent": "Human Alliance",
+      "no_legends": true,
+      "reward": 140
+    },
+    {
+      "id": "elf_precision",
+      "title": "Точность вместо числа",
+      "description": "Союз эльфов против нежити: победите, имея максимум четыре постройки. Улучшения разрешены.",
+      "race": "Elven Union",
+      "opponent": "Undead Forces",
+      "max_buildings": 4,
+      "reward": 160,
+      "origin": "Unity additional challenge"
+    },
+    {
+      "id": "north_storm",
+      "title": "До наступления оттепели",
+      "description": "Разбейте пандаренов северянами за 12 минут. Легендарные постройки недоступны обеим сторонам.",
+      "race": "Northern Realms",
+      "opponent": "Pandaren Order",
+      "max_seconds": 720,
+      "no_legends": true,
+      "reward": 180,
+      "origin": "Unity additional challenge"
+    },
+    {
+      "id": "bone_fortress",
+      "title": "Несокрушимая усыпальница",
+      "description": "Победите силы природы за нежить. К победе у вашего замка должно остаться не менее 70% здоровья.",
+      "race": "Undead Forces",
+      "opponent": "Nature Force",
+      "min_castle_fraction": 0.7,
+      "reward": 160,
+      "origin": "Unity additional challenge"
+    },
+    {
+      "id": "corrupt_triangle",
+      "title": "Три печати скверны",
+      "description": "Осквернённые против людей: победите, имея максимум три постройки одновременно. Улучшения разрешены.",
+      "race": "Corrupted Conglomerate",
+      "opponent": "Human Alliance",
+      "max_buildings": 3,
+      "reward": 200,
+      "origin": "Unity additional challenge"
+    },
+    {
+      "id": "orc_no_rescue",
+      "title": "Честь воина",
+      "description": "Одолейте наг за орков без спасительного взрыва у обеих сторон. Не более семи своих построек.",
+      "race": "Orcish Horde",
+      "opponent": "Naga Faction",
+      "no_rescue": true,
+      "max_buildings": 7,
+      "reward": 160,
+      "origin": "Unity additional challenge"
+    },
+    {
+      "id": "chaos_rush",
+      "title": "Десять минут Хаоса",
+      "description": "Победите Союз эльфов за Хаос за 10 минут. Легендарные постройки недоступны обеим сторонам.",
+      "race": "Chaos Legions",
+      "opponent": "Elven Union",
+      "max_seconds": 600,
+      "no_legends": true,
+      "reward": 180,
+      "origin": "Unity additional challenge"
+    },
+    {
+      "id": "swarm_survivor",
+      "title": "Панцирь крепости",
+      "description": "Нерубы против механизмов: максимум пять построек и не менее половины здоровья замка к победе.",
+      "race": "Nerubian Swarm",
+      "opponent": "Mech Coalition",
+      "max_buildings": 5,
+      "min_castle_fraction": 0.5,
+      "reward": 180,
+      "origin": "Unity additional challenge"
+    },
+    {
+      "id": "jade_without_safety",
+      "title": "Последний тост",
+      "description": "Пандарены против осквернённых: победите без спасительного взрыва у обеих сторон за 15 минут.",
+      "race": "Pandaren Order",
+      "opponent": "Corrupted Conglomerate",
+      "no_rescue": true,
+      "max_seconds": 900,
+      "reward": 180,
+      "origin": "Unity additional challenge"
+    },
+    {
+      "id": "nature_small_grove",
+      "title": "Малая роща",
+      "description": "Силы природы против элементалей: не более четырёх построек, не менее 60% здоровья замка к победе.",
+      "race": "Nature Force",
+      "opponent": "Elementals' Universe",
+      "max_buildings": 4,
+      "min_castle_fraction": 0.6,
+      "reward": 180,
+      "origin": "Unity additional challenge"
+    }
+  ],
+  "items": [
+    {
+      "id": "frame_jade",
+      "kind": "frame",
+      "title": "Нефритовая оправа",
+      "description": "Зелёная оправа для аватара профиля.",
+      "cost": 150,
+      "color": "61c994"
+    },
+    {
+      "id": "frame_flame",
+      "kind": "frame",
+      "title": "Огненная оправа",
+      "description": "Медно-огненная оправа для аватара профиля.",
+      "cost": 150,
+      "color": "f38b4a"
+    },
+    {
+      "id": "avatar_pandaren",
+      "kind": "avatar",
+      "title": "Хмелемастер",
+      "description": "Герб Ордена Нефритового Хмеля как аватар.",
+      "cost": 200,
+      "asset": "pandaren"
+    },
+    {
+      "id": "avatar_nerubian",
+      "kind": "avatar",
+      "title": "Владыка роя",
+      "description": "Герб нерубов как аватар.",
+      "cost": 200,
+      "asset": "nerubian"
+    },
+    {
+      "id": "aura_jade",
+      "kind": "aura",
+      "title": "Нефритовое сияние",
+      "description": "Декоративная аура вокруг строителя.",
+      "cost": 250,
+      "color": "52d99d"
+    },
+    {
+      "id": "aura_flame",
+      "kind": "aura",
+      "title": "Угольки Хаоса",
+      "description": "Декоративная огненная аура вокруг строителя.",
+      "cost": 250,
+      "color": "ff9a4d"
+    }
+  ]
+}

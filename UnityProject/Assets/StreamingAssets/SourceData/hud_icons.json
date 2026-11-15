@@ -1,0 +1,1052 @@
+{
+  "commands": {
+    "build": "res://assets/icons/hud/309a209f356d.png",
+    "upgrade": "res://assets/icons/hud/074add17140d.png",
+    "blink": "res://assets/icons/hud/40edeaa42ae3.png",
+    "repair": "res://assets/icons/hud/7ddf04374a9f.png",
+    "rescue": "res://assets/icons/hud/d052bae75f41.png",
+    "pause_all": "res://assets/icons/hud/2428ae432fdd.png",
+    "resume_all": "res://assets/icons/hud/df03bae9267a.png",
+    "cancel": "res://assets/icons/hud/b7c29c0ca593.png",
+    "pause": "res://assets/icons/hud/2428ae432fdd.png",
+    "sell": "res://assets/icons/hud/d4df77315b8b.png",
+    "attack": "res://assets/icons/hud/de2adb2383ce.png",
+    "armor": "res://assets/icons/hud/aae916ad4a5f.png",
+    "buff": "res://assets/icons/hud/f79f7b2e836f.png",
+    "debuff": "res://assets/icons/hud/449172faf7a9.png"
+  },
+  "resources": {
+    "gold": "res://assets/icons/hud/7f287de84f0d.png",
+    "wood": "res://assets/icons/hud/1e7b09091714.png"
+  },
+  "buffs": {
+    "Bdet": {
+      "icon": "res://assets/icons/hud/497df3d9dd54.png",
+      "name": "Bdet"
+    },
+    "Bvul": {
+      "icon": "res://assets/icons/hud/bb96693027db.png",
+      "name": "Bvul"
+    },
+    "Bspe": {
+      "icon": "res://assets/icons/hud/bf2a369421d0.png",
+      "name": "Bspe"
+    },
+    "Bfro": {
+      "icon": "res://assets/icons/hud/fd965dcd4c97.png",
+      "name": "Bfro"
+    },
+    "BSTN": {
+      "icon": "res://assets/icons/hud/c562a9c1fcc5.png",
+      "name": "BSTN"
+    },
+    "BPSE": {
+      "icon": "res://assets/icons/hud/c562a9c1fcc5.png",
+      "name": "BPSE"
+    },
+    "Binf": {
+      "icon": "res://assets/icons/hud/f79f7b2e836f.png",
+      "name": "Binf"
+    },
+    "Bhea": {
+      "icon": "res://assets/icons/hud/0cddb01960c4.png",
+      "name": "Bhea"
+    },
+    "Bslo": {
+      "icon": "res://assets/icons/hud/449172faf7a9.png",
+      "name": "Bslo"
+    },
+    "Binv": {
+      "icon": "res://assets/icons/hud/c0c14a33feab.png",
+      "name": "Binv"
+    },
+    "Bply": {
+      "icon": "res://assets/icons/hud/d5dc0627db88.png",
+      "name": "Bply"
+    },
+    "BHwe": {
+      "icon": "res://assets/icons/hud/8083fc3d92cb.png",
+      "name": "BHwe"
+    },
+    "BHab": {
+      "icon": "res://assets/icons/hud/bb7536add6c9.png",
+      "name": "BHab"
+    },
+    "BHtb": {
+      "icon": "res://assets/icons/hud/62a93952317c.png",
+      "name": "BHtb"
+    },
+    "BHtc": {
+      "icon": "res://assets/icons/hud/92d3fe5eea48.png",
+      "name": "BHtc"
+    },
+    "BHbh": {
+      "icon": "res://assets/icons/hud/800d69d352d9.png",
+      "name": "BHbh"
+    },
+    "BHav": {
+      "icon": "res://assets/icons/hud/f0fbfb9b54cf.png",
+      "name": "BHav"
+    },
+    "BHds": {
+      "icon": "res://assets/icons/hud/eb6368a3008a.png",
+      "name": "BHds"
+    },
+    "BHad": {
+      "icon": "res://assets/icons/hud/159bcbf0f5f2.png",
+      "name": "BHad"
+    },
+    "Bmil": {
+      "icon": "res://assets/icons/hud/deec17e07c4f.png",
+      "name": "Bmil"
+    },
+    "BHca": {
+      "icon": "res://assets/icons/hud/06938e28831a.png",
+      "name": "BHca"
+    },
+    "Bmlt": {
+      "icon": "res://assets/icons/hud/159e6b3558d0.png",
+      "name": "Bmlt"
+    },
+    "Bcmg": {
+      "icon": "res://assets/icons/hud/f8b8e59d823f.png",
+      "name": "Bcmg"
+    },
+    "Bclf": {
+      "icon": "res://assets/icons/hud/3d48db3e1b1d.png",
+      "name": "Bclf"
+    },
+    "BHfs": {
+      "icon": "res://assets/icons/hud/fb194136c51f.png",
+      "name": "BHfs"
+    },
+    "BHbn": {
+      "icon": "res://assets/icons/hud/04c2ff5932d5.png",
+      "name": "BHbn"
+    },
+    "Bpxf": {
+      "icon": "res://assets/icons/hud/f0616c3a7831.png",
+      "name": "Phoenix"
+    },
+    "BHbd": {
+      "icon": "res://assets/icons/hud/055064b00440.png",
+      "name": "BHbd"
+    },
+    "Bdbb": {
+      "icon": "res://assets/icons/hud/45a769f995fd.png",
+      "name": "Bdbb"
+    },
+    "Bdbl": {
+      "icon": "res://assets/icons/hud/45a769f995fd.png",
+      "name": "Bdbl"
+    },
+    "Bdbm": {
+      "icon": "res://assets/icons/hud/0bbfe6d47fcb.png",
+      "name": "Bdbm"
+    },
+    "BNhe": {
+      "icon": "res://assets/icons/hud/449172faf7a9.png",
+      "name": "BNhe"
+    },
+    "Bbsk": {
+      "icon": "res://assets/icons/hud/8057684e98ef.png",
+      "name": "Bbsk"
+    },
+    "Bbss": {
+      "icon": "res://assets/icons/hud/8057684e98ef.png",
+      "name": "Bbss"
+    },
+    "Bens": {
+      "icon": "res://assets/icons/hud/887e6b4486f3.png",
+      "name": "Bens"
+    },
+    "Beng": {
+      "icon": "res://assets/icons/hud/887e6b4486f3.png",
+      "name": "Beng"
+    },
+    "Bena": {
+      "icon": "res://assets/icons/hud/887e6b4486f3.png",
+      "name": "Bena"
+    },
+    "Bdvv": {
+      "icon": "res://assets/icons/hud/094117df16e5.png",
+      "name": "Bdvv"
+    },
+    "Bprg": {
+      "icon": "res://assets/icons/hud/c8583eb28dc3.png",
+      "name": "Bprg"
+    },
+    "Blsh": {
+      "icon": "res://assets/icons/hud/6cc9399746e8.png",
+      "name": "Blsh"
+    },
+    "Bblo": {
+      "icon": "res://assets/icons/hud/f70b530454ad.png",
+      "name": "Bblo"
+    },
+    "Beye": {
+      "icon": "res://assets/icons/hud/c30aa1ae67a4.png",
+      "name": "Beye"
+    },
+    "Bstt": {
+      "icon": "res://assets/icons/hud/31ac9020ec72.png",
+      "name": "Bstt"
+    },
+    "Bsta": {
+      "icon": "res://assets/icons/hud/31ac9020ec72.png",
+      "name": "Bsta"
+    },
+    "Bhwd": {
+      "icon": "res://assets/icons/hud/a141cba0ae73.png",
+      "name": "Bhwd"
+    },
+    "Boar": {
+      "icon": "res://assets/icons/hud/a141cba0ae73.png",
+      "name": "Boar"
+    },
+    "Bpoi": {
+      "icon": "res://assets/icons/hud/64c52453becc.png",
+      "name": "Bpoi"
+    },
+    "Bakb": {
+      "icon": "res://assets/icons/hud/34738e9c23bc.png",
+      "name": "Bakb"
+    },
+    "BOwk": {
+      "icon": "res://assets/icons/hud/41730f80e9e2.png",
+      "name": "BOwk"
+    },
+    "BOmi": {
+      "icon": "res://assets/icons/hud/4ec76d349cca.png",
+      "name": "BOmi"
+    },
+    "BOeq": {
+      "icon": "res://assets/icons/hud/b32b02b897fa.png",
+      "name": "BOeq"
+    },
+    "BOae": {
+      "icon": "res://assets/icons/hud/656d169a8171.png",
+      "name": "BOae"
+    },
+    "BOsf": {
+      "icon": "res://assets/icons/hud/8ea0c862177f.png",
+      "name": "BOsf"
+    },
+    "BOws": {
+      "icon": "res://assets/icons/hud/c0a7ba07b267.png",
+      "name": "BOws"
+    },
+    "Bbof": {
+      "icon": "res://assets/icons/hud/fb194136c51f.png",
+      "name": "TRIGSTR_2113"
+    },
+    "Bspl": {
+      "icon": "res://assets/icons/hud/7d4f3d29ba3a.png",
+      "name": "Bspl"
+    },
+    "Bliq": {
+      "icon": "res://assets/icons/hud/91c00632a7de.png",
+      "name": "Bliq"
+    },
+    "BOhx": {
+      "icon": "res://assets/icons/hud/3d94e1dcf14f.png",
+      "name": "BOhx"
+    },
+    "BOvd": {
+      "icon": "res://assets/icons/hud/ec8be2c4a9fc.png",
+      "name": "BOvd"
+    },
+    "Bpsd": {
+      "icon": "res://assets/icons/hud/64c52453becc.png",
+      "name": "Bpsd"
+    },
+    "BIpb": {
+      "icon": "res://assets/icons/hud/20511f86144e.png",
+      "name": "BIpb"
+    },
+    "BIpd": {
+      "icon": "res://assets/icons/hud/20511f86144e.png",
+      "name": "BIpd"
+    },
+    "Buns": {
+      "icon": "res://assets/icons/hud/d4df77315b8b.png",
+      "name": "Buns"
+    },
+    "Bspa": {
+      "icon": "res://assets/icons/hud/8684c03af367.png",
+      "name": "Bspa"
+    },
+    "Bweb": {
+      "icon": "res://assets/icons/hud/05f08cc7b606.png",
+      "name": "Bweb"
+    },
+    "Bwea": {
+      "icon": "res://assets/icons/hud/05f08cc7b606.png",
+      "name": "Bwea"
+    },
+    "Bapl": {
+      "icon": "res://assets/icons/hud/42ec10f47d18.png",
+      "name": "Bapl"
+    },
+    "Bfrz": {
+      "icon": "res://assets/icons/hud/ede80a883829.png",
+      "name": "Bfrz"
+    },
+    "Arai": {
+      "icon": "res://assets/icons/hud/2dea73927135.png",
+      "name": "Arai"
+    },
+    "Buhf": {
+      "icon": "res://assets/icons/hud/974559d8c4bd.png",
+      "name": "Buhf"
+    },
+    "Bcrs": {
+      "icon": "res://assets/icons/hud/3ed616fbe420.png",
+      "name": "Bcrs"
+    },
+    "Bams": {
+      "icon": "res://assets/icons/hud/d252e73698b3.png",
+      "name": "Bams"
+    },
+    "BUdp": {
+      "icon": "res://assets/icons/hud/badc219486d7.png",
+      "name": "BUdp"
+    },
+    "BUan": {
+      "icon": "res://assets/icons/hud/e4a68aab56c6.png",
+      "name": "BUan"
+    },
+    "BUsl": {
+      "icon": "res://assets/icons/hud/01e2b38e432f.png",
+      "name": "BUsl"
+    },
+    "BUst": {
+      "icon": "res://assets/icons/hud/01e2b38e432f.png",
+      "name": "BUst"
+    },
+    "BUav": {
+      "icon": "res://assets/icons/hud/861d2074c7e9.png",
+      "name": "BUav"
+    },
+    "BUfa": {
+      "icon": "res://assets/icons/hud/c85b1913d806.png",
+      "name": "BUfa"
+    },
+    "BUdd": {
+      "icon": "res://assets/icons/hud/9179b8e538e3.png",
+      "name": "BUdd"
+    },
+    "Bcri": {
+      "icon": "res://assets/icons/hud/c213b71a6fbe.png",
+      "name": "Bcri"
+    },
+    "BUau": {
+      "icon": "res://assets/icons/hud/e1c6efd87d2b.png",
+      "name": "BUau"
+    },
+    "Brpb": {
+      "icon": "res://assets/icons/hud/5cae0a6c4cc9.png",
+      "name": "Brpb"
+    },
+    "Brpl": {
+      "icon": "res://assets/icons/hud/a3276585bed1.png",
+      "name": "Brpl"
+    },
+    "Brpm": {
+      "icon": "res://assets/icons/hud/5cae0a6c4cc9.png",
+      "name": "Brpm"
+    },
+    "Babr": {
+      "icon": "res://assets/icons/hud/dafa1e763359.png",
+      "name": "Babr"
+    },
+    "BUim": {
+      "icon": "res://assets/icons/hud/3816bab947d1.png",
+      "name": "BUim"
+    },
+    "BUts": {
+      "icon": "res://assets/icons/hud/c5a414221894.png",
+      "name": "BUts"
+    },
+    "BUcb": {
+      "icon": "res://assets/icons/hud/e96113eecfc1.png",
+      "name": "BUcb"
+    },
+    "BUlo": {
+      "icon": "res://assets/icons/hud/70cacb7dd804.png",
+      "name": "BUlo"
+    },
+    "Brai": {
+      "icon": "res://assets/icons/hud/2dea73927135.png",
+      "name": "Brai"
+    },
+    "BUsp": {
+      "icon": "res://assets/icons/hud/01e2b38e432f.png",
+      "name": "BUsp"
+    },
+    "Bam2": {
+      "icon": "res://assets/icons/hud/d252e73698b3.png",
+      "name": "Bam2"
+    },
+    "Bpos": {
+      "icon": "res://assets/icons/hud/24f73f08756e.png",
+      "name": "Bpos"
+    },
+    "Bspo": {
+      "icon": "res://assets/icons/hud/1ba7d1c32deb.png",
+      "name": "Bspo"
+    },
+    "Bcor": {
+      "icon": "res://assets/icons/hud/2b38e818edeb.png",
+      "name": "Bcor"
+    },
+    "BEim": {
+      "icon": "res://assets/icons/hud/bfa9a3ef6e1e.png",
+      "name": "BEim"
+    },
+    "BEme": {
+      "icon": "res://assets/icons/hud/1758796b9698.png",
+      "name": "BEme"
+    },
+    "BEer": {
+      "icon": "res://assets/icons/hud/4e85853e7b7d.png",
+      "name": "BEer"
+    },
+    "BEfn": {
+      "icon": "res://assets/icons/hud/d087fca8d58c.png",
+      "name": "BEfn"
+    },
+    "BEah": {
+      "icon": "res://assets/icons/hud/3d45b322c5a4.png",
+      "name": "BEah"
+    },
+    "BEar": {
+      "icon": "res://assets/icons/hud/7597f35310d5.png",
+      "name": "BEar"
+    },
+    "Bfae": {
+      "icon": "res://assets/icons/hud/0bd196ade148.png",
+      "name": "Bfae"
+    },
+    "Bcyc": {
+      "icon": "res://assets/icons/hud/30b682469f1c.png",
+      "name": "Bcyc"
+    },
+    "Brej": {
+      "icon": "res://assets/icons/hud/aba47753c9f8.png",
+      "name": "Brej"
+    },
+    "Broa": {
+      "icon": "res://assets/icons/hud/fb9ee76482ee.png",
+      "name": "Broa"
+    },
+    "Bbar": {
+      "icon": "res://assets/icons/hud/fc8e7442d5e4.png",
+      "name": "Bbar"
+    },
+    "Bvng": {
+      "icon": "res://assets/icons/hud/668d8865e0e6.png",
+      "name": "Bvng"
+    },
+    "Bmfl": {
+      "icon": "res://assets/icons/hud/b1587dfe78c3.png",
+      "name": "Bmfl"
+    },
+    "Bmfa": {
+      "icon": "res://assets/icons/hud/b1587dfe78c3.png",
+      "name": "Bmfa"
+    },
+    "Bpsh": {
+      "icon": "res://assets/icons/hud/40d7f91898a5.png",
+      "name": "Bpsh"
+    },
+    "BEsh": {
+      "icon": "res://assets/icons/hud/eab2f59eae2d.png",
+      "name": "BEsh"
+    },
+    "BEsi": {
+      "icon": "res://assets/icons/hud/eab2f59eae2d.png",
+      "name": "BEsi"
+    },
+    "BEsv": {
+      "icon": "res://assets/icons/hud/47fda1edfe47.png",
+      "name": "BEsv"
+    },
+    "Bssd": {
+      "icon": "res://assets/icons/hud/752b1a572ba4.png",
+      "name": "Bssd"
+    },
+    "Bcy2": {
+      "icon": "res://assets/icons/hud/30b682469f1c.png",
+      "name": "Bcy2"
+    },
+    "Btau": {
+      "icon": "res://assets/icons/hud/780fc44134cf.png",
+      "name": "Btau"
+    },
+    "BNdc": {
+      "icon": "res://assets/icons/hud/01e2b38e432f.png",
+      "name": "BNdc"
+    },
+    "BNsl": {
+      "icon": "res://assets/icons/hud/01e2b38e432f.png",
+      "name": "BNsl"
+    },
+    "Bchd": {
+      "icon": "res://assets/icons/hud/ae2c5d23d4e7.png",
+      "name": "Bchd"
+    },
+    "BOac": {
+      "icon": "res://assets/icons/hud/eb40ddc21b6d.png",
+      "name": "BOac"
+    },
+    "Btlf": {
+      "icon": "res://assets/icons/hud/b782b5df213c.png",
+      "name": "Btlf"
+    },
+    "BNms": {
+      "icon": "res://assets/icons/hud/30db16c8c257.png",
+      "name": "BNms"
+    },
+    "BNrd": {
+      "icon": "res://assets/icons/hud/9978709770e1.png",
+      "name": "BNrd"
+    },
+    "Bcsd": {
+      "icon": "res://assets/icons/hud/06938e28831a.png",
+      "name": "Bcsd"
+    },
+    "BNht": {
+      "icon": "res://assets/icons/hud/d337cedba736.png",
+      "name": "BNht"
+    },
+    "BNdo": {
+      "icon": "res://assets/icons/hud/7d184eda50e2.png",
+      "name": "BNdo"
+    },
+    "BNef": {
+      "icon": "res://assets/icons/hud/8848d967d77b.png",
+      "name": "BNef"
+    },
+    "BNsg": {
+      "icon": "res://assets/icons/hud/0636c3fea727.png",
+      "name": "BNsg"
+    },
+    "BNsq": {
+      "icon": "res://assets/icons/hud/1052f13f546e.png",
+      "name": "BNsq"
+    },
+    "BNsw": {
+      "icon": "res://assets/icons/hud/b3335e0d079a.png",
+      "name": "BNsw"
+    },
+    "BCbf": {
+      "icon": "res://assets/icons/hud/83b01b3f7a02.png",
+      "name": "BCbf"
+    },
+    "BNmr": {
+      "icon": "res://assets/icons/hud/2b2e438cf64e.png",
+      "name": "BNmr"
+    },
+    "BNbf": {
+      "icon": "res://assets/icons/hud/34080b1d9d3b.png",
+      "name": "BNbf"
+    },
+    "BNdh": {
+      "icon": "res://assets/icons/hud/186058e1b318.png",
+      "name": "BNdh"
+    },
+    "BNsi": {
+      "icon": "res://assets/icons/hud/1fd60614443d.png",
+      "name": "BNsi"
+    },
+    "BNba": {
+      "icon": "res://assets/icons/hud/38cafd69991d.png",
+      "name": "BNba"
+    },
+    "BNdm": {
+      "icon": "res://assets/icons/hud/38cafd69991d.png",
+      "name": "BNdm"
+    },
+    "BNmo": {
+      "icon": "res://assets/icons/hud/f4fc120db24e.png",
+      "name": "BNmo"
+    },
+    "BNwm": {
+      "icon": "res://assets/icons/hud/fb385df0ff32.png",
+      "name": "BNwm"
+    },
+    "Basl": {
+      "icon": "res://assets/icons/hud/570e3b88ee7c.png",
+      "name": "Basl"
+    },
+    "Btsp": {
+      "icon": "res://assets/icons/hud/570e3b88ee7c.png",
+      "name": "Btsp"
+    },
+    "BCtc": {
+      "icon": "res://assets/icons/hud/99c509ecbd7e.png",
+      "name": "BCtc"
+    },
+    "Bfzy": {
+      "icon": "res://assets/icons/hud/f70b530454ad.png",
+      "name": "Bfzy"
+    },
+    "BNic": {
+      "icon": "res://assets/icons/hud/75c82cd1488f.png",
+      "name": "BNic"
+    },
+    "BNso": {
+      "icon": "res://assets/icons/hud/b8bcce5277f5.png",
+      "name": "BNso"
+    },
+    "BNvc": {
+      "icon": "res://assets/icons/hud/de513a13829d.png",
+      "name": "BNvc"
+    },
+    "BNcs": {
+      "icon": "res://assets/icons/hud/9355621704a2.png",
+      "name": "BNcs"
+    },
+    "BNeg": {
+      "icon": "res://assets/icons/hud/074add17140d.png",
+      "name": "BNeg"
+    },
+    "BNhs": {
+      "icon": "res://assets/icons/hud/120be6fb5337.png",
+      "name": "BNhs"
+    },
+    "BNab": {
+      "icon": "res://assets/icons/hud/2492df8c58c8.png",
+      "name": "BNab"
+    },
+    "BNcr": {
+      "icon": "res://assets/icons/hud/1af26956bd3a.png",
+      "name": "BNcr"
+    },
+    "BNtm": {
+      "icon": "res://assets/icons/hud/61df2b68bf88.png",
+      "name": "BNtm"
+    },
+    "BNpa": {
+      "icon": "res://assets/icons/hud/58828c6f5edf.png",
+      "name": "BNpa"
+    },
+    "BNpm": {
+      "icon": "res://assets/icons/hud/58828c6f5edf.png",
+      "name": "BNpm"
+    },
+    "BNbr": {
+      "icon": "res://assets/icons/hud/fb9ee76482ee.png",
+      "name": "BNbr"
+    },
+    "Bdef": {
+      "icon": "res://assets/icons/hud/20e6e0609885.png",
+      "name": "Bdef"
+    },
+    "BIil": {
+      "icon": "res://assets/icons/hud/b88e1055a677.png",
+      "name": "BIil"
+    },
+    "BIsv": {
+      "icon": "res://assets/icons/hud/018c96339da2.png",
+      "name": "BIsv"
+    },
+    "BIcf": {
+      "icon": "res://assets/icons/hud/5379f95c8902.png",
+      "name": "BIcf"
+    },
+    "BIcb": {
+      "icon": "res://assets/icons/hud/c78f73dcfe1e.png",
+      "name": "BIcb"
+    },
+    "BIrl": {
+      "icon": "res://assets/icons/hud/b86a56956e80.png",
+      "name": "BIrl"
+    },
+    "BIrm": {
+      "icon": "res://assets/icons/hud/076b9fdfdc9d.png",
+      "name": "BIrm"
+    },
+    "BIrg": {
+      "icon": "res://assets/icons/hud/b3d8fa229c73.png",
+      "name": "BIrg"
+    },
+    "BIpv": {
+      "icon": "res://assets/icons/hud/9ef35e348316.png",
+      "name": "BIpv"
+    },
+    "Bshs": {
+      "icon": "res://assets/icons/hud/297dc89c7c86.png",
+      "name": "Bshs"
+    },
+    "Bnss": {
+      "icon": "res://assets/icons/hud/ff9ed7e7ac04.png",
+      "name": "Bnss"
+    },
+    "BNsa": {
+      "icon": "res://assets/icons/hud/850c94b38b59.png",
+      "name": "BNsa"
+    },
+    "BIrb": {
+      "icon": "res://assets/icons/hud/8a2ea6f1fd2c.png",
+      "name": "BIrb"
+    },
+    "B02E": {
+      "icon": "res://assets/icons/hud/3ed616fbe420.png",
+      "name": "Curse Blood Fiend"
+    },
+    "B02D": {
+      "icon": "res://assets/icons/hud/933fb7bfc6dc.png",
+      "name": "Wisp Strike"
+    },
+    "B02C": {
+      "icon": "res://assets/icons/hud/e372cb289770.png",
+      "name": "|cff00ff00Rock Shield|r"
+    },
+    "B02B": {
+      "icon": "res://assets/icons/hud/2ea29bae19da.png",
+      "name": "Haste"
+    },
+    "B02A": {
+      "icon": "res://assets/icons/hud/d3876caf1a53.png",
+      "name": "|cff00ff00Forged Weapon|r"
+    },
+    "B029": {
+      "icon": "res://assets/icons/hud/fd965dcd4c97.png",
+      "name": "B029"
+    },
+    "B028": {
+      "icon": "res://assets/icons/hud/974559d8c4bd.png",
+      "name": "Lightning Shield"
+    },
+    "B027": {
+      "icon": "res://assets/icons/hud/db7d9143da97.png",
+      "name": "Haste"
+    },
+    "B026": {
+      "icon": "res://assets/icons/hud/70cacb7dd804.png",
+      "name": "Squall"
+    },
+    "B025": {
+      "icon": "res://assets/icons/hud/2595b481ba84.png",
+      "name": "Nothing"
+    },
+    "B024": {
+      "icon": "res://assets/icons/hud/95eea8b93427.png",
+      "name": "Natures Aura"
+    },
+    "B023": {
+      "icon": "res://assets/icons/hud/2b38e818edeb.png",
+      "name": "Corrosive Breath"
+    },
+    "B022": {
+      "icon": "res://assets/icons/hud/703cc48bb8b8.png",
+      "name": "B022"
+    },
+    "B021": {
+      "icon": "res://assets/icons/hud/8ea0c862177f.png",
+      "name": "Summoned Treant"
+    },
+    "B020": {
+      "icon": "res://assets/icons/hud/d911e056f554.png",
+      "name": "Curse of Nature"
+    },
+    "B01Z": {
+      "icon": "res://assets/icons/hud/570e3b88ee7c.png",
+      "name": "Cyclone"
+    },
+    "B01Y": {
+      "icon": "res://assets/icons/hud/ae2c5d23d4e7.png",
+      "name": "Astral Grenade"
+    },
+    "B01X": {
+      "icon": "res://assets/icons/hud/2595b481ba84.png",
+      "name": "Nothing"
+    },
+    "B01W": {
+      "icon": "res://assets/icons/hud/b32b02b897fa.png",
+      "name": "Earthquake"
+    },
+    "B01U": {
+      "icon": "res://assets/icons/hud/92e2c77ff071.png",
+      "name": "Explosive Shells"
+    },
+    "B01T": {
+      "icon": "",
+      "name": "Targeted"
+    },
+    "B01S": {
+      "icon": "res://assets/icons/hud/3816bab947d1.png",
+      "name": "B01S"
+    },
+    "B01R": {
+      "icon": "res://assets/icons/hud/d337cedba736.png",
+      "name": "Howl"
+    },
+    "B01Q": {
+      "icon": "res://assets/icons/hud/b7d54292e287.png",
+      "name": "Fragrance of Shadows"
+    },
+    "B01P": {
+      "icon": "res://assets/icons/hud/449172faf7a9.png",
+      "name": "Astral Chains"
+    },
+    "B01O": {
+      "icon": "res://assets/icons/hud/d741e107d2d5.png",
+      "name": "Blast Staff"
+    },
+    "B01N": {
+      "icon": "res://assets/icons/hud/d741e107d2d5.png",
+      "name": "Blast Staff"
+    },
+    "B01M": {
+      "icon": "res://assets/icons/hud/7324e10472b9.png",
+      "name": "Ray of Light"
+    },
+    "B01L": {
+      "icon": "res://assets/icons/hud/aa00ae7e35a4.png",
+      "name": "Power Ammo"
+    },
+    "B01K": {
+      "icon": "res://assets/icons/hud/f006fa17a247.png",
+      "name": "Power Armor"
+    },
+    "B01J": {
+      "icon": "res://assets/icons/hud/f8b8e59d823f.png",
+      "name": "Empowered"
+    },
+    "B01I": {
+      "icon": "res://assets/icons/hud/f8b8e59d823f.png",
+      "name": "Powered"
+    },
+    "B01H": {
+      "icon": "res://assets/icons/hud/30db16c8c257.png",
+      "name": "Energy Shield"
+    },
+    "B01G": {
+      "icon": "res://assets/icons/hud/cb8de2965692.png",
+      "name": "Red Energy Shield"
+    },
+    "B01F": {
+      "icon": "res://assets/icons/hud/d252e73698b3.png",
+      "name": "Spell Protection"
+    },
+    "B01E": {
+      "icon": "res://assets/icons/hud/c8192dd607bc.png",
+      "name": "Lightning"
+    },
+    "B01D": {
+      "icon": "res://assets/icons/hud/03042acda674.png",
+      "name": "Firebolt"
+    },
+    "B01C": {
+      "icon": "res://assets/icons/hud/20e6e0609885.png",
+      "name": "Scroll of Stone"
+    },
+    "B01B": {
+      "icon": "res://assets/icons/hud/159bcbf0f5f2.png",
+      "name": "B01B"
+    },
+    "B019": {
+      "icon": "res://assets/icons/hud/222552ae9ad7.png",
+      "name": "Targeted"
+    },
+    "B018": {
+      "icon": "res://assets/icons/hud/974559d8c4bd.png",
+      "name": "Solar Attack"
+    },
+    "B017": {
+      "icon": "res://assets/icons/hud/4b9856816418.png",
+      "name": "Blessing of the Wilderness"
+    },
+    "B016": {
+      "icon": "res://assets/icons/hud/96ddcb0d9949.png",
+      "name": "Moonshine Blessing"
+    },
+    "B015": {
+      "icon": "res://assets/icons/hud/ca7387ac46e5.png",
+      "name": "Frozen"
+    },
+    "B014": {
+      "icon": "res://assets/icons/hud/35d9f2fa3a29.png",
+      "name": "Freezing Cold"
+    },
+    "B013": {
+      "icon": "res://assets/icons/hud/008b59b7b707.png",
+      "name": "Vitality Aura"
+    },
+    "B012": {
+      "icon": "res://assets/icons/hud/41730f80e9e2.png",
+      "name": "Stealth"
+    },
+    "B011": {
+      "icon": "res://assets/icons/hud/d911e056f554.png",
+      "name": "Chamber of Darkness"
+    },
+    "B010": {
+      "icon": "res://assets/icons/hud/f2cbccb67860.png",
+      "name": "Tribal Blessing: Evasion"
+    },
+    "B00Z": {
+      "icon": "res://assets/icons/hud/78c20b812d83.png",
+      "name": "Tribal Blessing: Critical Strike"
+    },
+    "B00Y": {
+      "icon": "res://assets/icons/hud/e993671c2a59.png",
+      "name": "Tribal Blessing: Demolish"
+    },
+    "B00X": {
+      "icon": "res://assets/icons/hud/bc19406ff771.png",
+      "name": "Frozen"
+    },
+    "B00W": {
+      "icon": "res://assets/icons/hud/7d184eda50e2.png",
+      "name": "Inner Void"
+    },
+    "B00V": {
+      "icon": "res://assets/icons/hud/3d45b322c5a4.png",
+      "name": "Quill Aura"
+    },
+    "B00U": {
+      "icon": "res://assets/icons/hud/42ec10f47d18.png",
+      "name": "Greater Plague"
+    },
+    "B00R": {
+      "icon": "res://assets/icons/hud/4170836b1ef9.png",
+      "name": "Broken Weapon"
+    },
+    "B00Q": {
+      "icon": "res://assets/icons/hud/11fb98bb0ec0.png",
+      "name": "|c00ff0000Corrupt Armor|r"
+    },
+    "B00P": {
+      "icon": "res://assets/icons/hud/3ed616fbe420.png",
+      "name": "Corrupted Speed"
+    },
+    "B00O": {
+      "icon": "res://assets/icons/hud/75c82cd1488f.png",
+      "name": "Burning Soul"
+    },
+    "B00N": {
+      "icon": "res://assets/icons/hud/bb7536add6c9.png",
+      "name": "Crystal Aura"
+    },
+    "B00M": {
+      "icon": "res://assets/icons/hud/356bbcb92329.png",
+      "name": "Frozen"
+    },
+    "B00L": {
+      "icon": "res://assets/icons/hud/7c7ce4ca1c60.png",
+      "name": "Drum'n'Bass Bassline"
+    },
+    "B00K": {
+      "icon": "res://assets/icons/hud/fb9ee76482ee.png",
+      "name": "Battle Cry"
+    },
+    "B00J": {
+      "icon": "res://assets/icons/hud/f79f7b2e836f.png",
+      "name": "Blessing"
+    },
+    "B00I": {
+      "icon": "res://assets/icons/hud/d53b28eed10d.png",
+      "name": "Quad Damage"
+    },
+    "B00H": {
+      "icon": "res://assets/icons/hud/20511f86144e.png",
+      "name": "Double Damage"
+    },
+    "B00G": {
+      "icon": "res://assets/icons/hud/ae25be04653f.png",
+      "name": "Poison"
+    },
+    "B00F": {
+      "icon": "res://assets/icons/hud/62fa753b4a36.png",
+      "name": "Aggressive Warsong"
+    },
+    "B00E": {
+      "icon": "res://assets/icons/hud/91b64dd2b0a9.png",
+      "name": "Song of Shields"
+    },
+    "B00D": {
+      "icon": "res://assets/icons/hud/c562a9c1fcc5.png",
+      "name": "Stasis"
+    },
+    "B00C": {
+      "icon": "res://assets/icons/hud/04c2ff5932d5.png",
+      "name": "Serpent Rock Poison"
+    },
+    "B00B": {
+      "icon": "res://assets/icons/hud/c562a9c1fcc5.png",
+      "name": "Dummy insta kill"
+    },
+    "B00A": {
+      "icon": "res://assets/icons/hud/57e1e725b3f8.png",
+      "name": "Summoned Lobster"
+    },
+    "B009": {
+      "icon": "res://assets/icons/hud/1758796b9698.png",
+      "name": "Shaman's Buff"
+    },
+    "B008": {
+      "icon": "res://assets/icons/hud/34738e9c23bc.png",
+      "name": "Drum'n'Bass Beats"
+    },
+    "B007": {
+      "icon": "res://assets/icons/hud/8057684e98ef.png",
+      "name": "Berserk"
+    },
+    "B006": {
+      "icon": "res://assets/icons/hud/8057684e98ef.png",
+      "name": "B006"
+    },
+    "B005": {
+      "icon": "res://assets/icons/hud/c562a9c1fcc5.png",
+      "name": "Soul Taken"
+    },
+    "B004": {
+      "icon": "res://assets/icons/hud/d29025694a77.png",
+      "name": "Weaken Soul"
+    },
+    "B003": {
+      "icon": "res://assets/icons/hud/42ec10f47d18.png",
+      "name": "Plague"
+    },
+    "B002": {
+      "icon": "res://assets/icons/hud/24f73f08756e.png",
+      "name": "Fear of the Banshee"
+    },
+    "B001": {
+      "icon": "res://assets/icons/hud/42ec10f47d18.png",
+      "name": "Rot"
+    },
+    "B000": {
+      "icon": "res://assets/icons/hud/61df2b68bf88.png",
+      "name": "Holy Power"
+    },
+    "BZP2": {
+      "icon": "",
+      "name": "Чума"
+    },
+    "BZD1": {
+      "icon": "",
+      "name": "Rot"
+    },
+    "BZF1": {
+      "icon": "res://assets/icons/hud/5f0e00791444.png",
+      "name": "Ожог Маны"
+    },
+    "BZR3": {
+      "icon": "res://assets/icons/hud/c85b1913d806.png",
+      "name": "Ледяное Оцепенение"
+    },
+    "BZQ2": {
+      "icon": "res://assets/icons/hud/c9a6bd7d4949.png",
+      "name": "Нейротоксин"
+    },
+    "BZM1": {
+      "icon": "res://assets/icons/hud/0570ee98266f.png",
+      "name": "Тяжёлая Броня"
+    }
+  }
+}
