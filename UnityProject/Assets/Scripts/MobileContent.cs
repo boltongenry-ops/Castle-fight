@@ -113,7 +113,7 @@ public sealed class MobileContent : MonoBehaviour {
         int attempt=0;
         while(true){
             long resume=File.Exists(partial)?new FileInfo(partial).Length:0;if(resume>=size){File.Delete(partial);resume=0;}
-            using(var request=UnityWebRequest.Get(baseUrl+"/"+(string)row["file"])){
+            using(var request=UnityWebRequest.Get(ContentCatalog031.AssetUrl(index,row))){
                 request.downloadHandler=new DownloadHandlerFile(partial,resume>0){removeFileOnAbort=false};request.timeout=0;
                 if(resume>0)request.SetRequestHeader("Range","bytes="+resume+"-");
                 var transfer=request.SendWebRequest();long lastBytes=0;float lastProgress=Time.realtimeSinceStartup;

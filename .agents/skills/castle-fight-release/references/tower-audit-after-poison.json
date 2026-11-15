@@ -1,0 +1,494 @@
+{
+  "results": [
+    {
+      "measurement": "hNT1_ground",
+      "damage30s": 1088.0,
+      "attacksStarted": 19,
+      "huntProcs": 0,
+      "spellCasts": 0
+    },
+    {
+      "pass": true,
+      "check": "Tower projectiles actually damage the target"
+    },
+    {
+      "pass": true,
+      "check": "Tower alone does not consume the hunt mark bonus"
+    },
+    {
+      "pass": true,
+      "check": "Only upgraded tower marks ground targets"
+    },
+    {
+      "case": "hNT1_shoots_ground",
+      "status": "PASS"
+    },
+    {
+      "measurement": "hNT1_air",
+      "damage30s": 1088.0,
+      "attacksStarted": 19,
+      "huntProcs": 0,
+      "spellCasts": 3
+    },
+    {
+      "pass": true,
+      "check": "Tower projectiles actually damage the target"
+    },
+    {
+      "pass": true,
+      "check": "Tower alone does not consume the hunt mark bonus"
+    },
+    {
+      "case": "hNT1_shoots_air",
+      "status": "PASS"
+    },
+    {
+      "measurement": "hNT2_ground",
+      "damage30s": 2181.961,
+      "attacksStarted": 19,
+      "huntProcs": 0,
+      "spellCasts": 0
+    },
+    {
+      "pass": true,
+      "check": "Tower projectiles actually damage the target"
+    },
+    {
+      "pass": true,
+      "check": "Tower alone does not consume the hunt mark bonus"
+    },
+    {
+      "pass": true,
+      "check": "Only upgraded tower marks ground targets"
+    },
+    {
+      "case": "hNT2_shoots_ground",
+      "status": "PASS"
+    },
+    {
+      "measurement": "hNT2_air",
+      "damage30s": 2181.961,
+      "attacksStarted": 19,
+      "huntProcs": 0,
+      "spellCasts": 3
+    },
+    {
+      "pass": true,
+      "check": "Tower projectiles actually damage the target"
+    },
+    {
+      "pass": true,
+      "check": "Tower alone does not consume the hunt mark bonus"
+    },
+    {
+      "case": "hNT2_shoots_air",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Tower does not shoot beyond its 800 range"
+    },
+    {
+      "pass": true,
+      "check": "Weapon picks nearest eligible target"
+    },
+    {
+      "pass": true,
+      "check": "Independent web grounds a farther air target while weapon aims at ground"
+    },
+    {
+      "pass": true,
+      "check": "Web has a 12-second cooldown"
+    },
+    {
+      "case": "tower_range_and_target_priority",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Physical web works against magic-immune flyers"
+    },
+    {
+      "pass": true,
+      "check": "Flight and movement recover after the five-second web"
+    },
+    {
+      "case": "tower_web_magic_immunity",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Real tower projectile applies correct poison and Neurotoxin factor"
+    },
+    {
+      "pass": true,
+      "check": "Tower poison lasts five seconds"
+    },
+    {
+      "pass": true,
+      "check": "Tower poison has the existing movement slow"
+    },
+    {
+      "pass": true,
+      "check": "Upgraded poison reduces armor by three"
+    },
+    {
+      "pass": true,
+      "check": "Applied tower poison actually ticks between shots"
+    },
+    {
+      "pass": true,
+      "check": "Repeated tower hits do not stack poison effects"
+    },
+    {
+      "case": "hNT1_poison_aspect_-1",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Real tower projectile applies correct poison and Neurotoxin factor"
+    },
+    {
+      "pass": true,
+      "check": "Tower poison lasts five seconds"
+    },
+    {
+      "pass": true,
+      "check": "Tower poison has the existing movement slow"
+    },
+    {
+      "pass": true,
+      "check": "Upgraded poison reduces armor by three"
+    },
+    {
+      "pass": true,
+      "check": "Applied tower poison actually ticks between shots"
+    },
+    {
+      "pass": true,
+      "check": "Repeated tower hits do not stack poison effects"
+    },
+    {
+      "case": "hNT1_poison_aspect_1",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Real tower projectile applies correct poison and Neurotoxin factor"
+    },
+    {
+      "pass": true,
+      "check": "Tower poison lasts five seconds"
+    },
+    {
+      "pass": true,
+      "check": "Tower poison has the existing movement slow"
+    },
+    {
+      "pass": true,
+      "check": "Upgraded poison reduces armor by three"
+    },
+    {
+      "pass": true,
+      "check": "Applied tower poison actually ticks between shots"
+    },
+    {
+      "pass": true,
+      "check": "Repeated tower hits do not stack poison effects"
+    },
+    {
+      "case": "hNT2_poison_aspect_-1",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Real tower projectile applies correct poison and Neurotoxin factor"
+    },
+    {
+      "pass": true,
+      "check": "Tower poison lasts five seconds"
+    },
+    {
+      "pass": true,
+      "check": "Tower poison has the existing movement slow"
+    },
+    {
+      "pass": true,
+      "check": "Upgraded poison reduces armor by three"
+    },
+    {
+      "pass": true,
+      "check": "Applied tower poison actually ticks between shots"
+    },
+    {
+      "pass": true,
+      "check": "Repeated tower hits do not stack poison effects"
+    },
+    {
+      "case": "hNT2_poison_aspect_1",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Tower poison respects magic immunity"
+    },
+    {
+      "pass": true,
+      "check": "Weak tower poison does not replace stronger Venomancer poison"
+    },
+    {
+      "case": "tower_poison_immunity_and_strength",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Quarter-second poison refreshes retain two full neurotoxin ticks"
+    },
+    {
+      "pass": true,
+      "check": "Refreshing poison keeps one effect, full duration and a single aspect multiplier"
+    },
+    {
+      "pass": true,
+      "check": "Refreshing halfway through a tick preserves fractional time"
+    },
+    {
+      "pass": true,
+      "check": "Rejected weaker poison does not reset the stronger poison tick"
+    },
+    {
+      "pass": true,
+      "check": "Ordinary poison also retains its tick across refreshes"
+    },
+    {
+      "pass": true,
+      "check": "Expired poison starts a fresh tick on reapplication"
+    },
+    {
+      "pass": true,
+      "check": "Nerubian 0.32 catalog: nine base, eight upgrades and native brood helper"
+    },
+    {
+      "pass": true,
+      "check": "Matriarch is reached through the Cocoon Shrine upgrade chain, never direct construction"
+    },
+    {
+      "pass": true,
+      "check": "Nerubian player and Human bot keep separate aspects"
+    },
+    {
+      "pass": true,
+      "check": "Brood creates three native timed spiderlings at the mobile front"
+    },
+    {
+      "pass": true,
+      "check": "Brood pays twenty mana and uses front anchor"
+    },
+    {
+      "pass": true,
+      "check": "All native brood sources share the twelve-spiderling cap"
+    },
+    {
+      "pass": true,
+      "check": "Full brood cap prevents mana spending"
+    },
+    {
+      "pass": true,
+      "check": "Queen aspect replaces the ordinary Brood spell"
+    },
+    {
+      "pass": true,
+      "check": "Queen waits native eight seconds"
+    },
+    {
+      "pass": true,
+      "check": "Queen produces one twenty-four-second spiderling"
+    },
+    {
+      "pass": true,
+      "check": "Spiderlings cannot advance their own front anchor"
+    },
+    {
+      "pass": true,
+      "check": "Carrier death creates exactly two twelve-second spiderlings without Naga duplication"
+    },
+    {
+      "pass": true,
+      "check": "Chitin applies after ordinary damage without reducing the triggering hit"
+    },
+    {
+      "pass": true,
+      "check": "Chitin expires after three seconds"
+    },
+    {
+      "pass": true,
+      "check": "Spell damage does not trigger Chitin"
+    },
+    {
+      "pass": true,
+      "check": "Physical web roots and grounds a spell-immune flyer"
+    },
+    {
+      "pass": true,
+      "check": "Web applies native ten-damage hunt mark"
+    },
+    {
+      "pass": true,
+      "check": "Web expiry restores native flight"
+    },
+    {
+      "pass": true,
+      "check": "Nerubian tower casts native physical anti-air web"
+    },
+    {
+      "pass": true,
+      "check": "Upgraded multi-web casts against ground enemies"
+    },
+    {
+      "pass": true,
+      "check": "Multi-web caps three targets and assigns sixteen-damage mark"
+    },
+    {
+      "pass": true,
+      "check": "Rooted prey triggers ambush and hunter haste"
+    },
+    {
+      "pass": true,
+      "check": "Ambush retains eight-second internal cooldown"
+    },
+    {
+      "pass": true,
+      "check": "Venom scatter waits until third successful hit"
+    },
+    {
+      "pass": true,
+      "check": "Third hit poisons only two closest secondary victims"
+    },
+    {
+      "pass": true,
+      "check": "Neurotoxin raises slowing poison DPS by fifty percent"
+    },
+    {
+      "pass": true,
+      "check": "Weaker poison cannot replace amplified stronger poison"
+    },
+    {
+      "pass": true,
+      "check": "Reapplying identical poison refreshes without multiplying aspect twice"
+    },
+    {
+      "pass": true,
+      "check": "Neurotoxin death transfers remaining duration to one neighbor"
+    },
+    {
+      "pass": true,
+      "check": "Neurotoxin allows second transfer"
+    },
+    {
+      "pass": true,
+      "check": "Neurotoxin cannot transfer a third time"
+    },
+    {
+      "pass": true,
+      "check": "Cleansing cocoon pays forty-five mana"
+    },
+    {
+      "pass": true,
+      "check": "Upgraded cocoon removes one hostile poison and gives temporary armor"
+    },
+    {
+      "pass": true,
+      "check": "Cocoon restores native one hundred fifty HP over three seconds"
+    },
+    {
+      "pass": true,
+      "check": "Global acid chooses an actual enemy cluster and caps four victims"
+    },
+    {
+      "pass": true,
+      "check": "Acid impact is thirty-five without accidental weapon damage buff"
+    },
+    {
+      "pass": true,
+      "check": "Plague applies native global debuff for thirty-two mana"
+    },
+    {
+      "pass": true,
+      "check": "Plague death creates one twelve-second spiderling, not four"
+    },
+    {
+      "case": "existing_nerubian_scenarios",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Original 18-row two-team presentation layout is retained"
+    },
+    {
+      "pass": true,
+      "check": "Correct nonempty tower prefab for hNT1 team 0"
+    },
+    {
+      "towerPrefab": "hNT1",
+      "team": 0,
+      "asset": "Assets/GeneratedPC/hNT1-t0.prefab",
+      "clips": [
+        "Stand",
+        "Stand Alternate"
+      ]
+    },
+    {
+      "pass": true,
+      "check": "Correct nonempty tower prefab for hNT1 team 1"
+    },
+    {
+      "towerPrefab": "hNT1",
+      "team": 1,
+      "asset": "Assets/GeneratedPC/hNT1-t1.prefab",
+      "clips": [
+        "Stand",
+        "Stand Alternate"
+      ]
+    },
+    {
+      "pass": true,
+      "check": "Separate building icon resolves for hNT1"
+    },
+    {
+      "pass": true,
+      "check": "Correct nonempty tower prefab for hNT2 team 0"
+    },
+    {
+      "towerPrefab": "hNT2",
+      "team": 0,
+      "asset": "Assets/GeneratedPC/hNT2-t0.prefab",
+      "clips": [
+        "Stand",
+        "Stand Alternate"
+      ]
+    },
+    {
+      "pass": true,
+      "check": "Correct nonempty tower prefab for hNT2 team 1"
+    },
+    {
+      "towerPrefab": "hNT2",
+      "team": 1,
+      "asset": "Assets/GeneratedPC/hNT2-t1.prefab",
+      "clips": [
+        "Stand",
+        "Stand Alternate"
+      ]
+    },
+    {
+      "pass": true,
+      "check": "Separate building icon resolves for hNT2"
+    },
+    {
+      "case": "tower_art_references",
+      "status": "PASS"
+    }
+  ],
+  "failedCases": 0,
+  "source": "Actual Unity simulation and prefab references; icons visually inspected separately. No GUI or device execution."
+}

@@ -15,6 +15,11 @@ class CompareManaged {
   foreach(var r in b.MainModule.AssemblyReferences)if(!a.MainModule.AssemblyReferences.Any(x=>x.FullName==r.FullName))throw new Exception("New dependency: "+r.FullName);
   var m=b.MainModule.Types.Single(t=>t.FullName=="CastleFight.HumanMatch").Methods.Single(x=>x.Name=="ApplyEffectData");
   if(!m.Body.Instructions.Any(i=>i.OpCode==OpCodes.Ldfld&&((FieldReference)i.Operand).Name=="dotTick"))throw new Exception("Poison timer fix missing");
+  var tower=b.MainModule.Types.Single(t=>t.FullName=="CastleFight.HumanMatch").Methods.Single(x=>x.Name=="NerubAfterWeapon");
+  foreach(string literal in new[]{"hNT1","hNT2","poison"})if(!tower.Body.Instructions.Any(i=>i.OpCode==OpCodes.Ldstr&&(string)i.Operand==literal))throw new Exception("Tower poison branch missing: "+literal);
+  if(!tower.Body.Instructions.Any(i=>i.Operand is MethodReference call&&call.Name=="ApplyEffect"))throw new Exception("Tower poison application missing");
+  if(!b.MainModule.Types.Single(t=>t.FullName=="CastleFight.ContentCatalog031").Methods.Any(x=>x.Name=="AssetUrl"))throw new Exception("Per-package Android content URL support missing");
+  Console.WriteLine("TOWER_POISON_IL_PASS base=present upgrade=present application=present contentUrl=present");
   Console.WriteLine("MANAGED_COMPATIBILITY_PASS userTypes="+types+" fieldLayouts=unchanged dependencies=unchanged poisonFix=present");return 0;
  }
 }

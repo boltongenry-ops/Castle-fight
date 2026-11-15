@@ -24,6 +24,7 @@ public static class BuildWindowsRelease {
     }
     public static void Build(){
         BuildMobileContent.Restore();
+        CombatAbilityAudit.RunTower();
         var own=JObject.Parse(File.ReadAllText("Assets/Nerubian032/pc-nerubian.json"));
         var human=JObject.Parse(File.ReadAllText("Assets/Resources/pc-human.json"));
         int checks=0;FinalRaceScenarios.PoisonRefresh(own,human,(ok,message)=>{if(!ok)throw new Exception(message);checks++;});
@@ -45,7 +46,7 @@ public static class BuildWindowsRelease {
             }
         }
         // Published player data retains its original 0.20 metadata; the game UI version is PcGame.Version.
-        PlayerSettings.bundleVersion=scriptsOnly?"0.20.0":"0.32.1";
+        PlayerSettings.bundleVersion=scriptsOnly?"0.20.0":"0.32.2";
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone,ScriptingImplementation.Mono2x);
         const string output="Builds/MapWindows/CastleFightMap.exe";Directory.CreateDirectory(Path.GetDirectoryName(output));
         var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/Scenes/CastleFightMap.unity"},target=BuildTarget.StandaloneWindows64,locationPathName=output,options=scriptsOnly?BuildOptions.BuildScriptsOnly:BuildOptions.None});
@@ -56,6 +57,6 @@ public static class BuildWindowsRelease {
             File.Copy("Builds/WindowsBaseline/"+name,data+name,true);
         foreach(var row in before)if(Hash(data+row.Key)!=row.Value)throw new Exception("Scripts-only build changed base data: "+row.Key);
         File.Copy(supplement+"/centaur-028",data+"StreamingAssets/Frontend/centaur-028.windows",true);
-        Debug.Log("CF_WINDOWS_RELEASE_PASS version=0.32.1 bytes="+report.summary.totalSize);
+        Debug.Log("CF_WINDOWS_RELEASE_PASS version=0.32.2 bytes="+report.summary.totalSize);
     }
 }

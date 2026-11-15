@@ -7,12 +7,13 @@ using UnityEngine;
 using UnityEngine.Networking;
 namespace CastleFight {
 public static class ContentCatalog031 {
+    public static string AssetUrl(JObject catalog,JToken row)=>(string)row["url"]??(string)catalog["baseUrl"]+"/"+(string)row["file"];
     public static bool Compatible(JObject data,string player){
         if((int?)data?["schema"]!=1||!Release031.Https((string)data["baseUrl"])||(string)data["scene"]!="Assets/Scenes/CastleFightMap.unity")return false;
         string minimum=(string)data["minimumPlayerVersion"]??(string)data["version"];if(!System.Version.TryParse(minimum,out _)||Release031.Newer(minimum,player))return false;
         if(!(data["bundles"] is JArray bundles)||!(data["resources"] is JArray resources)||!(data["streaming"] is JArray media))return false;
         var names=bundles.Select(row=>(string)row["name"]).ToArray();if(names.Distinct().Count()!=names.Length||!new[]{"frontend","mapscene","builders"}.All(names.Contains))return false;
-        return bundles.Concat(media).All(row=>((string)row["sha256"]??"").Length==64&&(long?)row["size"]>0&&!((string)row["file"]??"").Contains("/")&&!((string)row["file"]??"").Contains(".."))&&resources.All(row=>names.Contains((string)row["bundle"]))&&media.All(row=>!Path.IsPathRooted((string)row["path"])&&!((string)row["path"]??"").Split('/','\\').Contains(".."));
+        return bundles.Concat(media).All(row=>Release031.Https(AssetUrl(data,row))&&((string)row["sha256"]??"").Length==64&&(long?)row["size"]>0&&!((string)row["file"]??"").Contains("/")&&!((string)row["file"]??"").Contains(".."))&&resources.All(row=>names.Contains((string)row["bundle"]))&&media.All(row=>!Path.IsPathRooted((string)row["path"])&&!((string)row["path"]??"").Split('/','\\').Contains(".."));
     }
     public static IEnumerator Resolve(JObject embedded,string cache,Action<JObject> ready){
         string file=Path.Combine(cache,"catalog031.json");JObject chosen=embedded;

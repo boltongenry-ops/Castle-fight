@@ -1,0 +1,3085 @@
+{
+  "results": [
+    {
+      "pass": true,
+      "check": "Quarter-second poison refreshes retain two full neurotoxin ticks"
+    },
+    {
+      "pass": true,
+      "check": "Refreshing poison keeps one effect, full duration and a single aspect multiplier"
+    },
+    {
+      "pass": true,
+      "check": "Refreshing halfway through a tick preserves fractional time"
+    },
+    {
+      "pass": true,
+      "check": "Rejected weaker poison does not reset the stronger poison tick"
+    },
+    {
+      "pass": true,
+      "check": "Ordinary poison also retains its tick across refreshes"
+    },
+    {
+      "pass": true,
+      "check": "Expired poison starts a fresh tick on reapplication"
+    },
+    {
+      "pass": true,
+      "check": "Nerubian 0.32 catalog: nine base, eight upgrades and native brood helper"
+    },
+    {
+      "pass": true,
+      "check": "Matriarch is reached through the Cocoon Shrine upgrade chain, never direct construction"
+    },
+    {
+      "pass": true,
+      "check": "Nerubian player and Human bot keep separate aspects"
+    },
+    {
+      "pass": true,
+      "check": "Brood creates three native timed spiderlings at the mobile front"
+    },
+    {
+      "pass": true,
+      "check": "Brood pays twenty mana and uses front anchor"
+    },
+    {
+      "pass": true,
+      "check": "All native brood sources share the twelve-spiderling cap"
+    },
+    {
+      "pass": true,
+      "check": "Full brood cap prevents mana spending"
+    },
+    {
+      "pass": true,
+      "check": "Queen aspect replaces the ordinary Brood spell"
+    },
+    {
+      "pass": true,
+      "check": "Queen waits native eight seconds"
+    },
+    {
+      "pass": true,
+      "check": "Queen produces one twenty-four-second spiderling"
+    },
+    {
+      "pass": true,
+      "check": "Spiderlings cannot advance their own front anchor"
+    },
+    {
+      "pass": true,
+      "check": "Carrier death creates exactly two twelve-second spiderlings without Naga duplication"
+    },
+    {
+      "pass": true,
+      "check": "Chitin applies after ordinary damage without reducing the triggering hit"
+    },
+    {
+      "pass": true,
+      "check": "Chitin expires after three seconds"
+    },
+    {
+      "pass": true,
+      "check": "Spell damage does not trigger Chitin"
+    },
+    {
+      "pass": true,
+      "check": "Physical web roots and grounds a spell-immune flyer"
+    },
+    {
+      "pass": true,
+      "check": "Web applies native ten-damage hunt mark"
+    },
+    {
+      "pass": true,
+      "check": "Web expiry restores native flight"
+    },
+    {
+      "pass": true,
+      "check": "Nerubian tower casts native physical anti-air web"
+    },
+    {
+      "pass": true,
+      "check": "Upgraded multi-web casts against ground enemies"
+    },
+    {
+      "pass": true,
+      "check": "Multi-web caps three targets and assigns sixteen-damage mark"
+    },
+    {
+      "pass": true,
+      "check": "Rooted prey triggers ambush and hunter haste"
+    },
+    {
+      "pass": true,
+      "check": "Ambush retains eight-second internal cooldown"
+    },
+    {
+      "pass": true,
+      "check": "Venom scatter waits until third successful hit"
+    },
+    {
+      "pass": true,
+      "check": "Third hit poisons only two closest secondary victims"
+    },
+    {
+      "pass": true,
+      "check": "Neurotoxin raises slowing poison DPS by fifty percent"
+    },
+    {
+      "pass": true,
+      "check": "Weaker poison cannot replace amplified stronger poison"
+    },
+    {
+      "pass": true,
+      "check": "Reapplying identical poison refreshes without multiplying aspect twice"
+    },
+    {
+      "pass": true,
+      "check": "Neurotoxin death transfers remaining duration to one neighbor"
+    },
+    {
+      "pass": true,
+      "check": "Neurotoxin allows second transfer"
+    },
+    {
+      "pass": true,
+      "check": "Neurotoxin cannot transfer a third time"
+    },
+    {
+      "pass": true,
+      "check": "Cleansing cocoon pays forty-five mana"
+    },
+    {
+      "pass": true,
+      "check": "Upgraded cocoon removes one hostile poison and gives temporary armor"
+    },
+    {
+      "pass": true,
+      "check": "Cocoon restores native one hundred fifty HP over three seconds"
+    },
+    {
+      "pass": true,
+      "check": "Global acid chooses an actual enemy cluster and caps four victims"
+    },
+    {
+      "pass": true,
+      "check": "Acid impact is thirty-five without accidental weapon damage buff"
+    },
+    {
+      "pass": true,
+      "check": "Plague applies native global debuff for thirty-two mana"
+    },
+    {
+      "pass": true,
+      "check": "Plague death creates one twelve-second spiderling, not four"
+    },
+    {
+      "case": "existing_nerubian_scenarios",
+      "status": "PASS"
+    },
+    {
+      "existingHumanChecks": 1781
+    },
+    {
+      "case": "existing_human_checks",
+      "status": "PASS"
+    },
+    {
+      "humanChecksReached": 1781
+    },
+    {
+      "pass": true,
+      "check": "Paladin healing casts"
+    },
+    {
+      "pass": true,
+      "check": "Resurrection is delayed"
+    },
+    {
+      "pass": true,
+      "check": "Healing and inner fire consume 66 mana"
+    },
+    {
+      "pass": true,
+      "check": "Delayed resurrection consumes one friendly corpse"
+    },
+    {
+      "pass": true,
+      "check": "Resurrection costs 70 mana and starts 40-second cooldown"
+    },
+    {
+      "case": "paladin_heal_then_resurrection",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "A corpse alone does not trigger followup-only resurrection"
+    },
+    {
+      "case": "paladin_without_wounded_ally",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Low-mana paladin still heals"
+    },
+    {
+      "pass": true,
+      "check": "After heal and inner fire, less than 70 mana blocks resurrection without spending it"
+    },
+    {
+      "case": "paladin_insufficient_mana",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Enemy or more-than-900-distance corpses are not resurrected"
+    },
+    {
+      "case": "paladin_corpse_range_and_team",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Dead paladin cannot complete the delayed resurrection"
+    },
+    {
+      "case": "paladin_caster_dies",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Resurrection cannot bypass its active cooldown"
+    },
+    {
+      "case": "paladin_resurrection_cooldown",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Ordinary simulation Step/autocast actually resurrects an ally"
+    },
+    {
+      "case": "paladin_normal_autocast",
+      "status": "PASS"
+    },
+    {
+      "measurement": "paladin_120s_continuous_wounded_ally",
+      "resurrections": 1,
+      "remainingMana": 1.0,
+      "spells": 14
+    },
+    {
+      "case": "paladin_sustained_healing",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Matriarch cannot be directly constructed"
+    },
+    {
+      "pass": true,
+      "check": "Cocoon Shrine construction starts: "
+    },
+    {
+      "pass": true,
+      "check": "Cocoon Shrine finishes construction"
+    },
+    {
+      "pass": true,
+      "check": "Shrine upgrades to Temple of Depths: "
+    },
+    {
+      "pass": true,
+      "check": "Matriarch upgrade requires lumber"
+    },
+    {
+      "pass": true,
+      "check": "Temple upgrades to Matriarch Court: "
+    },
+    {
+      "pass": true,
+      "check": "Matriarch chain costs 520 gold, has 41-second production and uses one legendary slot"
+    },
+    {
+      "pass": true,
+      "check": "Upgraded building actually produces a Matriarch"
+    },
+    {
+      "case": "matriarch_actual_upgrade_and_production",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Matriarch command casts with nearby enemy"
+    },
+    {
+      "pass": true,
+      "check": "Command affects at most four allies and costs 60 mana"
+    },
+    {
+      "pass": true,
+      "check": "Command grants 20% attack speed"
+    },
+    {
+      "case": "matriarch_command",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Cleansing cocoon casts"
+    },
+    {
+      "pass": true,
+      "check": "Nurse heals exactly two nearby spiderlings for 25"
+    },
+    {
+      "case": "nerubian_cocoon_heals_spiderlings",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Colossus fissure casts"
+    },
+    {
+      "pass": true,
+      "check": "Fissure hits only three targets for 40 and roots them"
+    },
+    {
+      "case": "nerubian_colossus_fissure",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Two attackers share one hunt proc per victim per second"
+    },
+    {
+      "pass": true,
+      "check": "Hunt can proc again after one second"
+    },
+    {
+      "case": "nerubian_hunt_shared_limit",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Neurotoxin does not amplify acid or plague without slowing poison"
+    },
+    {
+      "case": "nerubian_neurotoxin_scope",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Magic-immune enemies reject poison through targeting validation"
+    },
+    {
+      "case": "nerubian_magic_immunity_and_poison",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Two Matriarch armor auras do not stack"
+    },
+    {
+      "case": "nerubian_aura_nonstacking",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Death under an active plague heals two allies for 30 each"
+    },
+    {
+      "case": "plague_death_heals_allies",
+      "status": "PASS"
+    },
+    {
+      "pass": true,
+      "check": "Plague kills a 60-HP target on its sixth damage tick"
+    },
+    {
+      "measurement": "plague_final_tick_healing",
+      "allyA": 100.0,
+      "allyB": 100.0,
+      "queuedSpiders": 1
+    },
+    {
+      "pass": false,
+      "check": "Plague final-tick death must retain its described death healing"
+    },
+    {
+      "case": "plague_final_tick_death_healing",
+      "status": "FAIL",
+      "error": "Plague final-tick death must retain its described death healing"
+    },
+    {
+      "measurement": "raised_spider",
+      "resurrected": 1,
+      "summoned": false,
+      "lifeRemaining": 0.0,
+      "noBounty": false
+    },
+    {
+      "pass": false,
+      "check": "Resurrection must not turn a temporary spiderling into a permanent bounty-bearing unit"
+    },
+    {
+      "case": "resurrection_preserves_temporary_spider_semantics",
+      "status": "FAIL",
+      "error": "Resurrection must not turn a temporary spiderling into a permanent bounty-bearing unit"
+    },
+    {
+      "balanceMatrix": [
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 15.9300261,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 16.31752,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 19.2024879,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 19.3274879,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 16.02753,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 16.02753,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 27.3373756,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 27.3373756,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 17.0775223,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 16.92503,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 16.7675323,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 16.7950287,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 16,
+          "losses": 14,
+          "draws": 10,
+          "meanSeconds": 31.82731,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "mixed",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 26,
+          "losses": 10,
+          "draws": 4,
+          "meanSeconds": 29.76233,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 24.957407,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 25.2674046,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 2,
+          "losses": 38,
+          "draws": 0,
+          "meanSeconds": 19.4924812,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 19.3474846,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 19.309988,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 19.309988,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 25.2498913,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 25.8998985,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 20.6999645,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 20.49998,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 17.3375187,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 18.3900089,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 24.9998932,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "front_heavy",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNV1",
+            "hNP1",
+            "hNP1",
+            "hNS1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 24.9998932,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 11.0600224,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 11.0600224,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 12.9600277,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 12.9750271,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 10.4175215,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 10.4175215,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 17.60002,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 17.60002,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 30.4998283,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 26.9998741,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 11.9825287,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 11.9825287,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 15.0400391,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "poison_heavy",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 15.5475407,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 13.3100357,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 13.37753,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 15.3000231,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 2,
+          "losses": 38,
+          "draws": 0,
+          "meanSeconds": 16.3525047,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 13.8875351,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 13.8875351,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 19.5399876,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 21.43996,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 18.0800018,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 18.0700035,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 16.0500374,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 16.0500374,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 20.3749771,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "web_hunt",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNW1",
+            "hNW1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 4,
+          "losses": 36,
+          "draws": 0,
+          "meanSeconds": 19.60499,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 15.9450359,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 15.9450359,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 16.7700157,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 16.7700157,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 15.0800381,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 15.0800381,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 24.2499237,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 24.2499237,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 32.9497833,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 35.94972,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 14.422534,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 14.422534,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 19.4499931,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "cocoon_heavy",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNS1",
+            "hNS1",
+            "hNS1",
+            "hNV1",
+            "hNP1",
+            "hNP1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 19.4499931,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 13.0000324,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 13.167531,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 14.9975309,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 15.0075321,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 12.2600269,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 12.2600269,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 18.9000053,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 20.5999737,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 20.49998,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 18.75,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 14.0500412,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 14.0500412,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 18.0500069,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_poison",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "neurotoxin",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNP2",
+            "hNP2",
+            "hNP1",
+            "hNW1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 18.0500069,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_front_hunt",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNW1",
+            "hNS1",
+            "hNA1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 6,
+          "losses": 34,
+          "draws": 0,
+          "meanSeconds": 29.3098335,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_front_hunt",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNW1",
+            "hNS1",
+            "hNA1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 6,
+          "losses": 34,
+          "draws": 0,
+          "meanSeconds": 30.914814,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_front_hunt",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNW1",
+            "hNS1",
+            "hNA1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 22.6499481,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_front_hunt",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNW1",
+            "hNS1",
+            "hNA1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 34.164772,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_front_hunt",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNW1",
+            "hNS1",
+            "hNA1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 14.700037,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_front_hunt",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNW1",
+            "hNS1",
+            "hNA1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 20.5624733,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_front_hunt",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNW1",
+            "hNS1",
+            "hNA1",
+            "hNA1"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 2,
+          "losses": 38,
+          "draws": 0,
+          "meanSeconds": 32.9272881,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_tanks",
+          "enemy": "human_infantry_rifles",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNV2",
+            "hNV2",
+            "hNV2"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h003",
+            "h003",
+            "h003"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 22.0999584,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_tanks",
+          "enemy": "human_air_mix",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNV2",
+            "hNV2",
+            "hNV2"
+          ],
+          "enemyBuildings": [
+            "h000",
+            "h000",
+            "h000",
+            "h003",
+            "h003",
+            "h015",
+            "h015"
+          ],
+          "wins": 0,
+          "losses": 38,
+          "draws": 2,
+          "meanSeconds": 46.8021622,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_tanks",
+          "enemy": "human_paladin_guard",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNV2",
+            "hNV2",
+            "hNV2"
+          ],
+          "enemyBuildings": [
+            "h038",
+            "h039",
+            "h003",
+            "h003"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 36.41723,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_tanks",
+          "enemy": "orc_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNV2",
+            "hNV2",
+            "hNV2"
+          ],
+          "enemyBuildings": [
+            "h029",
+            "h029",
+            "h029",
+            "h029",
+            "h02B",
+            "h02B",
+            "h02P"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 89.80085,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_tanks",
+          "enemy": "orc_berserkers",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNV2",
+            "hNV2",
+            "hNV2"
+          ],
+          "enemyBuildings": [
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H",
+            "h02H"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 14.700037,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_tanks",
+          "enemy": "undead_mixed",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNV2",
+            "hNV2",
+            "hNV2"
+          ],
+          "enemyBuildings": [
+            "h01N",
+            "h01N",
+            "h01K",
+            "h01K",
+            "h01R"
+          ],
+          "wins": 0,
+          "losses": 40,
+          "draws": 0,
+          "meanSeconds": 32.4822922,
+          "totalResurrections": 0
+        },
+        {
+          "nerubianRoster": "upgraded_tanks",
+          "enemy": "nerubian_mirror",
+          "nerubianAspect": "none",
+          "goldBudgetEach": 1000,
+          "nerubianBuildings": [
+            "hNV2",
+            "hNV2",
+            "hNV2",
+            "hNV2"
+          ],
+          "enemyBuildings": [
+            "hNV1",
+            "hNW1",
+            "hNP1",
+            "hNP1",
+            "hNS1",
+            "hNA1"
+          ],
+          "wins": 40,
+          "losses": 0,
+          "draws": 0,
+          "meanSeconds": 27.0098667,
+          "totalResurrections": 0
+        }
+      ],
+      "scope": "8 Nerubian rosters, 1000 cumulative building gold per side, 20 seeded repetitions and both sides; no production, income spending, items, upgrades during combat or faction-special buildings. Not a match win rate."
+    },
+    {
+      "case": "equal_gold_wave_matrix",
+      "status": "PASS"
+    }
+  ],
+  "failedCases": 2,
+  "source": "Actual Unity HumanMatch simulation; no device or GUI execution"
+}
