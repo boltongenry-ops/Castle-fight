@@ -72,3 +72,14 @@ python tools/unity_assets.py pack-changes --tag unity-assets-MY-VERSION
 архивам Warcraft/Godot; для открытия и редактирования уже перенесённых моделей
 эти архивы не нужны. Для Android нужны Android Build Support/SDK/NDK; ключ
 подписи опубликованного приложения намеренно хранится отдельно, а не в GitHub.
+
+## Лаунчер из исходников
+
+На Windows с MSBuild и .NET Framework 4.8 Developer Pack:
+
+```powershell
+msbuild source/Launcher/CastleFight-Launcher.csproj /p:Configuration=Release
+```
+
+Результат: `Builds/Launcher/CastleFight-Launcher.exe`. Иконка и фон уже включены
+в проект; пути к файлам исходного рабочего компьютера не требуются.
