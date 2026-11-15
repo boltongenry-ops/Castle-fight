@@ -7,6 +7,7 @@ public static class BuildStructure031 {
     public static void Register(){
         BuildCombat030.Register();var path="Assets/Centaur028/index.json";var index=JObject.Parse(File.ReadAllText(path));
         index["Structure031/Pandaren"]="Assets/Structure031/pc-pandaren.json";
+        foreach(var entry in BuildNerubian032.Registry().Properties())index[entry.Name]=entry.Value.DeepClone();
         File.WriteAllText(path,index.ToString());AssetDatabase.Refresh();AssetDatabase.SaveAssets();
     }
     public static void Windows(){Register();BuildCentaurs.FinishWindows();Debug.Log("CF_STRUCTURE031_WINDOWS_PASS");}

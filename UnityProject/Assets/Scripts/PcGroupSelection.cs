@@ -48,7 +48,7 @@ public sealed partial class PcGame {
         foreach(int id in groupRings.Keys.Where(id=>!selectedGroup.Contains(id)).ToArray()){if(groupRings[id])Destroy(groupRings[id]);groupRings.Remove(id);}
     }
     void DrawSelectionMarquee(){if(!selectionDragging||!selectionPending)return;var rect=SelectionRect(GuiPoint(selectionStart),GuiPoint(selectionEnd));Fill(rect,new Color(.15f,.8f,.22f,.10f));Border(rect,new Color(.25f,1,.3f),1);}
-    Texture2D GroupIcon(HumanMatch.Unit unit){int race=unit.team==0?matchRace:matchBotRace;if(race==15)return CentaurUnitIcon(match.Lines[unit.kind].unit);var pack=Pack(race);string raw=match.Lines[unit.kind].building;if(!raceIndices[race].TryGetValue(raw,out int index))return CommandIcon(0);if(pack)return pack.buildingIcons[index];return index<unitIcons.Length?unitIcons[index]:CommandIcon(0);}
+    Texture2D GroupIcon(HumanMatch.Unit unit){var revised=ContentResources.Load<Texture2D>("NerubianUnitIcon/"+match.Lines[unit.kind].unit);if(revised)return revised;int race=unit.team==0?matchRace:matchBotRace;if(race==15)return CentaurUnitIcon(match.Lines[unit.kind].unit);var pack=Pack(race);string raw=match.Lines[unit.kind].building;if(!raceIndices[race].TryGetValue(raw,out int index))return CommandIcon(0);if(pack)return pack.buildingIcons[index];return index<unitIcons.Length?unitIcons[index]:CommandIcon(0);}
     void DrawGroupCard(){
         for(int i=0;i<selectedGroup.Count;i++){
             var actor=match.Units.FirstOrDefault(u=>u.id==selectedGroup[i]&&u.hp>0);if(actor==null)continue;

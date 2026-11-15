@@ -9,7 +9,7 @@ using CastleFight;
 public static class BuildCentaurIcons {
     const int Size=256;
     static Color[] colors={new Color(.25f,.32f,.37f),new Color(.3f,.2f,.16f),new Color(.25f,.16f,.12f),new Color(.13f,.25f,.23f),new Color(.35f,.24f,.13f),new Color(.25f,.17f,.31f),new Color(.22f,.23f,.14f),new Color(.18f,.22f,.31f),new Color(.19f,.28f,.14f),new Color(.37f,.27f,.11f),new Color(.32f,.22f,.18f)};
-    static Texture2D Capture(GameObject prefab,JObject profile,int family,bool upgrade,bool actor){
+    public static Texture2D Capture(GameObject prefab,JObject profile,int family,bool upgrade,bool actor){
         var obj=UnityEngine.Object.Instantiate(prefab);obj.transform.position=new Vector3(12000,0,12000);obj.transform.rotation=Quaternion.Euler(0,actor?150:0,0);
         foreach(var tr in obj.GetComponentsInChildren<Transform>())tr.gameObject.layer=30;
         var model=obj.GetComponent<PcModel>();var stand=model.clips.First(c=>c.name=="Stand"||c.name.StartsWith("Stand"));stand.SampleAnimation(model.animatedRoot,.2f);
