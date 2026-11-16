@@ -8,7 +8,7 @@ namespace CastleFight {
 public sealed partial class PcGame {
     IEnumerator ExerciseFog(){
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"fog-validation"));Directory.CreateDirectory(folder);
-        options.fogOfWar=true;MainMenu();raceChoice=botRaceChoice=0;aspectsOn=false;roundsChoice=1;NewMatch();testHoldAuthority=true;UpdateFog(true);RenderMatch();
+        options.fogOfWar=true;options.softFog=false;MainMenu();raceChoice=botRaceChoice=0;aspectsOn=false;roundsChoice=1;NewMatch();testHoldAuthority=true;UpdateFog(true);RenderMatch();
         Check(FogActive&&fog.Visible(HumanMatch.CastlePosition(0))&&!fog.Visible(HumanMatch.CastlePosition(1)),"Fog defaults on, own base permanently visible, enemy base unseen");
         Check(!fog.Known(Vector2.zero)&&fog.Display(Vector2.zero)==0,"Unexplored battlefield starts black");
         controls.FocusWorld(World(new Vector2(-58,0)),48);yield return Shot(folder,"01-unexplored-boundary");
@@ -29,6 +29,12 @@ public sealed partial class PcGame {
         Check(!match.VisionTest(0,enemy.position)&&match.VisionTest(1,enemy.position),"Manual player target validation uses fog without restricting global AI spells");
         enemy.nightInvisible=true;scout.hp=scout.maxHp;scout.position=scout.previous=enemy.position;UpdateFog(true);Check(!CanSeeUnit(enemy),"Vision alone does not reveal native invisible enemies");enemy.nightInvisible=false;
         options.fogOfWar=false;RenderMatch();Check(CanSeeUnit(enemy)&&castleObjects[1].activeSelf,"Disabling fog restores full battlefield presentation");
+        options.fogOfWar=true;options.softFog=false;screenFogNext=0;UpdateFog(true);RenderMatch();
+        bool hardEnemy=FogVisible(enemy.position);bool hardBase=FogVisible(HumanMatch.CastlePosition(1));
+        options.softFog=true;screenFogNext=0;UpdateFog(true);RenderMatch();yield return new WaitForSecondsRealtime(.4f);yield return Shot(folder,"03a-soft-fog");
+        int black=0,soft=0;for(int i=0;i<screenFogColors.Length;i++){var c=screenFogColors[i];if(c.a>=250&&c.r<10)black++;if(c.a>0&&c.r>=40)soft++;}
+        Check(soft>0&&black==0,"Soft shroud paints dim translucent pixels instead of opaque black");
+        Check(FogActive&&FogVisible(enemy.position)==hardEnemy&&!hardBase,"Soft fog keeps the same visibility rules and hidden enemy base");
         options.fogOfWar=true;MainMenu();NewMatch();testHoldAuthority=true;UpdateFog(true);Check(!fog.Known(Vector2.zero)&&fogKnownHuts.Count==0,"New match clears exploration and remembered buildings");
         BeginChallenge(progression.Challenge("five_pillars"));testHoldAuthority=true;options.fogOfWar=false;UpdateFog(true);Check(FogActive,"Challenges enforce fog independently of casual setting");MainMenu();options.fogOfWar=true;
         NewMatch();testHoldAuthority=true;UpdateFog(true);controls.FocusWorld(World(new Vector2(-58,0)),48);yield return new WaitForSecondsRealtime(.5f);yield return Shot(folder,"05-fog-final");

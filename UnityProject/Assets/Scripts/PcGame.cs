@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.33.1";
+    string Version=>MobileContent.Active?Application.version:"0.33.2";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -23,7 +23,7 @@ public sealed partial class PcGame : MonoBehaviour {
     public TextAsset catalog,terrainBytes,terrainMetadata,waterMetadata;public NativeMapCamera controls;
     enum Page { Main,Settings,Setup,Match,Pause,Result,Viewer,Leave,Help,Teams,Network,Progression,Guide }
     Page page=Page.Main,settingsReturn=Page.Main;
-    [Serializable] public sealed class Options {public int resolution=0,fps=60;public bool fullscreen,vsync;public bool hdTextures=false,fogOfWar=true;public float volume=.8f,musicVolume=.7f,cameraSpeed=1;public int quality=1;}
+    [Serializable] public sealed class Options {public int resolution=0,fps=60;public bool fullscreen,vsync;public bool hdTextures=false,fogOfWar=true,softFog=false;public float volume=.8f,musicVolume=.7f,cameraSpeed=1;public int quality=1;}
     Options options=new Options(),draft;string settingsPath,notice="";float noticeLeft,accumulator,screenDeadline;
     int difficulty=1,startGold=250,chosen=-1,roundsChoice=1;PcSeries series;HumanMatch match;NativeMapTerrain terrain;
     readonly Dictionary<int,PcModel> units=new Dictionary<int,PcModel>(),huts=new Dictionary<int,PcModel>();
@@ -76,6 +76,8 @@ public sealed partial class PcGame : MonoBehaviour {
         catch(Exception e){Debug.LogWarning("Settings reset: "+e.Message);options=new Options();}
         options.hdTextures=false;
         if(File.Exists(settingsPath)&&!File.ReadAllText(settingsPath).Contains("\"musicVolume\""))options.musicVolume=.7f;
+        // Soft fog is opt-in: older settings files keep the original opaque shroud.
+        if(File.Exists(settingsPath)&&!File.ReadAllText(settingsPath).Contains("\"softFog\""))options.softFog=false;
         options.resolution=Mathf.Clamp(options.resolution,0,sizes.Length-1);options.quality=Mathf.Clamp(options.quality,0,2);
         if(options.fps!=0&&options.fps!=30&&options.fps!=60&&options.fps!=90&&options.fps!=120)options.fps=60;
         options.volume=Mathf.Clamp01(options.volume);options.musicVolume=Mathf.Clamp01(options.musicVolume);options.cameraSpeed=Mathf.Clamp(options.cameraSpeed,.5f,2);
@@ -429,8 +431,9 @@ public sealed partial class PcGame : MonoBehaviour {
         Text(290,415,280,31,"Музыка в меню",label);draft.musicVolume=GUI.HorizontalSlider(new Rect(620,Application.isMobilePlatform?420:428,250,Application.isMobilePlatform?38:22),draft.musicVolume,0,1);Text(895,415,80,28,(draft.musicVolume*100).ToString("F0")+"%",small);
         Text(290,460,280,31,"Скорость камеры",label);draft.cameraSpeed=GUI.HorizontalSlider(new Rect(620,Application.isMobilePlatform?465:473,250,Application.isMobilePlatform?38:22),draft.cameraSpeed,.5f,2);Text(895,460,80,28,draft.cameraSpeed.ToString("F1")+"×",small);
         Text(290,505,280,31,"Туман войны",label);GUI.enabled=!confirmDisplay&&activeChallenge==null;if(Button("settings.fog",new Rect(610,501,365,38),activeChallenge!=null?"Включён в испытании":draft.fogOfWar?"Включён":"Выключен"))draft.fogOfWar=!draft.fogOfWar;GUI.enabled=!confirmDisplay;
-        if(MobileContent.Active){if(Button("settings.downloads",new Rect(290,549,420,42),"Ресурсы игры · скачать всё"))showResourceDownloads=true;}else Text(290,553,420,30,"Классические модели · Windows",small);
-        if(Button("settings.updates",new Rect(730,549,245,42),"Обновления")){showUpdatePanel=true;StartCoroutine(CheckGameRelease());}
+        Text(290,551,280,31,"Мягкий туман",label);GUI.enabled=!confirmDisplay;if(Button("settings.softfog",new Rect(610,547,365,38),draft.softFog?"Затемнение вместо чёрного":"Плотная чёрная тень"))draft.softFog=!draft.softFog;GUI.enabled=!confirmDisplay;
+        if(MobileContent.Active){if(Button("settings.downloads",new Rect(290,591,420,38),"Ресурсы игры · скачать всё"))showResourceDownloads=true;}else Text(290,595,420,30,"Классические модели · Windows",small);
+        if(Button("settings.updates",new Rect(730,591,245,38),"Обновления")){showUpdatePanel=true;StartCoroutine(CheckGameRelease());}
         if(Button("settings.cancel",new Rect(290,614,220,48),"Отмена")){if(confirmDisplay)RevertDisplay();page=settingsReturn;}
         if(Button("settings.apply",new Rect(660,614,315,48),"Применить",true))PreviewSettings();
         GUI.enabled=true;

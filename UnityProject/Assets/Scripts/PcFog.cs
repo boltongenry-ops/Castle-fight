@@ -22,7 +22,7 @@ public sealed partial class PcGame {
         foreach(var zone in match.NightZones)if(zone.team==0&&zone.age<8)fog.Reveal(zone.point,1100f/30);
         fog.Remember();foreach(var hut in match.Huts)if(hut.team==0||fog.Visible(hut.position))fogKnownHuts.Add(hut.id);
         if(!fogMini){fogMini=new Texture2D(FogGrid.Width,FogGrid.Height,TextureFormat.RGBA32,false){name="Exploration minimap",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};miniFogColors=new Color32[FogGrid.Width*FogGrid.Height];}
-        for(int i=0;i<miniFogColors.Length;i++){int display=Math.Max(fog.Current[i],fog.Explored[i]>0?85:0);miniFogColors[i]=new Color32(3,6,9,(byte)((255-display)*.96f));}fogMini.SetPixels32(miniFogColors);fogMini.Apply(false);screenFogNext=0;
+        for(int i=0;i<miniFogColors.Length;i++){int display=Math.Max(fog.Current[i],fog.Explored[i]>0?85:0);int shade=options.softFog?80:255;byte tint=options.softFog?(byte)118:(byte)3;miniFogColors[i]=new Color32(tint,tint,(byte)(tint+3),(byte)((shade-display*shade/255f)*.96f));}fogMini.SetPixels32(miniFogColors);fogMini.Apply(false);screenFogNext=0;
     }
     void ApplyFogViews(){
         if(match==null)return;
@@ -48,7 +48,7 @@ public sealed partial class PcGame {
             }
             for(int y=0;y<90;y++)for(int x=0;x<160;x++){float u=(x+.5f)/4,v=(y+.5f)/4;int cx=(int)u,cy=(int)v,index=cy*41+cx,target=y*160+x;u-=cx;v-=cy;fogGround[target]=Vector2.Lerp(Vector2.Lerp(fogCoarse[index],fogCoarse[index+1],u),Vector2.Lerp(fogCoarse[index+41],fogCoarse[index+42],u),v);fogEdge[target]=Mathf.Lerp(Mathf.Lerp(fogCoarseEdge[index],fogCoarseEdge[index+1],u),Mathf.Lerp(fogCoarseEdge[index+41],fogCoarseEdge[index+42],u),v);}
             fogProjectionMs=watch.Elapsed.TotalMilliseconds;}
-            watch.Restart();for(int i=0;i<screenFogColors.Length;i++){float visible=fog.Sample(fogGround[i]);float edge=visible>0&&visible<1?fogEdge[i]*Mathf.Sin(visible*Mathf.PI):0;screenFogColors[i]=new Color32(2,3,5,(byte)(255*(1-Mathf.Clamp01(visible+edge))));}
+            watch.Restart();bool soft=options.softFog;for(int i=0;i<screenFogColors.Length;i++){float visible=fog.Sample(fogGround[i]);float edge=visible>0&&visible<1?fogEdge[i]*Mathf.Sin(visible*Mathf.PI):0;float hidden=1-Mathf.Clamp01(visible+edge);if(soft){screenFogColors[i]=new Color32(58,64,72,(byte)(hidden*200));}else screenFogColors[i]=new Color32(2,3,5,(byte)(255*hidden));}
             fogScreen.SetPixels32(screenFogColors);fogScreen.Apply(false);
             fogMaskMs=watch.Elapsed.TotalMilliseconds;
         }
