@@ -13,7 +13,11 @@ public sealed partial class HumanMatch {
     public bool Disarmed(Unit u)=>u.effects.Any(e=>e.left>0&&(bool?)e.config?["disarm"]==true);
     public bool Silenced(Unit u)=>u.effects.Any(e=>e.left>0&&(bool?)e.config?["silence"]==true);
     public float MissChance(Unit u)=>Mathf.Clamp01(u.effects.Where(e=>e.left>0).Sum(e=>F(e.config,"miss")));
-    public float HellDisabled(Hut h)=>HellCurses.Where(c=>c.target==h.id).Select(c=>c.left).DefaultIfEmpty(0).Max();
+    public float HellDisabled(Hut h) {
+        if(HellCurses.Count==0)return 0;
+        float best=0;for(int i=0;i<HellCurses.Count;i++){var c=HellCurses[i];if(c.target==h.id&&c.left>best)best=c.left;}
+        return best;
+    }
     static readonly string[] ChaosBuildingSpells={"chaos_gift","map_erase","eruption","hell_fist"};
     void TickChaosBuilding(Hut h) {
         foreach(string id in Lines[h.kind].abilities)if(ChaosBuildingSpells.Contains((string)Abilities[id]?["kind"])&&(!h.spellTimers.TryGetValue(id,out float wait)||wait<=0)) {

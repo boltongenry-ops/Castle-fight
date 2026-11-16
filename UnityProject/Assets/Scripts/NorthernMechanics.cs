@@ -20,7 +20,11 @@ public sealed partial class HumanMatch {
         string id=(string)cfg["id"]??"",group=(string)cfg["stack_group"]??"";
         return team!=u.team&&(NorthernFrostIds.Contains(id)||group.StartsWith("frost",StringComparison.Ordinal)||group=="northern_ice_chains")?FrostDuration(team,duration,ShortNorthernControl(u)):duration;
     }
-    public float FrostDisabled(Hut h)=>NorthernFreezes.Where(v=>v.target==HutTarget(h)).Select(v=>v.left).DefaultIfEmpty(0).Max();
+    public float FrostDisabled(Hut h) {
+        if(NorthernFreezes.Count==0)return 0;
+        int want=HutTarget(h);float best=0;for(int i=0;i<NorthernFreezes.Count;i++){var v=NorthernFreezes[i];if(v.target==want&&v.left>best)best=v.left;}
+        return best;
+    }
     public float BuildingDisabled(Hut h)=>Mathf.Max(HellDisabled(h),FrostDisabled(h));
     public bool NorthernChannel(Hut h)=>NorthernWinters.Any(v=>v.source==h.id&&v.age<5.2f);
     void NorthernRage(Unit u) {

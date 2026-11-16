@@ -62,7 +62,12 @@ public sealed partial class HumanMatch {
     }
     void NerubTowerBarrage(Hut tower,Weapon weapon,int primary){
         if(Finished||NetworkReplica||tower.hp<=0||!tower.paid||tower.paused||BuildingDisabled(tower)>0||!new[]{"hNT1","hNT2"}.Contains(Lines[tower.kind].building))return;
-        var target=Units.Where(u=>u.id!=primary&&u.team!=tower.team&&u.hp>0&&Lines[u.kind].unit!="YTct"&&!Hidden(u)&&!Invulnerable(u)&&!CorruptedAirborne(u)&&NightCanDetect(tower.team,u)&&(Flying(u)?weapon.air:weapon.ground)&&(!Ethereal(u)||weapon.attack=="magic"||weapon.attack=="spells")&&Vector2.Distance(u.position,tower.position)<=weapon.range).OrderBy(u=>(u.position-tower.position).sqrMagnitude).FirstOrDefault();
+        Unit target=null;bool barrageIndexed=false;
+        if(UnitIndexReady033()) {
+            float wrSqr=weapon.range*weapon.range;
+            if(TryFindBestAny033(tower.position,wrSqr,tower.team,false,v=>v.id!=primary&&Lines[v.kind].unit!="YTct"&&!Hidden(v)&&!Invulnerable(v)&&!CorruptedAirborne(v)&&NightCanDetect(tower.team,v)&&(Flying(v)?weapon.air:weapon.ground)&&(!Ethereal(v)||weapon.attack=="magic"||weapon.attack=="spells"),out target))barrageIndexed=true;
+        }
+        if(!barrageIndexed)target=Units.Where(u=>u.id!=primary&&u.team!=tower.team&&u.hp>0&&Lines[u.kind].unit!="YTct"&&!Hidden(u)&&!Invulnerable(u)&&!CorruptedAirborne(u)&&NightCanDetect(tower.team,u)&&(Flying(u)?weapon.air:weapon.ground)&&(!Ethereal(u)||weapon.attack=="magic"||weapon.attack=="spells")&&Vector2.Distance(u.position,tower.position)<=weapon.range).OrderBy(u=>(u.position-tower.position).sqrMagnitude).FirstOrDefault();
         if(target!=null)AddShot(tower.team,tower.kind,tower.id,target.id,tower.position,target.position,weapon.damage*.6f*MechBuildingDamage(tower)*ElvenWeaponFactor(tower.team,false),weapon,0,3);
     }
     void NerubPlagueDeath(Unit dead,Effect effect){

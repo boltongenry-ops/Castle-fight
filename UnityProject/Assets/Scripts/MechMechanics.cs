@@ -11,10 +11,35 @@ public sealed partial class HumanMatch {
     public readonly double[] MechRepairGold=new double[2],MechRepairWood=new double[2];
     JObject mechRepairValues,mechPayloads;float mechCleanseClock;public float MechCleanseRemaining=>4-mechCleanseClock;
     public bool MechMine(Unit u)=>Lines[u.kind].unit=="n025";
+    void RebuildMechPowerCache() {
+        var s=Opt(this);s.mechPos0.Clear();s.mechPos1.Clear();
+        for(int i=0;i<Huts.Count;i++) {var p=Huts[i];if(p.hp<=0||!p.paid)continue;if(Lines[p.kind].building!="h09T")continue;(p.team==0?s.mechPos0:s.mechPos1).Add(p.position);}
+        s.mechTick=TickCount;
+    }
+    public bool MechPowered(Hut building) {
+        float r=F(Abilities["A09S"],"area",6);float rsqr=r*r;
+        var s=Opt(this);
+        if(s.mechTick==TickCount) {
+            var list=building.team==0?s.mechPos0:s.mechPos1;
+            for(int i=0;i<list.Count;i++)if((list[i]-building.position).sqrMagnitude<=rsqr)return true;
+            return false;
+        }
+        for(int i=0;i<Huts.Count;i++) {var p=Huts[i];if(p.hp<=0||!p.paid||p.team!=building.team)continue;if(Lines[p.kind].building!="h09T")continue;if((p.position-building.position).sqrMagnitude<=rsqr)return true;}
+        return false;
+    }
+    public bool MechCastlePowered(int team) {
+        float r=F(Abilities["A09S"],"area",6);float rsqr=r*r;Vector2 c=CastlePosition(team);
+        var s=Opt(this);
+        if(s.mechTick==TickCount) {
+            var list=team==0?s.mechPos0:s.mechPos1;
+            for(int i=0;i<list.Count;i++)if((list[i]-c).sqrMagnitude<=rsqr)return true;
+            return false;
+        }
+        for(int i=0;i<Huts.Count;i++) {var p=Huts[i];if(p.hp<=0||!p.paid||p.team!=team)continue;if(Lines[p.kind].building!="h09T")continue;if((p.position-c).sqrMagnitude<=rsqr)return true;}
+        return false;
+    }
     bool MechFighter(Unit u)=>u!=null&&u.hp>0&&!Hidden(u)&&!Invulnerable(u)&&!ElementalIllusion(u)&&Lines[u.kind].unit!="n02E"&&Lines[u.kind].unit!="YTct";
     JObject Ranked(Unit u,string id) {var cfg=(JObject)Abilities[id];var ranks=cfg?["ranks"] as JArray;return ranks!=null&&ranks.Count>0?(JObject)ranks[Mathf.Clamp(u.abilityLevels.TryGetValue(id,out int level)?level-1:0,0,ranks.Count-1)]:cfg;}
-    public bool MechPowered(Hut building)=>Huts.Any(p=>p.hp>0&&p.paid&&p.team==building.team&&Lines[p.kind].building=="h09T"&&Vector2.Distance(p.position,building.position)<=F(Abilities["A09S"],"area",6));
-    public bool MechCastlePowered(int team)=>Huts.Any(p=>p.hp>0&&p.paid&&p.team==team&&Lines[p.kind].building=="h09T"&&Vector2.Distance(p.position,CastlePosition(team))<=F(Abilities["A09S"],"area",6));
     public float CastleArmorFor(int team)=>CastleArmor+(MechCastlePowered(team)?F(Abilities["A09S"]?["fields"],"Had1"):0);
     public float MechBuildingArmor(Hut h)=>MechPowered(h)?F(Abilities["A09S"]?["fields"],"Had1"):0;
     float MechBuildingDamage(Hut h)=>MechPowered(h)?1+F(Abilities["A09V"]?["fields"],"Akb1"):1;

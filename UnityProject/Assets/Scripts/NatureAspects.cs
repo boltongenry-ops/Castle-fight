@@ -20,8 +20,8 @@ public sealed partial class HumanMatch {
         if(NatureResilience(team)&&!string.IsNullOrEmpty(l.unit))price=Mathf.CeilToInt(l.cost*1.1f);
         return price;
     }
-    public float BuildingCooldown(Hut hut,float cooldown)=>UndeadArmy(hut.team)&&UndeadRaiser(hut)?cooldown/1.4f:NatureForest(hut.team)&&ForestBuilding(hut)?cooldown/1.25f:cooldown;
-    public float BuildingManaRegen(Hut hut,float regen)=>TeamPandaren[hut.team]&&Aspects[hut.team]==1&&Lines[hut.kind].building=="pK01"?regen*1.2f:UndeadArmy(hut.team)&&UndeadRaiser(hut)?regen*1.4f:NatureForest(hut.team)&&ForestBuilding(hut)?regen*1.25f:regen;
+    public float BuildingCooldown(Hut hut,float cooldown)=>UndeadArmy(hut.team)&&HasRaise033(hut.kind)?cooldown/1.4f:NatureForest(hut.team)&&ForestBuilding(hut)?cooldown/1.25f:cooldown;
+    public float BuildingManaRegen(Hut hut,float regen)=>TeamPandaren[hut.team]&&Aspects[hut.team]==1&&Lines[hut.kind].building=="pK01"?regen*1.2f:UndeadArmy(hut.team)&&HasRaise033(hut.kind)?regen*1.4f:NatureForest(hut.team)&&ForestBuilding(hut)?regen*1.25f:regen;
     public void ApplyNatureResilience(Unit unit) {
         if(!NatureResilience(unit.team)||unit.spellResist>=.8f)return;
         unit.spellResist=Mathf.Min(.8f,unit.spellResist+.2f);

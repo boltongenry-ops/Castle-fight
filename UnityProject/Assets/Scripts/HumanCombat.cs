@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class HumanMatch {
     public Unit Spawn(int team,int kind,Vector2 position,bool production=false,Hut producer=null) {
-        if(production&&Lines[kind].unit=="u00F")kind=Array.FindIndex(Lines,l=>l.unit=="h030");var u=new Unit {id=nextId++,team=team,kind=kind,position=position,previous=position,hp=Lines[kind].hp,direction=team==0?Vector2.right:Vector2.left};Ensure(u);Units.Add(u);MechCreated(u,production,producer);UndeadCreated(u);ElementalCreated(u,production);NightCreated(u);ApplyUltimate(u);Spawned++;if(production)ChaosProduced(u);
+        if(production&&Lines[kind].unit=="u00F")kind=Array.FindIndex(Lines,l=>l.unit=="h030");var u=new Unit {id=nextId++,team=team,kind=kind,position=position,previous=position,hp=Lines[kind].hp,direction=team==0?Vector2.right:Vector2.left};Ensure(u);Units.Add(u);OnSpawnIndexed033(u);MechCreated(u,production,producer);UndeadCreated(u);ElementalCreated(u,production);NightCreated(u);ApplyUltimate(u);Spawned++;if(production)ChaosProduced(u);
         // Godot gameplay.route_through_arch: leave the keep's column before
         // heading to the road. Flying units can cross the footprint directly.
         if(!Flying(u)&&Mathf.Abs(position.x-(team==0?-5120f/30:5120f/30))<320f/30&&Mathf.Abs(position.y)>256f/30){u.leaveCastleLane=true;u.exitWaypoint=new Vector2(team==0?-4736f/30:4736f/30,position.y);}
@@ -40,8 +40,8 @@ public sealed partial class HumanMatch {
     public float AttackSpeed(Unit u)=>Mathf.Clamp(1+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5);
     public Weapon WeaponFor(Unit u,Unit target=null,bool structure=false)=>(Ethereal(u)||Disarmed(u))?null:(u.elementalWeapons??Lines[u.kind].weapons).FirstOrDefault(w=>(target==null||!Invulnerable(target)&&!CorruptedAirborne(target)&&!Hidden(target)&&NightCanDetect(u.team,target)&&Lines[target.kind].unit!="n02E")&&(target==null||Lines[target.kind].unit!="YTct"||w.targets.Contains("tree"))&&(target==null||!Ethereal(target)||w.attack=="magic"||w.attack=="spells")&&(structure?w.structure:target!=null&&Flying(target)?w.air:w.ground));
     int HutTarget(Hut h)=>-h.id-2;
-    Hut FindHut(int target)=>target< -1?Huts.FirstOrDefault(h=>h.id==-target-2&&h.hp>0&&h.paid):null;
-    Unit FindUnit(int target)=>target>=0?Units.FirstOrDefault(u=>u.id==target&&u.hp>0):null;
+    Hut FindHut(int target)=>FindHutFast033(target);
+    Unit FindUnit(int target)=>FindUnitFast033(target);
     Vector2 TargetPosition(int target,int sourceTeam)=>FindUnit(target)?.position??FindHut(target)?.position??CastlePosition(1-sourceTeam);
     bool TargetAlive(int target)=>target==-1||FindUnit(target)!=null||FindHut(target)!=null;
     bool AirTarget(int target)=>FindUnit(target) is Unit u&&Flying(u);
@@ -60,12 +60,30 @@ public sealed partial class HumanMatch {
         if(Ethereal(u)||Disarmed(u)){u.strikeLeft=-1;var etherealGoal=BuilderWaypoint(u.position,CastlePosition(1-u.team));u.direction=(etherealGoal-u.position).normalized;u.position=Vector2.MoveTowards(u.position,etherealGoal,MoveSpeed(u)*dt);u.pose="Walk";return;}
         if(!u.onRoad&&!Flying(u)) {if(Rooted(u)){u.pose="Stand";return;}var goal=u.leaveCastleLane?u.exitWaypoint:new Vector2(u.position.x,0);var travel=goal-u.position;if(travel.sqrMagnitude>.0001f)u.direction=travel.normalized;u.position=Vector2.MoveTowards(u.position,goal,MoveSpeed(u)*dt);u.pose="Walk";if((goal-u.position).sqrMagnitude<.0025f){if(u.leaveCastleLane)u.leaveCastleLane=false;else u.onRoad=true;}return;}
         u.onRoad=true;
-        var target=FindUnit(u.combatTarget);if(target!=null&&(target.team==u.team||WeaponFor(u,target)==null||Vector2.Distance(target.position,u.position)>Mathf.Max(29,l.range+2)))target=null;
-        if(target==null)target=Units.Where(v=>v.team!=u.team&&v.hp>0&&v.onRoad&&WeaponFor(u,v)!=null&&Vector2.Distance(v.position,u.position)<=Mathf.Max(26.667f,l.range+1)).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
+        var target=FindUnit(u.combatTarget);
+        if(target!=null) {
+            float keepMax=Mathf.Max(29f,l.range+2f);
+            if(target.team==u.team||(target.position-u.position).sqrMagnitude>keepMax*keepMax||WeaponFor(u,target)==null)target=null;
+        }
+        if(target==null) {
+            float searchMax=Mathf.Max(26.667f,l.range+1f);float searchMaxSqr=searchMax*searchMax;
+            Unit best=null;bool indexed=false;
+            if(TryFindBestUnit033(u.position,searchMaxSqr,u.team,v=>WeaponFor(u,v)!=null,out best))indexed=true;
+            if(!indexed) {
+                float bestSqr=float.MaxValue;
+                for(int i=0;i<Units.Count;i++) {var v=Units[i];if(v.team==u.team||v.hp<=0||!v.onRoad)continue;var d=v.position-u.position;float s=d.sqrMagnitude;if(s>searchMaxSqr||s>=bestSqr)continue;if(WeaponFor(u,v)==null)continue;best=v;bestSqr=s;}
+            }
+            target=best;
+        }
         target=NerubHuntTarget(u,target);if(target!=null)u.skirmish=true;
         u.combatTarget=target?.id??-1;int targetId=target?.id??-1;Weapon weapon=WeaponFor(u,target,target==null);
         if(weapon==null){u.pose="Stand";return;}
-        if(target==null&&u.skirmish&&Vector2.Distance(u.position,CastlePosition(1-u.team))>weapon.range+CastleCollision) {var hut=Huts.Where(h=>h.team!=u.team&&h.hp>0&&h.paid&&Vector2.Distance(h.position,u.position)<=weapon.range+2).OrderBy(h=>(h.position-u.position).sqrMagnitude).FirstOrDefault();if(hut!=null)targetId=HutTarget(hut);else u.skirmish=false;}
+        if(target==null&&u.skirmish&&(u.position-CastlePosition(1-u.team)).sqrMagnitude>(weapon.range+CastleCollision)*(weapon.range+CastleCollision)) {
+            float hutMax=weapon.range+2f;float hutMaxSqr=hutMax*hutMax;
+            Hut bestHut=null;float bestHutSqr=float.MaxValue;
+            for(int i=0;i<Huts.Count;i++) {var h=Huts[i];if(h.team==u.team||h.hp<=0||!h.paid)continue;var d=h.position-u.position;float s=d.sqrMagnitude;if(s>hutMaxSqr||s>=bestHutSqr)continue;bestHut=h;bestHutSqr=s;}
+            if(bestHut!=null)targetId=HutTarget(bestHut);else u.skirmish=false;
+        }
         Vector2 destination=TargetPosition(targetId,u.team),delta=destination-u.position;float reach=weapon.range+(targetId==-1?CastleCollision:targetId< -1?2:1);
         if(delta.sqrMagnitude>.001f)u.direction=delta.normalized;
         if(delta.magnitude<=reach+(u.pose=="Attack"?1:0)) {if(u.cooldown<=0)BeginAttack(u,weapon,targetId);u.pose=u.attackPoseLeft>0?"Attack":"Stand";}
