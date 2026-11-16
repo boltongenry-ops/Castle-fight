@@ -32,7 +32,7 @@ public sealed partial class HumanMatch {
     public float Height(Unit u)=>u.natureSpirit?1:Flying(u)?Lines[u.kind].flyHeight:0;
     public float Stat(Unit u,string name) {
         float value=(name=="haste"?ChaosHaste(u):0)+UltimateMod(u,name);value+=u.effects.Sum(e=>name=="armor"?e.armor:name=="damage"?((string)e.config?["kind"]=="regen"?0:e.power):name=="haste"?e.haste:name=="speed"?e.speed:name=="incoming"?e.incoming:0);
-        if(name=="armor")value+=u.auraArmor+u.auraArmorNegative;if(name=="haste")value+=u.auraHaste+u.auraHasteNegative;if(name=="speed")value+=u.auraSpeed+u.auraSpeedNegative;
+        if(name=="armor")value+=u.auraArmor+u.auraArmorNegative+NerubArmorOverlap(u);if(name=="haste")value+=u.auraHaste+u.auraHasteNegative;if(name=="speed")value+=u.auraSpeed+u.auraSpeedNegative;
         foreach(var id in u.abilities){var c=Ranked(u,id);if((string)c?["kind"]=="self_passive"&&name!="armor")value+=F(c,name);}
         return value;
     }
@@ -62,7 +62,7 @@ public sealed partial class HumanMatch {
         u.onRoad=true;
         var target=FindUnit(u.combatTarget);if(target!=null&&(target.team==u.team||WeaponFor(u,target)==null||Vector2.Distance(target.position,u.position)>Mathf.Max(29,l.range+2)))target=null;
         if(target==null)target=Units.Where(v=>v.team!=u.team&&v.hp>0&&v.onRoad&&WeaponFor(u,v)!=null&&Vector2.Distance(v.position,u.position)<=Mathf.Max(26.667f,l.range+1)).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
-        if(target!=null)u.skirmish=true;
+        target=NerubHuntTarget(u,target);if(target!=null)u.skirmish=true;
         u.combatTarget=target?.id??-1;int targetId=target?.id??-1;Weapon weapon=WeaponFor(u,target,target==null);
         if(weapon==null){u.pose="Stand";return;}
         if(target==null&&u.skirmish&&Vector2.Distance(u.position,CastlePosition(1-u.team))>weapon.range+CastleCollision) {var hut=Huts.Where(h=>h.team!=u.team&&h.hp>0&&h.paid&&Vector2.Distance(h.position,u.position)<=weapon.range+2).OrderBy(h=>(h.position-u.position).sqrMagnitude).FirstOrDefault();if(hut!=null)targetId=HutTarget(hut);else u.skirmish=false;}
@@ -72,7 +72,7 @@ public sealed partial class HumanMatch {
         else {
             if(Rooted(u)){u.pose="Stand";return;}
             u.pose="Walk";Vector2 waypoint=Flying(u)?destination:BuilderWaypoint(u.position,destination);Vector2 travel=waypoint-u.position;Vector2 direction=travel.normalized;
-            if(!Flying(u))foreach(var other in Units)if(other!=u&&other.hp>0&&other.onRoad&&!Flying(other)){var sep=u.position-other.position;float d=sep.sqrMagnitude;if(d>.001f&&d<1.5f)direction+=sep.normalized*(1-Mathf.Sqrt(d)/1.225f)*.6f;}
+            if(!Flying(u))direction=GroundSeparation(u,direction);
             u.position=Vector2.MoveTowards(u.position,u.position+direction.normalized*Mathf.Min(travel.magnitude,Mathf.Max(0,delta.magnitude-reach+.1f)),MoveSpeed(u)*dt);
             if(!Flying(u)&&Mathf.Abs(u.previous.y)<=2.201f&&targetId>=-1)u.position=new Vector2(u.position.x,Mathf.Clamp(u.position.y,-2.2f,2.2f));if(direction.sqrMagnitude>.01f)u.direction=direction.normalized;
         }
@@ -149,7 +149,7 @@ public sealed partial class HumanMatch {
         var victim=FindUnit(target);var owner=FindUnit(ownerId);
         if(victim!=null) {
             if(CorruptedAirborne(victim))return;Ensure(victim);if(NightEvasion(victim)>0&&Roll()<NightEvasion(victim)){PulseAt(victim.position,1,Color.white,"Уклонение");return;}
-            float bonus=passives&&owner!=null&&owner.hp>0?CorruptedIncinerate(owner,victim):0;float before=victim.hp;DamageUnit(victim,amount,team,w.attack,false,false,owner);if(bonus>0&&victim.hp>0)DamageUnit(victim,bonus,team,"magic",true,false,owner);float dealt=before-victim.hp;ElvenBlood(owner,victim,dealt,w.attack);if(dealt>0&&victim.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")NatureDragonArmor(victim);if(owner==null&&victim.hp>0&&Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0) is Hut feedbackTower)foreach(string id in Lines[feedbackTower.kind].abilities){var cfg=Abilities[id];if((string)cfg?["kind"]=="feedback"){float drained=Mathf.Min(victim.mana,F(cfg,"power"));victim.mana-=drained;DamageUnit(victim,drained*F(cfg,"ratio",1),team);}}if(victim.hp>0&&stun>0){victim.stun=Mathf.Max(victim.stun,stun);PulseAt(victim.position,1,Color.yellow,"Оглушение");}
+            float bonus=passives&&owner!=null&&owner.hp>0?CorruptedIncinerate(owner,victim):0;float before=victim.hp;DamageUnit(victim,amount*NerubHuntMultiplier(owner,victim),team,w.attack,false,false,owner);if(bonus>0&&victim.hp>0)DamageUnit(victim,bonus,team,"magic",true,false,owner);float dealt=before-victim.hp;ElvenBlood(owner,victim,dealt,w.attack);if(dealt>0&&victim.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")NatureDragonArmor(victim);if(owner==null&&victim.hp>0&&Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0) is Hut feedbackTower)foreach(string id in Lines[feedbackTower.kind].abilities){var cfg=Abilities[id];if((string)cfg?["kind"]=="feedback"){float drained=Mathf.Min(victim.mana,F(cfg,"power"));victim.mana-=drained;DamageUnit(victim,drained*F(cfg,"ratio",1),team);}}if(victim.hp>0&&stun>0){victim.stun=Mathf.Max(victim.stun,stun);PulseAt(victim.position,1,Color.yellow,"Оглушение");}
             if(passives){CentaurAfterWeapon(owner,victim,dealt);var nativeTower=owner==null?Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0):null;NerubAfterWeapon(owner,nativeTower,victim,dealt);PandaAfterWeapon(owner,nativeTower,victim);ElementalAfterWeapon(owner,dealt);}ElementalTowerHit(ownerId,team,victim,dealt);UndeadWeaponHit(owner,victim,dealt,w);MechTowerHit(ownerId,team,victim,dealt);NorthernAfterWeapon(ownerId,victim,w);if(owner!=null&&owner.hp>0&&passives){OnHit(owner,victim,dealt,w);if(w.type=="normal"&&victim.auraThorns>0)DamageUnit(owner,dealt*victim.auraThorns,victim.team,"magic",true,false,victim);if(w.type=="normal")foreach(var id in victim.abilities){var cfg=Abilities[id];if((string)cfg?["kind"]=="spiked"&&F(cfg,"reflect")>0){DamageUnit(owner,dealt*F(cfg,"reflect")+F(cfg,"bonus"),victim.team,"magic",true,false,victim);SpikedHits++;}}}else if(victim.hp>0&&Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0&&h.paid) is Hut tower&&Lines[tower.kind].abilities.Contains("A020")&&Valid(victim,team,Abilities["A020"],false))ApplyEffect(victim,"A020",team);
         } else {
             Vector2 center=TargetPosition(target,team);float elementalBefore=target==-1?CastleHp[1-team]:FindHut(target)?.hp??0;
@@ -163,7 +163,7 @@ public sealed partial class HumanMatch {
             var cfg=Abilities[id];string kind=(string)cfg?["kind"];
             if(kind=="cleave"&&w.type=="normal"){PulseAt(target.position,1,Color.white,"",.45f,"cleave");foreach(var v in Units.ToArray())if(v!=target&&v.hp>0&&v.team!=owner.team&&!Flying(v)&&Vector2.Distance(v.position,target.position)<=F(cfg,"area"))DamageUnit(v,dealt*F(cfg,"power"),owner.team,w.attack,false);}
             if(kind=="orb"&&target.hp>0&&Roll()<F(cfg,"chance")){var effect=Abilities[(string)cfg["effect"]];if((string)effect?["kind"]=="mana_burn"){if(Valid(target,owner.team,effect,false)){float drain=Mathf.Min(target.mana,F(effect,"power"));target.mana-=drain;if(drain>0){DamageUnit(target,drain*F(effect,"ratio",1),owner.team,"magic",true,false,owner);FeedbackHits++;PulseAt(target.position,1,Color.cyan,"Выжигание маны");}}}else if(!ElementalOrb(owner,target,effect)&&!CorruptedOrb(owner,target,effect)&&!UndeadOrb(owner,target,effect)&&!NorthernOrbEffect(owner,target,effect))Chain(owner,target,effect);}
-            if((kind=="poison"||kind=="corruption")&&target.hp>0&&Valid(target,owner.team,cfg,false))ApplyEffect(target,id,owner.team);
+            if((kind=="poison"||kind=="corruption")&&target.hp>0&&Valid(target,owner.team,cfg,false))ApplyEffect(target,id,owner.team,owner.id);
             if(kind=="feedback"&&target.hp>0){float drained=Mathf.Min(target.mana,F(cfg,"power"));target.mana-=drained;float bonus=(target.summoned||(bool?)Lines[target.kind].stats["summoned"]==true)?F(cfg,"summoned_bonus"):0;if(drained+bonus>0){DamageUnit(target,drained*F(cfg,"ratio",1)+bonus,owner.team,"magic",true,false,owner);FeedbackHits++;PulseAt(target.position,1,Color.cyan,"Выжигание маны");}}
         }
     }

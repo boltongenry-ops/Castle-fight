@@ -1236,7 +1236,7 @@
         "base": "ninf",
         "flying": false,
         "fly_height": 0,
-        "can_air": true,
+        "can_air": false,
         "range": 3.3333333333333335,
         "damage": 122.5,
         "cooldown": 1.35,
@@ -1254,8 +1254,8 @@
         "weapons": [
           {
             "slot": 1,
-            "targets": "air,debris,ground,item,structure,tree,ward",
-            "can_air": true,
+            "targets": "debris,ground,item,structure,tree,ward",
+            "can_air": false,
             "can_ground": true,
             "can_structure": true,
             "damage": 122.5,

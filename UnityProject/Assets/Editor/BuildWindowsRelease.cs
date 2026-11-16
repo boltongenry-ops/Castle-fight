@@ -20,11 +20,19 @@ public static class BuildWindowsRelease {
                 return output.Substring(0,64);
             }
         }
-        using(var stream=File.OpenRead(file))using(var sha=SHA256.Create())return BitConverter.ToString(sha.ComputeHash(stream)).Replace("-","").ToLowerInvariant();
+        // Unity Mono's managed SHA implementation is unusually slow on multi-GiB player data.
+        // Windows' native verifier keeps exactly the same before/after SHA-256 guard.
+        var native=new System.Diagnostics.ProcessStartInfo("certutil.exe","-hashfile \""+Path.GetFullPath(file)+"\" SHA256"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardOutput=true,RedirectStandardError=true};
+        using(var process=System.Diagnostics.Process.Start(native)){
+            string output=process.StandardOutput.ReadToEnd();process.WaitForExit();
+            string hash=output.Split('\n').Select(line=>line.Trim()).FirstOrDefault(line=>line.Length==64&&line.All(Uri.IsHexDigit));
+            if(process.ExitCode!=0||hash==null)throw new Exception("Native Windows SHA-256 verification failed");
+            return hash.ToLowerInvariant();
+        }
     }
     public static void Build(){
         BuildMobileContent.Restore();
-        CombatAbilityAudit.RunTower();
+        BuildNerubian033.Validate();
         var own=JObject.Parse(File.ReadAllText("Assets/Nerubian032/pc-nerubian.json"));
         var human=JObject.Parse(File.ReadAllText("Assets/Resources/pc-human.json"));
         int checks=0;FinalRaceScenarios.PoisonRefresh(own,human,(ok,message)=>{if(!ok)throw new Exception(message);checks++;});
@@ -46,7 +54,7 @@ public static class BuildWindowsRelease {
             }
         }
         // Published player data retains its original 0.20 metadata; the game UI version is PcGame.Version.
-        PlayerSettings.bundleVersion=scriptsOnly?"0.20.0":"0.32.2";
+        PlayerSettings.bundleVersion=scriptsOnly?"0.20.0":"0.33.0";
         PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone,ScriptingImplementation.Mono2x);
         const string output="Builds/MapWindows/CastleFightMap.exe";Directory.CreateDirectory(Path.GetDirectoryName(output));
         var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/Scenes/CastleFightMap.unity"},target=BuildTarget.StandaloneWindows64,locationPathName=output,options=scriptsOnly?BuildOptions.BuildScriptsOnly:BuildOptions.None});
@@ -57,6 +65,6 @@ public static class BuildWindowsRelease {
             File.Copy("Builds/WindowsBaseline/"+name,data+name,true);
         foreach(var row in before)if(Hash(data+row.Key)!=row.Value)throw new Exception("Scripts-only build changed base data: "+row.Key);
         File.Copy(supplement+"/centaur-028",data+"StreamingAssets/Frontend/centaur-028.windows",true);
-        Debug.Log("CF_WINDOWS_RELEASE_PASS version=0.32.2 bytes="+report.summary.totalSize);
+        Debug.Log("CF_WINDOWS_RELEASE_PASS version=0.33.0 bytes="+report.summary.totalSize);
     }
 }

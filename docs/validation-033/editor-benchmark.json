@@ -1,0 +1,258 @@
+{
+  "runtime": "Unity Editor Mono batchmode; simulation only, no graphics; not Android or player FPS",
+  "allocationCounterNote": "Zero from Mono allocation counter is treated as unavailable, not zero allocations",
+  "stepSeconds": 0.05,
+  "rows": [
+    {
+      "units": 200,
+      "layout": "march_separated",
+      "sections": [
+        {
+          "section": "full_simulation_step_50ms",
+          "samples": 8,
+          "medianMs": 98.248100000000008,
+          "maxMs": 109.88850000000001,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "aura_refresh",
+          "samples": 3,
+          "medianMs": 0.3044,
+          "maxMs": 0.6111,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "all_unit_decisions_and_movement",
+          "samples": 3,
+          "medianMs": 97.1371,
+          "maxMs": 98.4945,
+          "allocatedBytesPerSample": null
+        }
+      ]
+    },
+    {
+      "units": 200,
+      "layout": "engaged_dense",
+      "sections": [
+        {
+          "section": "full_simulation_step_50ms",
+          "samples": 8,
+          "medianMs": 15.990400000000001,
+          "maxMs": 56.901300000000006,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "aura_refresh",
+          "samples": 3,
+          "medianMs": 0.1794,
+          "maxMs": 0.2018,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "all_unit_decisions_and_movement",
+          "samples": 3,
+          "medianMs": 23.842100000000002,
+          "maxMs": 32.2781,
+          "allocatedBytesPerSample": null
+        }
+      ]
+    },
+    {
+      "units": 500,
+      "layout": "march_separated",
+      "sections": [
+        {
+          "section": "full_simulation_step_50ms",
+          "samples": 8,
+          "medianMs": 639.0692,
+          "maxMs": 668.1621,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "aura_refresh",
+          "samples": 3,
+          "medianMs": 0.4647,
+          "maxMs": 0.6478,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "all_unit_decisions_and_movement",
+          "samples": 3,
+          "medianMs": 583.4473,
+          "maxMs": 615.9393,
+          "allocatedBytesPerSample": null
+        }
+      ]
+    },
+    {
+      "units": 500,
+      "layout": "engaged_dense",
+      "sections": [
+        {
+          "section": "full_simulation_step_50ms",
+          "samples": 8,
+          "medianMs": 65.4432,
+          "maxMs": 82.4143,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "aura_refresh",
+          "samples": 3,
+          "medianMs": 0.44980000000000003,
+          "maxMs": 0.52960000000000007,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "all_unit_decisions_and_movement",
+          "samples": 3,
+          "medianMs": 99.3861,
+          "maxMs": 196.33530000000002,
+          "allocatedBytesPerSample": null
+        }
+      ]
+    },
+    {
+      "units": 1000,
+      "layout": "march_separated",
+      "sections": [
+        {
+          "section": "full_simulation_step_50ms",
+          "samples": 8,
+          "medianMs": 2312.2224,
+          "maxMs": 2538.2186,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "aura_refresh",
+          "samples": 3,
+          "medianMs": 1.6325,
+          "maxMs": 1.6795,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "all_unit_decisions_and_movement",
+          "samples": 3,
+          "medianMs": 2392.4267,
+          "maxMs": 2467.6712,
+          "allocatedBytesPerSample": null
+        }
+      ]
+    },
+    {
+      "units": 1000,
+      "layout": "engaged_dense",
+      "sections": [
+        {
+          "section": "full_simulation_step_50ms",
+          "samples": 8,
+          "medianMs": 239.2898,
+          "maxMs": 271.9449,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "aura_refresh",
+          "samples": 3,
+          "medianMs": 0.90240000000000009,
+          "maxMs": 0.9703,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "all_unit_decisions_and_movement",
+          "samples": 3,
+          "medianMs": 342.4853,
+          "maxMs": 614.5299,
+          "allocatedBytesPerSample": null
+        }
+      ]
+    },
+    {
+      "units": 2000,
+      "layout": "march_separated",
+      "sections": [
+        {
+          "section": "full_simulation_step_50ms",
+          "samples": 8,
+          "medianMs": 10633.1875,
+          "maxMs": 11645.5547,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "aura_refresh",
+          "samples": 3,
+          "medianMs": 2.2754000000000003,
+          "maxMs": 2.3477,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "all_unit_decisions_and_movement",
+          "samples": 3,
+          "medianMs": 9734.6734,
+          "maxMs": 10010.1919,
+          "allocatedBytesPerSample": null
+        }
+      ]
+    },
+    {
+      "units": 2000,
+      "layout": "engaged_dense",
+      "sections": [
+        {
+          "section": "full_simulation_step_50ms",
+          "samples": 8,
+          "medianMs": 950.95620000000008,
+          "maxMs": 989.0484,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "aura_refresh",
+          "samples": 3,
+          "medianMs": 2.3351,
+          "maxMs": 3.2119,
+          "allocatedBytesPerSample": null
+        },
+        {
+          "section": "all_unit_decisions_and_movement",
+          "samples": 3,
+          "medianMs": 1478.7979,
+          "maxMs": 2667.1539000000002,
+          "allocatedBytesPerSample": null
+        }
+      ]
+    }
+  ],
+  "buildingRows": [
+    {
+      "buildings": 100,
+      "fixture": "producing buildings, no units, production not due; excludes purchase/placement cost",
+      "step": {
+        "section": "full_simulation_step_50ms",
+        "samples": 8,
+        "medianMs": 2.0757,
+        "maxMs": 2.1336,
+        "allocatedBytesPerSample": null
+      }
+    },
+    {
+      "buildings": 500,
+      "fixture": "producing buildings, no units, production not due; excludes purchase/placement cost",
+      "step": {
+        "section": "full_simulation_step_50ms",
+        "samples": 8,
+        "medianMs": 44.0298,
+        "maxMs": 52.138200000000005,
+        "allocatedBytesPerSample": null
+      }
+    },
+    {
+      "buildings": 1000,
+      "fixture": "producing buildings, no units, production not due; excludes purchase/placement cost",
+      "step": {
+        "section": "full_simulation_step_50ms",
+        "samples": 8,
+        "medianMs": 157.32170000000002,
+        "maxMs": 179.4299,
+        "allocatedBytesPerSample": null
+      }
+    }
+  ]
+}

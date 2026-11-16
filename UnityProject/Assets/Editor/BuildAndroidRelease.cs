@@ -14,7 +14,7 @@ public static class BuildAndroidRelease {
     public static void BuildUpdate(){PrepareContent();Build();}
     public static void PrepareContent(){
         BuildMobileContent.Restore();
-        CombatAbilityAudit.RunTower();
+        BuildNerubian033.Validate();
         const string output="Builds/CentaurAndroid028";
         Directory.CreateDirectory(output);
         var registry=JObject.Parse(File.ReadAllText("Assets/Centaur028/index.json"));
@@ -28,27 +28,27 @@ public static class BuildAndroidRelease {
         var catalog=JObject.Parse(File.ReadAllText("Assets/MobileBootstrap/content.json"));
         var bundle=((JArray)catalog["bundles"]).Single(b=>(string)b["name"]=="centaur-028");
         bundle["file"]=hash+".cfb";bundle["sha256"]=hash;bundle["size"]=new FileInfo(source).Length;
-        bundle["url"]="https://github.com/boltongenry-ops/Castle-fight/releases/download/v0.32.2/"+hash+".cfb";
+        bundle["url"]="https://github.com/boltongenry-ops/Castle-fight/releases/download/v0.33.0/"+hash+".cfb";
         File.Copy(source,content+"/"+hash+".cfb",true);
         foreach(var entry in registry.Properties()){
             var row=((JArray)catalog["resources"]).FirstOrDefault(r=>(string)r["key"]==entry.Name);
             if(row==null)((JArray)catalog["resources"]).Add(new JObject{["key"]=entry.Name,["asset"]=entry.Value.DeepClone(),["bundle"]="centaur-028"});
             else{row["asset"]=entry.Value.DeepClone();row["bundle"]="centaur-028";}
         }
-        catalog["version"]="0.32.2";catalog["minimumPlayerVersion"]="0.32.2";
-        if(!ContentCatalog031.Compatible(catalog,"0.32.2")||ContentCatalog031.Compatible(catalog,"0.32.1"))throw new Exception("Android content compatibility check failed");
+        catalog["version"]="0.33.0";catalog["minimumPlayerVersion"]="0.33.0";
+        if(!ContentCatalog031.Compatible(catalog,"0.33.0")||ContentCatalog031.Compatible(catalog,"0.32.1"))throw new Exception("Android content compatibility check failed");
         string url=(string)bundle["url"];
         if(ContentCatalog031.AssetUrl(catalog,bundle)!=url)throw new Exception("Supplement URL override failed");
         var unchanged=((JArray)catalog["bundles"]).First(b=>b["url"]==null);
         if(ContentCatalog031.AssetUrl(catalog,unchanged)!=(string)catalog["baseUrl"]+"/"+(string)unchanged["file"])throw new Exception("Legacy content URL fallback failed");
         bundle["url"]="http://example.invalid/content.cfb";
-        if(ContentCatalog031.Compatible(catalog,"0.32.2"))throw new Exception("Insecure asset URL accepted");
+        if(ContentCatalog031.Compatible(catalog,"0.33.0"))throw new Exception("Insecure asset URL accepted");
         bundle["url"]=url;
         Debug.Log("CF_CONTENT_URL_PASS override=verified legacyFallback=verified http=rejected");
         File.WriteAllText(content+"/manifest.json",catalog.ToString());
         File.WriteAllText("Assets/MobileBootstrap/content.json",catalog.ToString());
         AssetDatabase.ImportAsset("Assets/MobileBootstrap/content.json",ImportAssetOptions.ForceSynchronousImport);
-        Debug.Log("CF_ANDROID_SUPPLEMENT_PASS version=0.32.2 sha256="+hash);
+        Debug.Log("CF_ANDROID_SUPPLEMENT_PASS version=0.33.0 sha256="+hash);
     }
     public static void Build(){
         string key=Environment.GetEnvironmentVariable("CF_KEYSTORE_PATH");

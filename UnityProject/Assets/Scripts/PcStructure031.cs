@@ -7,6 +7,7 @@ public sealed partial class PcGame {
     int constructionPage,sharedChestRow=-1;
     int SharedChestRow=>sharedChestRow<0?sharedChestRow=((JArray)JObject.Parse(catalog.text)["lines"]).ToList().FindIndex(l=>(string)l["building"]=="h008"):sharedChestRow;
     string StructureCatalog(int race,string original){
+        if(race==4){var chaos=ContentResources.Load<TextAsset>("Nerubian033/Chaos");return chaos?chaos.text:original;}
         if(race!=12&&race!=13&&race!=14&&race!=15)return original;
         var replacement=race==13?ContentResources.Load<TextAsset>("Nerubian032/Catalog"):race==14||race==12?ContentResources.Load<TextAsset>("Structure031/Pandaren"):null;
         if(race==12){
@@ -18,7 +19,7 @@ public sealed partial class PcGame {
             result["abilities"]["APKg"]=panda["abilities"]["APKg"].DeepClone();
             foreach(var slot in (JArray)result["ultimateSlots"])foreach(var group in (JArray)slot["groups"])if((string)group["race"]=="Pandaren Order")group["buildings"]=(string)slot["kind"]=="legendary"?new JArray("pK01"):new JArray(((JArray)group["buildings"]).Where(raw=>(string)raw!="pK01").Select(raw=>raw.DeepClone()));
             var nerub=ContentResources.Load<TextAsset>("Nerubian032/Catalog");if(nerub){
-                var revised=JObject.Parse(nerub.text);foreach(var row in ((JArray)result["lines"]).OfType<JObject>().ToArray()){
+                var revised=JObject.Parse(nerub.text);var abilityKeys=((JArray)revised["lines"]).SelectMany(row=>HumanMatch.Strings(row["abilities"]).Concat(HumanMatch.Strings(row["stats"]?["abilities"]))).Distinct();foreach(string key in abilityKeys)if(revised["abilities"]?[key]!=null)result["abilities"][key]=revised["abilities"][key].DeepClone();foreach(var row in ((JArray)result["lines"]).OfType<JObject>().ToArray()){
                     var change=((JArray)revised["lines"]).FirstOrDefault(l=>(string)l["building"]==(string)row["building"]);if(change==null)continue;
                     var copy=(JObject)change.DeepClone();copy["base"]=row["base"]?.DeepClone()??new JValue(false);if(row["allowed"]!=null)copy["allowed"]=row["allowed"].DeepClone();row.Replace(copy);
                 }
@@ -26,6 +27,7 @@ public sealed partial class PcGame {
                     var buildings=(string)slot["kind"]=="legendary"?new JArray("hNL1"):new JArray(((JArray)group["buildings"]).Where(raw=>(string)raw!="hNL1"&&(string)raw!="hNO1").Select(raw=>raw.DeepClone()));if(buildings.Count==0)group.Remove();else group["buildings"]=buildings;
                 }
             }
+            var chaos=ContentResources.Load<TextAsset>("Nerubian033/Chaos");if(chaos){var source=JObject.Parse(chaos.text);foreach(var row in result["lines"].Where(l=>(string)l["unit"]=="n000"))row["stats"]=source["lines"].First(l=>(string)l["unit"]=="n000")["stats"].DeepClone();}
             return result.ToString();
         }
         var data=JObject.Parse(replacement?replacement.text:original);var lines=(JArray)data["lines"];

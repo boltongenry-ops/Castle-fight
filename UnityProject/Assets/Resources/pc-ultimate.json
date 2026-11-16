@@ -1242,7 +1242,7 @@
         "base": "ninf",
         "flying": false,
         "fly_height": 0,
-        "can_air": true,
+        "can_air": false,
         "range": 3.3333333333333335,
         "damage": 122.5,
         "cooldown": 1.35,
@@ -1260,8 +1260,8 @@
         "weapons": [
           {
             "slot": 1,
-            "targets": "air,debris,ground,item,structure,tree,ward",
-            "can_air": true,
+            "targets": "debris,ground,item,structure,tree,ward",
+            "can_air": false,
             "can_ground": true,
             "can_structure": true,
             "damage": 122.5,
@@ -28927,8 +28927,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNW1",
@@ -29057,8 +29056,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNP1",
@@ -29187,8 +29185,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNS1",
@@ -29198,7 +29195,7 @@
       ],
       "name": "Святилище кокона",
       "unitName": "Хранитель кокона",
-      "hotkey": "S",
+      "hotkey": "R",
       "cost": 180,
       "woodCost": 0,
       "woodReward": 180,
@@ -29316,8 +29313,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNA1",
@@ -29446,8 +29442,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNO1",
@@ -29457,10 +29452,10 @@
       ],
       "name": "Двор матриарха",
       "unitName": "Матриарх роя",
-      "hotkey": "R",
-      "cost": 520,
+      "hotkey": "U",
+      "cost": 150,
       "woodCost": 300,
-      "woodReward": 130,
+      "woodReward": 38,
       "slots": 1,
       "base": false,
       "upgrades": [],
@@ -29545,7 +29540,7 @@
         "hp": 1800,
         "speed": 0,
         "build_time": 2,
-        "cost": 520,
+        "cost": 150,
         "armor": 7,
         "attack_type": "chaos",
         "armor_type": "fortified",
@@ -29575,8 +29570,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNB1",
@@ -29584,7 +29578,7 @@
       "production": [],
       "name": "Камера выводка",
       "unitName": "",
-      "hotkey": "D",
+      "hotkey": "S",
       "cost": 220,
       "woodCost": 300,
       "woodReward": 0,
@@ -29684,8 +29678,7 @@
       },
       "abilities": [
         "AUBr"
-      ],
-      "homeRace": "Nerubian Swarm"
+      ]
     },
     {
       "building": "hNC1",
@@ -29693,7 +29686,7 @@
       "production": [],
       "name": "Кислотный кратер",
       "unitName": "",
-      "hotkey": "F",
+      "hotkey": "D",
       "cost": 280,
       "woodCost": 400,
       "woodReward": 0,
@@ -29793,8 +29786,7 @@
       },
       "abilities": [
         "AUAc"
-      ],
-      "homeRace": "Nerubian Swarm"
+      ]
     },
     {
       "building": "hNL1",
@@ -29802,7 +29794,7 @@
       "production": [],
       "name": "Гробница праматери",
       "unitName": "",
-      "hotkey": "X",
+      "hotkey": "F",
       "cost": 520,
       "woodCost": 700,
       "woodReward": 0,
@@ -29835,7 +29827,7 @@
         ],
         "weapons": [],
         "aggro_range": 55,
-        "max_mana": 32,
+        "max_mana": 24,
         "start_mana": 0,
         "mana_regen": 1,
         "can_ground": false,
@@ -29878,7 +29870,7 @@
         ],
         "weapons": [],
         "aggro_range": 55,
-        "max_mana": 32,
+        "max_mana": 24,
         "start_mana": 0,
         "mana_regen": 1,
         "can_ground": false,
@@ -29902,8 +29894,7 @@
       },
       "abilities": [
         "AUPs"
-      ],
-      "homeRace": "Nerubian Swarm"
+      ]
     },
     {
       "building": "hNT1",
@@ -29943,7 +29934,8 @@
         "ability": "AUWB",
         "abilities": [
           "AUWB",
-          "AUN4"
+          "AUN4",
+          "ANDB"
         ],
         "weapons": [
           {
@@ -30004,7 +29996,8 @@
         "ability": "AUWB",
         "abilities": [
           "AUWB",
-          "AUN4"
+          "AUN4",
+          "ANDB"
         ],
         "weapons": [
           {
@@ -30049,9 +30042,9 @@
       },
       "abilities": [
         "AUWB",
-        "AUN4"
-      ],
-      "homeRace": "Nerubian Swarm"
+        "AUN4",
+        "ANDB"
+      ]
     },
     {
       "building": "hNV2",
@@ -30062,9 +30055,9 @@
       "name": "Стражевой инкубатор",
       "unitName": "Страж выводка",
       "hotkey": "",
-      "cost": 130,
+      "cost": 80,
       "woodCost": 0,
-      "woodReward": 130,
+      "woodReward": 80,
       "slots": 0,
       "base": false,
       "upgrades": [
@@ -30072,7 +30065,7 @@
       ],
       "pendingUpgrades": [],
       "category": "producer",
-      "seconds": 21.5,
+      "seconds": 25.0,
       "buildSeconds": 1.5,
       "incomeRate": 0.02,
       "stats": {
@@ -30150,7 +30143,7 @@
         "hp": 1450,
         "speed": 0,
         "build_time": 1,
-        "cost": 130,
+        "cost": 80,
         "armor": 6,
         "attack_type": "normal",
         "armor_type": "fortified",
@@ -30180,8 +30173,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNW2",
@@ -30192,15 +30184,15 @@
       "name": "Чертог ткачей",
       "unitName": "Ткач ловушек",
       "hotkey": "",
-      "cost": 190,
+      "cost": 130,
       "woodCost": 0,
-      "woodReward": 190,
+      "woodReward": 130,
       "slots": 0,
       "base": false,
       "upgrades": [],
       "pendingUpgrades": [],
       "category": "producer",
-      "seconds": 24.5,
+      "seconds": 29.0,
       "buildSeconds": 1.5,
       "incomeRate": 0.02,
       "stats": {
@@ -30279,7 +30271,7 @@
         "hp": 1500,
         "speed": 0,
         "build_time": 1,
-        "cost": 190,
+        "cost": 130,
         "armor": 6,
         "attack_type": "pierce",
         "armor_type": "fortified",
@@ -30309,8 +30301,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNP2",
@@ -30321,15 +30312,15 @@
       "name": "Кислотный питомник",
       "unitName": "Кислотный опустошитель",
       "hotkey": "",
-      "cost": 170,
+      "cost": 110,
       "woodCost": 0,
-      "woodReward": 170,
+      "woodReward": 110,
       "slots": 0,
       "base": false,
       "upgrades": [],
       "pendingUpgrades": [],
       "category": "producer",
-      "seconds": 23.5,
+      "seconds": 29.0,
       "buildSeconds": 1.5,
       "incomeRate": 0.02,
       "stats": {
@@ -30407,7 +30398,7 @@
         "hp": 1400,
         "speed": 0,
         "build_time": 1,
-        "cost": 170,
+        "cost": 110,
         "armor": 5,
         "attack_type": "pierce",
         "armor_type": "fortified",
@@ -30437,8 +30428,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNS2",
@@ -30454,10 +30444,12 @@
       "woodReward": 190,
       "slots": 0,
       "base": false,
-      "upgrades": [],
+      "upgrades": [
+        "hNO1"
+      ],
       "pendingUpgrades": [],
       "category": "producer",
-      "seconds": 24.5,
+      "seconds": 33.5,
       "buildSeconds": 1.5,
       "incomeRate": 0.02,
       "stats": {
@@ -30565,8 +30557,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNA2",
@@ -30577,15 +30568,15 @@
       "name": "Лабиринт клинков",
       "unitName": "Клинок улья",
       "hotkey": "",
-      "cost": 210,
+      "cost": 130,
       "woodCost": 0,
-      "woodReward": 210,
+      "woodReward": 130,
       "slots": 0,
       "base": false,
       "upgrades": [],
       "pendingUpgrades": [],
       "category": "producer",
-      "seconds": 25.5,
+      "seconds": 32.0,
       "buildSeconds": 1.5,
       "incomeRate": 0.02,
       "stats": {
@@ -30663,7 +30654,7 @@
         "hp": 1500,
         "speed": 0,
         "build_time": 1,
-        "cost": 210,
+        "cost": 130,
         "armor": 6,
         "attack_type": "pierce",
         "armor_type": "fortified",
@@ -30693,8 +30684,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "hNT2",
@@ -30711,7 +30701,7 @@
       "upgrades": [],
       "pendingUpgrades": [],
       "category": "tower",
-      "seconds": 26.0,
+      "seconds": 34.0,
       "buildSeconds": 1.5,
       "incomeRate": 0.007,
       "stats": {
@@ -30733,7 +30723,8 @@
         "abilities": [
           "AUWB",
           "ANM1",
-          "AUN5"
+          "AUN5",
+          "ANDB"
         ],
         "weapons": [
           {
@@ -30795,7 +30786,8 @@
         "abilities": [
           "AUWB",
           "ANM1",
-          "AUN5"
+          "AUN5",
+          "ANDB"
         ],
         "weapons": [
           {
@@ -30841,9 +30833,9 @@
       "abilities": [
         "AUWB",
         "ANM1",
-        "AUN5"
-      ],
-      "homeRace": "Nerubian Swarm"
+        "AUN5",
+        "ANDB"
+      ]
     },
     {
       "building": "hNV3",
@@ -30854,15 +30846,15 @@
       "name": "Цитадель выводка",
       "unitName": "Глубинный колосс",
       "hotkey": "",
-      "cost": 200,
+      "cost": 140,
       "woodCost": 0,
-      "woodReward": 200,
+      "woodReward": 140,
       "slots": 0,
       "base": false,
       "upgrades": [],
       "pendingUpgrades": [],
       "category": "producer",
-      "seconds": 25.0,
+      "seconds": 32.0,
       "buildSeconds": 1.5,
       "incomeRate": 0.02,
       "stats": {
@@ -30941,7 +30933,7 @@
         "hp": 1800,
         "speed": 0,
         "build_time": 1,
-        "cost": 200,
+        "cost": 140,
         "armor": 7,
         "attack_type": "normal",
         "armor_type": "fortified",
@@ -30971,8 +30963,7 @@
         "animation_blend_time": 0.15,
         "level": null
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "nN04",
@@ -30989,7 +30980,7 @@
       "upgrades": [],
       "pendingUpgrades": [],
       "category": "replacement",
-      "seconds": 0,
+      "seconds": 15.0,
       "buildSeconds": 0,
       "incomeRate": 0,
       "stats": {
@@ -31114,8 +31105,7 @@
         "animation_blend_time": 0.15,
         "level": 1
       },
-      "abilities": [],
-      "homeRace": "Nerubian Swarm"
+      "abilities": []
     },
     {
       "building": "pB01",
@@ -62801,7 +62791,7 @@
       "count": 2,
       "summon": "nN04",
       "summon_life": 12,
-      "description": "После смерти выпускает 2 паучков на 12 с. Общий предел всех паучков — 12 на сторону; без награды и повторного размножения.",
+      "description": "После смерти выпускает 2 паучков на 12 с. Общий предел всех паучков — 20 на сторону; без награды и повторного размножения.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -64568,8 +64558,8 @@
       "targets": "air,ground,enemies",
       "kind": "nerub_hunt",
       "name": "Добыча роя",
-      "power": 10,
-      "description": "Попадание помечает бойца на 4 с. Удары нерубов по добыче дополнительно наносят 10 физического урона. Общий предел на жертве — одно срабатывание в секунду; метки не складываются. Не действует на постройки.",
+      "power": 8,
+      "description": "Помечает добычу на 4 с: основные нерубы наносят ей на 8% больше урона оружием, паучки — на 2%. Метки не складываются; не усиливает яд, заклинания или атаки по зданиям.",
       "fields": {
         "aart": "ReplaceableTextures\\CommandButtons\\BTNWeb.blp",
         "acdn": 0,
@@ -65368,7 +65358,7 @@
       "dps": 9,
       "slow": 0.15,
       "armor": -3,
-      "description": "Яд на 5 с: 9 урона/с и −15% движения; дополнительно −3 брони. Попадания обновляют срок. Яды нерубов не складываются.",
+      "description": "Яд на 5 с: 9 урона/с и −15% движения; дополнительно −3 брони. Попадания обновляют срок. Яды нерубов не складываются. До двух слоёв от разных источников: сильнейший наносит полный периодический урон, второй — половину. Броня и замедление не складываются.",
       "stack_group": "nerub_venom",
       "fields": {
         "aher": 0,
@@ -65836,7 +65826,7 @@
     "ANH1": {
       "id": "ANH1",
       "cd": 8,
-      "mana": 30,
+      "mana": 20,
       "range": 18.333333333333332,
       "duration": 0,
       "targets": "air,ground,friend,self,organic",
@@ -65846,7 +65836,7 @@
       "power": 90,
       "armor": 2,
       "cleanse": false,
-      "description": "Восстанавливает раненому союзнику 90 здоровья за 3 с и даёт +2 брони на это время. Коконы не складываются. 30 маны, КД 8 с, дальность 550.",
+      "description": "Восстанавливает раненому союзнику 90 здоровья за 3 с и даёт +2 брони на это время. Коконы не складываются. 20 маны, КД 8 с, дальность 550. Предпочитает основных бойцов паучкам.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -67278,7 +67268,7 @@
     "ANH2": {
       "id": "ANH2",
       "cd": 9,
-      "mana": 45,
+      "mana": 30,
       "range": 18.333333333333332,
       "duration": 0,
       "targets": "air,ground,friend,self,organic",
@@ -67288,7 +67278,7 @@
       "power": 150,
       "armor": 3,
       "cleanse": true,
-      "description": "Восстанавливает раненому союзнику 150 здоровья за 3 с и даёт +3 брони на это время. При наложении снимает один вражеский яд или эффект замедления. Коконы не складываются. 45 маны, КД 9 с, дальность 550.",
+      "description": "Восстанавливает раненому союзнику 150 здоровья за 3 с и даёт +3 брони на это время. При наложении снимает один вражеский яд или эффект замедления. Коконы не складываются. 30 маны, КД 9 с, дальность 550. Предпочитает основных бойцов паучкам.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -67990,8 +67980,8 @@
       "targets": "air,ground,enemies",
       "kind": "nerub_ambush",
       "name": "Охотничий инстинкт",
-      "power": 20,
-      "description": "Попадание по помеченному или обездвиженному бойцу добавляет 20 физического урона и даёт +25% скорости атаки, +15% движения на 3 с. Перезарядка 8 с; по постройкам не работает.",
+      "power": 25,
+      "description": "Попадание по помеченному или обездвиженному бойцу добавляет 25 физического урона и даёт +25% скорости атаки, +15% движения на 3 с. Перезарядка 8 с; по постройкам не работает.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -68153,10 +68143,10 @@
       "targets": "ground,enemies",
       "kind": "nerub_fissure",
       "name": "Подземный разлом",
-      "power": 40,
+      "power": 80,
       "area": 6,
       "count": 3,
-      "description": "Ближайший наземный враг и до двух бойцов рядом получают 40 магического урона и удерживаются на 1 с. Радиус 180, дальность 350, КД 14 с. Воздух и здания не поражает.",
+      "description": "Ближайший наземный враг и до двух бойцов рядом получают 80 магического урона и удерживаются на 1 с. Радиус 180, дальность 350, КД 14 с. Воздух и здания не поражает.",
       "fields": {
         "aart": "ReplaceableTextures\\CommandButtons\\BTNImpale.blp",
         "acdn": 14,
@@ -68761,20 +68751,20 @@
     "AUPs": {
       "id": "AUPs",
       "cd": 0,
-      "mana": 32,
+      "mana": 24,
       "range": 0,
       "duration": 6,
-      "targets": "ground,enemies,organic",
+      "targets": "ground,enemies",
       "kind": "nerub_plague",
       "name": "Печать праматери",
-      "dps": 10,
+      "dps": 20,
       "hero_duration": 3,
       "area": 8.333333333333334,
-      "count": 4,
+      "count": 6,
       "death_spawn": "nN04",
       "death_spawn_life": 12,
       "death_spawn_count": 1,
-      "description": "Печать праматери: до 4 органических наземных бойцов получают 60 урона за 6 с и метку. Смерть носителя выпускает 1 паучка на 12 с и лечит до 2 нерубов рядом на 30. Призванные существа исключены. Цикл 32 с; легендарное здание. Накапливает 32 маны, восстановление 1/с.",
+      "description": "До 6 непризванных наземных бойцов заражаются на 6 с: 20 магического урона/с. Гибель заражённого лечит до двух нерубов рядом на 60; из органики выходит паучок на 12 с. Не более 3 наград за залп. Цикл 24 с. Работает по механизмам, не по иммунным к магии.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -68817,7 +68807,9 @@
         "aorf": "parasiteoff"
       },
       "card_description": true,
-      "provenance": "Nerubian skill redesign; user authorized 2026-10-26"
+      "provenance": "Nerubian skill redesign; user authorized 2026-10-26",
+      "death_heal": 60,
+      "death_reward_cap": 3
     },
     "ANak": {
       "id": "ANak",
@@ -70037,8 +70029,8 @@
       "targets": "air,ground,enemies",
       "kind": "nerub_ambush",
       "name": "Охотничий инстинкт",
-      "power": 36,
-      "description": "Попадание по помеченному или обездвиженному бойцу добавляет 36 физического урона и даёт +25% скорости атаки, +15% движения на 3 с. Перезарядка 8 с; по постройкам не работает.",
+      "power": 45,
+      "description": "Попадание по помеченному или обездвиженному бойцу добавляет 45 физического урона и даёт +25% скорости атаки, +15% движения на 3 с. Перезарядка 8 с; по постройкам не работает.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -70544,7 +70536,7 @@
       "dps": 4,
       "slow": 0.08,
       "armor": 0,
-      "description": "Яд на 5 с: 4 урона/с и −8% движения. Попадания обновляют срок. Яды нерубов не складываются.",
+      "description": "Яд на 5 с: 4 урона/с и −8% движения. Попадания обновляют срок. Яды нерубов не складываются. До двух слоёв от разных источников: сильнейший наносит полный периодический урон, второй — половину. Броня и замедление не складываются.",
       "stack_group": "nerub_venom",
       "fields": {
         "aher": 0,
@@ -71103,7 +71095,7 @@
       "count": 3,
       "summon": "nN04",
       "summon_life": 12,
-      "description": "После смерти выпускает 3 паучков на 12 с. Общий предел всех паучков — 12 на сторону; без награды и повторного размножения.",
+      "description": "После смерти выпускает 3 паучков на 12 с. Общий предел всех паучков — 20 на сторону; без награды и повторного размножения.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -71974,13 +71966,13 @@
       "targets": "air,ground,enemies",
       "kind": "nerub_acid",
       "name": "Феромонный залп",
-      "power": 35,
-      "dps": 4,
+      "power": 50,
+      "dps": 0,
       "hero_duration": 2.5,
       "armor": -2,
       "area": 8.333333333333334,
       "count": 4,
-      "description": "Феромонный залп: 35 урона, 20 урона за 5 с, −2 брони и метка добычи. До 4 врагов, радиус 250; базовый цикл 14 с. Накапливает 14 маны, восстановление 1/с.",
+      "description": "Подготовка охоты: залп наносит 50 магического урона до 4 врагам, снижает броню на 2 на 5 с и помечает добычу на 4 с. Радиус 250; цикл 14 с. Не создаёт дополнительный слой яда.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -72470,7 +72462,7 @@
       "name": "Зов выводка",
       "count": 3,
       "summon": "nN04",
-      "description": "Раз в 20 с отправляет 3 паучков к переднему ряду. Живут 16 с; максимум 12 временных паучков на сторону. Накапливает 20 маны, восстановление 1/с.",
+      "description": "За 20 маны выпускает 3 паучков у переднего основного наземного бойца. Живут 16 с; общий лимит всех источников — 20. Восстановление маны 1/с.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -74629,15 +74621,15 @@
     },
     "AUC2": {
       "id": "AUC2",
-      "cd": 18,
-      "mana": 60,
+      "cd": 20,
+      "mana": 40,
       "range": 21.666666666666668,
-      "duration": 0,
+      "duration": 6,
       "targets": "air,ground,friend,self",
       "kind": "nerub_command",
       "name": "Приказ матриарха",
       "ally": true,
-      "description": "До 4 союзных бойцов у переднего края в радиусе 650 получают +20% скорости атаки и +15% движения на 5 с. Эффекты приказов не складываются. 60 маны, КД 18 с; восстановление маны матриарха 2/с.",
+      "description": "До 6 союзников получают +20% скорости атаки и +15% движения на 6 с. Приоритет основных бойцов. Эффект не складывается. 40 маны, КД 20 с; восстановление 2/с.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -74671,7 +74663,8 @@
         "amcs": 60
       },
       "card_description": true,
-      "provenance": "Nerubian skill redesign; user authorized 2026-10-26"
+      "provenance": "Nerubian skill redesign; user authorized 2026-10-26",
+      "count": 6
     },
     "ANM2": {
       "id": "ANM2",
@@ -74682,8 +74675,8 @@
       "targets": "air,ground,enemies",
       "kind": "nerub_hunt",
       "name": "Добыча роя",
-      "power": 16,
-      "description": "Попадание помечает бойца на 4 с. Удары нерубов по добыче дополнительно наносят 16 физического урона. Общий предел на жертве — одно срабатывание в секунду; метки не складываются. Не действует на постройки.",
+      "power": 12,
+      "description": "Помечает добычу на 4 с: основные нерубы наносят ей на 12% больше урона оружием, паучки — на 3%. Метки не складываются; не усиливает яд, заклинания или атаки по зданиям.",
       "fields": {
         "aart": "ReplaceableTextures\\CommandButtons\\BTNWeb.blp",
         "acdn": 0,
@@ -77869,7 +77862,7 @@
       "targets": "air,ground,enemies",
       "kind": "nerub_nurse",
       "name": "Опека выводка",
-      "description": "Наложение очищающего кокона также лечит до двух раненых паучков рядом с целью на 25. Радиус 200. Других бойцов это дополнительное лечение не затрагивает.",
+      "description": "Очищающий кокон дополнительно лечит одного другого раненого основного союзника на 40 в радиусе 200 от цели. Паучки не получают дополнительное лечение.",
       "fields": {
         "aher": 0,
         "aite": 0,
@@ -79349,6 +79342,15 @@
         "abpy": "2"
       },
       "level": 1
+    },
+    "ANDB": {
+      "id": "ANDB",
+      "kind": "passive",
+      "name": "Раздвоенный плевок",
+      "description": "Одновременно выпускает снаряды в двух разных врагов в пределах дальности атаки. Первая цель получает полный урон, вторая — 60%. Оба снаряда накладывают обычный яд. Одна цель не получает два выстрела.",
+      "mana": 0,
+      "cd": 0,
+      "icon": ""
     }
   },
   "builderStats": {

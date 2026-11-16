@@ -16,11 +16,11 @@ public sealed partial class HumanMatch {
         if(Flying(u)&&flags.Contains("ground")&&!flags.Contains("air"))return false;
         if(!Flying(u)&&flags.Contains("air")&&!flags.Contains("ground"))return false;return true;
     }
-    public void ApplyEffect(Unit u,string id,int sourceTeam=-1) {
-        if(u==null)return;var c=Abilities[id];if(c!=null)ApplyEffectData(u,(JObject)c,sourceTeam<0?u.team:sourceTeam);
+    public void ApplyEffect(Unit u,string id,int sourceTeam=-1,int sourceId=0) {
+        if(u==null)return;var c=Abilities[id];if(c!=null){var data=(JObject)c;if(NerubVenom(c)){data=(JObject)data.DeepClone();data["nerub_source"]=sourceId;}ApplyEffectData(u,data,sourceTeam<0?u.team:sourceTeam);}
     }
     void ApplyEffectData(Unit u,JObject c,int sourceTeam) {
-        if(u==null||u.hp<=0)return;c=NerubStatus(u,c,sourceTeam);string id=(string)c["id"],group=(string)c["stack_group"]??id;float strength=F(c,"stack_strength",F(c,"dps"));
+        if(u==null||u.hp<=0)return;c=NerubStatus(u,c,sourceTeam);if(ApplyNerubVenom(u,c,sourceTeam))return;string id=(string)c["id"],group=(string)c["stack_group"]??id;float strength=F(c,"stack_strength",F(c,"dps"));
         if(u.effects.Any(e=>e.group==group&&e.strength>strength))return;
         // Refreshing the same poison extends its duration without postponing its next damage tick.
         var previous=(string)c["kind"]=="poison"&&F(c,"dps")>0?u.effects.FirstOrDefault(e=>e.id==id&&e.sourceTeam==sourceTeam&&e.left>0):null;
@@ -31,11 +31,11 @@ public sealed partial class HumanMatch {
         u.effects.Add(new Effect {id=id,group=group,left=duration,lifetime=duration,dotTick=dotTick,config=(JObject)c.DeepClone(),sourceTeam=sourceTeam<0?u.team:sourceTeam,power=F(c,"power"),armor=F(c,"armor"),haste=F(c,"haste"),speed=F(c,"speed")-F(c,"slow"),strength=strength,incoming=F(c,"incoming"),root=(bool?)c["root"]??false,ground=(bool?)c["ground"]??false});
     }
     void TickEffects(Unit u,float dt){foreach(var e in u.effects.ToArray()){float step=Mathf.Min(dt,Mathf.Max(0,e.left));e.left-=dt;var c=e.config;
-        if(F(c,"dps")>0){e.dotTick+=step;float interval=Mathf.Max(.05f,F(c,"interval",1));float due=e.left<=0?e.dotTick:Mathf.Floor(e.dotTick/interval)*interval;if(due>0){e.dotTick-=due;DamageUnit(u,F(c,"dps")*due,e.sourceTeam,(string)c["damage_type"]??"magic",true,false,null,false,(bool?)c["ignore_armor"]==true,F(c,"minimum_hp"));if(u.hp<=0)return;}}
+        if(F(c,"dps")>0){e.dotTick+=step;float interval=Mathf.Max(.05f,F(c,"interval",1));float due=e.left<=0?e.dotTick:Mathf.Floor(e.dotTick/interval)*interval;if(due>0){e.dotTick-=due;NerubPeriodicHit(u,e,due);if(u.hp<=0)return;}}
         if(e.id=="A02T"){float age=e.lifetime-e.left;float duration=F(c?["fields"],e.lifetime<=3.01f?"Prg5":"Prg4");e.root=age<duration;e.speed=age<e.lifetime*.8f?-.8f:0;}
         if((string)c?["kind"]=="regen"){u.hp=Mathf.Min(u.maxHp,u.hp+e.power*step/Mathf.Max(.01f,e.lifetime));u.mana=Mathf.Min(u.maxMana,u.mana+F(c,"restore_mana")*step/Mathf.Max(.01f,e.lifetime));}
         else if(F(c,"regen")>0)u.hp=Mathf.Min(u.maxHp,u.hp+F(c,"regen")*step);
-        }u.effects.RemoveAll(e=>e.left<=0);}
+        }u.effects.RemoveAll(e=>e.left<=0);RefreshNerubVenomFields(u);}
     void UpdateAuras() {
         foreach(var u in Units){u.auraSpeed=0;u.auraSpeedNegative=0;u.auraHasteNegative=0;u.auraHaste=0;u.auraArmorNegative=0;u.auraVampiric=0;u.auraDamageNegative=0;u.auraArmor=0;u.auraMana=0;u.auraDamage=0;u.auraRegen=0;u.auraThorns=0;u.auraDamageTick=0;u.auraIds.Clear();}
         foreach(var source in Units.Where(v=>v.hp>0))foreach(var id in source.abilities) {
@@ -143,7 +143,7 @@ public sealed partial class HumanMatch {
     }
     public void Heal(Unit u,float amount){if(u==null||u.hp<=0)return;float healed=Mathf.Min(amount,u.maxHp-u.hp);if(healed<=0)return;u.hp+=healed;Heals++;PulseAt(u.position,1,Color.green,"+"+Mathf.RoundToInt(healed));}
     public int Raise(int team,Vector2 center,float radius,int count,bool organic) {
-        var bodies=Corpses.Where(c=>c.unit.team==team&&Vector2.Distance(c.unit.position,center)<=radius&&(!organic||Organic(c.unit))).Take(count).ToArray();
+        var bodies=Corpses.Where(c=>Lines[c.unit.kind].unit!="nN04"&&c.unit.team==team&&Vector2.Distance(c.unit.position,center)<=radius&&(!organic||Organic(c.unit))).Take(count).ToArray();
         foreach(var c in bodies){var old=c.unit;var fresh=Spawn(team,old.kind,old.position);fresh.onRoad=true;foreach(var id in old.abilities)Grant(fresh,id);fresh.armor=old.armor;fresh.maxHp=old.maxHp;fresh.hp=fresh.maxHp;Corpses.Remove(c);old.deadAge=100;Resurrections++;PulseAt(fresh.position,2,Color.yellow,"Воскрешение");}return bodies.Length;
     }
     void TickHumanJobs(float dt) {
@@ -209,7 +209,7 @@ public sealed partial class HumanMatch {
             if(h.cooldown<=0){var w=l.buildingWeapons[0];h.cooldown=w.cooldown/(TeamHuman[h.team]&&Aspects[h.team]==0?1.2f:1);h.attackSerial++;h.attackPoseLeft=.6f;AddShot(h.team,h.kind,h.id,-1,h.position,h.aim,w.damage,w,0,2,true);}return;
         }
         if(l.buildingWeapons.Length==0)return;
-        if(h.strikeLeft>=0){h.strikeLeft-=dt;if(h.strikeLeft<=0){var victim=FindUnit(h.attackTarget);if(victim!=null){var w=h.pendingWeapon;float bonus=0,stun=0;foreach(var id in l.abilities){var c=Abilities[id];var p=c?["profile"];if((string)c?["kind"]=="bash"&&(Flying(victim)?((string)p?["targets"]??"").Contains("air"):((string)p?["targets"]??"").Contains("ground"))&&Roll()<F(p,"chance")){bonus+=F(p,"bonus");stun=Mathf.Max(stun,F(p,Lines[victim.kind].armorType=="hero"?"hero_duration":"duration"));}}AddShot(h.team,h.kind,h.id,victim.id,h.position,victim.position,(w.damage+bonus)*MechBuildingDamage(h)*ElvenWeaponFactor(h.team,false),w,stun,3);ElvenTowerBarrage(h,w,victim.id);}h.strikeLeft=-1;}return;}
+        if(h.strikeLeft>=0){h.strikeLeft-=dt;if(h.strikeLeft<=0){var victim=FindUnit(h.attackTarget);if(victim!=null){var w=h.pendingWeapon;float bonus=0,stun=0;foreach(var id in l.abilities){var c=Abilities[id];var p=c?["profile"];if((string)c?["kind"]=="bash"&&(Flying(victim)?((string)p?["targets"]??"").Contains("air"):((string)p?["targets"]??"").Contains("ground"))&&Roll()<F(p,"chance")){bonus+=F(p,"bonus");stun=Mathf.Max(stun,F(p,Lines[victim.kind].armorType=="hero"?"hero_duration":"duration"));}}AddShot(h.team,h.kind,h.id,victim.id,h.position,victim.position,(w.damage+bonus)*MechBuildingDamage(h)*ElvenWeaponFactor(h.team,false),w,stun,3);ElvenTowerBarrage(h,w,victim.id);NerubTowerBarrage(h,w,victim.id);}h.strikeLeft=-1;}return;}
         if(h.cooldown>0)return;
         var target=Units.Where(u=>u.team!=h.team&&u.hp>0&&!CorruptedAirborne(u)&&!Invulnerable(u)&&!Hidden(u)&&NightCanDetect(h.team,u)&&l.buildingWeapons.Any(w=>(Flying(u)?w.air:w.ground)&&Vector2.Distance(u.position,h.position)<=w.range)).OrderBy(u=>(u.position-h.position).sqrMagnitude).FirstOrDefault();
         if(target==null)return;h.pendingWeapon=l.buildingWeapons.First(w=>(Flying(target)?w.air:w.ground)&&Vector2.Distance(target.position,h.position)<=w.range);h.cooldown=h.pendingWeapon.cooldown;h.strikeLeft=h.pendingWeapon.point;h.attackTarget=target.id;h.attackSerial++;h.attackPoseLeft=h.pendingWeapon.point+h.pendingWeapon.backswing+.2f;
