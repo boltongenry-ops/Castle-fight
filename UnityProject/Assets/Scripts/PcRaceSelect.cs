@@ -38,14 +38,14 @@ public sealed partial class PcGame {
     PcModel menuPortraitModel;string menuPortraitRaw;
 
     int RequiredWins=>roundsChoice/2+1;
-    bool RaceStaged(int race)=>race>=0&&race<MobileContent.RaceResources.Length&&(race==0||MobileContent.Active||Pack(race)!=null);
+    bool RaceStaged(int race)=>race>=0&&race<MobileContent.RaceResources.Length;
     int RaceOfUnity(int unity)=>Array.IndexOf(AllRaceUnity,unity);
 
     JArray AspectOptions(int race) {
         if(race<0||race>=raceAspects.Length)return null;
         if(raceAspects[race]!=null)return raceAspects[race];
         try {
-            string text=race==0?(catalog?RaceCatalog(race):null):MobileContent.Active||Pack(race)?RaceCatalog(race):null;
+            string text=RaceCatalog(race);
             raceAspects[race]=text==null?new JArray():(JArray)(JObject.Parse(text)["aspects"]??new JArray());
         } catch(Exception error) {Debug.LogWarning("Aspect catalog: "+error.Message);raceAspects[race]=new JArray();}
         return raceAspects[race];
@@ -194,12 +194,7 @@ public sealed partial class PcGame {
     // The panel follows whichever model set this player carries: the classic build has
     // populated SD arrays and empty Reforged ones, the Reforged build the opposite.
     static GameObject FirstModel(GameObject[] models)=>models!=null&&models.Length>0?models[0]:null;
-    GameObject RacePreviewPrefab() {
-        if(MobileContent.Active)return MenuBuilder(raceChoice);
-        var pack=Pack(raceChoice);
-        if(pack!=null)return FirstModel(pack.builders)??FirstModel(pack.hdBuilders);
-        return FirstModel(builderModels)??FirstModel(reforgedBuilders);
-    }
+    GameObject RacePreviewPrefab()=>MenuBuilder(raceChoice);
     void EnsurePortraitRig() {
         if(portraitCamera)return;
         portraitStage=new GameObject("Selection portrait stage");portraitStage.transform.position=new Vector3(0,-1000,0);

@@ -15,20 +15,32 @@ public sealed partial class PcGame {
         MainMenu();page=Page.Guide;guideRace=guideEntry=-1;guideOpened=0;guideQuery="";guideHistory.Clear();
         if(!guideGarden){guideGarden=new GameObject("Guide clearing — fifteen classic builders");
             for(int race=0;race<MobileContent.RaceResources.Length;race++){
-                var prefab=MenuBuilder(race);var model=Instantiate(prefab,guideGarden.transform).GetComponent<PcModel>();
+                var prefab=MenuBuilder(race);var model=Instantiate(prefab?prefab:FirstModel(builderModels),guideGarden.transform).GetComponent<PcModel>();
                 int column=race%5,row=race/5;if(race==15){column=3;row=-1;}if(column==4){column=row;row=-1;}Vector2 p=guideClearing+new Vector2((column-2)*20,(row-1)*13);var ground=World(p);model.transform.position=ground;model.Face(Vector2.up,true);model.Play("Stand");model.SamplePose();
                 var bounds=model.BodyBounds();float scale=4.6f/Mathf.Max(.1f,bounds.size.y);model.transform.localScale*=scale;model.transform.position=ground+Vector3.up*(ground.y-bounds.min.y)*scale;guideBuilders.Add(model);
             }
         }
         guideGarden.SetActive(true);if(guideStage)guideStage.SetActive(false);if(guideCamera)guideCamera.enabled=false;guideOpened=0;controls.FocusWorld(World(guideClearing)+Vector3.up*75,155);Debug.Log("CF_GUIDE_OPEN builders="+guideBuilders.Count);
     }
-    void CloseGuide(){if(guideGarden)guideGarden.SetActive(false);if(guideStage)guideStage.SetActive(false);if(guideCamera)guideCamera.enabled=false;}
+    void CloseGuide(){
+        if(guideCamera)guideCamera.enabled=false;
+        if(guideGarden){guideGarden.SetActive(false);Destroy(guideGarden);}
+        if(guideStage){guideStage.SetActive(false);Destroy(guideStage);}
+        if(guideTexture){guideTexture.Release();Destroy(guideTexture);}
+        if(guideLayerReserved&&Camera.main)Camera.main.cullingMask=guideMainMask;
+        guideGarden=guideStage=null;guideCamera=null;guideModel=null;guideTexture=null;guideLayerReserved=false;
+        guideBuilders.Clear();guideCatalog=null;guideAuthority=null;
+    }
     void UpdateGuide(){
         if(page!=Page.Guide){CloseGuide();return;}if(guideRace<0){guideOpened=Mathf.Min(1.25f,guideOpened+Mathf.Min(Time.unscaledDeltaTime,.05f));float t=guideOpened/1.25f;float ease=t*t*(3-2*t);controls.FocusWorld(World(guideClearing)+Vector3.up*Mathf.Lerp(75,0,ease),Mathf.Lerp(155,80,ease));}
         if(guideModel&&guideEntry>=0){if(guideSpin)guideAngle+=Time.unscaledDeltaTime*18;guideModel.transform.localRotation=Quaternion.Euler(0,guideAngle,0);}
     }
     void GuideChooseRace(int race){
         if(MobileContent.Active&&race!=0&&!Pack(race)){StartCoroutine(PrepareMobileGuide(race));return;}
+        if(!MobileContent.Active){
+            if(DiscardRaceAssets(race)){ClearRacePrefabCaches();SweepRaceAssets();}
+            LoadDesktopRace(race);
+        }
         guideRace=race;guideEntry=-1;guideGridScroll=guideTextScroll=Vector2.zero;guideQuery="";guideHistory.Clear();guideGarden.SetActive(false);
         guideCatalog=JObject.Parse(RaceCatalog(race));guideAuthority=new HumanMatch(guideCatalog);if(guideCamera)guideCamera.enabled=false;if(guideStage)guideStage.SetActive(false);
     }
@@ -41,7 +53,7 @@ public sealed partial class PcGame {
     void GuideBack(){
         if(guideEntry>=0&&guideHistory.Count>0){int previous=guideHistory.Pop();GuideSelectEntry(previous);return;}
         if(guideEntry>=0){guideEntry=-1;if(guideCamera)guideCamera.enabled=false;if(guideStage)guideStage.SetActive(false);return;}
-        if(guideRace>=0){guideRace=-1;guideOpened=1.25f;guideGarden.SetActive(true);return;}MainMenu();
+        if(guideRace>=0){guideRace=-1;guideOpened=1.25f;if(guideModel){Destroy(guideModel.gameObject);guideModel=null;}guideCatalog=null;guideAuthority=null;guideGarden.SetActive(true);ReleaseIdleRaceAssets(true);return;}MainMenu();
     }
     void GuideRefreshPreview(){
         if(guideModel){guideModel.gameObject.SetActive(false);Destroy(guideModel.gameObject);}if(!guideStage)guideStage=new GameObject("Guide isolated preview");guideStage.SetActive(true);guideStage.transform.position=new Vector3(0,-5000,0);
@@ -111,7 +123,7 @@ public sealed partial class PcGame {
         if(Button("guide.building",new Rect(848,626,190,46),"Постройка",!guideUnit)){guideUnit=false;GuideRefreshPreview();}
         if(Button("guide.spin",new Rect(1048,626,208,46),guideSpin?"Пауза вращения":"Вращать модель"))guideSpin=!guideSpin;
     }
-    void DisposeGuide(){CloseGuide();if(guideTexture){guideTexture.Release();Destroy(guideTexture);}if(guideGarden)Destroy(guideGarden);if(guideStage)Destroy(guideStage);if(guideLayerReserved&&Camera.main)Camera.main.cullingMask=guideMainMask;}
+    void DisposeGuide(){CloseGuide();}
 }
 }
 

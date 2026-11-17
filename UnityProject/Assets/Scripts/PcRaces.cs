@@ -8,7 +8,15 @@ public sealed partial class PcGame {
     PcRacePack orcPack,nagaPack,naturePack,chaosPack,northernPack,mechPack,undeadPack,corruptedPack,elementalPack,nightPack;int raceChoice,matchRace,botRaceChoice=-1,matchBotRace;
     readonly Dictionary<string,int>[] raceIndices=Enumerable.Range(0,MobileContent.RaceResources.Length).Select(_=>new Dictionary<string,int>()).ToArray();
     PcRacePack Pack(int race)=>race==1?orcPack:race==2?nagaPack:race==3?naturePack:race==4?chaosPack:race==5?northernPack:race==6?mechPack:race==7?undeadPack:race==8?corruptedPack:race==9?elementalPack:race==10?nightPack:race==11?elvenPack:race==12?ultimatePack:race==13?nerubianPack:race==14?pandarenPack:race==15?centaurPack:null;
-    string RaceCatalog(int race)=>StructureCatalog(race,race==0?catalog.text:MobileContent.Active?ContentResources.Load<TextAsset>("MobileCatalogs/"+race).text:Pack(race).catalog.text);
+    string RaceCatalog(int race){
+        if(race==0)return StructureCatalog(0,catalog.text);
+        var pack=Pack(race);
+        var asset=MobileContent.Active?ContentResources.Load<TextAsset>("MobileCatalogs/"+race):
+            pack?pack.catalog:desktopMenuBuilders?desktopMenuBuilders.LoadAsset<TextAsset>("catalogs/"+race):null;
+        if(!asset&&!MobileContent.Active)asset=Resources.Load<TextAsset>("pc-"+DesktopRaceCatalogs[race]);
+        if(!asset)throw new InvalidOperationException("Missing race catalog "+race);
+        return StructureCatalog(race,asset.text);
+    }
     void PrepareRaceIndices(){for(int race=0;race<raceIndices.Length;race++){raceIndices[race].Clear();if(race!=0&&!Pack(race)&&!MobileContent.Active)continue;var j=JObject.Parse(RaceCatalog(race));int i=0;foreach(var line in (JArray)j["lines"])raceIndices[race][(string)line["building"]]=i++;}}
     GameObject RaceModel(int team,int kind,bool building){int race=team==0?matchRace:matchBotRace;string key=match.Lines[kind].building;if(!raceIndices[race].ContainsKey(key)){int other=team==0?matchBotRace:matchRace;if(raceIndices[other].ContainsKey(key))race=other;}return raceIndices[race].TryGetValue(key,out int index)?CatalogModel(race,team,index,key,building):null;}
     GameObject RaceBuilder(int team){var pack=Pack(team==0?matchRace:matchBotRace);return pack?pack.builders[team]:builderModels[team];}

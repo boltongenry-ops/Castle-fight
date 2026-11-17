@@ -27,6 +27,7 @@ def main():
     p.add_argument('--version', required=True)
     p.add_argument('--replace-burst', action='store_true', help='Retain the newly compiled Burst plugin; original layouts and shipped managed dependencies must still match')
     p.add_argument('--spell-art-sha256', help='Retain the separately built spell-art-036 bundle with this verified hash')
+    p.add_argument('--race-builders-sha256', help='Retain the separately built builder preview bundle with this verified hash')
     args = p.parse_args()
     index = json.loads(args.reference_index.read_text())['windows']
     assert args.reference.stat().st_size == index['size'] and sha(args.reference) == index['sha256']
@@ -39,6 +40,11 @@ def main():
         assert (args.build / spell_art).resolve().is_relative_to(args.build.resolve())
         assert sha(args.build / spell_art) == args.spell_art_sha256, 'Spell art bundle hash differs'
         keep.add(spell_art)
+    if args.race_builders_sha256:
+        builders = 'CastleFightMap_Data/StreamingAssets/Frontend/race-builders.windows'
+        assert (args.build / builders).resolve().is_relative_to(args.build.resolve())
+        assert sha(args.build / builders) == args.race_builders_sha256, 'Race builder bundle hash differs'
+        keep.add(builders)
     burst = 'CastleFightMap_Data/Plugins/x86_64/lib_burst_generated.dll'
     if args.replace_burst:
         assert burst in expected and (args.build / burst).read_bytes()[:2] == b'MZ', 'Missing compiled Burst plugin'
@@ -57,6 +63,8 @@ def main():
                 assert hashlib.sha256(content).hexdigest() == expected[name]['sha256']
                 (Path(work) / (dependency + '.dll')).write_bytes(content)
             command.append(work)
+        if args.version == '0.37.0' and args.race_builders_sha256:
+            command.append('--verify-race-fog-private-fields')
         subprocess.run(command, check=True)
         def matches(name):
             target = args.build / name

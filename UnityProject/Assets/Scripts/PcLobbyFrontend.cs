@@ -45,7 +45,7 @@ public sealed partial class PcGame {
                 case "voice_session":ReceiveVoiceSession(packet);break;
                 case "emote":if(onlineMatch)ReceiveEmote(packet);break;
                 case "post_match":if(onlineMatch){onlineChoices=packet["choices"] as JArray??new JArray();Notice("Ожидаем решение соперника");}break;
-                case "return_lobby":ResetRecovery(false);socialTab=0;onlineChoices=new JArray();onlineMatch=false;onlineStarted=false;onlineReplica=null;ClearMatch();series=null;page=Page.Network;directoryStatus="Вернулись в комнату";break;
+                case "return_lobby":ResetRecovery(false);socialTab=0;onlineChoices=new JArray();onlineMatch=false;onlineStarted=false;onlineReplica=null;ClearMatch();ReleaseIdleRaceAssets(true);series=null;page=Page.Network;directoryStatus="Вернулись в комнату";break;
             }
         }
     }

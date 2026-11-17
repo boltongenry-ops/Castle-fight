@@ -56,7 +56,7 @@ public sealed partial class PcGame {
     }
     void FailNetworkLoad(string message){
         Debug.LogError("CF_NETWORK_LOAD_FAILED "+message);CloseVersus();onlineMatch=false;onlineStarted=false;onlineReplica=null;
-        ClearMatch();page=Page.Network;networkLoadError=directoryStatus=message;
+        ClearMatch();ReleaseIdleRaceAssets(true);page=Page.Network;networkLoadError=directoryStatus=message;
     }
     void DrawNetworkLoadError(){
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.85f));LobbyPanel(new Rect(300,205,680,310));

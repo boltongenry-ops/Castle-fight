@@ -42,7 +42,7 @@ public sealed partial class PcGame {
     static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей"};
     Texture2D versusLeft,versusRight;int versusA,versusB,versusSerial;float versusAt;bool versusActive,versusPrepared,versusNetwork;string versusNameA,versusNameB;
     void DisposeVersusArt(){if(versusLeft)Destroy(versusLeft);if(versusRight)Destroy(versusRight);versusLeft=versusRight=null;}
-    void CloseVersus(){versusSerial++;versusActive=false;versusPrepared=false;DisposeVersusArt();}
+    void CloseVersus(){versusSerial++;versusActive=false;versusPrepared=false;mobileRoundPrepared=false;DisposeVersusArt();}
     void BeginVersus(int a,int b,bool online){
         DisposeVersusArt();versusSerial++;versusA=Mathf.Clamp(a,0,VersusKeys.Length-1);versusB=Mathf.Clamp(b,0,VersusKeys.Length-1);versusActive=true;versusPrepared=false;versusNetwork=online;versusAt=Time.realtimeSinceStartup;
         versusNameA=online?ResultPlayerName(networkSlot):"Вы";versusNameB=online?ResultPlayerName(1-networkSlot):"Компьютер";
@@ -61,10 +61,12 @@ public sealed partial class PcGame {
     }
     void BeginOfflineVersus(bool next=false){if(versusActive)return;if(testing){if(next)StartRound();else NewMatch();return;}StartCoroutine(OfflineVersus(next));}
     IEnumerator OfflineVersus(bool next){
-        if(MobileContent.Active&&matchMode==1){raceChoice=RandomStagedRace(-1);botRaceChoice=RandomStagedRace(raceChoice);mobileRoundPrepared=true;}
+        if(matchMode==1){raceChoice=RandomStagedRace(-1);botRaceChoice=RandomStagedRace(raceChoice);mobileRoundPrepared=true;}
         BeginVersus(raceChoice,matchMode==2?raceChoice:botRaceChoice<0?raceChoice:botRaceChoice,false);int generation=versusSerial;
         yield return LoadVersusArt(generation);yield return new WaitForEndOfFrame();if(generation!=versusSerial)yield break;
         if(MobileContent.Active){yield return PrepareMobileMatch(versusA,versusB);yield return PrepareUltimateDraw034(versusA,versusB);MobileContent.Current.Ready();}
+        else yield return PrepareDesktopMatch(versusA,versusB,generation);
+        if(generation!=versusSerial){mobileRoundPrepared=false;yield break;}
         if(next)StartRound();else NewMatch();
         if(matchRace!=versusA||matchBotRace!=versusB){versusA=matchRace;versusB=matchBotRace;DisposeVersusArt();yield return LoadVersusArt(generation);}
         RenderMatch();versusPrepared=true;yield return new WaitForEndOfFrame();
@@ -79,6 +81,8 @@ public sealed partial class PcGame {
         BeginVersus(a,b,true);int generation=versusSerial;
         yield return LoadVersusArt(generation);yield return new WaitForEndOfFrame();if(generation!=versusSerial)yield break;
         if(MobileContent.Active){yield return PrepareMobileMatch(a,b);yield return PrepareUltimateDraw034(a,b,packet["ultimate_loadouts"] as JArray);MobileContent.Current.Ready();}
+        else yield return PrepareDesktopMatch(a,b,generation);
+        if(generation!=versusSerial)yield break;
         NetworkLoadCore(packet);if(!onlineMatch){CloseVersus();yield break;}RenderMatch();versusPrepared=true;
     }
     void DrawVersus(){

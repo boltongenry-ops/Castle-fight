@@ -21,9 +21,6 @@ public static class CentaurContent {
 }
 public sealed partial class PcGame {
     PcRacePack centaurPack;
-    IEnumerator LoadCentaurArt(){
-        if(!MobileContent.Active){yield return CentaurContent.Open();centaurPack=ContentResources.Load<PcRacePack>("CentaurKhanates");}
-    }
     Texture2D CentaurUnitIcon(string raw)=>ContentResources.Load<Texture2D>("CentaurUnitIcon/"+raw);
 }
 }

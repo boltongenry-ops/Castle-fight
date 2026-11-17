@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.36.0";
+    string Version=>MobileContent.Active?Application.version:"0.37.0";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -41,16 +41,14 @@ public sealed partial class PcGame : MonoBehaviour {
     IEnumerator Start() {
         StartFrontend();LoadLauncherSession();LoadProgression();StartLoadingArt();
         yield return null;
-        if(!MobileContent.Active){
-        orcPack=ContentResources.Load<PcRacePack>("OrcStageOne");nagaPack=ContentResources.Load<PcRacePack>("NagaStageOne");naturePack=ContentResources.Load<PcRacePack>("NatureStageOne");chaosPack=ContentResources.Load<PcRacePack>("ChaosStageOne");northernPack=ContentResources.Load<PcRacePack>("NorthernRealms");mechPack=ContentResources.Load<PcRacePack>("MechCoalition");undeadPack=ContentResources.Load<PcRacePack>("UndeadForces");corruptedPack=ContentResources.Load<PcRacePack>("CorruptedConglomerate");elementalPack=ContentResources.Load<PcRacePack>("ElementalsUniverse");nightPack=ContentResources.Load<PcRacePack>("NightElves");elvenPack=ContentResources.Load<PcRacePack>("ElvenUnion");ultimatePack=ContentResources.Load<PcRacePack>("UltimateBuilder");nerubianPack=ContentResources.Load<PcRacePack>("NerubianSwarm");pandarenPack=ContentResources.Load<PcRacePack>("PandarenOrder");
-        }
-        yield return LoadCentaurArt();
+        yield return CentaurContent.Open();
+        yield return OpenDesktopMenuBuilders();
         terrain=new NativeMapTerrain(terrainBytes.bytes,JObject.Parse(terrainMetadata.text),(JObject)JObject.Parse(waterMetadata.text)["water"]);
         settingsPath=BattleLab.Arg("--pc-settings-file",Path.Combine(Application.persistentDataPath,"pc-settings.json"));
         string testMode=BattleLab.Arg("--pc-test");testing=testMode=="spell-audit036"||testMode=="optimization035"||testMode=="challenge034"||testMode=="nerubian033"||testMode=="nerubian032"||testMode=="structure031"||testMode=="combat030"||testMode=="centaur028"||testMode=="bot027"||testMode=="units026"||testMode=="cards025"||testMode=="motion024"||testMode=="network023"||testMode=="polish022"||testMode=="recovery"||testMode=="social"||testMode=="guide"||testMode=="fog"||testMode=="frontend"||testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"||testMode=="elven"||testMode=="polish"||testMode=="night"||testMode=="elemental"||testMode=="corrupted"||testMode=="undead"||testMode=="mech"||testMode=="northern"||testMode=="1"||testMode=="naga"||testMode=="nature"||testMode=="classic"||testMode=="menu"||testMode=="chaos";
         LoadSettings();LoadMatchRules();Apply(options,false);controls.HideToolbar=true;controls.TouchOverUi=TouchOverUi;controls.TouchPanAllowed=()=>chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder;
         controls.AllowGridToggle=false;controls.buildGrid.SetActive(false);
-        if(!MobileContent.Active){ResolveMechDefaultColor();ResolveUndeadDefaultColors();ResolveCorruptedDefaultColors();ResolveElementalDefaultColors();ResolveNightDefaultColors();ResolveElvenDefaultColors();ResolveFinalDefaultColors();AuditMaterials();AuditUndeadParticles();AuditCorruptedParticles();AuditElementalParticles();AuditNightParticles();AuditElvenParticles();AuditFinalParticles();}
+        if(testing&&!MobileContent.Active)PreserveAssetAuditForHistoricalTests();
         yield return LoadClassicProjectiles();
         yield return LoadSpellArt036();
         if(MobileContent.Active){yield return LoadMobileFrontendArt();yield return MobileContent.Current.EnsureMedia("Frontend/startup_intro.mp4");}
@@ -114,7 +112,9 @@ public sealed partial class PcGame : MonoBehaviour {
         ClearMatch();
         // Godot match_state.choose_races: random mode redraws both sides every round.
         if(matchMode==1&&!mobileRoundPrepared){raceChoice=RandomStagedRace(-1);botRaceChoice=RandomStagedRace(raceChoice);}mobileRoundPrepared=false;
-        matchRace=raceChoice;matchBotRace=matchMode==2?raceChoice:botRaceChoice<0?matchRace:botRaceChoice;PrepareRaceIndices();
+        matchRace=raceChoice;matchBotRace=matchMode==2?raceChoice:botRaceChoice<0?matchRace:botRaceChoice;
+        if(!MobileContent.Active){LoadDesktopRace(matchRace);LoadDesktopRace(matchBotRace);}
+        PrepareRaceIndices();
         var first=JObject.Parse(RaceCatalog(matchRace));var second=matchRace==matchBotRace?first:JObject.Parse(RaceCatalog(matchBotRace));
         ApplyUltimateRound(ref first,ref second);
         bool aspectRound=aspectsOn&&AspectCount(matchRace)==2&&AspectCount(matchBotRace)==2;
@@ -134,11 +134,12 @@ public sealed partial class PcGame : MonoBehaviour {
         nativeFlames.Clear();
         if(preview)Destroy(preview);if(previewMaterial)Destroy(previewMaterial);preview=null;previewMaterial=null;
         Art036.casts.Clear();Art036.hutTeams.Clear();Art036.unitKinds.Clear();ClearHumanEffects();ClearNorthernViews();ClearMechViews();ClearUndeadViews();ClearCorruptedViews();ClearElementalViews();ClearNightViews();ClearElvenViews();ClearFinalViews();
+        ClearPortraits();ClearRacePrefabCaches();
         for(int i=0;i<2;i++){builders[i]=null;castleViews[i]=null;}selectedRing=null;moveMarker=null;
         localGrid=null;if(gridMesh)Destroy(gridMesh);if(gridMaterial)Destroy(gridMaterial);gridMesh=null;gridMaterial=null;gridCenter=new Vector2Int(-99,-99);
         controls.buildGrid.SetActive(false);foreach(var c in castleObjects)c.SetActive(true);
     }
-    void MainMenu(){noticeLeft=0;CloseVersus();CloseGuide();EndChallenge();if(onlineMatch){onlineMatch=false;onlineStarted=false;onlineReplica=null;StopDirectory();}ClearMatch();series=null;page=Page.Main;controls.Focus("castle");}
+    void MainMenu(){bool hadContent=match!=null||page==Page.Guide;noticeLeft=0;CloseVersus();CloseGuide();EndChallenge();if(onlineMatch){onlineMatch=false;onlineStarted=false;onlineReplica=null;StopDirectory();}ClearMatch();ReleaseIdleRaceAssets(hadContent);series=null;page=Page.Main;controls.Focus("castle");}
     Vector3 World(Vector2 point)=>terrain.Position(point.x*30,point.y*30,true);
     void Select(int line){if(!builderSelected)return;selectedItem=-1;buildMenu=true;chosen=line;moveOrder=false;Notice("Приказ рабочему: "+match.Lines[line].name+(Application.isMobilePlatform?". Коснитесь места постройки.":". ЛКМ — место · ПКМ — отмена."));}
     bool Place(int x,int y){

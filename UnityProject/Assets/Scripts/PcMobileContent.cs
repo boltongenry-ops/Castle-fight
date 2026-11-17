@@ -30,7 +30,7 @@ public sealed partial class PcGame {
         yield return MobileContent.Current.EnsureRace(race);
         if(race==0)yield break;
         if(race==12){yield return PrepareUltimateShell034();}else if(!Pack(race)){yield return MobileContent.Current.LoadAsync<PcRacePack>(MobileContent.RaceResources[race],value=>AssignPack(race,value));if(!Pack(race))throw new InvalidOperationException("Missing downloaded race "+race);}
-        switch(race){case 6:ResolveMechDefaultColor();break;case 7:ResolveUndeadDefaultColors();break;case 8:ResolveCorruptedDefaultColors();break;case 9:ResolveElementalDefaultColors();break;case 10:ResolveNightDefaultColors();break;case 11:ResolveElvenDefaultColors();break;case 12:case 13:case 14:ResolveFinalDefaultColors();break;}
+        ApplyRaceMaterialDefaults(race);
         Debug.Log("CF_MOBILE_RACE_READY race="+race);
     }
     IEnumerator PrepareMobileMatch(int a,int b){
@@ -44,7 +44,20 @@ public sealed partial class PcGame {
         yield return Resources.UnloadUnusedAssets();
         yield return PrepareMobileRace(a);if(a!=b)yield return PrepareMobileRace(b);
     }
-    IEnumerator PrepareMobileGuide(int race){MobileContent.Current.Begin();yield return PrepareMobileRace(race);GuideChooseRace(race);MobileContent.Current.Ready();}
-    GameObject MenuBuilder(int race){if(race==0)return FirstModel(builderModels);if(!MobileContent.Active){var pack=Pack(race);return pack?FirstModel(pack.builders):FirstModel(builderModels);}return ContentResources.Load<GameObject>("MobileBuilders/"+race);}
+    IEnumerator PrepareMobileGuide(int race){
+        MobileContent.Current.Begin();
+        if(DiscardRaceAssets(race)){ClearRacePrefabCaches();yield return Resources.UnloadUnusedAssets();}
+        yield return PrepareMobileRace(race);
+        if(page==Page.Guide)GuideChooseRace(race);
+        MobileContent.Current.Ready();
+    }
+    GameObject MenuBuilder(int race){
+        if(race==0)return FirstModel(builderModels);
+        if(MobileContent.Active)return ContentResources.Load<GameObject>("MobileBuilders/"+race);
+        if(desktopMenuBuilders)return desktopMenuBuilders.LoadAsset<GameObject>("builders/"+race);
+        var pack=Pack(race);
+        if(!pack)pack=ContentResources.Load<PcRacePack>(MobileContent.RaceResources[race]);
+        return pack?FirstModel(pack.builders):FirstModel(builderModels);
+    }
 }
 }

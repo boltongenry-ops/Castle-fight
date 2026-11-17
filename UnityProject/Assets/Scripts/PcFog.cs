@@ -4,7 +4,11 @@ using System.Linq;
 using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame {
-    FogGrid fog;HumanMatch fogMatch;float fogNext,screenFogNext,fogProjectionNext;Texture2D fogScreen,fogMini;Color32[] screenFogColors,miniFogColors;Vector2[] fogGround,fogCoarse;float[] fogEdge,fogCoarseEdge;Vector3 fogCameraPosition;Quaternion fogCameraRotation;Matrix4x4 fogProjection;float fogCameraFov,fogCameraSize;int fogWidth,fogHeight;double fogProjectionMs,fogMaskMs;
+    const int FogScreenWidth=160,FogScreenHeight=90,FogMeshWidth=41,FogMeshHeight=24,FogStride=FogGrid.Width+2;
+    FogGrid fog;HumanMatch fogMatch;float fogNext,screenFogNext;Texture2D fogScreen,fogMini;Color32[] screenFogColors,miniFogColors;
+    readonly byte[] fogDisplay=new byte[FogStride*(FogGrid.Height+2)];
+    readonly Vector3[] fogProjectionNodes=new Vector3[FogMeshWidth*FogMeshHeight];
+    Vector3 fogCameraPosition;Quaternion fogCameraRotation;Matrix4x4 fogProjection;Rect fogViewport;int fogWidth,fogHeight;bool fogSoft;double fogProjectionMs,fogMaskMs;
     readonly HashSet<int> fogKnownHuts=new HashSet<int>();
     bool FogActive=>match!=null&&(onlineMatch?onlineFog:(activeChallenge!=null||options.fogOfWar));
     bool FogVisible(Vector2 point)=>!FogActive||fog!=null&&fog.Visible(point);
@@ -22,7 +26,14 @@ public sealed partial class PcGame {
         foreach(var zone in match.NightZones)if(zone.team==0&&zone.age<8)fog.Reveal(zone.point,1100f/30);
         fog.Remember();foreach(var hut in match.Huts)if(hut.team==0||fog.Visible(hut.position))fogKnownHuts.Add(hut.id);
         if(!fogMini){fogMini=new Texture2D(FogGrid.Width,FogGrid.Height,TextureFormat.RGBA32,false){name="Exploration minimap",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};miniFogColors=new Color32[FogGrid.Width*FogGrid.Height];}
-        for(int i=0;i<miniFogColors.Length;i++){int display=Math.Max(fog.Current[i],fog.Explored[i]>0?85:0);int shade=options.softFog?104:255;miniFogColors[i]=new Color32(0,0,0,(byte)((shade-display*shade/255f)*.96f));}fogMini.SetPixels32(miniFogColors);fogMini.Apply(false);screenFogNext=0;
+        int shade=options.softFog?104:255;
+        for(int y=0;y<FogGrid.Height;y++)for(int x=0;x<FogGrid.Width;x++){
+            int i=y*FogGrid.Width+x;
+            byte display=(byte)Math.Max(fog.Current[i],fog.Explored[i]>0?85:0);
+            fogDisplay[(y+1)*FogStride+x+1]=display;
+            miniFogColors[i]=new Color32(0,0,0,(byte)((shade-display*shade/255f)*.96f));
+        }
+        fogMini.SetPixels32(miniFogColors);fogMini.Apply(false);screenFogNext=0;
     }
     void ApplyFogViews(){
         if(match==null)return;
@@ -36,23 +47,87 @@ public sealed partial class PcGame {
     }
     void DrawWorldFog(){
         if(!FogActive||fog==null)return;var camera=Camera.main;if(!camera)return;
-        if(!fogScreen){fogScreen=new Texture2D(160,90,TextureFormat.RGBA32,false){name="Terrain projected fog",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};screenFogColors=new Color32[160*90];fogGround=new Vector2[160*90];fogEdge=new float[160*90];fogCoarse=new Vector2[41*24];fogCoarseEdge=new float[41*24];}
-        bool moved=fogWidth!=Screen.width||fogHeight!=Screen.height||fogProjection!=camera.projectionMatrix||fogCameraPosition!=camera.transform.position||fogCameraRotation!=camera.transform.rotation||Mathf.Abs(fogCameraFov-camera.fieldOfView)>.01f||Mathf.Abs(fogCameraSize-camera.orthographicSize)>.01f;
-        if(Event.current.type==EventType.Repaint&&(Time.unscaledTime>=screenFogNext||moved)){
-            var watch=System.Diagnostics.Stopwatch.StartNew();screenFogNext=Time.unscaledTime+.18f;
-            if(moved){fogProjectionNext=Time.unscaledTime;fogProjection=camera.projectionMatrix;fogCameraPosition=camera.transform.position;fogCameraRotation=camera.transform.rotation;fogCameraFov=camera.fieldOfView;fogCameraSize=camera.orthographicSize;fogWidth=Screen.width;fogHeight=Screen.height;
-            for(int y=0;y<24;y++)for(int x=0;x<41;x++){
-                var ray=camera.ScreenPointToRay(new Vector3(x*4f/160*Screen.width,y*4f/90*Screen.height));float height=12;var point=ray.origin;
-                for(int i=0;i<6;i++){float travel=ray.direction.y<-.0001f?Mathf.Max(0,(height-ray.origin.y)/ray.direction.y):0;point=ray.origin+ray.direction*travel;float nextHeight=terrain.Height(point.x*30,-point.z*30,true);if(nextHeight==height)break;height=nextHeight;}
-                int index=y*41+x;fogCoarse[index]=new Vector2(point.x,-point.z);fogCoarseEdge[index]=(Mathf.PerlinNoise(point.x*.28f,point.z*.28f)-.5f)*.1f;
+        if(Event.current.type!=EventType.Repaint)return;
+        if(!fogScreen){
+            fogScreen=new Texture2D(FogScreenWidth,FogScreenHeight,TextureFormat.RGBA32,false){name="Terrain projected fog",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};
+            screenFogColors=new Color32[FogScreenWidth*FogScreenHeight];
+        }
+        var projection=camera.projectionMatrix;var position=camera.transform.position;var rotation=camera.transform.rotation;var viewport=camera.rect;
+        int width=Screen.width,height=Screen.height;
+        bool moved=fogWidth!=width||fogHeight!=height||fogProjection!=projection||fogCameraPosition!=position||fogCameraRotation!=rotation||fogViewport!=viewport;
+        if(moved||fogSoft!=options.softFog||Time.unscaledTime>=screenFogNext){
+            long stamp=System.Diagnostics.Stopwatch.GetTimestamp();
+            if(moved){
+                ProjectFog(camera,width,height,position);
+                fogProjection=projection;fogCameraPosition=position;fogCameraRotation=rotation;fogViewport=viewport;fogWidth=width;fogHeight=height;
+                fogProjectionMs=FogElapsed(stamp);
             }
-            for(int y=0;y<90;y++)for(int x=0;x<160;x++){float u=(x+.5f)/4,v=(y+.5f)/4;int cx=(int)u,cy=(int)v,index=cy*41+cx,target=y*160+x;u-=cx;v-=cy;fogGround[target]=Vector2.Lerp(Vector2.Lerp(fogCoarse[index],fogCoarse[index+1],u),Vector2.Lerp(fogCoarse[index+41],fogCoarse[index+42],u),v);fogEdge[target]=Mathf.Lerp(Mathf.Lerp(fogCoarseEdge[index],fogCoarseEdge[index+1],u),Mathf.Lerp(fogCoarseEdge[index+41],fogCoarseEdge[index+42],u),v);}
-            fogProjectionMs=watch.Elapsed.TotalMilliseconds;}
-            watch.Restart();bool soft=options.softFog;for(int i=0;i<screenFogColors.Length;i++){float visible=fog.Sample(fogGround[i]);float edge=visible>0&&visible<1?fogEdge[i]*Mathf.Sin(visible*Mathf.PI):0;float hidden=1-Mathf.Clamp01(visible+edge);if(soft){screenFogColors[i]=new Color32(0,0,0,(byte)(hidden*104));}else screenFogColors[i]=new Color32(0,0,0,(byte)(255*hidden));}
-            fogScreen.SetPixels32(screenFogColors);fogScreen.Apply(false);
-            fogMaskMs=watch.Elapsed.TotalMilliseconds;
+            stamp=System.Diagnostics.Stopwatch.GetTimestamp();
+            fogSoft=options.softFog;
+            PaintFogMask(fogSoft?104:255);
+            fogScreen.SetPixels32(screenFogColors);
+            fogScreen.Apply(false);
+            screenFogNext=Time.unscaledTime+.18f;
+            fogMaskMs=FogElapsed(stamp);
         }
         GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),fogScreen,ScaleMode.StretchToFill,true);
+    }
+    static double FogElapsed(long stamp)=>(System.Diagnostics.Stopwatch.GetTimestamp()-stamp)*1000.0/System.Diagnostics.Stopwatch.Frequency;
+    void ProjectFog(Camera camera,int width,int height,Vector3 cameraPosition){
+        // Ray origins on the near plane are affine even when the viewport is letterboxed.
+        var corner=camera.ScreenPointToRay(Vector3.zero);
+        var dx=(camera.ScreenPointToRay(new Vector3(width,0)).origin-corner.origin)/(FogMeshWidth-1);
+        var dy=(camera.ScreenPointToRay(new Vector3(0,height*92f/FogScreenHeight)).origin-corner.origin)/(FogMeshHeight-1);
+        bool orthographic=camera.orthographic;
+        for(int y=0;y<FogMeshHeight;y++){
+            var row=corner.origin+dy*y;
+            for(int x=0;x<FogMeshWidth;x++){
+                var start=row+dx*x;var direction=orthographic?corner.direction:start-cameraPosition;
+                float px=start.x,pz=start.z;
+                if(direction.y<-.0001f){
+                    float xPerY=direction.x/direction.y,zPerY=direction.z/direction.y;
+                    float surface=12;
+                    for(int i=0;i<6;i++){
+                        float rise=Math.Min(0,surface-start.y);
+                        px=start.x+rise*xPerY;pz=start.z+rise*zPerY;
+                        float next=terrain.Height(px*30,-pz*30,true);
+                        if(next==surface)break;
+                        surface=next;
+                    }
+                }
+                fogProjectionNodes[y*FogMeshWidth+x]=new Vector3(
+                    (px*30+8192)/64-.5f,(-pz*30+4096)/64-.5f,(Mathf.PerlinNoise(px*.28f,pz*.28f)-.5f)*.1f);
+            }
+        }
+    }
+    void PaintFogMask(int shade){
+        for(int y=0;y<FogScreenHeight;y++){
+            int top=(y/4)*FogMeshWidth;
+            float v=(y%4+.5f)*.25f;
+            int pixel=y*FogScreenWidth;
+            for(int tile=0;tile<FogMeshWidth-1;tile++){
+                int node=top+tile;
+                var left=fogProjectionNodes[node]+(fogProjectionNodes[node+FogMeshWidth]-fogProjectionNodes[node])*v;
+                var right=fogProjectionNodes[node+1]+(fogProjectionNodes[node+FogMeshWidth+1]-fogProjectionNodes[node+1])*v;
+                var step=(right-left)*.25f;
+                var sample=left+step*.5f;
+                for(int dx=0;dx<4;dx++){
+                    float visible=SampleFogDisplay(sample.x,sample.y);
+                    if(visible>0&&visible<1)visible=Mathf.Clamp01(visible+sample.z*Mathf.Sin(visible*Mathf.PI));
+                    screenFogColors[pixel++]=new Color32(0,0,0,(byte)((1-visible)*shade));
+                    sample+=step;
+                }
+            }
+        }
+    }
+    float SampleFogDisplay(float x,float y){
+        if(x<=-1||y<=-1||x>=FogGrid.Width||y>=FogGrid.Height)return 0;
+        int col=x<0?-1:(int)x,row=y<0?-1:(int)y;
+        int i=(row+1)*FogStride+col+1;
+        float u=x-col,v=y-row;
+        int a=fogDisplay[i],b=fogDisplay[i+1],c=fogDisplay[i+FogStride],d=fogDisplay[i+FogStride+1];
+        float top=a+(b-a)*u,bottom=c+(d-c)*u;
+        return (top+(bottom-top)*v)*(1f/255f);
     }
     void DrawMinimapFog(Rect rect){if(FogActive&&fogMini)GUI.DrawTextureWithTexCoords(rect,fogMini,new Rect(.125f,.9375f,.75f,-.875f),true);}
     void DisposeFog(){if(fogScreen)Destroy(fogScreen);if(fogMini)Destroy(fogMini);}

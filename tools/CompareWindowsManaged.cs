@@ -6,11 +6,29 @@ using Mono.Cecil.Cil;
 class CompareManaged {
  static IEnumerable<TypeDefinition> Walk(TypeDefinition t){yield return t;foreach(var child in t.NestedTypes)foreach(var nested in Walk(child))yield return nested;}
  static bool UserType(TypeDefinition t){return !t.FullName.Contains("<")&&!t.CustomAttributes.Any(a=>a.AttributeType.Name=="CompilerGeneratedAttribute");}
- static string Layout(TypeDefinition t){return (t.BaseType==null?"":t.BaseType.FullName)+"|"+string.Join(";",t.Fields.Select(f=>f.Name+":"+f.FieldType.FullName+":"+f.IsStatic));}
+ static string Layout(TypeDefinition t,IEnumerable<FieldDefinition> fields){return (t.BaseType==null?"":t.BaseType.FullName)+"|"+string.Join(";",fields.Select(f=>f.Name+":"+f.FieldType.FullName+":"+f.IsStatic));}
+ static readonly HashSet<string> RaceFogRuntimeFields=new HashSet<string>{
+  "fogProjectionNext","fogGround","fogCoarse","fogEdge","fogCoarseEdge","fogCameraFov","fogCameraSize",
+  "FogScreenWidth","FogScreenHeight","FogMeshWidth","FogMeshHeight","FogStride","fogDisplay","fogProjectionNodes",
+  "fogViewport","fogSoft","desktopMenuBuilders","raceAssetSweep","DesktopRaceCatalogs"
+ };
+ static IEnumerable<FieldDefinition> VerifiedRaceFogLayout(TypeDefinition type){
+  foreach(var field in type.Fields){
+   if(!RaceFogRuntimeFields.Contains(field.Name)){yield return field;continue;}
+   if(!field.IsPrivate||field.CustomAttributes.Any(a=>a.AttributeType.FullName=="UnityEngine.SerializeField"||a.AttributeType.FullName=="UnityEngine.SerializeReference"))
+    throw new Exception("Race or fog runtime field is serializable: "+field.FullName);
+  }
+ }
  static int Main(string[] args){
   var a=AssemblyDefinition.ReadAssembly(args[0]);var b=AssemblyDefinition.ReadAssembly(args[1]);int types=0;
   foreach(var t in a.MainModule.Types.SelectMany(Walk).Where(UserType)){
-   var n=b.MainModule.Types.SelectMany(Walk).Single(x=>x.FullName==t.FullName);if(Layout(t)!=Layout(n))throw new Exception("Changed field layout: "+t.FullName);types++;
+   var n=b.MainModule.Types.SelectMany(Walk).Single(x=>x.FullName==t.FullName);
+   bool raceFog=t.FullName=="CastleFight.PcGame"&&args.Contains("--verify-race-fog-private-fields");
+   var oldFields=raceFog?VerifiedRaceFogLayout(t):t.Fields;
+   var newFields=raceFog?VerifiedRaceFogLayout(n):n.Fields;
+   if(Layout(t,oldFields)!=Layout(n,newFields))throw new Exception("Changed field layout: "+t.FullName);
+   if(raceFog)Console.WriteLine("RACE_FOG_PRIVATE_FIELDS_PASS serializedLayout=unchanged");
+   types++;
   }
   foreach(var r in b.MainModule.AssemblyReferences)if(!a.MainModule.AssemblyReferences.Any(x=>x.FullName==r.FullName)){
    if(args.Length<3||!(r.Name=="Unity.Burst"||r.Name=="Unity.Collections"||r.Name=="UnityEngine.BurstModule"))throw new Exception("New dependency: "+r.FullName);

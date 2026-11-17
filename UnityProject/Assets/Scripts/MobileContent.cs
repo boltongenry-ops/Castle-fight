@@ -43,6 +43,16 @@ public sealed class MobileContent : MonoBehaviour {
     }
     public void Ready(){Busy=false;Debug.Log("CF_ANDROID_CONTENT_MENU_VISIBLE");}
     public void Begin(){Busy=true;}
+    public void ReleaseRaceBundles(){
+        // Keep the live scene and every dependency of the resident interface and shared content.
+        var keep=new HashSet<string>();
+        var roots=loaded.Keys.Where(name=>!name.StartsWith("race-",StringComparison.Ordinal)&&!name.StartsWith("fx-",StringComparison.Ordinal)).ToArray();
+        foreach(string root in roots)foreach(string _ in Dependencies(root,keep)){}
+        foreach(string name in loaded.Keys.Where(name=>!keep.Contains(name)).ToArray()){
+            loaded[name].Unload(false);
+            loaded.Remove(name);
+        }
+    }
     public bool Has(string key)=>resources.ContainsKey(key);
     public T Load<T>(string key) where T:UnityEngine.Object {
         if(!resources.TryGetValue(key,out var rows))return null;
