@@ -88,15 +88,32 @@ public sealed partial class HumanMatch {
             for(int i=0;i<Huts.Count;i++) {var h=Huts[i];if(h.team==u.team||h.hp<=0||!h.paid)continue;var d=h.position-u.position;float s=d.sqrMagnitude;if(s>hutMaxSqr||s>=bestHutSqr)continue;bestHut=h;bestHutSqr=s;}
             if(bestHut!=null)targetId=HutTarget(bestHut);else u.skirmish=false;
         }
-        Vector2 destination=TargetPosition(targetId,u.team),delta=destination-u.position;float reach=weapon.range+(targetId==-1?CastleCollision:targetId< -1?2:1);
+        Vector2 destination=TargetPosition(targetId,u.team),delta=destination-u.position;
+        float reach=weapon.range+(targetId==-1?CastleCollision:targetId< -1?2:1);
+        float distance=delta.magnitude;
+        bool ground=!Flying(u);
         if(delta.sqrMagnitude>.001f)u.direction=delta.normalized;
-        if(delta.magnitude<=reach+(u.pose=="Attack"?1:0)) {if(u.cooldown<=0)BeginAttack(u,weapon,targetId);u.pose=u.attackPoseLeft>0?"Attack":"Stand";}
+        if(distance<=reach+(targetId!=-1&&u.pose=="Attack"?1:0)) {if(u.cooldown<=0)BeginAttack(u,weapon,targetId);u.pose=u.attackPoseLeft>0?"Attack":"Stand";}
         else {
             if(Rooted(u)){u.pose="Stand";return;}
-            u.pose="Walk";Vector2 waypoint=Flying(u)?destination:BuilderWaypoint(u.position,destination);Vector2 travel=waypoint-u.position;Vector2 direction=travel.normalized;
-            if(!Flying(u))direction=GroundSeparation(u,direction);
-            u.position=Vector2.MoveTowards(u.position,u.position+direction.normalized*Mathf.Min(travel.magnitude,Mathf.Max(0,delta.magnitude-reach+.1f)),MoveSpeed(u)*dt);
-            if(!Flying(u)&&Mathf.Abs(u.previous.y)<=2.201f&&targetId>=-1)u.position=new Vector2(u.position.x,Mathf.Clamp(u.position.y,-2.2f,2.2f));if(direction.sqrMagnitude>.01f)u.direction=direction.normalized;
+            u.pose="Walk";
+            Vector2 waypoint=ground?BuilderWaypoint(u.position,destination):destination;
+            bool approachingCastle=ground&&targetId==-1&&waypoint==destination&&distance<=Mathf.Min(24,reach+12)
+                &&delta.x*(u.team==0?1:-1)>0;
+            if(approachingCastle){
+                var slot=CastleApproach038(u,destination,reach);
+                var travel=slot-u.position;
+                u.position=Vector2.MoveTowards(u.position,slot,MoveSpeed(u)*dt);
+                if(travel.sqrMagnitude>.01f)u.direction=travel.normalized;
+                return;
+            }
+            Vector2 advance=waypoint-u.position;
+            Vector2 direction=ground?GroundSeparation(u,advance.normalized):advance.normalized;
+            Vector2 start=u.position;
+            var next=Vector2.MoveTowards(start,start+direction*Mathf.Min(advance.magnitude,Mathf.Max(0,distance-reach+.1f)),MoveSpeed(u)*dt);
+            if(ground&&Mathf.Abs(u.previous.y)<=2.201f&&targetId>=-1)next.y=Mathf.Clamp(next.y,-2.2f,2.2f);
+            u.position=next;
+            if((next-start).sqrMagnitude>.000001f)u.direction=(next-start).normalized;
         }
     }
     void BeginAttack(Unit u,Weapon weapon,int target) {

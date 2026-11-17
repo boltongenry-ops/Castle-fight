@@ -12,11 +12,14 @@ class CompareManaged {
   "FogScreenWidth","FogScreenHeight","FogMeshWidth","FogMeshHeight","FogStride","fogDisplay","fogProjectionNodes",
   "fogViewport","fogSoft","desktopMenuBuilders","raceAssetSweep","DesktopRaceCatalogs"
  };
- static IEnumerable<FieldDefinition> VerifiedRaceFogLayout(TypeDefinition type){
+ static readonly HashSet<string> WorkshopRuntimeFields=new HashSet<string>{
+  "workshops038","WorkshopCategories","WorkshopShelf","WorkshopLook","WorkshopGold","WorkshopIvory","WorkshopText"
+ };
+ static IEnumerable<FieldDefinition> VerifyPrivateRuntimeFields(TypeDefinition type,HashSet<string> names,bool staticOnly){
   foreach(var field in type.Fields){
-   if(!RaceFogRuntimeFields.Contains(field.Name)){yield return field;continue;}
-   if(!field.IsPrivate||field.CustomAttributes.Any(a=>a.AttributeType.FullName=="UnityEngine.SerializeField"||a.AttributeType.FullName=="UnityEngine.SerializeReference"))
-    throw new Exception("Race or fog runtime field is serializable: "+field.FullName);
+   if(!names.Contains(field.Name)){yield return field;continue;}
+   if(!field.IsPrivate||(staticOnly&&!field.IsStatic)||field.CustomAttributes.Any(a=>a.AttributeType.FullName=="UnityEngine.SerializeField"||a.AttributeType.FullName=="UnityEngine.SerializeReference"))
+    throw new Exception("Runtime field failed serialization check: "+field.FullName);
   }
  }
  static int Main(string[] args){
@@ -24,10 +27,13 @@ class CompareManaged {
   foreach(var t in a.MainModule.Types.SelectMany(Walk).Where(UserType)){
    var n=b.MainModule.Types.SelectMany(Walk).Single(x=>x.FullName==t.FullName);
    bool raceFog=t.FullName=="CastleFight.PcGame"&&args.Contains("--verify-race-fog-private-fields");
-   var oldFields=raceFog?VerifiedRaceFogLayout(t):t.Fields;
-   var newFields=raceFog?VerifiedRaceFogLayout(n):n.Fields;
+   bool workshop=t.FullName=="CastleFight.PcGame"&&args.Contains("--verify-workshop-static-fields");
+   var ignored=raceFog?RaceFogRuntimeFields:workshop?WorkshopRuntimeFields:null;
+   var oldFields=ignored!=null?VerifyPrivateRuntimeFields(t,ignored,workshop):t.Fields;
+   var newFields=ignored!=null?VerifyPrivateRuntimeFields(n,ignored,workshop):n.Fields;
    if(Layout(t,oldFields)!=Layout(n,newFields))throw new Exception("Changed field layout: "+t.FullName);
    if(raceFog)Console.WriteLine("RACE_FOG_PRIVATE_FIELDS_PASS serializedLayout=unchanged");
+   if(workshop)Console.WriteLine("WORKSHOP_STATIC_FIELDS_PASS serializedLayout=unchanged");
    types++;
   }
   foreach(var r in b.MainModule.AssemblyReferences)if(!a.MainModule.AssemblyReferences.Any(x=>x.FullName==r.FullName)){

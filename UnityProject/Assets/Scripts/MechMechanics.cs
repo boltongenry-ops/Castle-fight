@@ -111,18 +111,18 @@ public sealed partial class HumanMatch {
         if(!near)return false;u.mechFuse=true;u.strikeLeft=-1;MechJobs.Add(new MechJob {kind="sapper",source=u.id,team=u.team,left=F(Abilities["A099"],"duration")});return true;
     }
     bool MechRepair(Unit u,float dt) {
-        var target=FindUnit(u.mechRepairTarget);var hut=FindHut(u.mechRepairTarget);bool castle=u.mechRepairTarget==-1&&CastleHp[u.team]<CastleMax;
+        var target=FindUnit(u.mechRepairTarget);var hut=FindHut(u.mechRepairTarget);bool castle=u.mechRepairTarget==-1&&CastleHp[u.team]<CastleHealthLimit(u.team);
         if(!castle&&(target==null||target.team!=u.team||target.hp>=target.maxHp)&&(hut==null||hut.team!=u.team||hut.hp>=hut.maxHp)) {
-            var candidates=Huts.Where(h=>h.paid&&h.hp>0&&h.team==u.team&&h.maxHp-h.hp>100).Select(HutTarget).ToList();if(CastleMax-CastleHp[u.team]>100)candidates.Add(-1);
+            var candidates=Huts.Where(h=>h.paid&&h.hp>0&&h.team==u.team&&h.maxHp-h.hp>100).Select(HutTarget).ToList();if(CastleHealthLimit(u.team)-CastleHp[u.team]>100)candidates.Add(-1);
             if(candidates.Count==0)candidates.AddRange(Units.Where(v=>v!=u&&v.hp>0&&v.team==u.team&&!Organic(v)&&v.maxHp-v.hp>100).Select(v=>v.id));
             u.mechRepairTarget=candidates.Count>0?candidates[Mathf.Min(candidates.Count-1,(int)(Roll()*candidates.Count))]:-1000000;target=FindUnit(u.mechRepairTarget);hut=FindHut(u.mechRepairTarget);castle=u.mechRepairTarget==-1;
         }
         if(target==null&&hut==null&&!castle){u.pose="Stand";return true;}
         Vector2 point=target?.position??hut?.position??CastlePosition(u.team),delta=point-u.position;u.direction=delta.normalized;
         if(delta.magnitude>F(Abilities["A09K"],"range")){u.position=Vector2.MoveTowards(u.position,point,MoveSpeed(u)*dt);u.pose="Walk";return true;}
-        float max=target?.maxHp??hut?.maxHp??CastleMax,hp=target?.hp??hut?.hp??CastleHp[u.team];string raw=target!=null?Lines[target.kind].unit:hut!=null?Lines[hut.kind].building:"hcas";var values=mechRepairValues[raw];if(values==null){u.pose="Stand";return true;}
+        float max=target?.maxHp??hut?.maxHp??CastleHealthLimit(u.team),hp=target?.hp??hut?.hp??CastleHp[u.team];string raw=target!=null?Lines[target.kind].unit:hut!=null?Lines[hut.kind].building:"hcas";var values=mechRepairValues[raw];if(values==null){u.pose="Stand";return true;}
         float rate=max/Mathf.Max(1,F(values,"seconds")*F(Abilities["A09K"]?["fields"],"Rep2",1));float healed=PayMechRepair(u.team,raw,max,Mathf.Min(rate*dt,max-hp));
-        if(target!=null)target.hp+=healed;else if(hut!=null)hut.hp+=healed;else CastleHp[u.team]+=healed;if(healed>0)MechRepairs++;u.pose="Attack";return true;
+        if(target!=null)target.hp+=healed;else if(hut!=null)hut.hp+=healed;else healed=RestoreCastleHealth(u.team,healed);if(healed>0)MechRepairs++;u.pose="Attack";return true;
     }
     public float PayMechRepair(int team,string raw,float max,float desired) {
         var values=mechRepairValues[raw];if(values==null||max<=0)return 0;double ratio=F(Abilities["A09K"]?["fields"],"Rep1"),gold=F(values,"gold")*ratio/max,wood=F(values,"wood")*ratio/max;

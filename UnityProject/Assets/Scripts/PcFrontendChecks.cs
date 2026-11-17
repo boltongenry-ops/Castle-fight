@@ -12,7 +12,7 @@ public sealed partial class PcGame {
         Check(menuAudio&&menuAudio.clip&&menuAudio.clip.loadState==AudioDataLoadState.Loaded&&menuAudio.isPlaying&&menuAudio.volume>0,"Godot menu music loaded, playing and audible by settings");
         var samples=new float[512];bool audible=false;for(int attempt=0;attempt<40&&!audible;attempt++){menuAudio.GetOutputData(samples,0);audible=samples.Any(v=>Mathf.Abs(v)>.00001f);if(!audible){AudioListener.GetOutputData(samples,0);audible=samples.Any(v=>Mathf.Abs(v)>.00001f);}if(!audible)yield return new WaitForSecondsRealtime(.2f);}Debug.Log("CF_AUDIO_PROBE audible="+audible+" time="+menuAudio.time+" volume="+menuAudio.volume+" listener="+AudioListener.volume+" paused="+AudioListener.pause+" focused="+Application.isFocused+" dsp="+AudioSettings.dspTime);Check(audible,"Menu audio source emits nonzero PCM samples");
         Check(loadingBackground&&loadingHammer,"Generated loading background and transparent orc hammer packaged");
-        Check(((JArray)progression.Catalog["challenges"]).Count==30&&((JArray)progression.Catalog["items"]).Count==7,"Thirty campaign challenges and all six original shop items plus the meme pack");
+        Check(((JArray)progression.Catalog["challenges"]).Count==42&&((JArray)progression.Catalog["items"]).Count==27,"Forty-two challenges and the extended cosmetic shop");
         foreach(var row in (JArray)progression.Catalog["challenges"]){Check(RaceStaged(Array.IndexOf(ProgressRaces,(string)row["race"]))&&RaceStaged(Array.IndexOf(ProgressRaces,(string)row["opponent"])),"Both playable challenge races: "+row["id"]);}
         Check(progression.Coins==0,"Fresh test profile starts without free tokens");yield return Shot(folder,"01-main");
         yield return Action("main.challenges");Check(page==Page.Progression&&!progressShop,"Challenges open through main menu");yield return Shot(folder,"02-challenges");
@@ -41,6 +41,7 @@ public sealed partial class PcGame {
         foreach(var row in ((JArray)progression.Catalog["challenges"]).Take(9))progression.Complete((string)row["id"],100);
         int coins=progression.Coins;Check(!progression.Buy("does-not-exist",out _)&&progression.Coins==coins,"Unknown shop item cannot debit wallet");
         yield return Action("main.challenges");yield return Action("progress.shop");Check(progressShop,"Shop opens through main menu");yield return Shot(folder,"06-shop");
+        yield return Action("workshop.tab.3");yield return Action("workshop.pick.frame_jade");
         yield return Action("progress.item.frame_jade");Check(!progression.Owned("frame_jade"),"Purchase requires concrete second confirmation");
         yield return Action("progress.item.frame_jade");Check(progression.Owned("frame_jade")&&progression.Coins==coins-150,"Confirmed purchase debits exact original price");
         Check(!progression.Buy("frame_jade",out _)&&progression.Coins==coins-150,"Duplicate purchase cannot spend tokens again");

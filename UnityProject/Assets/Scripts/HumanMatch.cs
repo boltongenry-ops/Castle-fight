@@ -126,7 +126,10 @@ public sealed partial class HumanMatch {
         var b=Builders[team];using(var snapshot035_1=SimulationBuffers035.Take(b.jobs))foreach(int id in snapshot035_1){var h=Huts.FirstOrDefault(v=>v.id==id);if(h!=null&&!h.started)Huts.Remove(h);}b.jobs.Clear();b.goal=point;b.repairing=false;return true;
     }
     public bool ResumeBuilding(int team,int hutId){if(Finished||team<0||team>1)return false;var h=Huts.FirstOrDefault(v=>v.id==hutId&&v.team==team&&!v.paid);if(h==null)return false;var b=Builders[team];if(!b.jobs.Contains(hutId))b.jobs.Insert(0,hutId);b.repairing=false;return true;}
-    public bool RepairCastle(int team){if(Finished||team<0||team>1||CastleHp[team]>=CastleMax)return false;MoveBuilder(team,Builders[team].position);Builders[team].repairing=true;return true;}
+    public bool RepairCastle(int team){
+        if(Finished||team<0||team>1||!ChallengeBuilderRepairAllowed(team)||CastleHp[team]>=CastleHealthLimit(team))return false;
+        MoveBuilder(team,Builders[team].position);Builders[team].repairing=true;return true;
+    }
     public bool Blink(int team,Vector2 p){if(Finished||team<0||team>1||float.IsNaN(p.x)||float.IsNaN(p.y)||float.IsInfinity(p.x)||float.IsInfinity(p.y)||Mathf.Abs(p.x)>6144f/30||Mathf.Abs(p.y)>2048f/30)return false;var b=Builders[team];MoveBuilder(team,b.position);PulseAt(b.position,2,Color.cyan,"Скачок",.633f,"blinkout");if(!InsideBase(team,p))p=new Vector2(team==0?-4544f/30:4544f/30,448f/30);b.position=b.previous=b.goal=p;PulseAt(p,2,Color.cyan,"",1.2f,"blinkin");return true;}
     static Vector2 BuilderWaypoint(Vector2 from,Vector2 goal) {
         float nearest=float.MaxValue,wall=0;foreach(float x in new[]{-3520f/30,-2016f/30,2016f/30,3520f/30})if((from.x-x)*(goal.x-x)<0&&Mathf.Abs(from.x-x)<nearest){nearest=Mathf.Abs(from.x-x);wall=x;}
@@ -138,14 +141,19 @@ public sealed partial class HumanMatch {
         if(b.repairing){var d=b.position-CastlePosition(b.team);destination=CastlePosition(b.team)+(d.sqrMagnitude>.01f?d.normalized:Vector2.right)*6.7f;}
         if((destination-b.position).sqrMagnitude>.16f){var waypoint=BuilderWaypoint(b.position,destination);b.direction=(waypoint-b.position).normalized;b.position=Vector2.MoveTowards(b.position,waypoint,BuilderSpeed*dt);b.pose="Walk";}
         else if(hut!=null){hut.started=true;hut.buildLeft=Mathf.Max(0,hut.buildLeft-dt);b.pose="Stand Work";b.direction=(hut.position-b.position).normalized;if(hut.buildLeft<=0){var l=Lines[hut.kind];Gold[b.team]-=GoldPrice(b.team,hut.kind);Wood[b.team]+=l.woodReward-l.woodCost;hut.paid=true;hut.income=l.cost*l.incomeRate;hut.mana=F(l.buildingStats,"start_mana");b.jobs.RemoveAt(0);b.goal=b.position;}}
-        else if(b.repairing){b.pose="Stand Work";b.direction=(CastlePosition(b.team)-b.position).normalized;CastleHp[b.team]=Mathf.Min(CastleMax,CastleHp[b.team]+15*dt);if(CastleHp[b.team]>=CastleMax)b.repairing=false;}
+        else if(b.repairing){
+            b.pose="Stand Work";b.direction=(CastlePosition(b.team)-b.position).normalized;
+            RestoreCastleHealth(b.team,15*dt);
+            if(CastleHp[b.team]>=CastleHealthLimit(b.team))b.repairing=false;
+        }
         else b.pose="Stand";
     }
     void Bot()=>ThinkBot();
     public void Step(float dt) {
         if(Finished||dt<=0)return;SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
         while(incomeAge>=10){incomeAge-=10;for(int t=0;t<2;t++){incomeFraction[t]+=Income(t);int payment=(int)(incomeFraction[t]+.00001f);incomeFraction[t]-=payment;Gold[t]+=payment;}}
-        for(int t=0;t<2;t++)if(CastleHp[t]>0)CastleHp[t]=Mathf.Min(CastleMax,CastleHp[t]+CastleRegen*dt);
+        float recovery=NaturalCastleRecovery*dt;
+        for(int t=0;t<2;t++)RestoreCastleHealth(t,recovery);
         foreach(var b in Builders)TickBuilder(b,dt);if(botAge<=0){botAge=difficulty==0?8:difficulty==1?4:2;Bot();}
         for(int t=0;t<2;t++)RescueCooldown[t]=Mathf.Max(0,RescueCooldown[t]-dt);
         foreach(var c in Corpses)c.left-=dt;Corpses.RemoveAll(c=>c.left<=0);
@@ -157,6 +165,7 @@ public sealed partial class HumanMatch {
         SimulationPhase035.Mark("auras");TickShots(dt);SimulationPhase035.Mark("projectiles");BeginUnitBatch033();using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_4)if(u.hp>0){TickUnit(u,dt);UnitMoved033(u);}EndUnitBatch033();SimulationPhase035.Mark("unit_decisions_movement");FlushUndeadBirths();FlushFinalBirths();
         Units.RemoveAll(u=>u.hp<=0&&u.deadAge>3);Shots.RemoveAll(s=>s.age>s.duration+(s.kind==2||s.kind==3?.35f:0));
         if(CastleHp[0]<=0||CastleHp[1]<=0)Winner=CastleHp[0]<=0&&CastleHp[1]<=0?-1:CastleHp[0]<=0?1:0;
+        ResolveChallengeClock();
     }
     public void Surrender(int team){if(!Finished&&team>=0&&team<2)Winner=1-team;}
     public float Roll(){randomState^=randomState<<13;randomState^=randomState>>17;randomState^=randomState<<5;return (randomState&0xFFFFFF)/16777216f;}

@@ -16,10 +16,20 @@ public sealed partial class HumanMatch {
             if(Mathf.Abs(u.position.y)>1.5f&&Mathf.Abs(perpendicular.y)>.5f)sign=-Mathf.Sign(u.position.y*perpendicular.y);
             result=forward*.45f+perpendicular*sign*.9f;
         }
-        var answer=result.sqrMagnitude<.001f?forward:result.normalized;
+        // Dense groups can sum enough repulsion to reverse an otherwise valid order.
+        float advance=Vector2.Dot(result,forward);
+        var lateral=Vector2.ClampMagnitude(result-forward*advance,.95f);
+        var answer=(forward*Mathf.Max(.45f,advance)+lateral).normalized;
         if(spatial.auditGround&&!spatial.reference&&Opt(this).unitBatchActive){spatial.reference=true;var scalar=GroundSeparation(u,forward);spatial.reference=false;if(answer.x!=scalar.x||answer.y!=scalar.y)throw new System.Exception("Ground candidate mismatch unit="+u.id+" index="+answer+" full="+scalar);}
 
         return answer;
+    }
+    static Vector2 CastleApproach038(Unit unit,Vector2 castle,float reach){
+        // Fix the approach point for each unit so changes of nearest neighbour cannot swap its shoulders.
+        int slot=(unit.id%13*7)%13-6;
+        float angle=slot*.155f;
+        float radius=Mathf.Max(.5f,reach-.32f);
+        return castle+new Vector2((unit.team==0?-1:1)*Mathf.Cos(angle),Mathf.Sin(angle))*radius;
     }
     void AccumulateGround035(Unit u,Unit other,Vector2 forward,float ownRadius,ref Vector2 result,ref Unit blocker,ref float best){
             if(other==u||other.hp<=0||!other.onRoad)return;

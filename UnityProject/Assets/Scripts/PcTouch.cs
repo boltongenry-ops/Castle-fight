@@ -45,6 +45,7 @@ public sealed partial class PcGame {
         if(hadBuilder&&!builderSelected&&!selectedCastle&&selectedHut<0&&selectedUnit<0){builderSelected=true;OrderBuilder(point);}
     }
     void UpdateTouchScroll(){
+        UpdateProgressionTouch();
         UpdatePassiveAspectTouch();UpdateSpellScroll();
         if(page!=Page.Network||showNetworkProfile||showStickerPicker||showVoicePanel){scrollFinger=-1;return;}
         for(int i=0;i<Input.touchCount;i++){var t=Input.GetTouch(i);var p=GuiPoint(t.position);

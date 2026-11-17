@@ -125,8 +125,8 @@ public sealed partial class HumanMatch {
     void ThinkBot(){
         if(Finished||NetworkReplica)return;InitBotPolicy();ObserveBot();
         int pending=Builders[1].jobs.Count;if(pending>=(difficulty==2?2:1)){botPlan="Завершает строительство";return;}
-        if(pending==0&&CastleHp[1]<CastleMax*.45f&&botDanger>0){RepairCastle(1);botPlan="Ремонтирует замок под давлением";return;}
-        if(Builders[1].repairing&&CastleHp[1]<CastleMax*.8f&&botDanger>0)return;
+        if(pending==0&&CastleHp[1]<CastleHealthLimit(1)*.45f&&botDanger>0){RepairCastle(1);botPlan="Ремонтирует замок под давлением";return;}
+        if(Builders[1].repairing&&CastleHp[1]<CastleHealthLimit(1)*.8f&&botDanger>0)return;
         botOptions.Clear();
         for(int k=0;k<Lines.Length;k++)if(BotAllowed(k,null))botOptions.Add(new BotOption{kind=k,score=BotScore(k,null),price=GoldPrice(1,k)});
         foreach(var hut in Huts.Where(h=>h.team==1&&h.paid&&h.hp>0&&!h.paused))foreach(string raw in Lines[hut.kind].upgrades){int k=Kind(raw);if(BotAllowed(k,hut))botOptions.Add(new BotOption{kind=k,hut=hut,score=BotScore(k,hut),price=GoldPrice(1,k)});}
@@ -159,7 +159,7 @@ public sealed partial class HumanMatch {
     void BotDefend(){
         if(Finished||NetworkReplica)return;var danger=Units.Where(BotSeesUnit).Where(u=>u.position.x>2016f/30&&Lines[u.kind].unit!="YTct"&&Lines[u.kind].unit!="n02E").ToArray();if(danger.Length==0)return;
         Unit best=null;float score=0;int count=0;foreach(var center in danger){float value=0;int n=0;foreach(var u in danger)if(Vector2.Distance(center.position,u.position)<=1000f/30){value+=Mathf.Min(2500,u.hp);n++;}if(value>score){score=value;best=center;count=n;}}
-        bool urgent=CastleHp[1]<CastleMax*.3f||danger.Any(u=>Vector2.Distance(u.position,CastlePosition(1))<24);
+        bool urgent=CastleHp[1]<CastleHealthLimit(1)*.3f||danger.Any(u=>Vector2.Distance(u.position,CastlePosition(1))<24);
         if(best==null||!(urgent&&score>=500||count>=5&&score>=2200))return;
         if(RescueCharges[1]<=0&&BotGold()>=1000&&score>=2500)BuyRescue(1);
         if(RescueCharges[1]>0&&RescueCooldown[1]<=0)Rescue(1,best.position);

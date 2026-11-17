@@ -154,6 +154,7 @@ public sealed partial class PcGame {
         }
     }
     void LateUpdate() {
+        UpdateWorkshopPreview();
         if(match==null){RenderMenuPortrait();return;}
         if(menuPortraitModel){menuPortraitModel.gameObject.SetActive(false);Destroy(menuPortraitModel.gameObject);menuPortraitModel=null;menuPortraitRaw=null;}
         var prefab=PortraitPrefab(out var raw);if(!prefab)return;

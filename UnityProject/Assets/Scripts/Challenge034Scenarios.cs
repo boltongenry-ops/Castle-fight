@@ -7,8 +7,8 @@ namespace CastleFight {
 public static class Challenge034Scenarios {
     public static void Run(JObject catalog,JObject human,string profile,Action<bool,string> check){
         ChallengeCatalog034.Extend(catalog);ChallengeCatalog034.Extend(catalog);
-        var rows=(JArray)catalog["challenges"];
-        check(rows.Count==30&&rows.Select(r=>(string)r["id"]).Distinct().Count()==30,"Thirty unique stable challenges; extending twice is safe");
+        var rows=((JArray)catalog["challenges"]).Where(row=>!ChallengeCampaign038.IsSiege(row)).ToArray();
+        check(rows.Length==30&&rows.Select(r=>(string)r["id"]).Distinct().Count()==30,"Thirty unique original challenges; extending twice is safe");
         foreach(JObject row in rows){check((int)row["reward"]>0&&ChallengeCatalog034.Experience(row)>0&&((string)row["description"]).Length>30,"Reward, XP and description: "+row["id"]);}
         var store=new PcProgressionStore(catalog,profile);int coins=store.Coins,xp=store.Experience;
         int reward=store.Complete("five_pillars",100);check(store.Coins==coins+reward&&store.Experience==xp+ChallengeCatalog034.Experience(store.Challenge("five_pillars")),"First win grants tokens and persistent mastery XP");

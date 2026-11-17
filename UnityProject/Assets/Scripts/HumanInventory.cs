@@ -54,7 +54,7 @@ public sealed partial class HumanMatch {
                 if(rate>0){float period=1/rate;slot.accumulator=Mathf.Min(slot.accumulator+dt,period*8);while(slot.accumulator+.000001f>=period){slot.accumulator-=period;FireItemStaff(team,item);}}
                 float repair=F(item,"repair")*slot.count*dt;if(repair<=0)continue;float radius=F(item,"range",23.333333f);var position=Builders[team].position;
                 foreach(var h in Huts)if(h.team==team&&h.hp>0&&Vector2.Distance(h.position,position)<=radius+.00001f)h.hp=Mathf.Min(h.maxHp,h.hp+repair);
-                if(CastleHp[team]>0&&Vector2.Distance(CastlePosition(team),position)<=radius+.00001f)CastleHp[team]=Mathf.Min(CastleMax,CastleHp[team]+repair);
+                if(Vector2.Distance(CastlePosition(team),position)<=radius+.00001f)RestoreCastleHealth(team,repair);
             }
         }
     }
