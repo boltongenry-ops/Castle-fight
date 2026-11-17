@@ -1,0 +1,96 @@
+{
+  "status": "PASS",
+  "version": "0.36.0",
+  "checks": [
+    {
+      "check": "Invalid building tap keeps selection for retry",
+      "passed": true
+    },
+    {
+      "check": "One accepted placement closes build menu and ghost immediately",
+      "passed": true
+    },
+    {
+      "check": "A second legal tile does not queue a duplicate",
+      "passed": true
+    },
+    {
+      "check": "Occupied tile keeps the order unsent and permits retry",
+      "passed": true
+    },
+    {
+      "check": "The originally placed building completes normally",
+      "passed": true
+    },
+    {
+      "check": "The next world tap follows the mobile movement path",
+      "passed": true
+    },
+    {
+      "check": "A blocked network send leaves the placement available",
+      "passed": true
+    },
+    {
+      "check": "Actual Blink emits a departure and an arrival",
+      "passed": true
+    },
+    {
+      "check": "Six classic cast prefabs play their source one-shots without duplicate rings",
+      "passed": true
+    },
+    {
+      "check": "Blink departure remains at the point of origin",
+      "passed": true
+    },
+    {
+      "check": "Missing named effect falls back to visible ring",
+      "passed": true
+    },
+    {
+      "check": "An unseen cast creates neither mesh nor ring",
+      "passed": true
+    },
+    {
+      "check": "Active native spell materials support the standalone renderer",
+      "passed": true
+    },
+    {
+      "check": "Expired spell visuals are removed",
+      "passed": true
+    },
+    {
+      "check": "Entangling Roots does not draw an orc cage",
+      "passed": true
+    },
+    {
+      "check": "Ensnare retains its visible cage",
+      "passed": true
+    },
+    {
+      "check": "An invisible fighter cannot be exposed by its net",
+      "passed": true
+    },
+    {
+      "check": "Converted fighter immediately uses the new team's model",
+      "passed": true
+    },
+    {
+      "check": "Changing a fighter's form replaces the previous model under the same id",
+      "passed": true
+    },
+    {
+      "check": "Missing actor prefab is safely skipped",
+      "passed": true
+    },
+    {
+      "check": "A beam with an endpoint in the fog stays hidden",
+      "passed": true
+    },
+    {
+      "check": "Captured building immediately uses the new team's model",
+      "passed": true
+    }
+  ],
+  "failures": 0,
+  "portableSha256": "531bc98236bd2dc96623a1f222a708fb144009f14134e90e06622b38560b01cf"
+}

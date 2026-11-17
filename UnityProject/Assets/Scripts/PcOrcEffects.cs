@@ -7,7 +7,7 @@ public sealed partial class PcGame {
     readonly Dictionary<int,Vector2> netSizes=new Dictionary<int,Vector2>();
     readonly Dictionary<int,PcModel> reforgedNets=new Dictionary<int,PcModel>(),reforgedAirNets=new Dictionary<int,PcModel>();GameObject reforgedNetPrefab,reforgedAirNetPrefab;
     void RenderOrcNets() {
-        var netted=match.Units.Where(u=>u.hp>0&&match.Rooted(u)&&!u.effects.Any(e=>e.group=="northern_ice_chains")).ToArray();
+        var netted=match.Units.Where(u=>u.hp>0&&CanSeeUnit(u)&&!match.Hidden(u)&&u.effects.Any(IsEnsnareArt036)).ToArray();
         if(options.hdTextures&&!reforgedNetPrefab)reforgedNetPrefab=ContentResources.Load<GameObject>("RefFx/net");if(options.hdTextures&&!reforgedAirNetPrefab)reforgedAirNetPrefab=ContentResources.Load<GameObject>("RefFx/net_air");
         foreach(var u in netted) {
             if(options.hdTextures&&reforgedNetPrefab){

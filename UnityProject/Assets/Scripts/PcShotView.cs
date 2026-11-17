@@ -9,7 +9,7 @@ public sealed class PcShotView : MonoBehaviour {
     public PcModel NativeModel=>nativeModel;
     public GameObject NativeObject=>nativeObject;
     public bool VisualHit {get;private set;}
-    public void Finish(){if(!nativeObject)return;var classic=nativeObject.GetComponent<ClassicProjectileModel>();if(!classic)return;nativeObject.transform.SetParent(transform.parent,true);Destroy(nativeObject,classic.Finish());nativeObject=null;}
+    public void Finish(){if(!nativeObject||!gameObject.activeInHierarchy)return;var classic=nativeObject.GetComponent<ClassicProjectileModel>();if(!classic)return;nativeObject.transform.SetParent(transform.parent,true);Destroy(nativeObject,classic.Finish());nativeObject=null;}
     public void Setup(int kind,Material shell,Material tracer,Material impact) {
         block=new MaterialPropertyBlock();
         if(kind==2||kind==3||kind==5||kind==6||kind==7){body=Sphere(kind==5?"Ensnare missile":kind==6?"Spell steal missile":kind==7?"Acid missile":"Mortar shell",shell);body.localScale=kind==5?new Vector3(.65f,.2f,.65f):Vector3.one*.48f;}

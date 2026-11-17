@@ -8,7 +8,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 public static class BuildProjectileParticles {
     static T Save<T>(T value,string path) where T:UnityEngine.Object {var existing=AssetDatabase.LoadAssetAtPath<T>(path);if(existing){EditorUtility.CopySerialized(value,existing);UnityEngine.Object.DestroyImmediate(value);EditorUtility.SetDirty(existing);return existing;}AssetDatabase.CreateAsset(value,path);return value;}
-    public static void Add(GameObject instance,JObject profile,JArray interval,string key) {
+    public static void Add(GameObject instance,JObject profile,JArray interval,string key,string materialPath="Assets/ClassicProjectiles/Materials") {
         float scale=(float?)profile["scale"]??1f/30;int i=0;
         foreach(JObject e in (JArray)profile["emitters"]??new JArray()) {
             var obj=new GameObject("Native emitter "+i);string bone=(string)e["bone"];var parent=instance.transform;
@@ -29,7 +29,7 @@ public static class BuildProjectileParticles {
             var gradient=new Gradient();gradient.SetKeys(ck,ak);var color=ps.colorOverLifetime;color.enabled=true;color.color=gradient;var size=ps.sizeOverLifetime;size.enabled=true;size.size=new ParticleSystem.MinMaxCurve(1,curve);
             var atlas=ps.textureSheetAnimation;atlas.enabled=true;atlas.numTilesX=Mathf.Max(1,(int)e["columns"]);atlas.numTilesY=Mathf.Max(1,(int)e["rows"]);atlas.frameOverTime=new ParticleSystem.MinMaxCurve(1,AnimationCurve.Linear(0,0,1,1));
             int filter=(int)e["filter"];string shader=filter==1?"Legacy Shaders/Particles/Additive":filter==2||filter==3?"Legacy Shaders/Particles/Multiply":"Legacy Shaders/Particles/Alpha Blended";
-            var mat=new Material(Shader.Find(shader)){mainTexture=AssetDatabase.LoadAssetAtPath<Texture2D>((string)e["unityTexture"])};mat=Save(mat,$"Assets/ClassicProjectiles/Materials/{key}-particle{i}.mat");
+            var mat=new Material(Shader.Find(shader)){mainTexture=AssetDatabase.LoadAssetAtPath<Texture2D>((string)e["unityTexture"])};mat=Save(mat,$"{materialPath}/{key}-particle{i}.mat");
             var renderer=ps.GetComponent<ParticleSystemRenderer>();renderer.sharedMaterial=mat;renderer.shadowCastingMode=ShadowCastingMode.Off;
             var controller=obj.AddComponent<NativeMapEmitter>();controller.density=1;controller.emitter=ps;controller.sourceProfile=e.ToString(Newtonsoft.Json.Formatting.None);controller.clipInterval=interval.ToString(Newtonsoft.Json.Formatting.None);i++;
         }

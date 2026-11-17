@@ -22,12 +22,12 @@ public sealed partial class PcGame {
     }
     void RenderNorthernEffects(float alpha) {
         var wanted=new HashSet<string>();
-        foreach(var unit in match.Units)if(unit.hp>0&&units.TryGetValue(unit.id,out var view)) {
+        foreach(var unit in match.Units)if(unit.hp>0&&units.TryGetValue(unit.id,out var view)&&ShowUnitArt036(unit,view)) {
             if(unit.effects.Any(e=>e.left>0&&e.group=="northern_ice_chains"))PlaceNorthernFx(wanted,"ice-unit-"+unit.id,"fx_759aa9a57831",view.transform.position);
             if(unit.effects.Any(e=>e.left>0&&(bool?)e.config?["frost_armor"]==true))PlaceNorthernFx(wanted,"armor-"+unit.id,"fx_96b9f2d40527",view.transform.position+Vector3.up*Mathf.Max(.7f,view.ClassicHeight*.55f));
         }
-        foreach(var hut in match.Huts)if(match.FrostDisabled(hut)>0)PlaceNorthernFx(wanted,"ice-hut-"+hut.id,"fx_759aa9a57831",World(hut.position));
-        foreach(var freeze in match.NorthernFreezes)if(freeze.target==-1&&freeze.left>0)PlaceNorthernFx(wanted,"ice-castle-"+(1-freeze.team),"fx_759aa9a57831",World(HumanMatch.CastlePosition(1-freeze.team)));
+        foreach(var hut in match.Huts)if(CanInspectHut(hut)&&match.FrostDisabled(hut)>0)PlaceNorthernFx(wanted,"ice-hut-"+hut.id,"fx_759aa9a57831",World(hut.position));
+        foreach(var freeze in match.NorthernFreezes)if(freeze.target==-1&&freeze.left>0&&FogVisible(HumanMatch.CastlePosition(1-freeze.team)))PlaceNorthernFx(wanted,"ice-castle-"+(1-freeze.team),"fx_759aa9a57831",World(HumanMatch.CastlePosition(1-freeze.team)));
         foreach(string id in northernAttachments.Keys.Where(id=>!wanted.Contains(id)).ToArray()){if(northernAttachments[id])Destroy(northernAttachments[id].gameObject);northernAttachments.Remove(id);}
         foreach(var orb in match.NorthernOrbs) {
             if(!northernOrbViews.TryGetValue(orb.id,out var body)||!body) {

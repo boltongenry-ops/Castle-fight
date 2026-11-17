@@ -73,7 +73,10 @@ public sealed partial class PcGame {
         }
     }
     void NetworkReturnToMenu(){onlineMatch=false;onlineStarted=false;onlineReplica=null;showBattleChat=false;StopDirectory();MainMenu();}
-    void NetworkCommand(JObject packet){if(onlineMatch&&onlineStarted&&!NetworkBlocked&&network!=null&&network.Connected)SendNetwork(packet);else Notice("Ожидаем соединение с боем");}
+    bool NetworkCommand(JObject packet){
+        if(onlineMatch&&onlineStarted&&!NetworkBlocked&&network!=null&&network.Connected){SendNetwork(packet);return true;}
+        Notice("Ожидаем соединение с боем");return false;
+    }
     void DrawNetworkHudOverlay() {
         if(!onlineMatch)return;
         float socialTop=Application.isMobilePlatform?48:33;var chatRect=new Rect(68,socialTop,48,48);var stickersRect=new Rect(124,socialTop,48,48);var voiceRect=new Rect(180,socialTop,48,48);

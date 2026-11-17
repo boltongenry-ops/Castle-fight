@@ -67,7 +67,7 @@ public sealed partial class PcGame {
     void RenderHumanEffects() {
         RenderOrcNets();
         foreach(var p in match.Pulses) {
-            if((p.fx??"").StartsWith("elven:")||(p.fx??"").StartsWith("night:")||(p.fx??"").StartsWith("elemental:")||(p.fx??"").StartsWith("corrupted:")||options.hdTextures&&((reforgedFxLoaded&&reforgedFx.ContainsKey(PulseFx(p)??""))||p.fx=="wisp")){if(humanEffects.TryGetValue(p.id,out var hidden))hidden.gameObject.SetActive(false);continue;}
+            if(!ShowPulse036(p)||Art036.rendered.Contains(p.id)||options.hdTextures&&((reforgedFxLoaded&&reforgedFx.ContainsKey(PulseFx(p)??""))||p.fx=="wisp")){if(humanEffects.TryGetValue(p.id,out var hidden))hidden.gameObject.SetActive(false);continue;}
             if(humanEffects.TryGetValue(p.id,out var restored))restored.gameObject.SetActive(true);
             if(!humanEffects.TryGetValue(p.id,out var line)){line=new GameObject("Human spell "+p.text).AddComponent<LineRenderer>();line.transform.SetParent(visuals.transform);line.sharedMaterial=impactMaterial;line.positionCount=49;line.useWorldSpace=true;line.startWidth=line.endWidth=.09f;humanEffects[p.id]=line;}
             float radius=p.radius*Mathf.Lerp(.3f,1,Mathf.Clamp01(p.age/p.duration));

@@ -1,0 +1,129 @@
+{
+  "status": "PASS",
+  "build": "0.36.0",
+  "checks": [
+    {
+      "check": "Fog defaults on, own base permanently visible, enemy base unseen",
+      "passed": true
+    },
+    {
+      "check": "Unexplored battlefield starts black",
+      "passed": true
+    },
+    {
+      "check": "Unseen enemy model hidden",
+      "passed": true
+    },
+    {
+      "check": "Hidden enemy cannot remain selected in unit card",
+      "passed": true
+    },
+    {
+      "check": "Drag selection excludes unseen enemies",
+      "passed": true
+    },
+    {
+      "check": "Allied living unit reveals enemy and enables selection",
+      "passed": true
+    },
+    {
+      "check": "After scout loss, explored terrain stays dim and enemies disappear",
+      "passed": true
+    },
+    {
+      "check": "Enemy building fixture placed on legal base cell",
+      "passed": true
+    },
+    {
+      "check": "Never seen enemy building hidden on field and minimap",
+      "passed": true
+    },
+    {
+      "check": "Scout discovers enemy building",
+      "passed": true
+    },
+    {
+      "check": "Known building retained under shroud without live card inspection",
+      "passed": true
+    },
+    {
+      "check": "Elven Faerie Fire supplies native vision",
+      "passed": true
+    },
+    {
+      "check": "Northern winter sphere supplies native vision",
+      "passed": true
+    },
+    {
+      "check": "Night Starfall active zone supplies native vision",
+      "passed": true
+    },
+    {
+      "check": "Expired Starfall vision ends",
+      "passed": true
+    },
+    {
+      "check": "Manual player target validation uses fog without restricting global AI spells",
+      "passed": true
+    },
+    {
+      "check": "Vision alone does not reveal native invisible enemies",
+      "passed": true
+    },
+    {
+      "check": "Disabling fog restores full battlefield presentation",
+      "passed": true
+    },
+    {
+      "check": "Soft shroud paints dim translucent pixels instead of opaque black",
+      "passed": true
+    },
+    {
+      "check": "Soft fog keeps the same visibility rules and hidden enemy base",
+      "passed": true
+    },
+    {
+      "check": "Fog presentation survives settings draft copy",
+      "passed": true
+    },
+    {
+      "check": "Cancelling a settings draft cannot change active fog",
+      "passed": true
+    },
+    {
+      "check": "Early terrain convergence preserves every projected point and skips repeated flat-ground work",
+      "passed": true
+    },
+    {
+      "check": "Fog camera projection stays synchronized on all 24 moving frames",
+      "passed": true
+    },
+    {
+      "check": "Minimap dimming is neutral with no blue tint",
+      "passed": true
+    },
+    {
+      "check": "New match clears exploration and remembered buildings",
+      "passed": true
+    },
+    {
+      "check": "Challenges enforce fog independently of casual setting",
+      "passed": true
+    },
+    {
+      "check": "Small fixed masks independent of display resolution, no fog particles",
+      "passed": true
+    }
+  ],
+  "failures": 0,
+  "projectionIterations": 2738,
+  "referenceProjectionIterations": 5904,
+  "movingFrames": 24,
+  "maxMovingProjectionMs": 4.5536,
+  "maxMovingMaskMs": 3.5241000000000002,
+  "projectionMilliseconds": 4.1908,
+  "maskMilliseconds": 2.684,
+  "refreshSeconds": 0.18,
+  "cameraProjectionEveryMovingFrame": true,
+  "portableSha256": "531bc98236bd2dc96623a1f222a708fb144009f14134e90e06622b38560b01cf"
+}

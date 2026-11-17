@@ -32,6 +32,20 @@ public sealed class ClassicProjectileModel:MonoBehaviour {
         animationPlayer[clip.name].wrapMode=death?WrapMode.ClampForever:WrapMode.Loop;animationPlayer.Play(clip.name);if(appearance)appearance.SetClip(clip.name);
     }
     public void Face(Vector3 velocity){if(velocity.sqrMagnitude>.0001f)transform.rotation=Quaternion.LookRotation(velocity);}
+    // A ground/target spell uses its authored one-shot animation, not the
+    // looping projectile pose. The presentation lifetime is set by its pulse.
+    public void PlayCast(){
+        foreach(var emitter in emitters)emitter.SetClip(JArray.Parse(emitter.clipInterval),false);
+        if(!animationPlayer)return;
+        var clip=clips.FirstOrDefault(c=>c.name.StartsWith("Birth",StringComparison.OrdinalIgnoreCase))
+            ??clips.FirstOrDefault(c=>c.name.StartsWith("Stand",StringComparison.OrdinalIgnoreCase))
+            ??clips.FirstOrDefault();
+        if(!clip)return;
+        animationPlayer[clip.name].wrapMode=WrapMode.ClampForever;
+        animationPlayer[clip.name].time=0;
+        animationPlayer.Play(clip.name);
+        if(appearance)appearance.SetClip(clip.name);
+    }
     void LateUpdate(){if(!viewingCamera)viewingCamera=Camera.main;billboards?.Face(viewingCamera);}
     public float Finish(){
         float tail=0;

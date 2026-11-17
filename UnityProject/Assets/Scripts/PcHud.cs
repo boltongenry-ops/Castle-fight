@@ -105,7 +105,7 @@ public sealed partial class PcGame {
             var point=Camera.main.WorldToScreenPoint(buildingView.transform.position+Vector3.up*Mathf.Max(3,buildingView.ClassicHeight+.4f));if(point.z<=0)continue;float x=(point.x-guiOrigin.x)/guiScale,y=(Screen.height-point.y-guiOrigin.y)/guiScale;if(y<42||y>510||x<0||x>1280)continue;
             Fill(new Rect(x-24,y,48,5),Color.black);Fill(new Rect(x-23,y+1,46*Mathf.Clamp01(h.hp/h.maxHp),3),h.team==0?new Color(.2f,.85f,.25f):new Color(.95f,.2f,.14f));DrawManaBar(new Rect(x-24,y+6,48,4),h.mana,HumanMatch.F(match.Lines[h.kind].buildingStats,"max_mana"),false);
         }
-        foreach(var p in match.Pulses)if(!string.IsNullOrEmpty(p.text)&&FogVisible(p.position)) {
+        foreach(var p in match.Pulses)if(!string.IsNullOrEmpty(p.text)&&ShowPulse036(p)) {
             var point=Camera.main.WorldToScreenPoint(World(p.position)+Vector3.up*(3+p.age));if(point.z<=0)continue;
             float x=(point.x-guiOrigin.x)/guiScale,y=(Screen.height-point.y-guiOrigin.y)/guiScale;
             if(y<40||y>480)continue;GUI.Label(new Rect(x-90,y,180,24),p.text,new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter,normal={textColor=p.color}});

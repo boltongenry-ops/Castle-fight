@@ -126,14 +126,14 @@ public sealed partial class HumanMatch {
         } else if(kind=="orc_spell_steal") {if(!CastOrcSteal(source,cfg))return false;PulseAt(source.position,1,Color.white,"",1.23f,"steal_caster");
         } else if(kind=="heal") {
             if(!Valid(target,source.team,cfg,true)||Vector2.Distance(target.position,source.position)>F(cfg,"range")||target.hp>=target.maxHp)return false;
-            Heal(target,F(cfg,"power"));NatureAfterHeal(source,target,id);if(id=="A03K")QueueHumanJob035(new HumanJob {kind="inner",source=source.id,target=target.id,left=0});
+            Heal(target,F(cfg,"power"),id=="A03K"?"heal_direct":null);NatureAfterHeal(source,target,id);if(id=="A03K")QueueHumanJob035(new HumanJob {kind="inner",source=source.id,target=target.id,left=0});
             if(Lines[source.kind].unit=="h03C"){Grant(target,"A03L");QueueHumanJob035(new HumanJob {kind="paladin_raise",source=source.id,left=1});}
         } else if(kind=="buff") {
             if(!Valid(target,source.team,cfg,true)||Vector2.Distance(target.position,source.position)>F(cfg,"range")||target.effects.Any(e=>e.id==id))return false;
             ApplyEffect(target,id);PulseAt(target.position,1.5f,new Color(1,.8f,.4f),(string)cfg["name"]??"Усиление");
             if(id=="A02M"){source.spellTimers[id]=SpellCooldown(source,id);OrcInnerFires++;if(TeamOrc[source.team]&&Aspects[source.team]==1){var echo=Units.Where(v=>v!=target&&Valid(v,source.team,cfg,true)&&!v.effects.Any(e=>e.id==id)&&Vector2.Distance(source.position,v.position)<=F(cfg,"range")).OrderBy(v=>v.hp/v.maxHp).FirstOrDefault();if(echo!=null)ApplyEffect(echo,id);}}
         } else if(kind=="resurrect") {
-            if(Raise(source.team,source.position,F(cfg,"area"),(int?)cfg["count"]??1,((string)cfg["targets"]??"").Contains("organic"))==0)return false;PulseAt(source.position,2,Color.yellow,"",1f,"resurrect_caster");
+            if(Raise(source.team,source.position,F(cfg,"area"),(int?)cfg["count"]??1,((string)cfg["targets"]??"").Contains("organic"))==0)return false;PulseAt(source.position,2,Color.yellow,"",4.567f,"resurrect_caster");
         } else if(kind=="warlock_blast") {
             if(source.warlockPhase>=0||!Valid(target,source.team,cfg,false)||Flying(target)||Vector2.Distance(source.position,target.position)>F(cfg,"range"))return false;
             var center=target.position;using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_4)if(Valid(u,source.team,cfg,false)&&!Flying(u)&&Vector2.Distance(u.position,center)<=F(cfg,"area"))DamageUnit(u,F(cfg,"power"),source.team);
@@ -145,10 +145,11 @@ public sealed partial class HumanMatch {
         } else return false;
         source.mana-=F(cfg,"mana");source.castPause=Mathf.Max(source.castPause,id=="A0CG"?1.2f:kind=="warlock_blast"?.35f:F(cfg,"cast_pause",.2f));source.finalCastPose=(string)cfg["animation"];source.pose=source.finalCastPose??"Spell";SpellsCast++;return true;
     }
-    public void Heal(Unit u,float amount){if(u==null||u.hp<=0)return;float healed=Mathf.Min(amount,u.maxHp-u.hp);if(healed<=0)return;u.hp+=healed;Heals++;PulseAt(u.position,1,Color.green,"+"+Mathf.RoundToInt(healed));}
+    public void Heal(Unit u,float amount)=>Heal(u,amount,null);
+    void Heal(Unit u,float amount,string fx){if(u==null||u.hp<=0)return;float healed=Mathf.Min(amount,u.maxHp-u.hp);if(healed<=0)return;u.hp+=healed;Heals++;PulseAt(u.position,1,Color.green,"+"+Mathf.RoundToInt(healed),fx==null?.8f:1.833f,fx,fx==null?-1:u.id);}
     public int Raise(int team,Vector2 center,float radius,int count,bool organic) {
         var bodies=Corpses.Where(c=>Lines[c.unit.kind].unit!="nN04"&&c.unit.team==team&&Vector2.Distance(c.unit.position,center)<=radius&&(!organic||Organic(c.unit))).Take(count).ToArray();
-        foreach(var c in bodies){var old=c.unit;var fresh=Spawn(team,old.kind,old.position);fresh.onRoad=true;foreach(var id in old.abilities)Grant(fresh,id);fresh.armor=old.armor;fresh.maxHp=old.maxHp;fresh.hp=fresh.maxHp;Corpses.Remove(c);old.deadAge=100;Resurrections++;PulseAt(fresh.position,2,Color.yellow,"Воскрешение");}return bodies.Length;
+        foreach(var c in bodies){var old=c.unit;var fresh=Spawn(team,old.kind,old.position);fresh.onRoad=true;foreach(var id in old.abilities)Grant(fresh,id);fresh.armor=old.armor;fresh.maxHp=old.maxHp;fresh.hp=fresh.maxHp;Corpses.Remove(c);old.deadAge=100;Resurrections++;PulseAt(fresh.position,2,Color.yellow,"Воскрешение",2.367f,"resurrect",fresh.id);}return bodies.Length;
     }
     void TickHumanJobs(float dt) {
         var scheduled035=SimulationState035.Get(this).reference?null:HumanQueue035().Advance(dt);
