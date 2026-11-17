@@ -25,6 +25,7 @@ public sealed partial class HumanMatch {
     }
     public string ItemPurchaseError(int team,int index) {
         if(team<0||team>1||index<0||index>=ShopItems.Count)return "Предмет не продаётся в замке";if(Finished)return "Матч завершён";
+        if(!ChallengeShopAllowed(team))return "Испытание: покупки в замке недоступны";
         var item=ShopItems[index];if(Elapsed<F(item,"unlock_time"))return "Доступно после 15 минут раунда";
         var stock=Stock(team,index);if(stock.count<=0)return "Предмет появится через "+Mathf.CeilToInt(Mathf.Max(0,stock.next-Elapsed))+" с";
         if(AvailableGold(team)<F(item,"gold"))return "Недостаточно золота";if(AvailableWood(team)<F(item,"wood"))return "Недостаточно дерева";

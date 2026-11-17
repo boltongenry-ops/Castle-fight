@@ -11,6 +11,11 @@ public sealed class PcProgressionStore {
         foreach(string candidate in new[]{path,path+".bak"})try{if(!File.Exists(candidate))continue;var saved=JObject.Parse(File.ReadAllText(candidate));if((int?)saved["schema"]!=1||saved["coins"]?.Type!=JTokenType.Integer||(int)saved["coins"]<0||!(saved["completed"] is JArray)||!(saved["unlocked"] is JArray)||!(saved["equipped"] is JObject)||!(saved["best"] is JObject))continue;state=saved;break;}catch(IOException){}catch(Newtonsoft.Json.JsonException){}
     }
     public int Coins=>(int)state["coins"];
+    public int CompletedCount=>((JArray)Catalog["challenges"]).OfType<JObject>().Count(r=>Completed((string)r["id"]));
+    public int Experience=>((JArray)Catalog["challenges"]).OfType<JObject>().Where(r=>Completed((string)r["id"])).Sum(ChallengeCatalog034.Experience);
+    public int MasteryLevel=>ChallengeCatalog034.Level(Experience);
+    public int NextLevelExperience=>ChallengeCatalog034.Threshold(MasteryLevel+1);
+    public string MasteryTitle=>ChallengeCatalog034.Title(MasteryLevel);
     public JObject Challenge(string id)=>((JArray)Catalog["challenges"]).OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id);
     public JObject Item(string id)=>((JArray)Catalog["items"]).OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id);
     public bool Completed(string id)=>((JArray)state["completed"]).Any(v=>(string)v==id);

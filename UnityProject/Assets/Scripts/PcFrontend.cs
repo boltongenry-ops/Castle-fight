@@ -64,7 +64,7 @@ public sealed partial class PcGame {
         if(MobileContent.Active&&matchMode==1){raceChoice=RandomStagedRace(-1);botRaceChoice=RandomStagedRace(raceChoice);mobileRoundPrepared=true;}
         BeginVersus(raceChoice,matchMode==2?raceChoice:botRaceChoice<0?raceChoice:botRaceChoice,false);int generation=versusSerial;
         yield return LoadVersusArt(generation);yield return new WaitForEndOfFrame();if(generation!=versusSerial)yield break;
-        if(MobileContent.Active){yield return PrepareMobileMatch(versusA,versusB);MobileContent.Current.Ready();}
+        if(MobileContent.Active){yield return PrepareMobileMatch(versusA,versusB);yield return PrepareUltimateDraw034(versusA,versusB);MobileContent.Current.Ready();}
         if(next)StartRound();else NewMatch();
         if(matchRace!=versusA||matchBotRace!=versusB){versusA=matchRace;versusB=matchBotRace;DisposeVersusArt();yield return LoadVersusArt(generation);}
         RenderMatch();versusPrepared=true;yield return new WaitForEndOfFrame();
@@ -78,7 +78,7 @@ public sealed partial class PcGame {
         if(a<0||b<0){NetworkLoadCore(packet);yield break;}
         BeginVersus(a,b,true);int generation=versusSerial;
         yield return LoadVersusArt(generation);yield return new WaitForEndOfFrame();if(generation!=versusSerial)yield break;
-        if(MobileContent.Active){yield return PrepareMobileMatch(a,b);MobileContent.Current.Ready();}
+        if(MobileContent.Active){yield return PrepareMobileMatch(a,b);yield return PrepareUltimateDraw034(a,b,packet["ultimate_loadouts"] as JArray);MobileContent.Current.Ready();}
         NetworkLoadCore(packet);if(!onlineMatch){CloseVersus();yield break;}RenderMatch();versusPrepared=true;
     }
     void DrawVersus(){

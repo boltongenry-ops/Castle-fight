@@ -32,15 +32,27 @@ public sealed partial class PcGame {
         options.fogOfWar=true;options.softFog=false;screenFogNext=0;UpdateFog(true);RenderMatch();
         bool hardEnemy=FogVisible(enemy.position);bool hardBase=FogVisible(HumanMatch.CastlePosition(1));
         options.softFog=true;screenFogNext=0;UpdateFog(true);RenderMatch();yield return new WaitForSecondsRealtime(.4f);yield return Shot(folder,"03a-soft-fog");
-        int black=0,soft=0;for(int i=0;i<screenFogColors.Length;i++){var c=screenFogColors[i];if(c.a>=250&&c.r<10)black++;if(c.a>0&&c.r>=40)soft++;}
+        int black=0,soft=0;for(int i=0;i<screenFogColors.Length;i++){var c=screenFogColors[i];if(c.a>=250)black++;if(c.a>0&&c.a<=104&&c.r==0&&c.g==0&&c.b==0)soft++;}
         Check(soft>0&&black==0,"Soft shroud paints dim translucent pixels instead of opaque black");
         Check(FogActive&&FogVisible(enemy.position)==hardEnemy&&!hardBase,"Soft fog keeps the same visibility rules and hidden enemy base");
+        var copied=Copy(options);Check(copied.softFog,"Fog presentation survives settings draft copy");copied.softFog=false;Check(options.softFog,"Cancelling a settings draft cannot change active fog");
+        int equivalentRays=0,totalIterations=0;
+        for(int y=0;y<24;y++)for(int x=0;x<41;x++){var ray=Camera.main.ScreenPointToRay(new Vector3(x*4f/160*Screen.width,y*4f/90*Screen.height));var referencePoint=ray.origin;float height=12;
+            for(int k=0;k<6;k++){float travel=ray.direction.y<-.0001f?Mathf.Max(0,(height-ray.origin.y)/ray.direction.y):0;referencePoint=ray.origin+ray.direction*travel;height=terrain.Height(referencePoint.x*30,-referencePoint.z*30,true);}
+            var actual=ray.origin;height=12;for(int k=0;k<6;k++){totalIterations++;float travel=ray.direction.y<-.0001f?Mathf.Max(0,(height-ray.origin.y)/ray.direction.y):0;actual=ray.origin+ray.direction*travel;float next=terrain.Height(actual.x*30,-actual.z*30,true);if(next==height)break;height=next;}
+            if(referencePoint==actual)equivalentRays++;
+        }
+        Check(equivalentRays==41*24&&totalIterations<41*24*6,"Early terrain convergence preserves every projected point and skips repeated flat-ground work");
+        int currentFrames=0;double maxProjection=0,maxMask=0;
+        for(int frame=0;frame<24;frame++){controls.FocusWorld(World(new Vector2(-58+frame*.2f,0)),48);yield return new WaitForEndOfFrame();if(fogCameraPosition==Camera.main.transform.position&&fogProjection==Camera.main.projectionMatrix)currentFrames++;maxProjection=Math.Max(maxProjection,fogProjectionMs);maxMask=Math.Max(maxMask,fogMaskMs);}
+        Check(currentFrames==24,"Fog camera projection stays synchronized on all 24 moving frames");
+        Check(miniFogColors.All(c=>c.r==0&&c.g==0&&c.b==0),"Minimap dimming is neutral with no blue tint");
         options.fogOfWar=true;MainMenu();NewMatch();testHoldAuthority=true;UpdateFog(true);Check(!fog.Known(Vector2.zero)&&fogKnownHuts.Count==0,"New match clears exploration and remembered buildings");
         BeginChallenge(progression.Challenge("five_pillars"));testHoldAuthority=true;options.fogOfWar=false;UpdateFog(true);Check(FogActive,"Challenges enforce fog independently of casual setting");MainMenu();options.fogOfWar=true;
         NewMatch();testHoldAuthority=true;UpdateFog(true);controls.FocusWorld(World(new Vector2(-58,0)),48);yield return new WaitForSecondsRealtime(.5f);yield return Shot(folder,"05-fog-final");
         Check(fogScreen.width==160&&fogScreen.height==90&&fogMini.width==256&&fogMini.height==128,"Small fixed masks independent of display resolution, no fog particles");
         var reference=new FogGrid();reference.RevealBase();reference.Reveal(new Vector2(-12,0),800f/30);reference.Remember();File.WriteAllBytes(Path.Combine(folder,"vision-grid.bin"),reference.Current);File.WriteAllBytes(Path.Combine(folder,"explored-grid.bin"),reference.Explored);
-        var report=new JObject{["status"]=testFailures==0?"PASS":"FAIL",["build"]=Version,["checks"]=testChecks,["failures"]=testFailures,["projectionMilliseconds"]=fogProjectionMs,["maskMilliseconds"]=fogMaskMs,["refreshSeconds"]=.18,["cameraProjectionMaxHz"]=12};File.WriteAllText(Path.Combine(folder,"fog-verification.json"),report.ToString());
+        var report=new JObject{["status"]=testFailures==0?"PASS":"FAIL",["build"]=Version,["checks"]=testChecks,["failures"]=testFailures,["projectionIterations"]=totalIterations,["referenceProjectionIterations"]=41*24*6,["movingFrames"]=currentFrames,["maxMovingProjectionMs"]=maxProjection,["maxMovingMaskMs"]=maxMask,["projectionMilliseconds"]=fogProjectionMs,["maskMilliseconds"]=fogMaskMs,["refreshSeconds"]=.18,["cameraProjectionEveryMovingFrame"]=true};File.WriteAllText(Path.Combine(folder,"fog-verification.json"),report.ToString());
         Debug.Log("CF_FOG_TARGETED_"+(testFailures==0?"PASS":"FAIL")+" checks="+testChecks.Count+" projectionMs="+fogProjectionMs+" maskMs="+fogMaskMs);Application.Quit(testFailures==0?0:1);
     }
 }

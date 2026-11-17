@@ -52,7 +52,7 @@ public static class BuildMobileContent {
         string previous=PlayerSettings.bundleVersion;
         try{
             Move("Assets/Resources",Source);Move("Assets/StreamingAssets",Streaming);
-            PlayerSettings.bundleVersion="0.33.1";PlayerSettings.Android.bundleVersionCode=Math.Max(20,PlayerSettings.Android.bundleVersionCode);
+            PlayerSettings.bundleVersion="0.34.0";PlayerSettings.Android.bundleVersionCode=Math.Max(22,PlayerSettings.Android.bundleVersionCode);
             var result=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/MobileBootstrap/Startup.unity"},target=BuildTarget.Android,locationPathName="Builds/MapAndroid/CastleFight-Android-OnlineAssets.apk",assetBundleManifestPath=File.Exists(Output+"/ContentAndroid021.manifest")?Output+"/ContentAndroid021.manifest":null,options=BuildOptions.CompressWithLz4});
             if(result.summary.result!=BuildResult.Succeeded)throw new Exception("Small Android rebuild failed: "+result.summary.result);
             Debug.Log("CF_ANDROID_CONTENT_PLAYER_PASS apkBytes="+result.summary.totalSize);

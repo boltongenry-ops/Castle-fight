@@ -22,7 +22,7 @@ public sealed partial class PcGame {
         foreach(var zone in match.NightZones)if(zone.team==0&&zone.age<8)fog.Reveal(zone.point,1100f/30);
         fog.Remember();foreach(var hut in match.Huts)if(hut.team==0||fog.Visible(hut.position))fogKnownHuts.Add(hut.id);
         if(!fogMini){fogMini=new Texture2D(FogGrid.Width,FogGrid.Height,TextureFormat.RGBA32,false){name="Exploration minimap",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};miniFogColors=new Color32[FogGrid.Width*FogGrid.Height];}
-        for(int i=0;i<miniFogColors.Length;i++){int display=Math.Max(fog.Current[i],fog.Explored[i]>0?85:0);int shade=options.softFog?80:255;byte tint=options.softFog?(byte)118:(byte)3;miniFogColors[i]=new Color32(tint,tint,(byte)(tint+3),(byte)((shade-display*shade/255f)*.96f));}fogMini.SetPixels32(miniFogColors);fogMini.Apply(false);screenFogNext=0;
+        for(int i=0;i<miniFogColors.Length;i++){int display=Math.Max(fog.Current[i],fog.Explored[i]>0?85:0);int shade=options.softFog?104:255;miniFogColors[i]=new Color32(0,0,0,(byte)((shade-display*shade/255f)*.96f));}fogMini.SetPixels32(miniFogColors);fogMini.Apply(false);screenFogNext=0;
     }
     void ApplyFogViews(){
         if(match==null)return;
@@ -37,18 +37,18 @@ public sealed partial class PcGame {
     void DrawWorldFog(){
         if(!FogActive||fog==null)return;var camera=Camera.main;if(!camera)return;
         if(!fogScreen){fogScreen=new Texture2D(160,90,TextureFormat.RGBA32,false){name="Terrain projected fog",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};screenFogColors=new Color32[160*90];fogGround=new Vector2[160*90];fogEdge=new float[160*90];fogCoarse=new Vector2[41*24];fogCoarseEdge=new float[41*24];}
-        bool moved=fogWidth!=Screen.width||fogHeight!=Screen.height||fogProjection!=camera.projectionMatrix||Vector3.Distance(fogCameraPosition,camera.transform.position)>.02f||Quaternion.Angle(fogCameraRotation,camera.transform.rotation)>.02f||Mathf.Abs(fogCameraFov-camera.fieldOfView)>.01f||Mathf.Abs(fogCameraSize-camera.orthographicSize)>.01f;
-        if(Event.current.type==EventType.Repaint&&(Time.unscaledTime>=screenFogNext||moved&&Time.unscaledTime>=fogProjectionNext)){
+        bool moved=fogWidth!=Screen.width||fogHeight!=Screen.height||fogProjection!=camera.projectionMatrix||fogCameraPosition!=camera.transform.position||fogCameraRotation!=camera.transform.rotation||Mathf.Abs(fogCameraFov-camera.fieldOfView)>.01f||Mathf.Abs(fogCameraSize-camera.orthographicSize)>.01f;
+        if(Event.current.type==EventType.Repaint&&(Time.unscaledTime>=screenFogNext||moved)){
             var watch=System.Diagnostics.Stopwatch.StartNew();screenFogNext=Time.unscaledTime+.18f;
-            if(moved){fogProjectionNext=Time.unscaledTime+1f/12;fogProjection=camera.projectionMatrix;fogCameraPosition=camera.transform.position;fogCameraRotation=camera.transform.rotation;fogCameraFov=camera.fieldOfView;fogCameraSize=camera.orthographicSize;fogWidth=Screen.width;fogHeight=Screen.height;
+            if(moved){fogProjectionNext=Time.unscaledTime;fogProjection=camera.projectionMatrix;fogCameraPosition=camera.transform.position;fogCameraRotation=camera.transform.rotation;fogCameraFov=camera.fieldOfView;fogCameraSize=camera.orthographicSize;fogWidth=Screen.width;fogHeight=Screen.height;
             for(int y=0;y<24;y++)for(int x=0;x<41;x++){
                 var ray=camera.ScreenPointToRay(new Vector3(x*4f/160*Screen.width,y*4f/90*Screen.height));float height=12;var point=ray.origin;
-                for(int i=0;i<6;i++){float travel=ray.direction.y<-.0001f?Mathf.Max(0,(height-ray.origin.y)/ray.direction.y):0;point=ray.origin+ray.direction*travel;height=terrain.Height(point.x*30,-point.z*30,true);}
+                for(int i=0;i<6;i++){float travel=ray.direction.y<-.0001f?Mathf.Max(0,(height-ray.origin.y)/ray.direction.y):0;point=ray.origin+ray.direction*travel;float nextHeight=terrain.Height(point.x*30,-point.z*30,true);if(nextHeight==height)break;height=nextHeight;}
                 int index=y*41+x;fogCoarse[index]=new Vector2(point.x,-point.z);fogCoarseEdge[index]=(Mathf.PerlinNoise(point.x*.28f,point.z*.28f)-.5f)*.1f;
             }
             for(int y=0;y<90;y++)for(int x=0;x<160;x++){float u=(x+.5f)/4,v=(y+.5f)/4;int cx=(int)u,cy=(int)v,index=cy*41+cx,target=y*160+x;u-=cx;v-=cy;fogGround[target]=Vector2.Lerp(Vector2.Lerp(fogCoarse[index],fogCoarse[index+1],u),Vector2.Lerp(fogCoarse[index+41],fogCoarse[index+42],u),v);fogEdge[target]=Mathf.Lerp(Mathf.Lerp(fogCoarseEdge[index],fogCoarseEdge[index+1],u),Mathf.Lerp(fogCoarseEdge[index+41],fogCoarseEdge[index+42],u),v);}
             fogProjectionMs=watch.Elapsed.TotalMilliseconds;}
-            watch.Restart();bool soft=options.softFog;for(int i=0;i<screenFogColors.Length;i++){float visible=fog.Sample(fogGround[i]);float edge=visible>0&&visible<1?fogEdge[i]*Mathf.Sin(visible*Mathf.PI):0;float hidden=1-Mathf.Clamp01(visible+edge);if(soft){screenFogColors[i]=new Color32(58,64,72,(byte)(hidden*200));}else screenFogColors[i]=new Color32(2,3,5,(byte)(255*hidden));}
+            watch.Restart();bool soft=options.softFog;for(int i=0;i<screenFogColors.Length;i++){float visible=fog.Sample(fogGround[i]);float edge=visible>0&&visible<1?fogEdge[i]*Mathf.Sin(visible*Mathf.PI):0;float hidden=1-Mathf.Clamp01(visible+edge);if(soft){screenFogColors[i]=new Color32(0,0,0,(byte)(hidden*104));}else screenFogColors[i]=new Color32(0,0,0,(byte)(255*hidden));}
             fogScreen.SetPixels32(screenFogColors);fogScreen.Apply(false);
             fogMaskMs=watch.Elapsed.TotalMilliseconds;
         }

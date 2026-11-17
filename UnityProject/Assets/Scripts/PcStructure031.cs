@@ -42,9 +42,9 @@ public sealed partial class PcGame {
         var pack=Pack(race);var arr=pack?(building?pack.buildings:pack.units):(building?buildingModels:unitModels);
         int count=arr.Length/2;
         if(raw=="h008"&&row>=count)return building?buildingModels[team*(buildingModels.Length/2)+SharedChestRow]:null;
-        return arr[team*count+row];
+        if(MobileContent.Active&&race==12)return UltimateModel034(team,row,building);return arr[team*count+row];
     }
-    Texture2D CatalogBuildingIcon(int race,int row,string raw){var revised=ContentResources.Load<Texture2D>("NerubianBuildingIcon/"+raw);if(revised)return revised;var pack=Pack(race);var icons=pack?pack.buildingIcons:buildingIcons;return raw=="h008"&&row>=icons.Length?buildingIcons[SharedChestRow]:icons[row];}
+    Texture2D CatalogBuildingIcon(int race,int row,string raw){var revised=ContentResources.Load<Texture2D>("NerubianBuildingIcon/"+raw);if(revised)return revised;if(MobileContent.Active&&race==12)return UltimateIcon034(row);var pack=Pack(race);var icons=pack?pack.buildingIcons:buildingIcons;return raw=="h008"&&row>=icons.Length?buildingIcons[SharedChestRow]:icons[row];}
     Texture2D MatchBuildingIcon(int kind){string raw=match.Lines[kind].building;int race=raceIndices[matchRace].ContainsKey(raw)?matchRace:matchBotRace;return CatalogBuildingIcon(race,raceIndices[race][raw],raw);}
 }
 }

@@ -54,6 +54,9 @@ public sealed class MobileContent : MonoBehaviour {
         yield return EnsureBundles(rows.Select(r=>(string)r["bundle"]),"Загрузка ресурсов");
         foreach(var row in rows){var request=loaded[(string)row["bundle"]].LoadAssetAsync<T>((string)row["asset"]);yield return request;if(request.asset is T value){complete(value);yield break;}}complete(null);
     }
+    AssetBundle NamedBundle(string path){if(string.IsNullOrEmpty(path))return null;foreach(var bundle in loaded.Values)if(bundle.Contains(path))return bundle;throw new InvalidOperationException("Missing downloaded asset "+path);}
+    public T LoadNamed<T>(string path) where T:UnityEngine.Object {var bundle=NamedBundle(path);return bundle?bundle.LoadAsset<T>(path):null;}
+    public IEnumerator LoadNamedAsync<T>(string path,Action<T> complete) where T:UnityEngine.Object {var bundle=NamedBundle(path);if(!bundle){complete(null);yield break;}var request=bundle.LoadAssetAsync<T>(path);yield return request;complete(request.asset as T);}
     public IEnumerator EnsureRace(int race){
         yield return EnsurePrefix("ClassicMissiles","Классические снаряды");
         if(race==0){yield return EnsurePrefix("NativeFX","Подготовка эффектов");yield break;}

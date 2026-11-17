@@ -241,7 +241,7 @@ public sealed partial class HumanMatch {
         botRescueAge-=dt;if(botRescueAge>0)return;botRescueAge=1;
         BotDefend();
     }
-    public bool BuyRescue(int team){if(!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||AvailableGold(team)<1000)return false;Gold[team]-=1000;RescueCharges[team]++;return true;}
+    public bool BuyRescue(int team){if(!ChallengeShopAllowed(team)||!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||AvailableGold(team)<1000)return false;Gold[team]-=1000;RescueCharges[team]++;return true;}
     public bool Rescue(int team,Vector2 p){if(!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||RescueCharges[team]<=0||RescueCooldown[team]>0||float.IsNaN(p.x)||float.IsNaN(p.y)||Mathf.Abs(p.x)>6144f/30||Mathf.Abs(p.y)>2048f/30)return false;RescueCharges[team]--;RescueCooldown[team]=60;foreach(var u in Units.ToArray())if(u.hp>0&&u.team!=team&&Vector2.Distance(p,u.position)<=1000f/30)DamageUnit(u,u.maxHp+1,team,"chaos",true,true);PulseAt(p,1000f/30,Color.cyan,"Спасительный удар",1.267f,"wisp");return true;}
 }
 }

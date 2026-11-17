@@ -14,8 +14,8 @@ public sealed partial class PcGame {
             if(matchBotRace==12){ultimateRoundLoadouts[1]=HumanMatch.Strings(networkRoundLoadouts[1-networkSlot]);second=draw.Playable(canonical,ultimateRoundLoadouts[1]);}
             return;
         }
-        if(matchRace==12){ultimateRoundLoadouts[0]=draw.Draw();first=draw.Playable(canonical,ultimateRoundLoadouts[0]);}
-        if(matchBotRace==12){ultimateRoundLoadouts[1]=draw.Draw();second=draw.Playable(canonical,ultimateRoundLoadouts[1]);}
+        if(matchRace==12){ultimateRoundLoadouts[0]=MobileContent.Active?MobileUltimate034.For(this).draw[0]:draw.Draw();first=draw.Playable(canonical,ultimateRoundLoadouts[0]);}
+        if(matchBotRace==12){ultimateRoundLoadouts[1]=MobileContent.Active?MobileUltimate034.For(this).draw[1]:draw.Draw();second=draw.Playable(canonical,ultimateRoundLoadouts[1]);}
         Debug.Log("CF_ULTIMATE_ROUND_DRAW "+new JArray(ultimateRoundLoadouts.Select(ids=>new JArray(ids))));
     }
 }

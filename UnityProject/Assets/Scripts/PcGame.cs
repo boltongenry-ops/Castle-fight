@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.33.2";
+    string Version=>MobileContent.Active?Application.version:"0.34.0";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -23,7 +23,7 @@ public sealed partial class PcGame : MonoBehaviour {
     public TextAsset catalog,terrainBytes,terrainMetadata,waterMetadata;public NativeMapCamera controls;
     enum Page { Main,Settings,Setup,Match,Pause,Result,Viewer,Leave,Help,Teams,Network,Progression,Guide }
     Page page=Page.Main,settingsReturn=Page.Main;
-    [Serializable] public sealed class Options {public int resolution=0,fps=60;public bool fullscreen,vsync;public bool hdTextures=false,fogOfWar=true,softFog=false;public float volume=.8f,musicVolume=.7f,cameraSpeed=1;public int quality=1;}
+    [Serializable] public sealed class Options {public int resolution=0,fps=60;public bool fullscreen,vsync;public bool hdTextures=false,fogOfWar=true;public bool softFog {get=>FogOption034.Get(this);set=>FogOption034.Set(this,value);}public float volume=.8f,musicVolume=.7f,cameraSpeed=1;public int quality=1;}
     Options options=new Options(),draft;string settingsPath,notice="";float noticeLeft,accumulator,screenDeadline;
     int difficulty=1,startGold=250,chosen=-1,roundsChoice=1;PcSeries series;HumanMatch match;NativeMapTerrain terrain;
     readonly Dictionary<int,PcModel> units=new Dictionary<int,PcModel>(),huts=new Dictionary<int,PcModel>();
@@ -47,7 +47,7 @@ public sealed partial class PcGame : MonoBehaviour {
         yield return LoadCentaurArt();
         terrain=new NativeMapTerrain(terrainBytes.bytes,JObject.Parse(terrainMetadata.text),(JObject)JObject.Parse(waterMetadata.text)["water"]);
         settingsPath=BattleLab.Arg("--pc-settings-file",Path.Combine(Application.persistentDataPath,"pc-settings.json"));
-        string testMode=BattleLab.Arg("--pc-test");testing=testMode=="nerubian033"||testMode=="nerubian032"||testMode=="structure031"||testMode=="combat030"||testMode=="centaur028"||testMode=="bot027"||testMode=="units026"||testMode=="cards025"||testMode=="motion024"||testMode=="network023"||testMode=="polish022"||testMode=="recovery"||testMode=="social"||testMode=="guide"||testMode=="fog"||testMode=="frontend"||testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"||testMode=="elven"||testMode=="polish"||testMode=="night"||testMode=="elemental"||testMode=="corrupted"||testMode=="undead"||testMode=="mech"||testMode=="northern"||testMode=="1"||testMode=="naga"||testMode=="nature"||testMode=="classic"||testMode=="menu"||testMode=="chaos";
+        string testMode=BattleLab.Arg("--pc-test");testing=testMode=="challenge034"||testMode=="nerubian033"||testMode=="nerubian032"||testMode=="structure031"||testMode=="combat030"||testMode=="centaur028"||testMode=="bot027"||testMode=="units026"||testMode=="cards025"||testMode=="motion024"||testMode=="network023"||testMode=="polish022"||testMode=="recovery"||testMode=="social"||testMode=="guide"||testMode=="fog"||testMode=="frontend"||testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"||testMode=="elven"||testMode=="polish"||testMode=="night"||testMode=="elemental"||testMode=="corrupted"||testMode=="undead"||testMode=="mech"||testMode=="northern"||testMode=="1"||testMode=="naga"||testMode=="nature"||testMode=="classic"||testMode=="menu"||testMode=="chaos";
         LoadSettings();LoadMatchRules();Apply(options,false);controls.HideToolbar=true;controls.TouchOverUi=TouchOverUi;controls.TouchPanAllowed=()=>chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder;
         controls.AllowGridToggle=false;controls.buildGrid.SetActive(false);
         if(!MobileContent.Active){ResolveMechDefaultColor();ResolveUndeadDefaultColors();ResolveCorruptedDefaultColors();ResolveElementalDefaultColors();ResolveNightDefaultColors();ResolveElvenDefaultColors();ResolveFinalDefaultColors();AuditMaterials();AuditUndeadParticles();AuditCorruptedParticles();AuditElementalParticles();AuditNightParticles();AuditElvenParticles();AuditFinalParticles();}
@@ -64,7 +64,7 @@ public sealed partial class PcGame : MonoBehaviour {
         Debug.Log("CF_PC_READY page="+page+" build="+Version);
         StartCoroutine(CompleteStartupLoading());if(!MobileContent.Active)StartCoroutine(LoadMobileFrontendArt());
         if(!testing){StartCoroutine(CheckGameRelease(true));if(!string.IsNullOrEmpty(networkSessionToken))BeginDirectory();}
-        if(testing)StartCoroutine(testMode=="nerubian033"?ExerciseNerubian033():testMode=="nerubian032"?ExerciseNerubian032():testMode=="structure031"?ExerciseStructure031():testMode=="combat030"?ExerciseCombat030():testMode=="centaur028"?ExerciseCentaur028():testMode=="bot027"?ExerciseBot027():testMode=="units026"?ExerciseUnits026():testMode=="cards025"?ExerciseCards025():testMode=="motion024"?ExerciseProjectileMotion024():testMode=="network023"?ExerciseNetwork023():testMode=="polish022"?ExerciseFrontend022():testMode=="recovery"?ExerciseRecovery():testMode=="social"?ExerciseSocial():testMode=="guide"?ExerciseGuide():testMode=="fog"?ExerciseFog():testMode=="frontend"?ExerciseFrontend():testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"?ExerciseFinalRaceOnly(testMode):testMode=="elven"?ExerciseElvenOnly():testMode=="polish"?ExercisePolishOnly():testMode=="night"?ExerciseNightOnly():testMode=="elemental"?ExerciseElementalOnly():testMode=="corrupted"?ExerciseCorruptedOnly():testMode=="undead"?ExerciseUndeadOnly():testMode=="mech"?ExerciseMechOnly():testMode=="northern"?ExerciseNorthernOnly():testMode=="chaos"?ExerciseChaosOnly():testMode=="classic"?ExerciseClassicOnly():testMode=="menu"?ExerciseMenu():testMode=="naga"?ExerciseNagaOnly():testMode=="nature"?ExerciseNatureOnly():Exercise());
+        if(testing)StartCoroutine(testMode=="challenge034"?ExerciseChallenge034():testMode=="nerubian033"?ExerciseNerubian033():testMode=="nerubian032"?ExerciseNerubian032():testMode=="structure031"?ExerciseStructure031():testMode=="combat030"?ExerciseCombat030():testMode=="centaur028"?ExerciseCentaur028():testMode=="bot027"?ExerciseBot027():testMode=="units026"?ExerciseUnits026():testMode=="cards025"?ExerciseCards025():testMode=="motion024"?ExerciseProjectileMotion024():testMode=="network023"?ExerciseNetwork023():testMode=="polish022"?ExerciseFrontend022():testMode=="recovery"?ExerciseRecovery():testMode=="social"?ExerciseSocial():testMode=="guide"?ExerciseGuide():testMode=="fog"?ExerciseFog():testMode=="frontend"?ExerciseFrontend():testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"?ExerciseFinalRaceOnly(testMode):testMode=="elven"?ExerciseElvenOnly():testMode=="polish"?ExercisePolishOnly():testMode=="night"?ExerciseNightOnly():testMode=="elemental"?ExerciseElementalOnly():testMode=="corrupted"?ExerciseCorruptedOnly():testMode=="undead"?ExerciseUndeadOnly():testMode=="mech"?ExerciseMechOnly():testMode=="northern"?ExerciseNorthernOnly():testMode=="chaos"?ExerciseChaosOnly():testMode=="classic"?ExerciseClassicOnly():testMode=="menu"?ExerciseMenu():testMode=="naga"?ExerciseNagaOnly():testMode=="nature"?ExerciseNatureOnly():Exercise());
 #if CF_ONLINE_QA
         if(BattleLab.Arg("--pc-online-qa")!="")StartCoroutine(ExerciseOnlineMatch());
 #endif
@@ -77,7 +77,7 @@ public sealed partial class PcGame : MonoBehaviour {
         options.hdTextures=false;
         if(File.Exists(settingsPath)&&!File.ReadAllText(settingsPath).Contains("\"musicVolume\""))options.musicVolume=.7f;
         // Soft fog is opt-in: older settings files keep the original opaque shroud.
-        if(File.Exists(settingsPath)&&!File.ReadAllText(settingsPath).Contains("\"softFog\""))options.softFog=false;
+        if(File.Exists(settingsPath))try{options.softFog=(bool?)JObject.Parse(File.ReadAllText(settingsPath))["softFog"]??false;}catch(Exception){options.softFog=false;}
         options.resolution=Mathf.Clamp(options.resolution,0,sizes.Length-1);options.quality=Mathf.Clamp(options.quality,0,2);
         if(options.fps!=0&&options.fps!=30&&options.fps!=60&&options.fps!=90&&options.fps!=120)options.fps=60;
         options.volume=Mathf.Clamp01(options.volume);options.musicVolume=Mathf.Clamp01(options.musicVolume);options.cameraSpeed=Mathf.Clamp(options.cameraSpeed,.5f,2);
@@ -93,11 +93,11 @@ public sealed partial class PcGame : MonoBehaviour {
         if(display)Screen.SetResolution(widths[value.resolution],heights[value.resolution],value.fullscreen?FullScreenMode.FullScreenWindow:FullScreenMode.Windowed);
         else if(!testing&&BattleLab.Arg("-screen-width")=="")Screen.SetResolution(widths[value.resolution],heights[value.resolution],value.fullscreen?FullScreenMode.FullScreenWindow:FullScreenMode.Windowed);
     }
-    Options Copy(Options value)=>JsonUtility.FromJson<Options>(JsonUtility.ToJson(value));
+    Options Copy(Options value){var result=JsonUtility.FromJson<Options>(JsonUtility.ToJson(value));result.softFog=value.softFog;return result;}
     void OpenSettings(){settingsReturn=page;draft=Copy(options);page=Page.Settings;}
     void SaveSettings() {
         options=Copy(draft);Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(settingsPath)));
-        string temp=settingsPath+".tmp";File.WriteAllText(temp,JsonUtility.ToJson(options,true));
+        string temp=settingsPath+".tmp";var saved=JObject.Parse(JsonUtility.ToJson(options,true));saved["softFog"]=options.softFog;File.WriteAllText(temp,saved.ToString());
         if(File.Exists(settingsPath))File.Replace(temp,settingsPath,null);else File.Move(temp,settingsPath);
         Apply(options,false);confirmDisplay=false;page=settingsReturn;Notice("Настройки сохранены");
     }
@@ -431,7 +431,7 @@ public sealed partial class PcGame : MonoBehaviour {
         Text(290,415,280,31,"Музыка в меню",label);draft.musicVolume=GUI.HorizontalSlider(new Rect(620,Application.isMobilePlatform?420:428,250,Application.isMobilePlatform?38:22),draft.musicVolume,0,1);Text(895,415,80,28,(draft.musicVolume*100).ToString("F0")+"%",small);
         Text(290,460,280,31,"Скорость камеры",label);draft.cameraSpeed=GUI.HorizontalSlider(new Rect(620,Application.isMobilePlatform?465:473,250,Application.isMobilePlatform?38:22),draft.cameraSpeed,.5f,2);Text(895,460,80,28,draft.cameraSpeed.ToString("F1")+"×",small);
         Text(290,505,280,31,"Туман войны",label);GUI.enabled=!confirmDisplay&&activeChallenge==null;if(Button("settings.fog",new Rect(610,501,365,38),activeChallenge!=null?"Включён в испытании":draft.fogOfWar?"Включён":"Выключен"))draft.fogOfWar=!draft.fogOfWar;GUI.enabled=!confirmDisplay;
-        Text(290,551,280,31,"Мягкий туман",label);GUI.enabled=!confirmDisplay;if(Button("settings.softfog",new Rect(610,547,365,38),draft.softFog?"Затемнение вместо чёрного":"Плотная чёрная тень"))draft.softFog=!draft.softFog;GUI.enabled=!confirmDisplay;
+        Text(290,551,280,31,"Простое затемнение",label);GUI.enabled=!confirmDisplay;if(Button("settings.softfog",new Rect(610,547,365,38),draft.softFog?"Включено  [x]":"Выключено  [ ]"))draft.softFog=!draft.softFog;GUI.enabled=!confirmDisplay;
         if(MobileContent.Active){if(Button("settings.downloads",new Rect(290,591,420,38),"Ресурсы игры · скачать всё"))showResourceDownloads=true;}else Text(290,595,420,30,"Классические модели · Windows",small);
         if(Button("settings.updates",new Rect(730,591,245,38),"Обновления")){showUpdatePanel=true;StartCoroutine(CheckGameRelease());}
         if(Button("settings.cancel",new Rect(290,614,220,48),"Отмена")){if(confirmDisplay)RevertDisplay();page=settingsReturn;}
