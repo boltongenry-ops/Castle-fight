@@ -30,7 +30,7 @@ public sealed partial class HumanMatch {
         float duration=NorthernStatusDuration(u,c,sourceTeam,F(c,shortControl?"hero_duration":"duration",F(c,"duration")));
         u.effects.Add(new Effect {id=id,group=group,left=duration,lifetime=duration,dotTick=dotTick,config=(JObject)c.DeepClone(),sourceTeam=sourceTeam<0?u.team:sourceTeam,power=F(c,"power"),armor=F(c,"armor"),haste=F(c,"haste"),speed=F(c,"speed")-F(c,"slow"),strength=strength,incoming=F(c,"incoming"),root=(bool?)c["root"]??false,ground=(bool?)c["ground"]??false});
     }
-    void TickEffects(Unit u,float dt){foreach(var e in u.effects.ToArray()){float step=Mathf.Min(dt,Mathf.Max(0,e.left));e.left-=dt;var c=e.config;
+    void TickEffects(Unit u,float dt){using(var snapshot035_1=SimulationBuffers035.Take(u.effects))foreach(var e in snapshot035_1){float step=Mathf.Min(dt,Mathf.Max(0,e.left));e.left-=dt;var c=e.config;
         if(F(c,"dps")>0){e.dotTick+=step;float interval=Mathf.Max(.05f,F(c,"interval",1));float due=e.left<=0?e.dotTick:Mathf.Floor(e.dotTick/interval)*interval;if(due>0){e.dotTick-=due;NerubPeriodicHit(u,e,due);if(u.hp<=0)return;}}
         if(e.id=="A02T"){float age=e.lifetime-e.left;float duration=F(c?["fields"],e.lifetime<=3.01f?"Prg5":"Prg4");e.root=age<duration;e.speed=age<e.lifetime*.8f?-.8f:0;}
         if((string)c?["kind"]=="regen"){u.hp=Mathf.Min(u.maxHp,u.hp+e.power*step/Mathf.Max(.01f,e.lifetime));u.mana=Mathf.Min(u.maxMana,u.mana+F(c,"restore_mana")*step/Mathf.Max(.01f,e.lifetime));}
@@ -38,57 +38,61 @@ public sealed partial class HumanMatch {
         }u.effects.RemoveAll(e=>e.left<=0);RefreshNerubVenomFields(u);}
     void UpdateAuras() {
         foreach(var u in Units){u.auraSpeed=0;u.auraSpeedNegative=0;u.auraHasteNegative=0;u.auraHaste=0;u.auraArmorNegative=0;u.auraVampiric=0;u.auraDamageNegative=0;u.auraArmor=0;u.auraMana=0;u.auraDamage=0;u.auraRegen=0;u.auraThorns=0;u.auraDamageTick=0;u.auraIds.Clear();}
-        foreach(var source in Units.Where(v=>v.hp>0))foreach(var id in source.abilities) {
-            var cfg=Ranked(source,id);if((string)cfg?["kind"]!="aura"||(id=="A00F"&&source.warlockPhase>=0))continue;var profile=cfg["profile"];if(profile==null)continue;
+        var queries035=SimulationState035.Get(this).auraQueries;queries035.Clear();
+        foreach(var source in Units)if(source.hp>0)foreach(var id in source.abilities){var cfg=Ranked(source,id);if((string)cfg?["kind"]!="aura"||(id=="A00F"&&source.warlockPhase>=0))continue;var profile=cfg["profile"];if(profile!=null)queries035.Add(new AuraBatch035.Query{source=source,id=id,profile=profile});}
+        using(var batch035=new AuraBatch035(queries035,Units,SimulationState035.Get(this).reference))
+        for(int row035=0;row035<queries035.Count;row035++){
+            var query035=queries035[row035];var source=query035.source;var id=query035.id;var profile=query035.profile;
             bool enemy=(bool?)profile["enemy"]??false;string flags=(string)profile["targets"]??"air,ground";
-            foreach(var u in Units) {
+            for(int column035=0;column035<Units.Count;column035++) {
+                var u=Units[column035];if(!batch035.Contains(row035,column035,u))continue;
                 if((bool?)profile["melee_only"]==true&&!Lines[u.kind].weapons.Any(w=>w.type=="normal"))continue;
                 if(u.hp<=0||Lines[u.kind].unit=="YTct"||(u.team!=source.team)!=enemy||enemy&&u.spellResist>=1)continue;
                 if(Invulnerable(u)&&!flags.Contains("invu"))continue;
                 if(flags.Contains("organic")&&!Organic(u)||flags.Contains("mechanical")&&Organic(u))continue;
-                if(flags=="self"&&u!=source||Vector2.Distance(source.position,u.position)>F(profile,"radius"))continue;
+                if(flags=="self"&&u!=source)continue;
                 if(Flying(u)&&flags.Contains("ground")&&!flags.Contains("air")||!Flying(u)&&flags.Contains("air")&&!flags.Contains("ground"))continue;
                 u.auraIds.Add(id);var effects=profile["effects"];u.auraHaste=Mathf.Max(u.auraHaste,F(effects,"haste"));u.auraHasteNegative=Mathf.Min(u.auraHasteNegative,F(effects,"haste"));u.auraSpeed=Mathf.Max(u.auraSpeed,F(effects,"speed"));u.auraSpeedNegative=Mathf.Min(u.auraSpeedNegative,F(effects,"speed"));u.auraArmorNegative=Mathf.Min(u.auraArmorNegative,F(effects,"armor"));u.auraVampiric=Mathf.Max(u.auraVampiric,F(effects,"vampiric"));u.auraDamageNegative=Mathf.Min(u.auraDamageNegative,F(effects,"damage"));u.auraArmor=Mathf.Max(u.auraArmor,F(effects,"armor"));u.auraMana=Mathf.Max(u.auraMana,F(effects,"mana"));u.auraDamage=Mathf.Max(u.auraDamage,F(effects,"damage"));u.auraRegen=Mathf.Max(u.auraRegen,F(effects,"regen"));u.auraThorns=Mathf.Max(u.auraThorns,F(effects,"thorns"));u.auraDamageTick=Mathf.Max(u.auraDamageTick,F(effects,"damage_tick"));
             }
         }
         MechBuildingAuras();UndeadBuildingAuras();CorruptedAuras();
-        foreach(var u in Units.ToArray())if(u.hp>0&&u.auraDamageTick>0)DamageUnit(u,u.auraDamageTick*.5f,1-u.team);
+        using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_2)if(u.hp>0&&u.auraDamageTick>0)DamageUnit(u,u.auraDamageTick*.5f,1-u.team);
     }
-    bool HasSpell(Unit u,string id)=>u.abilities.Contains(id)&&u.mana+.0001f>=F(Abilities[id],"mana")&&(!u.spellTimers.TryGetValue(id,out float t)||t<=0);
+    bool HasSpell(Unit u,string id)=>u.abilities.Contains(id)&&u.mana+.0001f>=SimulationConfig035.Get(Abilities[id]).mana&&(!u.spellTimers.TryGetValue(id,out float t)||t<=0);
     float SpellCooldown(Unit u,string id)=>F(Abilities[id],"cd")*(TeamPandaren[u.team]&&Aspects[u.team]==1&&(string)Abilities[id]?["kind"]=="panda_brew"?.8f:1)/(TeamOrc[u.team]&&Aspects[u.team]==1&&id=="A02M"?1.35f:1);
     bool TryAutocast(Unit u) {
         if(Silenced(u))return false;
-        foreach(var id in u.abilities.ToArray()) {
-            var cfg=Abilities[id];string kind=(string)cfg?["kind"];if(!HasSpell(u,id)||(bool?)cfg?["followup_only"]==true)continue;
+        using(var snapshot035_3=SimulationBuffers035.Take(AbilityView035.Get(u,Abilities).active))foreach(var id in snapshot035_3) {
+            var cfg=Abilities[id];var typed=SimulationConfig035.Get(cfg);string kind=typed.kind;if((!typed.autocast&&!FinalActive.Contains(kind)&&!NerubNets.Contains(id))||typed.followup||!HasSpell(u,id))continue;
             Unit target=null;
             if(NerubNets.Contains(id))target=CastNerubNet(u,cfg,true)?u:null;
             else if(FinalActive.Contains(kind))target=(kind.StartsWith("nerub_",StringComparison.Ordinal)?CastNerub(u.team,u.position,cfg,u,null,null,true):CastPanda(u.team,u.position,cfg,u,null,null,true))?u:null;
-            else if(id=="A01G")target=Units.Where(v=>Valid(v,u.team,cfg,false)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
+            else if(id=="A01G")target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>Valid(v,u.team,cfg,false)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
             else if(kind=="elven_heal"||kind=="elven_solar")target=ElvenTargets(u.team,u.position,cfg).OrderBy(v=>kind=="elven_heal"?v.hp/v.maxHp:0).FirstOrDefault();
-            else if(kind=="debuff"&&(string)cfg["code"]=="Afae")target=Units.Where(v=>Valid(v,u.team,cfg,false)&&!v.effects.Any(e=>e.id==id&&e.left>0)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
+            else if(kind=="debuff"&&(string)cfg["code"]=="Afae")target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>Valid(v,u.team,cfg,false)&&!v.effects.Any(e=>e.id==id&&e.left>0)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
             else if(kind=="night_roots")target=NightTargets(u.team,u.position,cfg).FirstOrDefault();
             else if(kind=="elemental_barrage")target=ElementalTargets(u.team,u.position,cfg).FirstOrDefault();
             else if(kind=="corrupted_impale")target=CorruptedTargets(u.team,u.position,cfg).FirstOrDefault();
             else if(kind=="undead_raise_unit")target=UndeadReady(u,cfg)?u:null;
-            else if(kind=="debuff"&&id=="A01M")target=Units.Where(v=>Valid(v,u.team,cfg,false)&&!v.effects.Any(e=>e.id==id)&&Vector2.Distance(v.position,u.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
+            else if(kind=="debuff"&&id=="A01M")target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>Valid(v,u.team,cfg,false)&&!v.effects.Any(e=>e.id==id)&&Vector2.Distance(v.position,u.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
             else if(kind=="mech_mines"||kind=="mech_grenade")target=MechUnitReady(u,cfg)?u:null;
             else if(kind!=null&&kind.StartsWith("north_",StringComparison.Ordinal))target=NorthernUnitReady(u,cfg)?u:null;
             else if(kind=="twins_blast")target=ChaosBlastReady(u)?u:null;
             else if(kind=="chaos_roar")target=ChaosRoarReady(u)?u:null;
             else if(kind=="resurrect")target=Corpses.Any(c=>c.unit.team==u.team&&Vector2.Distance(c.unit.position,u.position)<=F(cfg,"area"))?u:null;
             else if(kind=="nature_trees")target=u;
-            else if(kind=="taunt")target=Units.FirstOrDefault(v=>Valid(v,u.team,cfg,false)&&Vector2.Distance(v.position,u.position)<=F(cfg,"range"));
-            else if(kind=="regen")target=Units.Where(v=>Valid(v,u.team,cfg,true)&&v.hp<v.maxHp&&!v.effects.Any(e=>e.id==((string)cfg["effect_id"]??id))&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>v.hp/v.maxHp).FirstOrDefault();
-            else if(kind=="debuff"&&(id=="A0AR"||id=="A0AS"||id=="A0AV"))target=Units.Where(v=>NatureDebuffTarget(u.team,v,id,cfg)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
-            else if(kind=="heal")target=Units.Where(v=>Valid(v,u.team,cfg,true)&&v.hp<v.maxHp&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>v.hp/v.maxHp).FirstOrDefault();
-            else if(kind=="warlock_blast"&&u.warlockPhase<0)target=Units.Where(v=>Valid(v,u.team,cfg,false)&&!Flying(v)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
-            else if(kind=="human_prayer")target=Units.FirstOrDefault(v=>Valid(v,u.team,Abilities["A0I1"],true)&&v.hp<v.maxHp&&Vector2.Distance(u.position,v.position)<=F(cfg,"range"));
-            else if(kind=="orc_nets")target=Units.Where(v=>OrcNetTarget(u.team,v)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
-            else if(kind=="buff"&&(bool?)cfg["followup_only"]!=true)target=Units.Where(v=>Valid(v,u.team,cfg,true)&&!v.effects.Any(e=>e.id==id)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>v.hp/v.maxHp).FirstOrDefault();
+            else if(kind=="taunt")target=RadiusUnits035(u.position,F(cfg,"range")).FirstOrDefault(v=>Valid(v,u.team,cfg,false)&&Vector2.Distance(v.position,u.position)<=F(cfg,"range"));
+            else if(kind=="regen")target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>Valid(v,u.team,cfg,true)&&v.hp<v.maxHp&&!v.effects.Any(e=>e.id==((string)cfg["effect_id"]??id))&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>v.hp/v.maxHp).FirstOrDefault();
+            else if(kind=="debuff"&&(id=="A0AR"||id=="A0AS"||id=="A0AV"))target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>NatureDebuffTarget(u.team,v,id,cfg)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
+            else if(kind=="heal")target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>Valid(v,u.team,cfg,true)&&v.hp<v.maxHp&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>v.hp/v.maxHp).FirstOrDefault();
+            else if(kind=="warlock_blast"&&u.warlockPhase<0)target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>Valid(v,u.team,cfg,false)&&!Flying(v)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
+            else if(kind=="human_prayer")target=RadiusUnits035(u.position,F(cfg,"range")).FirstOrDefault(v=>Valid(v,u.team,Abilities["A0I1"],true)&&v.hp<v.maxHp&&Vector2.Distance(u.position,v.position)<=F(cfg,"range"));
+            else if(kind=="orc_nets")target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>OrcNetTarget(u.team,v)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
+            else if(kind=="buff"&&(bool?)cfg["followup_only"]!=true)target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>Valid(v,u.team,cfg,true)&&!v.effects.Any(e=>e.id==id)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>v.hp/v.maxHp).FirstOrDefault();
             else if(kind=="orc_spell_steal")target=OrcStealChoice(u,cfg)?.donor;
-            else if(kind=="naga_purge")target=Units.Where(v=>NagaCandidate(v,u.team)&&Valid(v,u.team,cfg,false)&&!IsNagaHero(v)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
+            else if(kind=="naga_purge")target=RadiusUnits035(u.position,F(cfg,"range")).Where(v=>NagaCandidate(v,u.team)&&Valid(v,u.team,cfg,false)&&!IsNagaHero(v)&&Vector2.Distance(u.position,v.position)<=F(cfg,"range")).OrderBy(v=>(v.position-u.position).sqrMagnitude).FirstOrDefault();
             if(target==null)continue;
-            u.pendingSpell=id;u.spellTarget=target.id;u.castLeft=F(Lines[u.kind].stats,"cast_point",.3f);u.finalCastPose=(string)cfg["animation"];u.pose=u.finalCastPose??"Spell";u.attackSerial++;
+            u.pendingSpell=id;u.spellTarget=target.id;u.castLeft=UnitConfig035(u.kind).castPoint;u.finalCastPose=(string)cfg["animation"];u.pose=u.finalCastPose??"Spell";u.attackSerial++;
             if(u.castLeft<=0){u.castLeft=-1;u.pendingSpell=null;u.spellTimers[id]=Cast(u,id,target.id)?SpellCooldown(u,id):.25f;}return true;
         }
         return false;
@@ -122,8 +126,8 @@ public sealed partial class HumanMatch {
         } else if(kind=="orc_spell_steal") {if(!CastOrcSteal(source,cfg))return false;PulseAt(source.position,1,Color.white,"",1.23f,"steal_caster");
         } else if(kind=="heal") {
             if(!Valid(target,source.team,cfg,true)||Vector2.Distance(target.position,source.position)>F(cfg,"range")||target.hp>=target.maxHp)return false;
-            Heal(target,F(cfg,"power"));NatureAfterHeal(source,target,id);if(id=="A03K")humanJobs.Add(new HumanJob {kind="inner",source=source.id,target=target.id,left=0});
-            if(Lines[source.kind].unit=="h03C"){Grant(target,"A03L");humanJobs.Add(new HumanJob {kind="paladin_raise",source=source.id,left=1});}
+            Heal(target,F(cfg,"power"));NatureAfterHeal(source,target,id);if(id=="A03K")QueueHumanJob035(new HumanJob {kind="inner",source=source.id,target=target.id,left=0});
+            if(Lines[source.kind].unit=="h03C"){Grant(target,"A03L");QueueHumanJob035(new HumanJob {kind="paladin_raise",source=source.id,left=1});}
         } else if(kind=="buff") {
             if(!Valid(target,source.team,cfg,true)||Vector2.Distance(target.position,source.position)>F(cfg,"range")||target.effects.Any(e=>e.id==id))return false;
             ApplyEffect(target,id);PulseAt(target.position,1.5f,new Color(1,.8f,.4f),(string)cfg["name"]??"Усиление");
@@ -132,12 +136,12 @@ public sealed partial class HumanMatch {
             if(Raise(source.team,source.position,F(cfg,"area"),(int?)cfg["count"]??1,((string)cfg["targets"]??"").Contains("organic"))==0)return false;PulseAt(source.position,2,Color.yellow,"",1f,"resurrect_caster");
         } else if(kind=="warlock_blast") {
             if(source.warlockPhase>=0||!Valid(target,source.team,cfg,false)||Flying(target)||Vector2.Distance(source.position,target.position)>F(cfg,"range"))return false;
-            var center=target.position;foreach(var u in Units.ToArray())if(Valid(u,source.team,cfg,false)&&!Flying(u)&&Vector2.Distance(u.position,center)<=F(cfg,"area"))DamageUnit(u,F(cfg,"power"),source.team);
+            var center=target.position;using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_4)if(Valid(u,source.team,cfg,false)&&!Flying(u)&&Vector2.Distance(u.position,center)<=F(cfg,"area"))DamageUnit(u,F(cfg,"power"),source.team);
             source.warlockPhase=0;source.warlockLeft=.3f;source.strikeLeft=-1;source.combatTarget=-1;source.auraMana=0;source.auraIds.Remove("A00F");WarlockBlasts++;PulseAt(center,F(cfg,"area"),new Color(.7f,.25f,1),"Магический взрыв",1.267f,"wisp");
         } else if(kind=="human_prayer") {
             if(!Units.Any(v=>Valid(v,source.team,Abilities["A0I1"],true)&&v.hp<v.maxHp&&Vector2.Distance(source.position,v.position)<=F(cfg,"range")))return false;
             foreach(var v in Units.Where(v=>Valid(v,source.team,Abilities["A0I1"],true)&&Vector2.Distance(source.position,v.position)<=15).ToArray()){Heal(v,50);v.mana=Mathf.Min(v.maxMana,v.mana+50);}
-            humanJobs.Add(new HumanJob {kind="prayer_buff",team=source.team,center=source.position,left=.1f,count=1+(int)(Roll()*3)});Prayers++;PulseAt(source.position,15,new Color(1,.9f,.5f),"Молитва");
+            QueueHumanJob035(new HumanJob {kind="prayer_buff",team=source.team,center=source.position,left=.1f,count=1+(int)(Roll()*3)});Prayers++;PulseAt(source.position,15,new Color(1,.9f,.5f),"Молитва");
         } else return false;
         source.mana-=F(cfg,"mana");source.castPause=Mathf.Max(source.castPause,id=="A0CG"?1.2f:kind=="warlock_blast"?.35f:F(cfg,"cast_pause",.2f));source.finalCastPose=(string)cfg["animation"];source.pose=source.finalCastPose??"Spell";SpellsCast++;return true;
     }
@@ -147,11 +151,12 @@ public sealed partial class HumanMatch {
         foreach(var c in bodies){var old=c.unit;var fresh=Spawn(team,old.kind,old.position);fresh.onRoad=true;foreach(var id in old.abilities)Grant(fresh,id);fresh.armor=old.armor;fresh.maxHp=old.maxHp;fresh.hp=fresh.maxHp;Corpses.Remove(c);old.deadAge=100;Resurrections++;PulseAt(fresh.position,2,Color.yellow,"Воскрешение");}return bodies.Length;
     }
     void TickHumanJobs(float dt) {
-        foreach(var job in humanJobs.ToArray()) {
-            job.left-=dt;if(job.left>.00001f)continue;humanJobs.Remove(job);
+        var scheduled035=SimulationState035.Get(this).reference?null:HumanQueue035().Advance(dt);
+        using(var humanSnapshot035=SimulationBuffers035.Take(scheduled035??humanJobs))foreach(var job in humanSnapshot035) {
+            if(scheduled035==null){job.left-=dt;if(job.left>.00001f)continue;}humanJobs.Remove(job);
             if(job.kind=="prayer_buff") {
                 foreach(var u in Units)if(Valid(u,job.team,Abilities["A0I2"],true)&&Vector2.Distance(u.position,job.center)<=15)ApplyEffect(u,"A0I2");
-                humanJobs.Add(new HumanJob {kind="prayer_raise",team=job.team,center=job.center,left=.1f,count=job.count});
+                QueueHumanJob035(new HumanJob {kind="prayer_raise",team=job.team,center=job.center,left=.1f,count=job.count});
             } else if(job.kind=="prayer_raise") {
                 if(Corpses.Any(c=>c.unit.team==job.team&&Organic(c.unit)&&Vector2.Distance(c.unit.position,job.center)<=15))Raise(job.team,job.center,F(Abilities["A0I4"],"area"),job.count,true);
             } else {
@@ -160,7 +165,7 @@ public sealed partial class HumanMatch {
                 if(Cast(source,id,job.target))source.spellTimers[id]=F(Abilities[id],"cd");
             }
         }
-        foreach(var f in Fires.ToArray()) {
+        using(var snapshot035_6=SimulationBuffers035.Take(Fires))foreach(var f in snapshot035_6) {
             f.age+=dt;var c=Abilities[f.ability];float duration=F(c?["fields"],"adur",1.01f),full=F(c?["fields"],"ahdu",1.01f);
             while(f.nextFull<=full+.00001f&&f.age+.00001f>=f.nextFull){FirePulse(f,F(c,"power"));f.nextFull+=F(c,"interval",.25f);}
             while(f.nextTail<=duration+.00001f&&f.age+.00001f>=f.nextTail){FirePulse(f,F(c?["fields"],"Hfs3",3));f.nextTail+=F(c?["fields"],"Hfs4",1);}
@@ -196,7 +201,7 @@ public sealed partial class HumanMatch {
         }
     }
     public void TickBuilding(Hut h,float dt) {
-        var l=Lines[h.kind];h.attackPoseLeft=Mathf.Max(0,h.attackPoseLeft-dt);if(h.spellTimers.Count>0)foreach(var id in h.spellTimers.Keys.ToArray())h.spellTimers[id]=Mathf.Max(0,h.spellTimers[id]-dt);if(BuildingDisabled(h)>0){h.cooldown=Mathf.Max(0,h.cooldown-dt);return;}TickFinalBuilding(h);if(TeamElven[h.team]||TeamUltimate[h.team])TickElvenBuilding(h);if(TeamNight[h.team]||TeamUltimate[h.team])TickNightBuilding(h);if(TeamElemental[h.team]||TeamUltimate[h.team])TickElementalBuilding(h);if(TeamCorrupted[h.team]||TeamUltimate[h.team])TickCorruptedBuilding(h);if(TeamUndead[h.team]||TeamUltimate[h.team])TickUndeadBuilding(h);if(TeamMech[h.team]||TeamUltimate[h.team])TickMechBuilding(h);if(TeamNorthern[h.team]||TeamUltimate[h.team])TickNorthernBuilding(h);if(TeamChaos[h.team]||TeamUltimate[h.team])TickChaosBuilding(h);if(TeamOrc[h.team]||TeamUltimate[h.team])TickOrcBuilding(h);if(TeamNature[h.team]||TeamUltimate[h.team])TickNatureBuilding(h);if(TeamNaga[h.team]&&Aspects[h.team]==1&&l.building=="h00G")TickNagaSea(h,dt);if(l.building=="h00G"||l.building=="h00I"||l.building=="h00M"||l.building=="h00N")TickNagaBuilding(h,dt);if(l.building=="h00N")return;
+        var l=Lines[h.kind];if(l.abilities.Length>0||l.buildingWeapons.Length>0)InvalidateArmyCounts035();h.attackPoseLeft=Mathf.Max(0,h.attackPoseLeft-dt);if(h.spellTimers.Count>0)using(var snapshot035_7=SimulationBuffers035.Take(h.spellTimers.Keys))foreach(var id in snapshot035_7)h.spellTimers[id]=Mathf.Max(0,h.spellTimers[id]-dt);if(BuildingDisabled(h)>0){h.cooldown=Mathf.Max(0,h.cooldown-dt);return;}TickFinalBuilding(h);if(TeamElven[h.team]||TeamUltimate[h.team])TickElvenBuilding(h);if(TeamNight[h.team]||TeamUltimate[h.team])TickNightBuilding(h);if(TeamElemental[h.team]||TeamUltimate[h.team])TickElementalBuilding(h);if(TeamCorrupted[h.team]||TeamUltimate[h.team])TickCorruptedBuilding(h);if(TeamUndead[h.team]||TeamUltimate[h.team])TickUndeadBuilding(h);if(TeamMech[h.team]||TeamUltimate[h.team])TickMechBuilding(h);if(TeamNorthern[h.team]||TeamUltimate[h.team])TickNorthernBuilding(h);if(TeamChaos[h.team]||TeamUltimate[h.team])TickChaosBuilding(h);if(TeamOrc[h.team]||TeamUltimate[h.team])TickOrcBuilding(h);if(TeamNature[h.team]||TeamUltimate[h.team])TickNatureBuilding(h);if(TeamNaga[h.team]&&Aspects[h.team]==1&&l.building=="h00G")TickNagaSea(h,dt);if(l.building=="h00G"||l.building=="h00I"||l.building=="h00M"||l.building=="h00N")TickNagaBuilding(h,dt);if(l.building=="h00N")return;
         if(l.building=="h010") {
             var cfg=Abilities["A01K"];if(h.mana>=F(cfg,"mana")&&(!h.spellTimers.TryGetValue("A01K",out float wait)||wait<=0)) {
                 var targets=Units.Where(u=>Valid(u,h.team,Abilities["A016"],true)&&((string)Lines[u.kind].stats["unit_types"]??"").ToLowerInvariant().Contains("sapper")&&Vector2.Distance(u.position,h.position)<=F(cfg,"range")).ToArray();
@@ -223,8 +228,8 @@ public sealed partial class HumanMatch {
     void AddFire(int team,Vector2 center,string id="A02K"){var c=Abilities[id];Fires.Add(new Fire {id=nextId++,team=team,ability=id,center=center,nextFull=F(c,"interval",.25f),nextTail=F(c?["fields"],"ahdu",1.01f)+F(c?["fields"],"Hfs4",1)});ArtilleryFires++;PulseAt(center,F(c,"area",5),new Color(1,.3f,.02f),"Горючая смесь",F(c?["fields"],"adur",1.01f));}
     void FirePulse(Fire fire,float amount) {
         var cfg=Abilities[fire.ability];float radius=F(cfg,"area",5);
-        foreach(var u in Units.ToArray())if(Valid(u,fire.team,cfg,false)&&Vector2.Distance(u.position,fire.center)<=radius)DamageUnit(u,amount,fire.team);
-        foreach(var h in Huts.ToArray())if(h.team!=fire.team&&h.paid&&h.hp>0&&Vector2.Distance(h.position,fire.center)<=radius)DamageHut(h,amount,"magic",fire.team,true);
+        using(var snapshot035_8=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_8)if(Valid(u,fire.team,cfg,false)&&Vector2.Distance(u.position,fire.center)<=radius)DamageUnit(u,amount,fire.team);
+        using(var snapshot035_9=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_9)if(h.team!=fire.team&&h.paid&&h.hp>0&&Vector2.Distance(h.position,fire.center)<=radius)DamageHut(h,amount,"magic",fire.team,true);
         if(Vector2.Distance(CastlePosition(1-fire.team),fire.center)<=radius)DamageCastle(1-fire.team,amount,"magic",true);
     }
     public float BuildingArmor(Hut h)=>F(Lines[h.kind].buildingStats,"armor")-h.dragonArmorRank*2+MechBuildingArmor(h)+(TeamHuman[h.team]&&Aspects[h.team]==0&&Lines[h.kind].building=="h006"?2:0);
@@ -242,6 +247,6 @@ public sealed partial class HumanMatch {
         BotDefend();
     }
     public bool BuyRescue(int team){if(!ChallengeShopAllowed(team)||!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||AvailableGold(team)<1000)return false;Gold[team]-=1000;RescueCharges[team]++;return true;}
-    public bool Rescue(int team,Vector2 p){if(!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||RescueCharges[team]<=0||RescueCooldown[team]>0||float.IsNaN(p.x)||float.IsNaN(p.y)||Mathf.Abs(p.x)>6144f/30||Mathf.Abs(p.y)>2048f/30)return false;RescueCharges[team]--;RescueCooldown[team]=60;foreach(var u in Units.ToArray())if(u.hp>0&&u.team!=team&&Vector2.Distance(p,u.position)<=1000f/30)DamageUnit(u,u.maxHp+1,team,"chaos",true,true);PulseAt(p,1000f/30,Color.cyan,"Спасительный удар",1.267f,"wisp");return true;}
+    public bool Rescue(int team,Vector2 p){if(!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||RescueCharges[team]<=0||RescueCooldown[team]>0||float.IsNaN(p.x)||float.IsNaN(p.y)||Mathf.Abs(p.x)>6144f/30||Mathf.Abs(p.y)>2048f/30)return false;RescueCharges[team]--;RescueCooldown[team]=60;using(var snapshot035_10=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_10)if(u.hp>0&&u.team!=team&&Vector2.Distance(p,u.position)<=1000f/30)DamageUnit(u,u.maxHp+1,team,"chaos",true,true);PulseAt(p,1000f/30,Color.cyan,"Спасительный удар",1.267f,"wisp");return true;}
 }
 }

@@ -52,7 +52,7 @@ public sealed partial class HumanMatch {
     public void EmpowerMech(Unit u) {if(u==null||u.hp<=0||u.mechEmpowered)return;u.mechEmpowered=true;u.maxHp+=100;u.hp+=100;Grant(u,"A09Q");Grant(u,"A09R");MechEmpowered++;}
     void TickMech(float dt) {
         var pending=MechJobs.ToArray();mechCleanseClock+=dt;while(mechCleanseClock>=4){mechCleanseClock-=4;MechCleanse();}
-        foreach(var u in Units.ToArray())if(u.hp>0&&MechMine(u)) {
+        using(var snapshot035_1=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_1)if(u.hp>0&&MechMine(u)) {
             u.mechMineAge+=dt;if(u.mechMineAge<F(Abilities["A098"]?["fields"],"Min1",5))continue;
             if(Units.Any(v=>v!=u&&MechTrigger(v,u.team)&&Vector2.Distance(v.position,u.position)<=F(Abilities["A098"],"range")))MechSuicide(u);
         }
@@ -65,7 +65,7 @@ public sealed partial class HumanMatch {
     }
     bool MechTrigger(Unit u,int team,bool grenade=false)=>u.hp>0&&u.team!=team&&!Hidden(u)&&!Flying(u)&&(!grenade||!u.abilities.Contains("A08H"))&&!Invulnerable(u)&&((string)Lines[u.kind].stats["unit_types"]??"").ToLowerInvariant().Contains("sapper");
     public void MechCleanse() {
-        foreach(var plant in Huts.Where(p=>p.hp>0&&p.paid&&Lines[p.kind].building=="h09T").ToArray())foreach(var h in Huts.ToArray())if(h.hp>0&&h.paid&&Lines[h.kind].building!="h09T"&&Vector2.Distance(h.position,plant.position)<=252f/30) {
+        foreach(var plant in Huts.Where(p=>p.hp>0&&p.paid&&Lines[p.kind].building=="h09T").ToArray())using(var snapshot035_2=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_2)if(h.hp>0&&h.paid&&Lines[h.kind].building!="h09T"&&Vector2.Distance(h.position,plant.position)<=252f/30) {
             int removed=NorthernFreezes.RemoveAll(v=>v.target==HutTarget(h));removed+=HellCurses.RemoveAll(v=>v.target==h.id);
             if(removed>0){MechCleanses++;PulseAt(h.position,2,Color.cyan,"Очищение");}
         }
@@ -88,7 +88,7 @@ public sealed partial class HumanMatch {
     void TickMechBuilding(Hut h) {foreach(string id in Lines[h.kind].abilities)if((string)Abilities[id]?["kind"]=="mech_shield"&&(!h.spellTimers.TryGetValue(id,out float t)||t<=0))h.spellTimers[id]=CastMechBuilding(h,id)?BuildingCooldown(h,F(Abilities[id],"cd")):.25f;}
     public bool MechBuildingChannel(Hut h)=>Lines[h.kind].abilities.Any(id=>(string)Abilities[id]?["kind"]=="mech_shield")&&h.attackPoseLeft>0;
     void MechGrenade(int team,Vector2 point) {
-        var cfg=Abilities["A09E"];foreach(var u in Units.ToArray())if(u.hp>0&&u.team!=team&&Vector2.Distance(u.position,point)<=F(cfg,"area")) {
+        var cfg=Abilities["A09E"];using(var snapshot035_3=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_3)if(u.hp>0&&u.team!=team&&Vector2.Distance(u.position,point)<=F(cfg,"area")) {
             if(Valid(u,team,cfg,false)){DamageUnit(u,F(cfg,"power"),team);if(u.hp>0){var status=(JObject)cfg.DeepClone();status["power"]=0;ApplyEffectData(u,status,team);}}
             if(!MechTrigger(u,team,true))continue;float drained=Mathf.Min(100,u.mana);u.mana-=drained;if(drained>0)DamageUnit(u,drained,team,"chaos",false);
         }MechGrenades++;PulseAt(point,F(cfg,"area"),new Color(.5f,.75f,1),"Импульсная граната");
@@ -97,10 +97,10 @@ public sealed partial class HumanMatch {
     void MechDied(Unit u) {if(ElementalIllusion(u)||u.mechActiveExplosion)return;foreach(string id in u.abilities){var cfg=Ranked(u,id);if((string)cfg?["kind"]=="mech_death_blast")MechJobs.Add(new MechJob {kind="blast",team=u.team,point=u.position,left=F(cfg,"duration"),config=(JObject)cfg.DeepClone()});}}
     public void MechBlast(int team,Vector2 point,JObject cfg) {
         var fields=cfg["fields"];float full=F(fields,"Dda1")/30,outer=F(fields,"Dda3")/30;string flags=(string)cfg["targets"]??"";
-        foreach(var u in Units.ToArray())if(Valid(u,team,cfg,false)){float d=Vector2.Distance(u.position,point);if(d<=Mathf.Max(full,outer))DamageUnit(u,F(fields,d<=full?"Dda2":"Dda4"),team);}
+        using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_4)if(Valid(u,team,cfg,false)){float d=Vector2.Distance(u.position,point);if(d<=Mathf.Max(full,outer))DamageUnit(u,F(fields,d<=full?"Dda2":"Dda4"),team);}
         if(flags.Contains("structure")) {
             float modifier=(string)cfg["id"]=="A099"?F(fields,"Sds1",1):1;
-            foreach(var h in Huts.ToArray())if(h.paid&&h.hp>0&&h.team!=team){float d=Vector2.Distance(h.position,point);if(d<=Mathf.Max(full,outer))DamageHut(h,F(fields,d<=full?"Dda2":"Dda4")*modifier,"magic",team,true);}
+            using(var snapshot035_5=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_5)if(h.paid&&h.hp>0&&h.team!=team){float d=Vector2.Distance(h.position,point);if(d<=Mathf.Max(full,outer))DamageHut(h,F(fields,d<=full?"Dda2":"Dda4")*modifier,"magic",team,true);}
             float castle=Vector2.Distance(CastlePosition(1-team),point);if(castle<=Mathf.Max(full,outer))DamageCastle(1-team,F(fields,castle<=full?"Dda2":"Dda4")*modifier,"magic",true);
         }MechExplosions++;PulseAt(point,Mathf.Max(full,outer),new Color(1,.55f,.1f),"Взрыв");
     }

@@ -11,8 +11,8 @@ public sealed partial class HumanMatch {
     // Source n02E has umvs=0; Unity effect movement uses an explicit 150 WC3/s fallback.
     public readonly List<NatureCyclone> NatureCyclones=new List<NatureCyclone>();
     public int NatureDispels,NatureEnts,NatureSpirits,NatureTaunts,NatureBanishes;
-    public bool Ethereal(Unit unit)=>unit.effects.Any(e=>e.left>0&&(bool?)e.config?["ethereal"]==true);
-    public bool Disabled(Unit unit)=>unit.effects.Any(e=>e.left>0&&(bool?)e.config?["disable"]==true);
+    public bool Ethereal(Unit unit){foreach(var e in unit.effects)if(e.left>0&&(bool?)e.config?["ethereal"]==true)return true;return false;}
+    public bool Disabled(Unit unit){foreach(var e in unit.effects)if(e.left>0&&(bool?)e.config?["disable"]==true)return true;return false;}
     bool NatureEligible(Unit unit,int team)=>unit.hp>0&&unit.team!=team&&(bool?)Lines[unit.kind].stats["invulnerable"]!=true&&!unit.abilities.Contains("A08H")&&(((string)Lines[unit.kind].stats["unit_types"]??"").Contains("sapper")||unit.natureSpirit);
     int UnitKind(string raw){int kind=Kind(raw);return kind>=0?kind:Array.FindIndex(Lines,l=>l.unit==raw);}
     Unit NatureSummon(int team,string raw,Vector2 at,float lifetime) {
@@ -50,7 +50,7 @@ public sealed partial class HumanMatch {
     }
     public bool CastNatureTrees(Unit source) {
         var cfg=Abilities["A0BX"];if(!HasSpell(source,"A0BX"))return false;
-        foreach(var unit in Units.ToArray())if(unit!=source&&unit.hp>0&&!Flying(unit)&&((string)Lines[unit.kind].stats["unit_types"]??"").Contains("sapper")&&Vector2.Distance(unit.position,source.position)<=144f/30){float angle=(135+Roll()*99+180*unit.team)*Mathf.Deg2Rad;unit.position=unit.previous=source.position+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*((160+Roll()*58)/30);PulseAt(unit.position,1,Color.green,"Перемещение");}
+        using(var snapshot035_1=SimulationBuffers035.Take(Units))foreach(var unit in snapshot035_1)if(unit!=source&&unit.hp>0&&!Flying(unit)&&((string)Lines[unit.kind].stats["unit_types"]??"").Contains("sapper")&&Vector2.Distance(unit.position,source.position)<=144f/30){float angle=(135+Roll()*99+180*unit.team)*Mathf.Deg2Rad;unit.position=unit.previous=source.position+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*((160+Roll()*58)/30);UnitMoved033(unit);PulseAt(unit.position,1,Color.green,"Перемещение");}
         var job=new NatureJob {kind="trees",team=source.team,source=source.id,id="A0BX",center=source.position,left=F(cfg,"delay",3)};
         for(int i=0;i<5;i++){float angle=i*Mathf.PI*2/5;var tree=NatureSummon(source.team,"YTct",source.position+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*4,0);if(tree!=null){tree.noBounty=true;job.trees.Add(tree.id);}}
         natureJobs.Add(job);PulseAt(source.position,4,Color.green,"Пробуждение рощи",3);return true;
@@ -79,7 +79,7 @@ public sealed partial class HumanMatch {
         }
     }
     void TickNatureJobs(float dt) {
-        foreach(var job in natureJobs.ToArray()) {
+        using(var snapshot035_2=SimulationBuffers035.Take(natureJobs))foreach(var job in snapshot035_2) {
             job.left-=dt;if(job.left>0)continue;
             if(job.kind=="spirits") {
                 var cfg=Abilities[job.id];while(job.left<=.00001f&&job.count<((int?)cfg["count"]??6)) {float x=(job.team==0?-1:1)*(2048+Roll()*(7680-2048))/30;var spirit=NatureSummon(job.team,(string)cfg["summon"],new Vector2(x,job.count%2==0?-64:64),F(cfg,"duration",42));if(spirit!=null){spirit.natureSpirit=true;spirit.noBounty=false;spirit.abilities.Remove("Awha");NatureSpirits++;}job.count++;job.left+=F(cfg,"delay",.3f);}if(job.count>=((int?)cfg["count"]??6))natureJobs.Remove(job);
@@ -89,12 +89,12 @@ public sealed partial class HumanMatch {
                 else for(int i=0;i<job.trees.Count;i++){var tree=Units.FirstOrDefault(u=>u.id==job.trees[i]);if(tree==null)continue;if(tree.hp>0&&source!=null){float angle=i*Mathf.PI*2/5;if(NatureSummon(job.team,"e00D",job.center+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*(112f/30),F(Abilities[job.id],"duration",20))!=null)NatureEnts++;}tree.hp=0;tree.deathProcessed=true;tree.deadAge=100;}
             }
         }
-        foreach(var cyclone in NatureCyclones.ToArray()) {
+        using(var snapshot035_3=SimulationBuffers035.Take(NatureCyclones))foreach(var cyclone in snapshot035_3) {
             float step=Mathf.Min(dt,cyclone.left);cyclone.left-=dt;cyclone.wander-=step;var actor=cyclone.actor;
             var target=FindUnit(cyclone.target);if(cyclone.wander<=0||target==null||!NatureEligible(target,actor.team)){target=Units.Where(u=>NatureEligible(u,actor.team)).OrderBy(u=>(u.position-actor.position).sqrMagnitude).FirstOrDefault();cyclone.target=target?.id??-1;cyclone.wander=F(Abilities["Atwa"],"duration",2);if(target==null){float angle=Roll()*Mathf.PI*2,range=Mathf.Sqrt(Roll())*F(Abilities["Atwa"],"range");cyclone.destination=cyclone.origin+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*range;cyclone.destination=new Vector2(Mathf.Clamp(cyclone.destination.x,-256,256),Mathf.Clamp(cyclone.destination.y,-64,64));}}
             if(target!=null)cyclone.destination=target.position;actor.previous=actor.position;actor.position=Vector2.MoveTowards(actor.position,cyclone.destination,(Lines[actor.kind].speed>0?Lines[actor.kind].speed:150f/30)*step);actor.pose="Stand";
-            foreach(var unit in Units.ToArray())if(unit.hp>0&&unit.team!=actor.team&&(bool?)Lines[unit.kind].stats["invulnerable"]!=true&&Lines[unit.kind].unit!="YTct") {float gap=Vector2.Distance(unit.position,actor.position);var slow=Abilities["Aasl"];if(gap<=F(slow,"area")&&unit.spellResist<1){unit.effects.RemoveAll(e=>e.id=="Aasl");unit.effects.Add(new Effect {id="Aasl",group="Aasl",left=.3f,lifetime=.3f,sourceTeam=actor.team,speed=F(slow?["profile"]?["effects"],"speed"),haste=F(slow?["profile"]?["effects"],"haste"),config=new JObject {["kind"]="debuff",["name"]="Вихрь"}});}if(gap<=F(Abilities["A0CE"],"area"))DamageUnit(unit,F(Abilities["A0CE"]?["fields"],"Tdg1")*step,actor.team);}
-            var building=Abilities["Atdg"];foreach(var hut in Huts.ToArray())if(hut.team!=actor.team&&hut.paid&&hut.hp>0&&Vector2.Distance(hut.position,actor.position)<=F(building,"area"))DamageHut(hut,F(building?["fields"],"Tdg1")*step,"magic",actor.team,true);
+            using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var unit in snapshot035_4)if(unit.hp>0&&unit.team!=actor.team&&(bool?)Lines[unit.kind].stats["invulnerable"]!=true&&Lines[unit.kind].unit!="YTct") {float gap=Vector2.Distance(unit.position,actor.position);var slow=Abilities["Aasl"];if(gap<=F(slow,"area")&&unit.spellResist<1){unit.effects.RemoveAll(e=>e.id=="Aasl");unit.effects.Add(new Effect {id="Aasl",group="Aasl",left=.3f,lifetime=.3f,sourceTeam=actor.team,speed=F(slow?["profile"]?["effects"],"speed"),haste=F(slow?["profile"]?["effects"],"haste"),config=new JObject {["kind"]="debuff",["name"]="Вихрь"}});}if(gap<=F(Abilities["A0CE"],"area"))DamageUnit(unit,F(Abilities["A0CE"]?["fields"],"Tdg1")*step,actor.team);}
+            var building=Abilities["Atdg"];using(var snapshot035_5=SimulationBuffers035.Take(Huts))foreach(var hut in snapshot035_5)if(hut.team!=actor.team&&hut.paid&&hut.hp>0&&Vector2.Distance(hut.position,actor.position)<=F(building,"area"))DamageHut(hut,F(building?["fields"],"Tdg1")*step,"magic",actor.team,true);
             if(Vector2.Distance(CastlePosition(1-actor.team),actor.position)<=F(building,"area"))DamageCastle(1-actor.team,F(building?["fields"],"Tdg1")*step,"magic",true);
             if(cyclone.left<=0||actor.hp<=0){actor.hp=0;actor.deadAge=100;actor.deathProcessed=true;NatureCyclones.Remove(cyclone);}
         }

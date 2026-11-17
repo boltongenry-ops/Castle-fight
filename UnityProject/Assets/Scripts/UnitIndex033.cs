@@ -116,17 +116,17 @@ public sealed partial class HumanMatch {
     void BeginUnitBatch033() {
         var s=Opt(this);
         RebuildIdCache033();
-        s.unitIndex.Rebuild(Units); s.unitIndexBuiltTick=TickCount;
+        SimulationState035.Get(this).targets.Rebuild(Units); SimulationState035.Get(this).neighbors.Rebuild(Units);s.unitIndexBuiltTick=TickCount;
         s.unitBatchActive=true;
     }
     void EndUnitBatch033() { Opt(this).unitBatchActive=false; }
     void EnsureUnitIndex033() {
         var s=Opt(this);
         if(s.unitIndexBuiltTick==TickCount)return;
-        s.unitIndex.Rebuild(Units); s.unitIndexBuiltTick=TickCount;
+        SimulationState035.Get(this).targets.Rebuild(Units); s.unitIndexBuiltTick=TickCount;
     }
     void RebuildElementalLinkCache033() {
-        var s=Opt(this);
+        RebuildLinks035();var s=Opt(this);
         s.linkPos0.Clear(); s.linkPos1.Clear();
         s.linkRadius=F(Abilities["A0EL"]?["fields"],"aare",0)/30;
         for(int i=0;i<Huts.Count;i++){var h=Huts[i];if(!h.paid||h.hp<=0)continue;EnsureLineCache033();if(!Opt(this).lineIsLink[h.kind])continue;if(BuildingDisabled(h)>0)continue;(h.team==0?s.linkPos0:s.linkPos1).Add(h.position);}
@@ -142,7 +142,7 @@ public sealed partial class HumanMatch {
     }
     void OnSpawnIndexed033(Unit u) {
         var s=Opt(this);
-        if(s.unitIndexBuiltTick==TickCount)s.unitIndex.Add(u,Units.Count-1);
+        if(s.unitIndexBuiltTick==TickCount){SimulationState035.Get(this).targets.Add(u,Units.Count-1);if(s.unitBatchActive)SimulationState035.Get(this).neighbors.Add(u,Units.Count-1);}
         if(!s.unitById.ContainsKey(u.id)){s.unitById[u.id]=u;s.unitOrder[u.id]=Units.Count-1;}
         s.idCacheCountU=Units.Count;
     }

@@ -15,7 +15,7 @@ public sealed partial class HumanMatch {
         if(ElvenGraceChance(unit.team)>0)ElvenJobs.Add(new ElvenJob{kind="grace",body=unit,left=2});
     }
     void TickElven(float dt){
-        foreach(var job in ElvenJobs.ToArray()){
+        using(var snapshot035_1=SimulationBuffers035.Take(ElvenJobs))foreach(var job in snapshot035_1){
             job.left-=dt;if(job.left>.00001f)continue;ElvenJobs.Remove(job);
             if(job.kind=="grace"){
                 var old=job.body;if(old==null||old.hp>0||!Units.Contains(old)||old.deadAge>=99||old.noCorpse)continue;

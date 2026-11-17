@@ -25,6 +25,7 @@ def main():
     for name in ('build', 'reference', 'reference-index', 'mono', 'compat-check', 'archive'):
         p.add_argument('--' + name, type=Path, required=True)
     p.add_argument('--version', required=True)
+    p.add_argument('--replace-burst', action='store_true', help='Retain the newly compiled Burst plugin; original layouts and shipped managed dependencies must still match')
     args = p.parse_args()
     index = json.loads(args.reference_index.read_text())['windows']
     assert args.reference.stat().st_size == index['size'] and sha(args.reference) == index['sha256']
@@ -32,13 +33,25 @@ def main():
     game = 'CastleFightMap_Data/Managed/Assembly-CSharp.dll'
     supplement = 'CastleFightMap_Data/StreamingAssets/Frontend/centaur-028.windows'
     keep = {game, supplement}
+    burst = 'CastleFightMap_Data/Plugins/x86_64/lib_burst_generated.dll'
+    if args.replace_burst:
+        assert burst in expected and (args.build / burst).read_bytes()[:2] == b'MZ', 'Missing compiled Burst plugin'
+        keep.add(burst)
     for name in expected:
         assert (args.build / name).resolve().is_relative_to(args.build.resolve())
     assert args.version.encode('utf-16le') in (args.build / game).read_bytes(), 'Visible game version missing'
     with zipfile.ZipFile(args.reference) as source, tempfile.TemporaryDirectory() as work:
         old = Path(work) / 'Assembly-CSharp.dll'
         old.write_bytes(source.read(game))
-        subprocess.run([str(args.mono), str(args.compat_check), str(old), str((args.build / game).resolve())], check=True)
+        command = [str(args.mono), str(args.compat_check), str(old), str((args.build / game).resolve())]
+        if args.replace_burst:
+            for dependency in ('Unity.Burst', 'Unity.Collections', 'UnityEngine.BurstModule'):
+                name = 'CastleFightMap_Data/Managed/' + dependency + '.dll'
+                content = source.read(name)
+                assert hashlib.sha256(content).hexdigest() == expected[name]['sha256']
+                (Path(work) / (dependency + '.dll')).write_bytes(content)
+            command.append(work)
+        subprocess.run(command, check=True)
         def matches(name):
             target = args.build / name
             return target.is_file() and target.stat().st_size == expected[name]['size'] and sha(target) == expected[name]['sha256']

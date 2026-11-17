@@ -1,3 +1,10 @@
+## Оптимизация и настройки 0.35 — 17 ноября 2026
+
+- Windows0.35 и Android0.35/code23 построены из одинаковых187 runtime CS. Portable SHA 29d9d05880a8017fb430cd7ef5f5bcb779057655d56ec341e8715af71a02f6cc; APK b78e5cc4bea183b21852cf155e28593117ebba21f33c1e237f205f31505ab0ad. Подпись/package, лаунчер/ярлык и33пакета ресурсов прежние. Публикацию подтверждать свежим Validation/Optimization035/publication-verification.json, не этой записью.
+- Переиспользуемая пространственная сетка и локальные соседи, typed JSON/active abilities, отрицательный кэш стихий, фазовый счёт армии,81 вложенный буфер снимков, очередь HumanJob, независимые AuraBatch/RadiusDensity Jobs/Burst. Полный план всех таймеров/движения/ECS не реализован; подробные пределы и реальные p50/p95/p99 в docs/OPTIMIZATION-STATUS.ru.md.
+- Фактический portable:127 целевых проверок,71нерубов,28тумана,104испытаний;16рас пошагово совпали с0.34.320марш p50 128.96→33.72мс;1000производителей+полнаяармия184.74→38.76.2000бойцов всё ещё тяжёлые. GCсчётчики недоступны; телефонный FPS не измерен. Пользователь подтвердил исправление AndroidUltimate0.34.
+- BuildOptimization035.Windows + finalize_windows_code_update.py --replace-burst:118 старых раскладок неизменны, новые разрешённые зависимости сверяются по identity с SHA-проверенным baseline. Заменяются только Assembly-CSharp.dll и lib_burst_generated.dll, не связанные ресурсы. APK BuildAndroidRelease.Build. Freeze work/network035-final-runtime-ready.json; отчёты Optimization035/Android035. Настройки Android выровнены, нижние кнопки разделены. Сервер/аккаунты/голос не менялись.
+
 ## Challenge campaign and mobile fog 0.34 — 17 November 2026
 
 - Base: latest fetched main 6a4b437e / paired 0.33.2. Keep 0.33.1 simulation optimizations. The full optimization plan is NOT complete: docs/OPTIMIZATION-STATUS.ru.md records completed/partial/missing work.

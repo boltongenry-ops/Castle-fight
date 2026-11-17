@@ -27,21 +27,24 @@ public sealed partial class HumanMatch {
         u.effects.Add(new Effect{id=(string)config["id"],group="nerub_venom",left=duration,lifetime=duration,dotTick=previous?.dotTick??0,sourceTeam=side,config=(JObject)config.DeepClone(),strength=F(config,"dps")});
         RefreshNerubVenomFields(u);return true;
     }
+    static int CompareVenom035(Effect a,Effect b){int c=F(b.config,"dps").CompareTo(F(a.config,"dps"));if(c!=0)return c;c=a.sourceTeam.CompareTo(b.sourceTeam);return c!=0?c:((int?)a.config?["nerub_source"]??0).CompareTo((int?)b.config?["nerub_source"]??0);}
     void RefreshNerubVenomFields(Unit u){
-        var effects=NerubVenoms(u);foreach(var e in effects){e.armor=0;e.speed=0;}
-        if(effects.Length==0)return;
-        effects[0].armor=effects.Min(e=>F(e.config,"armor"));
-        effects[0].speed=-effects.Max(e=>F(e.config,"slow"));
+        Effect first=null;float armor=0,slow=0;
+        foreach(var e in u.effects)if(e.left>0&&NerubVenom(e.config)){
+            e.armor=0;e.speed=0;float a=F(e.config,"armor"),s=F(e.config,"slow");
+            if(first==null){first=e;armor=a;slow=s;}else{if(a<armor||float.IsNaN(a))armor=a;if(s>slow||float.IsNaN(slow))slow=s;if(CompareVenom035(e,first)<0)first=e;}
+        }
+        if(first!=null){first.armor=armor;first.speed=-slow;}
     }
     float NerubArmorOverlap(Unit u){
-        var negative=u.effects.Where(e=>e.left>0&&(NerubVenom(e.config)||e.id=="AUAc")&&e.armor<0).Select(e=>e.armor).ToArray();
-        return negative.Length<2?0:negative.Min()-negative.Sum();
+        int count=0;float lowest=0;double sum=0;foreach(var e in u.effects)if(e.left>0&&(NerubVenom(e.config)||e.id=="AUAc")&&e.armor<0){if(count++==0||e.armor<lowest)lowest=e.armor;sum+=e.armor;}return count<2?0:lowest-(float)sum;
     }
     float NerubPeriodicDamage(Unit u,Effect e){
         if(!NerubVenom(e.config))return F(e.config,"dps");
-        // Include the current final tick; it still owns its slot while damage is resolved.
-        var layers=u.effects.Where(v=>NerubVenom(v.config)).OrderByDescending(v=>F(v.config,"dps")).ThenBy(v=>v.sourceTeam).ThenBy(NerubVenomSource).ToArray();
-        int rank=Array.IndexOf(layers,e);return F(e.config,"dps")*(rank==0?1:rank==1?.5f:0);
+        int index=u.effects.IndexOf(e);if(index<0)return 0;int rank=0;
+        // Include the current final tick and retain stable original-list ties.
+        for(int i=0;i<u.effects.Count;i++){var other=u.effects[i];if(other==e||!NerubVenom(other.config))continue;int compare=CompareVenom035(other,e);if(compare<0||compare==0&&i<index)rank++;}
+        return F(e.config,"dps")*(rank==0?1:rank==1?.5f:0);
     }
     void NerubPeriodicHit(Unit u,Effect e,float seconds){
         var previous=nerubTickingEffect;nerubTickingEffect=e;
@@ -50,15 +53,17 @@ public sealed partial class HumanMatch {
     }
     float NerubHuntMultiplier(Unit source,Unit target){
         if(source==null||!Nerub(source)||!FinalFighter(target)||source.team==target.team)return 1;
-        var mark=target.effects.Where(e=>e.id=="ANMK"&&e.sourceTeam==source.team&&e.left>0).OrderByDescending(e=>F(e.config,"hunt_bonus")).FirstOrDefault();
+        Effect mark=null;float strongest=0;foreach(var e in target.effects)if(e.id=="ANMK"&&e.sourceTeam==source.team&&e.left>0){float power=F(e.config,"hunt_bonus");if(mark==null||power.CompareTo(strongest)>0){mark=e;strongest=power;}}
         if(mark==null)return 1;float value=F(mark.config,"hunt_bonus")/100f;
         if(Lines[source.kind].unit=="nN04")value*=.25f;
         NerubHunts++;return 1+value;
     }
     Unit NerubHuntTarget(Unit source,Unit current){
-        if(!Nerub(source)||!source.abilities.Any(id=>(string)Abilities[id]?["kind"]=="nerub_ambush"))return current;
-        float nearest=current==null?6:Mathf.Min(6,Vector2.Distance(source.position,current.position)+1);
-        return Units.Where(v=>v.team!=source.team&&v.hp>0&&v.onRoad&&WeaponFor(source,v)!=null&&Vector2.Distance(source.position,v.position)<=nearest&&v.effects.Any(e=>e.id=="ANMK"&&e.sourceTeam==source.team&&e.left>0)).OrderBy(v=>(v.position-source.position).sqrMagnitude).FirstOrDefault()??current;
+        if(!Nerub(source)||!AbilityView035.Get(source,Abilities).kinds.Contains("nerub_ambush"))return current;
+        float radius=current==null?6:Mathf.Min(6,Vector2.Distance(source.position,current.position)+1);float sq=radius*radius;
+        bool Marked(Unit v){foreach(var e in v.effects)if(e.id=="ANMK"&&e.sourceTeam==source.team&&e.left>0)return true;return false;}
+        if(TryFindBestUnit033(source.position,(radius+.00001f)*(radius+.00001f),source.team,v=>Vector2.Distance(source.position,v.position)<=radius&&Marked(v)&&WeaponFor(source,v)!=null,out var indexed))return indexed??current;
+        Unit best=null;float distance=float.MaxValue;foreach(var v in Units){if(v.team==source.team||v.hp<=0||!v.onRoad)continue;float d=(v.position-source.position).sqrMagnitude;if(Vector2.Distance(source.position,v.position)>radius||d>=distance||!Marked(v)||WeaponFor(source,v)==null)continue;best=v;distance=d;}return best??current;
     }
     void NerubTowerBarrage(Hut tower,Weapon weapon,int primary){
         if(Finished||NetworkReplica||tower.hp<=0||!tower.paid||tower.paused||BuildingDisabled(tower)>0||!new[]{"hNT1","hNT2"}.Contains(Lines[tower.kind].building))return;

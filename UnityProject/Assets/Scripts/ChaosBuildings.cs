@@ -10,8 +10,8 @@ public sealed partial class HumanMatch {
     public readonly List<ChaosFlame> ChaosFlames=new List<ChaosFlame>();
     public readonly List<HellCurse> HellCurses=new List<HellCurse>();
     public int ChaosGifts,ChaosErases,ChaosEruptions,ChaosFists,ChaosMisses;
-    public bool Disarmed(Unit u)=>u.effects.Any(e=>e.left>0&&(bool?)e.config?["disarm"]==true);
-    public bool Silenced(Unit u)=>u.effects.Any(e=>e.left>0&&(bool?)e.config?["silence"]==true);
+    public bool Disarmed(Unit u){foreach(var e in u.effects)if(e.left>0&&(bool?)e.config?["disarm"]==true)return true;return false;}
+    public bool Silenced(Unit u){foreach(var e in u.effects)if(e.left>0&&(bool?)e.config?["silence"]==true)return true;return false;}
     public float MissChance(Unit u)=>Mathf.Clamp01(u.effects.Where(e=>e.left>0).Sum(e=>F(e.config,"miss")));
     public float HellDisabled(Hut h) {
         if(HellCurses.Count==0)return 0;
@@ -40,7 +40,7 @@ public sealed partial class HumanMatch {
             if(kind=="chaos_gift"){if(!NagaShieldBlock(target))ChaosGiftOutcome(target,source.team,Mathf.Min(9,(int)(Roll()*10)));ChaosGifts++;PulseAt(target.position,2,new Color(.8f,.25f,1),"Дар Хаоса");}
             else if(kind=="map_erase") {
                 string raw=Lines[target.kind].unit;
-                foreach(var u in Units.ToArray())if(u.hp>0&&u.team!=source.team&&Lines[u.kind].unit==raw) {
+                using(var snapshot035_1=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_1)if(u.hp>0&&u.team!=source.team&&Lines[u.kind].unit==raw) {
                     if(ChaosEraseShield(u))continue;
                     PulseAt(u.position,2,new Color(.9f,.3f,1),"Стирание");if(!u.abilities.Contains("A070"))DamageUnit(u,100500,source.team,"chaos");
                 }
@@ -68,14 +68,14 @@ public sealed partial class HumanMatch {
         else PulseAt(target.position,1,new Color(.7f,.3f,1),"Без эффекта");
     }
     void TickChaosJobs(float dt) {
-        foreach(var curse in HellCurses.ToArray()) {
+        using(var snapshot035_2=SimulationBuffers035.Take(HellCurses))foreach(var curse in snapshot035_2) {
             var target=Huts.FirstOrDefault(h=>h.id==curse.target&&h.hp>0);if(target==null){HellCurses.Remove(curse);continue;}
             float step=Mathf.Min(dt,Mathf.Max(0,curse.left));curse.left-=dt;curse.tick+=step;float due=curse.left<=0?curse.tick:Mathf.Floor(curse.tick);
             if(due>0){curse.tick-=due;DamageHut(target,curse.dps*due,"chaos",curse.team,true);}
             if(curse.left<=0)HellCurses.Remove(curse);
         }
         var cfg=Abilities["A01J"];if(cfg==null)return;
-        foreach(var flame in ChaosFlames.ToArray()) {
+        using(var snapshot035_3=SimulationBuffers035.Take(ChaosFlames))foreach(var flame in snapshot035_3) {
             flame.age+=dt;float delay=F(cfg,"cast_delay"),full=F(cfg,"full_duration"),duration=F(cfg,"duration");int phase=flame.age<delay?0:flame.age<delay+full?1:2;
             if(phase!=flame.phase){flame.phase=phase;PulseAt(flame.center,F(cfg,"area"),phase==0?new Color(1,.7f,.1f):phase==1?new Color(1,.25f,.02f):new Color(.7f,.12f,.02f),phase==0?"Извержение":"",phase==0?delay:phase==1?full:duration-full);}
             while(flame.nextFull<=full+.00001f&&flame.age+.00001f>=delay+flame.nextFull){ChaosFlamePulse(flame,F(cfg,"power"));flame.nextFull+=F(cfg,"interval",.25f);}

@@ -25,11 +25,11 @@ public sealed partial class HumanMatch {
         source.sirenFollowup=1;NagaPurges++;PulseAt(target.position,1.5f,new Color(.35f,.7f,1),"Очищение",2f,"naga_purge");return true;
     }
     void TickNagaJobs(float dt) {
-        foreach(var job in nagaSplits.ToArray()){
+        using(var snapshot035_1=SimulationBuffers035.Take(nagaSplits))foreach(var job in snapshot035_1){
             nagaSplits.Remove(job);
             for(int i=0;i<job.count;i++){var child=Spawn(job.team,job.kind,job.position+new Vector2(i==0?.8f:-.8f,0));child.summoned=true;child.onRoad=true;}
         }
-        foreach(var unit in Units.ToArray()) {
+        using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var unit in snapshot035_2) {
             if(unit.sirenFollowup<0)continue;unit.sirenFollowup-=dt;if(unit.sirenFollowup>0)continue;unit.sirenFollowup=-1;
             if(unit.hp<=0||unit.stun>0||!HasSpell(unit,"A02S"))continue;
             var cfg=Abilities["A02S"];int kind=Kind((string)cfg["summon"]);if(kind<0)kind=System.Array.FindIndex(Lines,l=>l.unit==(string)cfg["summon"]);if(kind<0)continue;

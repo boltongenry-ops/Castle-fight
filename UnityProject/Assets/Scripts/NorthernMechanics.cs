@@ -69,7 +69,7 @@ public sealed partial class HumanMatch {
         var targets=NorthernSpellTargets(source,cfg);if(targets.Length==0)return false;
         var target=targets.Contains(suggested)?suggested:targets[Mathf.Min(targets.Length-1,(int)(Roll()*targets.Length))];string kind=(string)cfg["kind"],effect=(string)cfg["effect_id"];
         var child=Abilities[effect];var center=kind=="north_nova"?target.position:source.position;
-        foreach(var u in Units.ToArray())if(Valid(u,source.team,child,false)&&Vector2.Distance(u.position,center)<=F(child,"area")) {
+        using(var snapshot035_1=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_1)if(Valid(u,source.team,child,false)&&Vector2.Distance(u.position,center)<=F(child,"area")) {
             if(kind=="north_howl")ApplyEffect(u,effect,source.team);
             else {
                 DamageUnit(u,kind=="north_nova"&&u!=target?F(child,"secondary",F(child,"power")):F(child,"power"),source.team);
@@ -108,8 +108,8 @@ public sealed partial class HumanMatch {
         string id=shot.chaosSpell.Substring(shot.chaosSpell.IndexOf(':')+1);var cfg=Abilities[id];
         if(shot.chaosSpell.StartsWith("north_frost:",StringComparison.Ordinal)) {
             float radius=F(cfg,"area");
-            foreach(var u in Units.ToArray())if(u.hp>0&&u.team!=shot.team&&!Hidden(u)&&(bool?)Lines[u.kind].stats["invulnerable"]!=true&&!Flying(u)&&(id=="A04L"&&Vector2.Distance(u.position,shot.end)<=radius))DamageUnit(u,F(cfg,"power"),shot.team,"chaos",false);
-            foreach(var h in Huts.ToArray())if(h.paid&&h.hp>0&&h.team!=shot.team&&(HutTarget(h)==shot.target||id=="A04L"&&Vector2.Distance(h.position,shot.end)<=radius)){DamageHut(h,F(cfg,"power"),"chaos",shot.team);if(h.hp>0)FreezeNorthernStructure(HutTarget(h),shot.team,"Bfrz",F(cfg,"freeze"));}
+            using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_2)if(u.hp>0&&u.team!=shot.team&&!Hidden(u)&&(bool?)Lines[u.kind].stats["invulnerable"]!=true&&!Flying(u)&&(id=="A04L"&&Vector2.Distance(u.position,shot.end)<=radius))DamageUnit(u,F(cfg,"power"),shot.team,"chaos",false);
+            using(var snapshot035_3=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_3)if(h.paid&&h.hp>0&&h.team!=shot.team&&(HutTarget(h)==shot.target||id=="A04L"&&Vector2.Distance(h.position,shot.end)<=radius)){DamageHut(h,F(cfg,"power"),"chaos",shot.team);if(h.hp>0)FreezeNorthernStructure(HutTarget(h),shot.team,"Bfrz",F(cfg,"freeze"));}
             if(id=="A04L"&&Vector2.Distance(CastlePosition(1-shot.team),shot.end)<=radius)DamageCastle(1-shot.team,F(cfg,"power"),"chaos");
             PulseAt(shot.end,Mathf.Max(2,radius),Color.cyan,"Заморозка");return true;
         }
@@ -141,13 +141,13 @@ public sealed partial class HumanMatch {
     }
     void TickNorthern(float dt) {
         NorthernWeather=Mathf.Max(0,NorthernWeather-dt);
-        foreach(var freeze in NorthernFreezes.ToArray()) {
+        using(var snapshot035_4=SimulationBuffers035.Take(NorthernFreezes))foreach(var freeze in snapshot035_4) {
             var hut=FindHut(freeze.target);bool castle=freeze.target==-1;if(!castle&&hut==null||castle&&CastleHp[1-freeze.team]<=0){NorthernFreezes.Remove(freeze);continue;}
             float step=Mathf.Min(dt,Mathf.Max(0,freeze.left));freeze.left-=dt;freeze.tick+=step;float due=freeze.left<=0?freeze.tick:Mathf.Floor(freeze.tick);
             if(due>0){freeze.tick-=due;if(freeze.dps>0){if(castle)DamageCastle(1-freeze.team,freeze.dps*due,"magic",true);else DamageHut(hut,freeze.dps*due,"magic",freeze.team,true);}}if(freeze.left<=0)NorthernFreezes.Remove(freeze);
         }
-        foreach(var winter in NorthernWinters.ToArray()) {winter.age+=dt;if(!winter.spawned&&winter.age>=1.5f){winter.spawned=true;for(int i=0;i<3;i++)SpawnNorthernOrb(winter.team,winter.point,Roll()*110-55+(winter.team==0?0:180));NorthernWeather=Mathf.Max(NorthernWeather,7.8f-winter.age);}if(winter.age>=7.8f)NorthernWinters.Remove(winter);}
-        foreach(var orb in NorthernOrbs.ToArray()) {
+        using(var snapshot035_5=SimulationBuffers035.Take(NorthernWinters))foreach(var winter in snapshot035_5) {winter.age+=dt;if(!winter.spawned&&winter.age>=1.5f){winter.spawned=true;for(int i=0;i<3;i++)SpawnNorthernOrb(winter.team,winter.point,Roll()*110-55+(winter.team==0?0:180));NorthernWeather=Mathf.Max(NorthernWeather,7.8f-winter.age);}if(winter.age>=7.8f)NorthernWinters.Remove(winter);}
+        using(var snapshot035_6=SimulationBuffers035.Take(NorthernOrbs))foreach(var orb in snapshot035_6) {
             orb.accumulator+=dt;
             while(orb.accumulator+.000001f>=.04f) {
                 orb.accumulator-=.04f;orb.previous=orb.position;float x=orb.position.x+10f/30*Mathf.Cos(orb.heading),y=orb.position.y+10f/30*Mathf.Sin(orb.heading);
@@ -155,7 +155,7 @@ public sealed partial class HumanMatch {
                 if(++orb.controlTicks>50){orb.controlTicks=0;NorthernOrbControl(orb);}
             }
             if(!NorthernOrbs.Contains(orb))continue;orb.fire-=dt;while(orb.fire<=.000001f){orb.fire+=F(Abilities["A080"],"cd");NorthernOrbFire(orb);}
-            var aura=Abilities["A081"];foreach(var u in Units.ToArray())if(Valid(u,orb.team,aura,false)&&Vector2.Distance(u.position,orb.position)<=F(aura,"area")) {
+            var aura=Abilities["A081"];using(var snapshot035_7=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_7)if(Valid(u,orb.team,aura,false)&&Vector2.Distance(u.position,orb.position)<=F(aura,"area")) {
                 var status=u.effects.FirstOrDefault(e=>e.id=="A081");
                 if(status!=null){status.left=status.lifetime=.6f;status.sourceTeam=orb.team;}
                 else ApplyEffectData(u,new JObject { ["id"]="A081",["name"]="Аура зимы",["duration"]=.6f,["speed"]=F(aura["fields"],"Oae1"),["haste"]=F(aura["fields"],"Oae2") },orb.team);

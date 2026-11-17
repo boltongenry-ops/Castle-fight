@@ -48,7 +48,7 @@ public sealed partial class HumanMatch {
     void TickInventory(float dt) {
         for(int team=0;team<2;team++) {
             var bag=Inventories[team];foreach(var b in bag.boosts)b.left-=dt;bag.boosts.RemoveAll(b=>b.left<=0);
-            foreach(string id in bag.cooldowns.Keys.ToArray())bag.cooldowns[id]=Mathf.Max(0,bag.cooldowns[id]-dt);
+            using(var snapshot035_1=SimulationBuffers035.Take(bag.cooldowns.Keys))foreach(string id in snapshot035_1)bag.cooldowns[id]=Mathf.Max(0,bag.cooldowns[id]-dt);
             foreach(var slot in bag.slots) {
                 slot.cooldown=Mathf.Max(0,slot.cooldown-dt);var item=ItemCatalog[slot.id];float rate=F(item,"rate")*slot.count;
                 if(rate>0){float period=1/rate;slot.accumulator=Mathf.Min(slot.accumulator+dt,period*8);while(slot.accumulator+.000001f>=period){slot.accumulator-=period;FireItemStaff(team,item);}}

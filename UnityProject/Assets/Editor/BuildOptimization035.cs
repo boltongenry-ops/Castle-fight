@@ -1,0 +1,9 @@
+using System;using System.IO;using System.Linq;using CastleFight;using UnityEngine;using UnityEditor;using UnityEditor.Build;using UnityEditor.Build.Reporting;
+public static class BuildOptimization035 {
+ public static void Validate(){string assets=Path.GetFullPath("Assets"),folder=Path.GetFullPath("../Validation/Optimization035/editor");int checks=0;Optimization035Checks.Run(assets,Path.GetFullPath("../../work/optimization035/CastleFight.Reference034.dll"),folder,(ok,message)=>{checks++;if(!ok)throw new Exception(message);},false);File.WriteAllText(Path.Combine(folder,"editor-verification.json"),"{\"status\":\"PASS\",\"checks\":"+checks+"}");Debug.Log("CF_OPT035_EDITOR_PASS checks="+checks);}
+ public static void Windows(){
+  BuildMobileContent.Restore();Validate();string data="Builds/MapWindows/CastleFightMap_Data/";var names=new[]{"resources.assets","globalgamemanagers","globalgamemanagers.assets","sharedassets0.assets"};var before=names.ToDictionary(n=>n,n=>BuildWindowsRelease.Hash(data+n));const string backup="Builds/WindowsBaseline035/";Directory.CreateDirectory(backup);foreach(string n in names.Where(n=>n.StartsWith("global")))File.Copy(data+n,backup+n,true);
+  PlayerSettings.bundleVersion="0.20.0";PlayerSettings.SetScriptingBackend(NamedBuildTarget.Standalone,ScriptingImplementation.Mono2x);
+  var report=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/Scenes/CastleFightMap.unity"},target=BuildTarget.StandaloneWindows64,locationPathName="Builds/MapWindows/CastleFightMap.exe",options=BuildOptions.BuildScriptsOnly});if(report.summary.result!=BuildResult.Succeeded)throw new Exception("Windows build failed");foreach(string n in names.Where(n=>n.StartsWith("global")))File.Copy(backup+n,data+n,true);foreach(var p in before)if(BuildWindowsRelease.Hash(data+p.Key)!=p.Value)throw new Exception("Modified base player data "+p.Key);Debug.Log("CF_OPT035_WINDOWS_PASS baseData=unchanged supplement=unchanged");
+ }
+}

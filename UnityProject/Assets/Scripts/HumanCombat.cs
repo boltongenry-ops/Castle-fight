@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class HumanMatch {
     public Unit Spawn(int team,int kind,Vector2 position,bool production=false,Hut producer=null) {
-        if(production&&Lines[kind].unit=="u00F")kind=Array.FindIndex(Lines,l=>l.unit=="h030");var u=new Unit {id=nextId++,team=team,kind=kind,position=position,previous=position,hp=Lines[kind].hp,direction=team==0?Vector2.right:Vector2.left};Ensure(u);Units.Add(u);OnSpawnIndexed033(u);MechCreated(u,production,producer);UndeadCreated(u);ElementalCreated(u,production);NightCreated(u);ApplyUltimate(u);Spawned++;if(production)ChaosProduced(u);
+        if(production&&Lines[kind].unit=="u00F")kind=Array.FindIndex(Lines,l=>l.unit=="h030");var u=new Unit {id=nextId++,team=team,kind=kind,position=position,previous=position,hp=Lines[kind].hp,direction=team==0?Vector2.right:Vector2.left};Ensure(u);Units.Add(u);InvalidateArmyCounts035();OnSpawnIndexed033(u);MechCreated(u,production,producer);UndeadCreated(u);ElementalCreated(u,production);NightCreated(u);ApplyUltimate(u);Spawned++;if(production)ChaosProduced(u);
         // Godot gameplay.route_through_arch: leave the keep's column before
         // heading to the road. Flying units can cross the footprint directly.
         if(!Flying(u)&&Mathf.Abs(position.x-(team==0?-5120f/30:5120f/30))<320f/30&&Mathf.Abs(position.y)>256f/30){u.leaveCastleLane=true;u.exitWaypoint=new Vector2(team==0?-4736f/30:4736f/30,position.y);}
@@ -25,20 +25,24 @@ public sealed partial class HumanMatch {
         if(k=="evasion")u.evasion=Mathf.Max(u.evasion,F(p,"chance"));
         if(k=="self_passive"){u.maxHp+=F(c,"health_bonus");u.hp+=F(c,"health_bonus");u.armor+=F(c,"armor");}
     }
-    public bool Invulnerable(Unit u)=>u.pandaSplit||(bool?)Lines[u.kind].stats["invulnerable"]==true||u.abilities.Contains("Avul");
-    public bool Flying(Unit u)=>((bool?)Lines[u.kind].stats["flying"]??false)&&!u.effects.Any(e=>e.left>0&&e.ground);
-    public bool Rooted(Unit u)=>u.effects.Any(e=>e.left>0&&e.root);
-    public bool Organic(Unit u)=>!((string)Lines[u.kind].stats["unit_types"]??"").ToLowerInvariant().Contains("mechanical");
+    public bool Invulnerable(Unit u)=>u.pandaSplit||UnitConfig035(u.kind).invulnerable||u.abilities.Contains("Avul");
+    public bool Flying(Unit u){if(!UnitConfig035(u.kind).flying)return false;foreach(var e in u.effects)if(e.left>0&&e.ground)return false;return true;}
+    public bool Rooted(Unit u){foreach(var e in u.effects)if(e.left>0&&e.root)return true;return false;}
+    public bool Organic(Unit u)=>UnitConfig035(u.kind).organic;
     public float Height(Unit u)=>u.natureSpirit?1:Flying(u)?Lines[u.kind].flyHeight:0;
     public float Stat(Unit u,string name) {
-        float value=(name=="haste"?ChaosHaste(u):0)+UltimateMod(u,name);value+=u.effects.Sum(e=>name=="armor"?e.armor:name=="damage"?((string)e.config?["kind"]=="regen"?0:e.power):name=="haste"?e.haste:name=="speed"?e.speed:name=="incoming"?e.incoming:0);
+        float value=(name=="haste"?ChaosHaste(u):0)+UltimateMod(u,name);double effects035=0;foreach(var e in u.effects)effects035+=name=="armor"?e.armor:name=="damage"?((string)e.config?["kind"]=="regen"?0:e.power):name=="haste"?e.haste:name=="speed"?e.speed:name=="incoming"?e.incoming:0;value+=(float)effects035;
         if(name=="armor")value+=u.auraArmor+u.auraArmorNegative+NerubArmorOverlap(u);if(name=="haste")value+=u.auraHaste+u.auraHasteNegative;if(name=="speed")value+=u.auraSpeed+u.auraSpeedNegative;
-        foreach(var id in u.abilities){var c=Ranked(u,id);if((string)c?["kind"]=="self_passive"&&name!="armor")value+=F(c,name);}
+        foreach(var id in AbilityView035.Get(u,Abilities).passives){var c=Ranked(u,id);if((string)c?["kind"]=="self_passive"&&name!="armor")value+=F(c,name);}
         return value;
     }
-    public float MoveSpeed(Unit u){var l=Lines[u.kind];if(u.elementalArmed)return Rooted(u)?0:15;var fixedMove=u.effects.Where(e=>e.left>0&&F(e.config,"move_override")>0).Select(e=>F(e.config,"move_override")).DefaultIfEmpty(-1).Min();if(fixedMove>=0)return Rooted(u)?0:fixedMove;return l.speed<=0||Rooted(u)?0:Mathf.Clamp((l.speed+(TeamNaga[u.team]&&Aspects[u.team]==0?-20f/30:0))*(1+ItemPassive(u.team,"speed_bonus",u))*Mathf.Max(0,1+Stat(u,"speed")+(u.nightInvisible?u.nightSpeed:0)),F(l.stats,"min_speed",5),F(l.stats,"max_speed",13.333333f));}
+    public float MoveSpeed(Unit u){var l=Lines[u.kind];if(u.elementalArmed)return Rooted(u)?0:15;float fixedMove=-1;foreach(var e in u.effects)if(e.left>0){float candidate=F(e.config,"move_override");if(candidate>0&&(fixedMove<0||candidate<fixedMove))fixedMove=candidate;}if(fixedMove>=0)return Rooted(u)?0:fixedMove;return l.speed<=0||Rooted(u)?0:Mathf.Clamp((l.speed+(TeamNaga[u.team]&&Aspects[u.team]==0?-20f/30:0))*(1+ItemPassive(u.team,"speed_bonus",u))*Mathf.Max(0,1+Stat(u,"speed")+(u.nightInvisible?u.nightSpeed:0)),UnitConfig035(u.kind).minSpeed,UnitConfig035(u.kind).maxSpeed);}
     public float AttackSpeed(Unit u)=>Mathf.Clamp(1+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5);
-    public Weapon WeaponFor(Unit u,Unit target=null,bool structure=false)=>(Ethereal(u)||Disarmed(u))?null:(u.elementalWeapons??Lines[u.kind].weapons).FirstOrDefault(w=>(target==null||!Invulnerable(target)&&!CorruptedAirborne(target)&&!Hidden(target)&&NightCanDetect(u.team,target)&&Lines[target.kind].unit!="n02E")&&(target==null||Lines[target.kind].unit!="YTct"||w.targets.Contains("tree"))&&(target==null||!Ethereal(target)||w.attack=="magic"||w.attack=="spells")&&(structure?w.structure:target!=null&&Flying(target)?w.air:w.ground));
+    public Weapon WeaponFor(Unit u,Unit target=null,bool structure=false){
+        if(Ethereal(u)||Disarmed(u))return null;
+        foreach(var w in u.elementalWeapons??Lines[u.kind].weapons)if((target==null||!Invulnerable(target)&&!CorruptedAirborne(target)&&!Hidden(target)&&NightCanDetect(u.team,target)&&Lines[target.kind].unit!="n02E")&&(target==null||Lines[target.kind].unit!="YTct"||w.targets.Contains("tree"))&&(target==null||!Ethereal(target)||w.attack=="magic"||w.attack=="spells")&&(structure?w.structure:target!=null&&Flying(target)?w.air:w.ground))return w;
+        return null;
+    }
     int HutTarget(Hut h)=>-h.id-2;
     Hut FindHut(int target)=>FindHutFast033(target);
     Unit FindUnit(int target)=>FindUnitFast033(target);
@@ -113,7 +117,7 @@ public sealed partial class HumanMatch {
         var source=FindUnit(owner);var victim=FindUnit(target);var s=new Shot {id=nextId++,team=team,line=line,sourceId=owner,target=target,start=start,end=end,damage=damage,weapon=w,stun=stun,kind=kind,arc=w.arc,incendiary=incendiary,homing=w.homing&&!w.type.StartsWith("artillery"),duration=kind==1?.14f:w.speed<=0?.05f:Mathf.Max(.1f,Vector2.Distance(start,end)/w.speed),hit=kind==1,startHeight=(source==null?3:Height(source)+((Lines[source.kind].unit??"").StartsWith("cU",StringComparison.Ordinal)?2.7f:1.4f)),endHeight=victim==null?4:Height(victim)+.8f};Shots.Add(s);if(kind==2)ShellsFired++;return s;
     }
     void TickShots(float dt) {
-        foreach(var shot in Shots.ToArray()) {
+        using(var snapshot035_1=SimulationBuffers035.Take(Shots))foreach(var shot in snapshot035_1) {
             shot.age+=dt;if(shot.kind==1||shot.kind==4)continue;
             if(shot.homing&&TargetAlive(shot.target)){shot.end=TargetPosition(shot.target,shot.team);var v=FindUnit(shot.target);if(v!=null)shot.endHeight=Height(v)+.8f;shot.duration=shot.weapon!=null&&shot.weapon.speed<=0?.05f:Mathf.Max(.1f,Vector2.Distance(shot.start,shot.end)/Mathf.Max(1,shot.weapon?.speed??30));}
             if(shot.chaosSpell=="north_spell:A082"||shot.chaosSpell=="north_spell:A083")shot.duration=.05f;
@@ -130,8 +134,8 @@ public sealed partial class HumanMatch {
             }
             if(!artillery&&TargetAlive(shot.target))ResolveAttack(shot.sourceId,shot.team,shot.target,shot.damage,w,shot.stun,!shot.nightSecondary);
             if(!ElvenWeaponPattern(shot))NightBounce(shot);if(w.full>0||w.half>0||w.quarter>0) {
-                foreach(var u in Units.ToArray())if(u.team!=shot.team&&u.hp>0&&(artillery||u.id!=shot.target)&&(Flying(u)?w.air:w.ground)){float f=Splash(w,Vector2.Distance(u.position,shot.end));if(f>0)ResolveAttack(shot.sourceId,shot.team,u.id,shot.damage*f,w,shot.stun,false);}
-                foreach(var h in Huts.ToArray())if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&h.team!=shot.team&&h.hp>0&&h.paid&&w.structure&&(artillery||HutTarget(h)!=shot.target)){float f=Splash(w,Vector2.Distance(h.position,shot.end));if(f>0){DamageHut(h,shot.damage*f,w.attack,shot.team);var owner=FindUnit(shot.sourceId);if(h.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")h.dragonArmorRank=Mathf.Min(3,h.dragonArmorRank+1);}}
+                using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_2)if(u.team!=shot.team&&u.hp>0&&(artillery||u.id!=shot.target)&&(Flying(u)?w.air:w.ground)){float f=Splash(w,Vector2.Distance(u.position,shot.end));if(f>0)ResolveAttack(shot.sourceId,shot.team,u.id,shot.damage*f,w,shot.stun,false);}
+                using(var snapshot035_3=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_3)if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&h.team!=shot.team&&h.hp>0&&h.paid&&w.structure&&(artillery||HutTarget(h)!=shot.target)){float f=Splash(w,Vector2.Distance(h.position,shot.end));if(f>0){DamageHut(h,shot.damage*f,w.attack,shot.team);var owner=FindUnit(shot.sourceId);if(h.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")h.dragonArmorRank=Mathf.Min(3,h.dragonArmorRank+1);}}
                 int enemy=1-shot.team;float factor=Splash(w,Vector2.Distance(CastlePosition(enemy),shot.end));if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&w.structure&&factor>0&&(artillery||shot.target!=-1))DamageCastle(enemy,shot.damage*factor,w.attack);
             }
             if(artillery&&shot.incendiary)AddFire(shot.team,shot.end,Lines[shot.line].unit=="o001"?"A02J":"A02K");
@@ -139,7 +143,7 @@ public sealed partial class HumanMatch {
     }
     float Splash(Weapon w,float distance)=>distance<=w.full?1:distance<=w.half?w.halfFactor:distance<=w.quarter?w.quarterFactor:0;
     public float DamageUnit(Unit victim,float amount,int team,string attack="magic",bool spell=true,bool execute=false,Unit killer=null,bool suppressUndead=false,bool ignoreArmor=false,float minimumHp=0,bool suppressElemental=false,string attackTable=null,bool bypassResistance=false,bool pandaDebt=false) {
-        if(victim==null||victim.hp<=0||amount<=0||CorruptedAirborne(victim))return 0;Ensure(victim);
+        if(victim==null||victim.hp<=0||amount<=0||CorruptedAirborne(victim))return 0;InvalidateArmyCounts035();Ensure(victim);
         if(!execute&&(Invulnerable(victim)||Lines[victim.kind].unit=="n02E"))return 0;
         if(!execute&&!pandaDebt&&Ethereal(victim)){if(!spell&&attack!="magic"&&attack!="spells")return 0;if(spell&&attack=="magic")amount*=1.66f;}
         if(!execute&&!pandaDebt){if(!spell)foreach(var id in victim.abilities){var cfg=Abilities[id];if((string)cfg?["kind"]=="spiked")amount*=1-Mathf.Clamp01(F(cfg,"reduction"));}if(spell&&attack=="magic"&&(!bypassResistance||victim.spellResist>=1))amount*=1-Mathf.Clamp01(victim.spellResist);if(!spell&&attack=="pierce"&&victim.abilities.Contains("A03G"))amount*=F(Abilities["A03G"],"defend",.4f);amount*=Multiplier(attackTable??(spell&&attack=="magic"?"spells":attack),Lines[victim.kind].armorType);if(!ignoreArmor&&!(spell&&attack=="magic"))amount*=ArmorFactor(victim.armor+Stat(victim,"armor"));amount*=Mathf.Max(0,1+Stat(victim,"incoming"));}
@@ -177,9 +181,9 @@ public sealed partial class HumanMatch {
     }
     void OnHit(Unit owner,Unit target,float dealt,Weapon w) {
         Pulverize(owner,target.position,w);NatureOnHit(owner,target);
-        foreach(var id in owner.abilities.ToArray()) {
+        using(var snapshot035_4=SimulationBuffers035.Take(owner.abilities))foreach(var id in snapshot035_4) {
             var cfg=Abilities[id];string kind=(string)cfg?["kind"];
-            if(kind=="cleave"&&w.type=="normal"){PulseAt(target.position,1,Color.white,"",.45f,"cleave");foreach(var v in Units.ToArray())if(v!=target&&v.hp>0&&v.team!=owner.team&&!Flying(v)&&Vector2.Distance(v.position,target.position)<=F(cfg,"area"))DamageUnit(v,dealt*F(cfg,"power"),owner.team,w.attack,false);}
+            if(kind=="cleave"&&w.type=="normal"){PulseAt(target.position,1,Color.white,"",.45f,"cleave");using(var snapshot035_5=SimulationBuffers035.Take(Units))foreach(var v in snapshot035_5)if(v!=target&&v.hp>0&&v.team!=owner.team&&!Flying(v)&&Vector2.Distance(v.position,target.position)<=F(cfg,"area"))DamageUnit(v,dealt*F(cfg,"power"),owner.team,w.attack,false);}
             if(kind=="orb"&&target.hp>0&&Roll()<F(cfg,"chance")){var effect=Abilities[(string)cfg["effect"]];if((string)effect?["kind"]=="mana_burn"){if(Valid(target,owner.team,effect,false)){float drain=Mathf.Min(target.mana,F(effect,"power"));target.mana-=drain;if(drain>0){DamageUnit(target,drain*F(effect,"ratio",1),owner.team,"magic",true,false,owner);FeedbackHits++;PulseAt(target.position,1,Color.cyan,"Выжигание маны");}}}else if(!ElementalOrb(owner,target,effect)&&!CorruptedOrb(owner,target,effect)&&!UndeadOrb(owner,target,effect)&&!NorthernOrbEffect(owner,target,effect))Chain(owner,target,effect);}
             if((kind=="poison"||kind=="corruption")&&target.hp>0&&Valid(target,owner.team,cfg,false))ApplyEffect(target,id,owner.team,owner.id);
             if(kind=="feedback"&&target.hp>0){float drained=Mathf.Min(target.mana,F(cfg,"power"));target.mana-=drained;float bonus=(target.summoned||(bool?)Lines[target.kind].stats["summoned"]==true)?F(cfg,"summoned_bonus"):0;if(drained+bonus>0){DamageUnit(target,drained*F(cfg,"ratio",1)+bonus,owner.team,"magic",true,false,owner);FeedbackHits++;PulseAt(target.position,1,Color.cyan,"Выжигание маны");}}
@@ -192,7 +196,7 @@ public sealed partial class HumanMatch {
         foreach(var id in owner.abilities) {
             var cfg=Abilities[id];if((string)cfg?["kind"]!="pulverize"||Roll()>=F(cfg,"chance"))continue;
             float full=F(cfg,"area"),half=F(cfg,"half_area");string flags=(string)cfg["targets"]??"ground";
-            foreach(var victim in Units.ToArray()) {
+            using(var snapshot035_6=SimulationBuffers035.Take(Units))foreach(var victim in snapshot035_6) {
                 if(victim.hp<=0||victim.team==owner.team||(Flying(victim)&&!flags.Contains("air"))||(!Flying(victim)&&!flags.Contains("ground"))||(flags.Contains("organic")&&!Organic(victim)))continue;
                 float distance=Vector2.Distance(victim.position,center);if(distance>Mathf.Max(full,half))continue;
                 // This is secondary physical weapon damage: armor applies, spell immunity does not block it.

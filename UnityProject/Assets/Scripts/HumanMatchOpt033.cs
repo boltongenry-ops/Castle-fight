@@ -62,15 +62,15 @@ public sealed partial class HumanMatch {
     bool TryFindBestUnit033(Vector2 point,float maxSqr,int team,System.Func<Unit,bool> canUse,out Unit best) {
         best=null;var s=Opt(this);
         if(!UnitIndexReady033())return false;
-        return s.unitIndex.TryFindBest(point,maxSqr,team,canUse,out best);
+        return SimulationState035.Get(this).targets.TryFindBest(point,maxSqr,team,canUse,out best);
     }
     bool TryFindBestAny033(Vector2 point,float maxSqr,int team,bool requireOnRoad,System.Func<Unit,bool> canUse,out Unit best) {
         best=null;var s=Opt(this);
         if(!UnitIndexReady033())return false;
-        return s.unitIndex.TryFindBestAny(point,maxSqr,team,requireOnRoad,canUse,out best);
+        return SimulationState035.Get(this).targets.TryFindBestAny(point,maxSqr,team,requireOnRoad,canUse,out best);
     }
-    void UnitMoved033(Unit u) { Opt(this).unitIndex.Moved(u); }
-    void SetBuildingActive033(bool v) { Opt(this).buildingActive=v; }
+    void UnitMoved033(Unit u) { SimulationState035.Get(this).targets.Moved(u);SimulationState035.Get(this).neighbors.Moved(u); }
+    void SetBuildingActive033(bool v) { Opt(this).buildingActive=v;InvalidateArmyCounts035(); }
     string[] ProdRoster033(int kind) { EnsureLineCache033(); return Opt(this).lineProdRoster[kind]; }
     int[] ProdKinds033(int kind) { EnsureLineCache033(); return Opt(this).lineProdKinds[kind]; }
     bool HasPair033(int kind) { EnsureLineCache033(); return Opt(this).lineHasPair[kind]; }

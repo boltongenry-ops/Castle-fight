@@ -6,7 +6,7 @@ namespace CastleFight {
 public sealed partial class HumanMatch {
     public static readonly string[] BloodPool={"A01B","A02B","A02B","A009","A05J","A01A","A00D","A01U","A012"};
     public int BloodFiends,TwinPairs,TwinBlasts,ChaosSeals;
-    public bool Hidden(Unit u)=>MechMine(u)||(bool?)Lines[u.kind].stats["hidden_controller"]==true;
+    public bool Hidden(Unit u)=>MechMine(u)||UnitConfig035(u.kind).hidden;
     bool ChaosFighter(Unit u)=>u!=null&&u.hp>0&&!Hidden(u)&&(bool?)Lines[u.kind].stats["invulnerable"]!=true&&Lines[u.kind].unit!="YTct"&&Lines[u.kind].unit!="n02E";
     public float ChaosHaste(Unit u)=>ChaosFighter(u)&&TeamChaos[u.team]&&Aspects[u.team]==0?.35f:0;
     public float ChaosSealBonus(Unit u){if(u.chaosSealTeam!=u.team){u.chaosSealTeam=u.team;u.chaosSeal=0;}return TeamChaos[u.team]&&Aspects[u.team]==1?u.chaosSeal*2:0;}
