@@ -5,6 +5,9 @@
 - Фактический portable:127 целевых проверок,71нерубов,28тумана,104испытаний;16рас пошагово совпали с0.34.320марш p50 128.96→33.72мс;1000производителей+полнаяармия184.74→38.76.2000бойцов всё ещё тяжёлые. GCсчётчики недоступны; телефонный FPS не измерен. Пользователь подтвердил исправление AndroidUltimate0.34.
 - BuildOptimization035.Windows + finalize_windows_code_update.py --replace-burst:118 старых раскладок неизменны, новые разрешённые зависимости сверяются по identity с SHA-проверенным baseline. Заменяются только Assembly-CSharp.dll и lib_burst_generated.dll, не связанные ресурсы. APK BuildAndroidRelease.Build. Freeze work/network035-final-runtime-ready.json; отчёты Optimization035/Android035. Настройки Android выровнены, нижние кнопки разделены. Сервер/аккаунты/голос не менялись.
 
+0.35 publication verified: source 44133d11a101de600f8cc94a29ebb373decbb1ca; channel c4bbd79daa70a6a5a3171b6e7c9d885c7d90d6c0. Portable 29d9d05880a8017fb430cd7ef5f5bcb779057655d56ec341e8715af71a02f6cc; APK 66379af96e360c6084e26c6dea416eb2acd1e7ac261e668cdab111cc9af364b4 / code23. Android ARM64 Burst present and 16KB-aligned; same certificate and33content bundles. Final portable330 checks; updater646880bytes, warm0. Physical Android performance untested. Same launcher/desktop shortcut; no live game/account/voice changes.
+
+
 ## Challenge campaign and mobile fog 0.34 — 17 November 2026
 
 - Base: latest fetched main 6a4b437e / paired 0.33.2. Keep 0.33.1 simulation optimizations. The full optimization plan is NOT complete: docs/OPTIMIZATION-STATUS.ru.md records completed/partial/missing work.
