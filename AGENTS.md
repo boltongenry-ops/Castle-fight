@@ -7,6 +7,9 @@
 - ChallengeCatalog034 extends 18 stable IDs to 30; preserves wallets, equipment and completion IDs. ChallengeRules enforces building/producer/type/shop restrictions and live upgraded/family victory goals. Local mastery XP/level/title derives from first completions, replays improve time only; it does not mutate PvP ranks or sync across devices. No combat stats changed.
 - Targeted acceptance: Editor 59 checks, actual portable 104 challenge checks + 28 fog checks, all 30 actual round starts; APK package/certificate/code/catalog verified, all 33 bundles unchanged. No physical Android crash or competitive challenge difficulty certification. Portable harness needs --portable-wait; otherwise wrapper completion precedes child test completion. Reports docs/validation-034. Source detail docs/CHALLENGES-034.ru.md.
 
+
+0.34 publication verified: portable SHA cd7a53ecf83c6d11001936f188d2a508b9c6153837151bf23e32988c60e86f5e; APK SHA 30af74cdf8cc196b62f24a55a3eeb1ac5b2e62a404fd4dc3ff968a7621b3c5e2. Source9bb554b3, channel152424a6. Same launcher/desktop shortcut and33content hashes. Relay temporary files removed after SHA verification: 4206648799 bytes; local literal4383497bytes removed. Current artifacts/source/immutable content retained.
+
 # Castle Fight repository
 
 - The complete canonical Unity project is `UnityProject`, Unity 6000.6.4f1. Launcher code is `source/Launcher`. The earlier partial `source/Unity` export has been replaced; do not recreate a second copy of game code.

@@ -2,6 +2,8 @@
 
 ПК и Android: строительство армии, битвы рас и сетевая игра на общем сервере.
 
+[Обновление 0.34: туман, Android и 30 испытаний](docs/CHALLENGES-034.ru.md) · [Состояние плана оптимизации](docs/OPTIMIZATION-STATUS.ru.md)
+
 ## Скачать
 
 - [Лаунчер для Windows](https://github.com/boltongenry-ops/Castle-fight/releases/latest/download/CastleFight-Launcher.exe)
