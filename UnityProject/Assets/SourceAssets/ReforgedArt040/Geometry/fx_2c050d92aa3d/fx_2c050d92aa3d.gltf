@@ -1,0 +1,282 @@
+{
+  "nodes": [
+    {
+      "name": "fx_2c050d92aa3d",
+      "rotation": [
+        -0.70710677,
+        0,
+        0,
+        0.70710677
+      ],
+      "children": [
+        5,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "ColumnSemiCircle",
+      "translation": [
+        0.00898,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ColumnSemiCircle_LOD1",
+      "translation": [
+        0.00898,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ColumnSemiCircle_LOD2",
+      "translation": [
+        0.00898,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "ColumnSemiCircle_LOD3",
+      "translation": [
+        0.00898,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fx_2c050d92aa3d_mesh",
+      "mesh": 0,
+      "skin": 0
+    }
+  ],
+  "skins": [
+    {
+      "inverseBindMatrices": 0,
+      "joints": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "fx_2c050d92aa3d",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3,
+            "JOINTS_0": 4,
+            "WEIGHTS_0": 5
+          },
+          "indices": 6,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "CS_Structures_ColumnSemiCircle_Diffuse",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        },
+        "metallicFactor": 1.0,
+        "roughnessFactor": 1.0
+      },
+      "occlusionTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "emissiveTexture": {
+        "index": 3
+      },
+      "emissiveFactor": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "source": 0
+    },
+    {
+      "source": 1
+    },
+    {
+      "source": 2
+    },
+    {
+      "source": 3
+    }
+  ],
+  "images": [
+    {
+      "uri": "CS_Structures_ColumnSemiCircle_Diffuse_diff.png"
+    },
+    {
+      "uri": "CS_Structures_ColumnSemiCircle_Diffuse_orm.png"
+    },
+    {
+      "uri": "CS_Structures_ColumnSemiCircle_Diffuse_norm.png"
+    },
+    {
+      "uri": "CS_Structures_ColumnSemiCircle_Diffuse_emis.png"
+    }
+  ],
+  "animations": [
+    {
+      "name": "Stand 1",
+      "samplers": [],
+      "channels": []
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "asset": {
+    "version": "2.0",
+    "generator": "Wc3ModelViewer"
+  },
+  "buffers": [
+    {
+      "uri": "fx_2c050d92aa3d.bin",
+      "byteLength": 357328
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 256
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 256,
+      "byteLength": 69252,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 69508,
+      "byteLength": 69252,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 138760,
+      "byteLength": 46168,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 184928,
+      "byteLength": 46168,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 231096,
+      "byteLength": 92336,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 323432,
+      "byteLength": 33486,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 356920,
+      "byteLength": 408
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 4,
+      "type": "MAT4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 5771,
+      "type": "VEC3",
+      "min": [
+        -6.7152,
+        0.0071666674,
+        -11.068667
+      ],
+      "max": [
+        5.544667,
+        14.786334,
+        11.308467
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 5771,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 5771,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 5771,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 5771,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5123,
+      "count": 16743,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 102,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        3.333
+      ]
+    }
+  ]
+}

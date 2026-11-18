@@ -1,0 +1,318 @@
+{
+  "nodes": [
+    {
+      "name": "fx_3b8980f5cf5d",
+      "rotation": [
+        -0.70710677,
+        0,
+        0,
+        0.70710677
+      ],
+      "children": [
+        3,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "root_bind_jnt",
+      "translation": [
+        -1.0680534,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "GuardTowerMissile",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fx_3b8980f5cf5d_mesh",
+      "mesh": 0,
+      "skin": 0
+    }
+  ],
+  "skins": [
+    {
+      "inverseBindMatrices": 0,
+      "joints": [
+        1,
+        2
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "fx_3b8980f5cf5d",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3,
+            "JOINTS_0": 4,
+            "WEIGHTS_0": 5
+          },
+          "indices": 6,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "GuardTowerMissile_Diffuse",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        },
+        "metallicFactor": 1.0,
+        "roughnessFactor": 1.0
+      },
+      "occlusionTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "emissiveTexture": {
+        "index": 3
+      },
+      "emissiveFactor": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "extras": {
+        "teamColorMask": 4,
+        "teamColorMaskUri": "GuardTowerMissile_Diffuse_team.png"
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.75
+    }
+  ],
+  "textures": [
+    {
+      "source": 0
+    },
+    {
+      "source": 1
+    },
+    {
+      "source": 2
+    },
+    {
+      "source": 3
+    },
+    {
+      "source": 4
+    }
+  ],
+  "images": [
+    {
+      "uri": "GuardTowerMissile_Diffuse_diff.png"
+    },
+    {
+      "uri": "GuardTowerMissile_Diffuse_orm.png"
+    },
+    {
+      "uri": "GuardTowerMissile_Diffuse_norm.png"
+    },
+    {
+      "uri": "GuardTowerMissile_Diffuse_emis.png"
+    },
+    {
+      "uri": "GuardTowerMissile_Diffuse_team.png"
+    }
+  ],
+  "animations": [
+    {
+      "name": "Stand 1",
+      "samplers": [],
+      "channels": []
+    },
+    {
+      "name": "Birth",
+      "samplers": [],
+      "channels": []
+    },
+    {
+      "name": "Death 1",
+      "samplers": [],
+      "channels": []
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "asset": {
+    "version": "2.0",
+    "generator": "Wc3ModelViewer"
+  },
+  "buffers": [
+    {
+      "uri": "fx_3b8980f5cf5d.bin",
+      "byteLength": 5116
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 128
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 128,
+      "byteLength": 948,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 1076,
+      "byteLength": 948,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 2024,
+      "byteLength": 632,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 2656,
+      "byteLength": 632,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3288,
+      "byteLength": 1264,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 4552,
+      "byteLength": 336,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 4888,
+      "byteLength": 172
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 5060,
+      "byteLength": 8
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 5068,
+      "byteLength": 48
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 2,
+      "type": "MAT4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 79,
+      "type": "VEC3",
+      "min": [
+        -1.6592335,
+        -0.6012667,
+        -0.23751001
+      ],
+      "max": [
+        1.0884634,
+        0.41120335,
+        0.23751001
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 79,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 79,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 79,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 79,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5123,
+      "count": 168,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 43,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        1.367
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 2,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        0.033
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 12,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        0.333
+      ]
+    }
+  ]
+}

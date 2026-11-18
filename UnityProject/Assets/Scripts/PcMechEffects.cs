@@ -21,6 +21,7 @@ public sealed partial class PcGame {
         LoadMechArt();string tag=shot.chaosSpell??"",key=tag=="mech_mine_payload"?(string)mechFxIndex["payloads"]?["h09M"]:tag=="mech_grenade_payload"?(string)mechFxIndex["payloads"]?["h09Q"]:tag=="mech_auto_fire"?"fx_e740be2ceb81":(string)mechFxIndex["weapons"]?[(shot.weapon?.missile??"").ToLowerInvariant()];return MechFx(key,shot.team);
     }
     void MechAttach(HashSet<string> wanted,string id,string key,int team,Transform parent,Vector3 position,float angle=0,float scale=1) {
+        if(TryPlaceHdArt040(id,key,team,parent.TransformPoint(position)))return;
         wanted.Add(id);if(!mechAttachments.TryGetValue(id,out var view)||!view){var prefab=MechFx(key,team);if(!prefab)return;view=Instantiate(prefab,parent).GetComponent<PcModel>();view.Play("Stand");mechAttachments[id]=view;}
         view.transform.localPosition=position;view.transform.localRotation=Quaternion.Euler(0,angle,0);view.transform.localScale=Vector3.one*scale;
     }

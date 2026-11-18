@@ -25,6 +25,29 @@ public sealed class ReforgedModelPack {
     readonly Dictionary<string,Texture2D> icons=new Dictionary<string,Texture2D>(StringComparer.Ordinal);
     readonly HashSet<string> verifiedHashes=new HashSet<string>(StringComparer.Ordinal);
     string[] optionalProfiles=Array.Empty<string>();
+    sealed class ArtPack040 {
+        public const string Release="https://github.com/boltongenry-ops/Castle-fight/releases/download/v0.40.0/";
+        public static readonly ConditionalWeakTable<ReforgedModelPack,ArtPack040> Instances=new ConditionalWeakTable<ReforgedModelPack,ArtPack040>();
+        public AssetBundle Bundle;
+        public JObject Icons,Effects;
+        public bool HasDownloadFiles,ConfirmDelete;
+        public readonly HashSet<string> MissingSheets=new HashSet<string>(StringComparer.Ordinal);
+        public readonly Dictionary<int,string> ShotPaths=new Dictionary<int,string>();
+        public readonly Dictionary<string,GameObject> Geometry=new Dictionary<string,GameObject>();
+        public readonly Dictionary<string,ClassicProjectileModel> LiveEffects=new Dictionary<string,ClassicProjectileModel>();
+        public readonly HashSet<string> CurrentEffects=new HashSet<string>(StringComparer.Ordinal);
+        public readonly List<string> ExpiredEffects=new List<string>();
+    }
+    ArtPack040 Art=>ArtPack040.Instances.GetOrCreateValue(this);
+    AssetBundle artBundle {get=>Art.Bundle;set=>Art.Bundle=value;}
+    JObject artIcons {get=>Art.Icons;set=>Art.Icons=value;}
+    JObject artEffects {get=>Art.Effects;set=>Art.Effects=value;}
+    internal HashSet<string> MissingSheets=>Art.MissingSheets;
+    internal Dictionary<int,string> ShotPaths=>Art.ShotPaths;
+    internal Dictionary<string,GameObject> Geometry=>Art.Geometry;
+    internal Dictionary<string,ClassicProjectileModel> LiveEffects=>Art.LiveEffects;
+    internal HashSet<string> CurrentEffects=>Art.CurrentEffects;
+    internal List<string> ExpiredEffects=>Art.ExpiredEffects;
     string cache;
     bool canceled;
     public bool Preferred,Draft,Panel;
@@ -36,12 +59,45 @@ public sealed class ReforgedModelPack {
     public string Status {get;private set;}="";
     public bool Active=>Preferred&&bundles.Count>0;
     public bool Installed=>File.Exists(IndexPath)&&!broken;
+    public bool ArtInstalled=>File.Exists(ArtIndexPath);
+    public bool HasCache=>Installed||ArtInstalled||Art.HasDownloadFiles;
+    public bool ConfirmDelete {get=>Art.ConfirmDelete;set=>Art.ConfirmDelete=value;}
+    internal JObject ArtEffects=>Active?artEffects:null;
     bool broken;
     string Platform=>Application.isMobilePlatform?Android:Windows;
     string IndexPath=>Path.Combine(cache,Platform+".json");
+    string ArtIndexPath=>Path.Combine(cache,"art040-"+Platform+".json");
 
     public void SetCache(string settingsPath){
         cache=Path.Combine(Path.GetDirectoryName(Path.GetFullPath(settingsPath)),"reforged-models-v1");
+        Art.HasDownloadFiles=CachedDownloads().Any();
+    }
+
+    IEnumerable<string> CachedDownloads(){
+        if(!Directory.Exists(cache))return Array.Empty<string>();
+        try{return Directory.GetFiles(cache).Where(path=>{
+            string name=Path.GetFileName(path);
+            return (name.Length==68&&name.EndsWith(".cfb",StringComparison.OrdinalIgnoreCase)||
+                    name.Length==73&&name.EndsWith(".cfb.part",StringComparison.OrdinalIgnoreCase))&&
+                name.Take(64).All(Uri.IsHexDigit);
+        }).ToArray();}
+        catch(IOException){return Array.Empty<string>();}
+        catch(UnauthorizedAccessException){return Array.Empty<string>();}
+    }
+
+    public void DeleteCache(){
+        if(Busy)return;
+        bool wanted=Preferred;
+        Select(false);
+        Preferred=wanted;
+        verifiedHashes.Clear();
+        bool removed=Delete(IndexPath)&Delete(ArtIndexPath);
+        foreach(var path in CachedDownloads())removed&=Delete(path);
+        Art.HasDownloadFiles=CachedDownloads().Any();
+        broken=false;
+        Bytes=Total=0;
+        ConfirmDelete=false;
+        Status=removed?"Пакет удалён. Его можно скачать снова.":"Часть файлов не удалось удалить. Повторите попытку.";
     }
 
     public GameObject Model(string raw,int team){
@@ -58,11 +114,14 @@ public sealed class ReforgedModelPack {
     internal bool Contains(string raw,int team)=>Active&&bundles.Any(pack=>pack.Contains(Address(raw,team)));
     internal T Asset<T>(string address) where T:UnityEngine.Object{
         if(!Active)return null;
+        if(artBundle&&artBundle.Contains(address))return artBundle.LoadAsset<T>(address);
         var pack=bundles.FirstOrDefault(value=>value.Contains(address));
         return pack?pack.LoadAsset<T>(address):null;
     }
     internal Texture2D Icon(string address){
         if(!Active)return null;
+        if(address.StartsWith("icon/",StringComparison.Ordinal)&&artIcons?[address.Substring(5)] is JValue alias)
+            address="art-icon/"+(string)alias;
         if(!icons.TryGetValue(address,out var icon))icons[address]=icon=Asset<Texture2D>(address);
         return icon;
     }
@@ -73,8 +132,11 @@ public sealed class ReforgedModelPack {
         Preferred=preferred;
         if(!Preferred){
             Cancel();
+            if(artBundle)artBundle.Unload(false);
+            artBundle=null;artIcons=artEffects=null;
+            MissingSheets.Clear();Geometry.Clear();
             if(bundles.Count>0){
-                foreach(var pack in bundles)pack.Unload(false);
+                foreach(var pack in bundles)if(pack)pack.Unload(false);
                 NativeAppearance.RemoveOptionalProfiles(optionalProfiles);optionalProfiles=Array.Empty<string>();
                 bundles.Clear();icons.Clear();ClearPrefabs();Revision++;
             }
@@ -114,12 +176,13 @@ public sealed class ReforgedModelPack {
     }
 
     public IEnumerator OpenCached(){
-        if(!Preferred||Busy||Active||!File.Exists(IndexPath))yield break;
+        if(!Preferred||Busy||!File.Exists(IndexPath))yield break;
+        if(Active){yield return OpenCachedArt();yield break;}
         List<PackFile> files;
         try{files=Parse(File.ReadAllText(IndexPath));}catch(IOException){yield break;}catch(UnauthorizedAccessException){yield break;}
         if(files==null||files.Any(file=>Length(FileFor(file))!=file.Size)){broken=true;Status="Пакет отсутствует или повреждён";yield break;}
         Busy=true;canceled=false;Total=Bytes=files.Sum(file=>file.Size);
-        try{yield return Open(files);}finally{Busy=false;}
+        try{yield return Open(files);if(Active)yield return OpenCachedArt();}finally{Busy=false;}
     }
 
     IEnumerator Open(List<PackFile> files){
@@ -156,7 +219,66 @@ public sealed class ReforgedModelPack {
         catch(Exception e) when(e is Newtonsoft.Json.JsonException||e is ArgumentException||e is InvalidCastException||e is NullReferenceException){return false;}
     }
 
-    public IEnumerator Download(bool explicitRequest)=>Transfer(explicitRequest,Release);
+    public IEnumerator Download(bool explicitRequest,string localArt=null){
+        if(!explicitRequest||!Draft||Busy)yield break;
+        if(!Installed)yield return Transfer(true,Release);
+        if(Installed&&!canceled&&!ArtInstalled){
+            string source=Directory.Exists(localArt)?new Uri(Path.GetFullPath(localArt)+Path.DirectorySeparatorChar).AbsoluteUri:ArtPack040.Release;
+            yield return TransferArt(source);
+        }
+    }
+
+    internal IEnumerator TransferArt(string release){
+        if(!Draft||Busy||!Installed||artBundle)yield break;
+        Busy=true;canceled=false;Bytes=Total=0;
+        try{
+            using(var request=UnityWebRequest.Get(release+"reforged-art-"+Platform+".json")){
+                request.timeout=20;
+                var operation=request.SendWebRequest();
+                while(!operation.isDone&&!canceled)yield return null;
+                if(canceled){request.Abort();yield break;}
+                if(request.result!=UnityWebRequest.Result.Success){Status="Дополнение HD пока недоступно";yield break;}
+                string json=request.downloadHandler.text;
+                var files=Parse(json);
+                if(files==null||files.Count!=1){Status="Каталог HD-эффектов повреждён";yield break;}
+                var file=files[0];Total=file.Size;
+                yield return Fetch(file,release,0);
+                if(canceled||!verifiedHashes.Contains(file.Hash))yield break;
+                try{File.WriteAllText(ArtIndexPath,json);}
+                catch(IOException){Status="Не удалось сохранить каталог HD-эффектов";yield break;}
+                catch(UnauthorizedAccessException){Status="Не удалось сохранить каталог HD-эффектов";yield break;}
+            }
+            if(Active)yield return OpenCachedArt();
+            else Status="HD-материалы скачаны. Нажмите «Применить».";
+        }finally{Busy=false;if(canceled)Status="Загрузка остановлена. Можно продолжить позже.";}
+    }
+
+    IEnumerator OpenCachedArt(){
+        if(!Active||artBundle||!ArtInstalled)yield break;
+        List<PackFile> files;
+        try{files=Parse(File.ReadAllText(ArtIndexPath));}
+        catch(IOException){yield break;}
+        catch(UnauthorizedAccessException){yield break;}
+        if(files==null||files.Count!=1){Delete(ArtIndexPath);yield break;}
+        var file=files[0];
+        if(!verifiedHashes.Contains(file.Hash)){
+            var verified=Task.Run(()=>Valid(FileFor(file),file));
+            while(!verified.IsCompleted){if(canceled||!Active)yield break;yield return null;}
+            if(verified.IsFaulted||!verified.Result){Delete(ArtIndexPath);yield break;}
+            verifiedHashes.Add(file.Hash);
+        }
+        var request=AssetBundle.LoadFromFileAsync(FileFor(file));yield return request;
+        var bundle=request.assetBundle;
+        if(!bundle){Delete(ArtIndexPath);yield break;}
+        if(canceled||!Active||artBundle){bundle.Unload(true);yield break;}
+        try{
+            artIcons=JObject.Parse(bundle.LoadAsset<TextAsset>("art-icons").text);
+            artEffects=JObject.Parse(bundle.LoadAsset<TextAsset>("art-effects").text);
+        }catch(Exception error) when(error is Newtonsoft.Json.JsonException||error is NullReferenceException){
+            artIcons=artEffects=null;bundle.Unload(true);Delete(ArtIndexPath);yield break;
+        }
+        artBundle=bundle;icons.Clear();MissingSheets.Clear();Revision++;Status="Модели и эффекты Reforged готовы";
+    }
     internal IEnumerator Transfer(bool explicitRequest,string release){
         if(!explicitRequest||!Draft||Busy||Active)yield break;
         Busy=true;canceled=false;Bytes=Total=0;Status="Проверяем пакет Reforged";
@@ -198,6 +320,7 @@ public sealed class ReforgedModelPack {
 
     IEnumerator Fetch(PackFile index,string release,long prior){
         string final=FileFor(index),partial=final+".part";
+        Art.HasDownloadFiles=true;
         verifiedHashes.Remove(index.Hash);
         if(Length(final)==index.Size){
             var verify=Task.Run(()=>Valid(final,index));
@@ -212,7 +335,10 @@ public sealed class ReforgedModelPack {
             if(canceled||verifiedHashes.Contains(index.Hash)||File.Exists(partial))yield break;
             start=0;
         }
-        if(start>=index.Size){if(!Delete(partial)){Status="Нет доступа к файлу загрузки";yield break;}start=0;}
+        if(start>=index.Size||start>0&&Uri.TryCreate(release,UriKind.Absolute,out var uri)&&uri.IsFile){
+            if(!Delete(partial)){Status="Нет доступа к файлу загрузки";yield break;}
+            start=0;
+        }
         for(int attempt=0;attempt<2;attempt++){
             using(var request=UnityWebRequest.Get(release+index.Hash+".cfb")){
                 var handler=FileHandler(partial,start>0);

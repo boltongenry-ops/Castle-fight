@@ -15,6 +15,8 @@ public sealed partial class PcGame {
     }
     Texture2D CombatIcon(bool armor,string type){
         string key=CombatIconKey(armor,type);
+        var hd=HdModels.Icon(ReforgedModelPack.IconAddress("Combat-"+key.Substring("CombatType/".Length)));
+        if(hd)return hd;
         if(!combatTypeIcons.TryGetValue(key,out var icon)){icon=ContentResources.Load<Texture2D>(key);if(icon)combatTypeIcons[key]=icon;}
         return icon;
     }

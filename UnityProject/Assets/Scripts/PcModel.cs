@@ -12,7 +12,9 @@ public sealed class PcModel : MonoBehaviour {
         foreach(var clip in clips)player.AddClip(clip,clip.name);
         player.cullingType=reforged?AnimationCullingType.BasedOnRenderers:AnimationCullingType.AlwaysAnimate;
         if(reforged)foreach(var skin in GetComponentsInChildren<SkinnedMeshRenderer>())skin.updateWhenOffscreen=false;
-        appearance=animatedRoot.AddComponent<NativeAppearance>();appearance.Configure(string.IsNullOrEmpty(appearanceKey)?raw:appearanceKey,player);Play("Stand");
+        appearance=animatedRoot.AddComponent<NativeAppearance>();appearance.Configure(string.IsNullOrEmpty(appearanceKey)?raw:appearanceKey,player);
+        if(!reforged&&ClassicWispBody040.IsWisp(raw))gameObject.AddComponent<ClassicWispBody040>();
+        Play("Stand");
     }
     public void Play(string requested,float speed=1,int attackSerial=0) {
         if(particleOnly)return;var clip=Choose(requested);
@@ -20,6 +22,7 @@ public sealed class PcModel : MonoBehaviour {
         player[clip.name].speed=speed;
         bool once=requested.StartsWith("Attack")||requested.StartsWith("Spell")||requested.StartsWith("Birth"),terminal=requested.StartsWith("Death");
         if(pose==requested&&(!once||attackSerial==previousAttack))return;
+        if(!reforged&&ClassicWispBody040.IsWisp(raw)&&TryGetComponent<ClassicWispBody040>(out var wisp))wisp.SetPose(requested);
         previousAttack=attackSerial;pose=requested;player[clip.name].wrapMode=terminal||once?WrapMode.ClampForever:WrapMode.Loop;
         if(once)player[clip.name].time=0;
         if(player.isPlaying)player.CrossFade(clip.name,.12f);else player.Play(clip.name);appearance.SetClip(clip.name);

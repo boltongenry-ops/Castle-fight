@@ -33,10 +33,17 @@ public sealed partial class PcGame {
     string BuilderRaw=>matchRace==15?"cBld":matchRace==12?"h075":matchRace==13?"hUAv":matchRace==14?"hPBu":matchRace==1?"h019":matchRace==2?"h00E":matchRace==3?"h01A":matchRace==4?"h00O":matchRace==5?"h017":matchRace==11?"h00P":matchRace==10?"h089":matchRace==9?"h051":matchRace==8?"u006":matchRace==7?"h018":matchRace==6?"h06P":"h00C";
     Texture2D[] BuildingIcons=>Pack(matchRace)?Pack(matchRace).buildingIcons:buildingIcons;
     Texture2D CommandIcon(int index){
+        var pack=Pack(matchRace);
+        var original=pack&&index==0?pack.builderIcon:pack&&index==6?pack.buildIcon:commandIcons[index];
+        if(HdArt040&&index==0&&BuilderRaw=="h051"){
+            var elemental=HdModels.Icon(ReforgedModelPack.IconAddress("ElementalBuilder"));
+            if(elemental)return elemental;
+        }
+        var icon=HdIcon(original);
+        if(HdArt040&&index==0&&icon!=original)return icon;
         var portrait=index==0?HdActorIcon(BuilderRaw):null;
         if(portrait)return portrait;
-        var pack=Pack(matchRace);
-        return HdIcon(pack&&index==0?pack.builderIcon:pack&&index==6?pack.buildIcon:commandIcons[index]);
+        return icon;
     }
 }
 }

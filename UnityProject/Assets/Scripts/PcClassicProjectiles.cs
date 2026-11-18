@@ -20,23 +20,26 @@ public sealed partial class PcGame {
         result=MobileContent.Active?ContentResources.Load<GameObject>("ClassicMissiles/"+id):classicProjectileBundle?classicProjectileBundle.LoadAsset<GameObject>("Assets/ClassicProjectiles/Prefabs/"+id+".prefab"):null;
         if(result)classicProjectilePrefabs[id]=result;return result;
     }
-    GameObject ClassicWeaponMissile(HumanMatch.Shot shot){
+    GameObject ClassicWeaponMissile(HumanMatch.Shot shot)=>ClassicProjectile(ClassicWeaponKey(shot),shot.team);
+    string ClassicWeaponKey(HumanMatch.Shot shot){
         if(classicProjectileIndex==null||shot.weapon==null||shot.line<0||shot.line>=match.Lines.Length||!string.IsNullOrEmpty(shot.chaosSpell))return null;
         string missile=shot.weapon.missile??"";
         // Barrage is ordinary weapon damage with different native missile art.
         // Resolve its original art through the same billboard/Death adapter.
-        if(missile=="elven:A015")return ClassicProjectile((string)classicProjectileIndex["paths"]?[ProjectilePath((string)match.Abilities["A015"]?["fields"]?["amat"])],shot.team);
+        if(missile=="elven:A015")return (string)classicProjectileIndex["paths"]?[ProjectilePath((string)match.Abilities["A015"]?["fields"]?["amat"])];
         if(missile.Contains(":")&&!missile.StartsWith("res:",StringComparison.Ordinal))return null;
-        string raw=shot.sourceId>=0?match.Units.FirstOrDefault(u=>u.id==shot.sourceId) is HumanMatch.Unit unit?match.Lines[unit.kind].unit:null:null;
+        string raw=shot.sourceId>=0&&match.VisualUnit036(shot.sourceId) is HumanMatch.Unit unit?match.Lines[unit.kind].unit:null;
         var line=match.Lines[shot.line];if(raw==null)raw=shot.sourceId<0||string.IsNullOrEmpty(line.unit)||line.buildingWeapons.Contains(shot.weapon)||match.Huts.Any(h=>h.id==shot.sourceId)?line.building:line.unit;
         var list=raw==line.building?line.buildingWeapons:line.weapons;int slot=list==null?-1:Array.IndexOf(list,shot.weapon);
         string key=(string)classicProjectileIndex["weapons"]?[raw+"_"+(slot>=0?slot+1:1)];
-        if(key==null)key=(string)classicProjectileIndex["paths"]?[ProjectilePath(shot.weapon.missile)];return ClassicProjectile(key,shot.team);
+        return key??(string)classicProjectileIndex["paths"]?[ProjectilePath(shot.weapon.missile)];
     }
     GameObject ClassicOnlineMissile(JObject row){
         string path=(string)row["path"]??"";string key=(string)classicProjectileIndex?["paths"]?[ProjectilePath(path)];
         if(key==null&&path.StartsWith("native:",StringComparison.Ordinal))key=path.Substring(7);
-        int team=((int?)row["t"]??0)==networkSlot?0:1;return ClassicProjectile(key,team);
+        int team=((int?)row["t"]??0)==networkSlot?0:1;
+        var hd=HdGeometry040(key??HdMissileKey040(path),team);
+        return hd?hd:ClassicProjectile(key,team);
     }
 }
 }

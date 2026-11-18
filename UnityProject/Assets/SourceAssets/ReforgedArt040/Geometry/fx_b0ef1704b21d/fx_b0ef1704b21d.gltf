@@ -1,0 +1,282 @@
+{
+  "nodes": [
+    {
+      "name": "fx_b0ef1704b21d",
+      "rotation": [
+        -0.70710677,
+        0,
+        0,
+        0.70710677
+      ],
+      "children": [
+        5,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "City_ColumnSemiCircle_Ruined",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "City_ColumnSemiCircle_Ruined_LOD1",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "City_ColumnSemiCircle_Ruined_LOD2",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "City_ColumnSemiCircle_Ruined_LOD3",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fx_b0ef1704b21d_mesh",
+      "mesh": 0,
+      "skin": 0
+    }
+  ],
+  "skins": [
+    {
+      "inverseBindMatrices": 0,
+      "joints": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "fx_b0ef1704b21d",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3,
+            "JOINTS_0": 4,
+            "WEIGHTS_0": 5
+          },
+          "indices": 6,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "DL_CityColumnRuined_Diffuse",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        },
+        "metallicFactor": 1.0,
+        "roughnessFactor": 1.0
+      },
+      "occlusionTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "emissiveTexture": {
+        "index": 3
+      },
+      "emissiveFactor": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "source": 0
+    },
+    {
+      "source": 1
+    },
+    {
+      "source": 2
+    },
+    {
+      "source": 3
+    }
+  ],
+  "images": [
+    {
+      "uri": "DL_CityColumnRuined_Diffuse_diff.png"
+    },
+    {
+      "uri": "DL_CityColumnRuined_Diffuse_orm.png"
+    },
+    {
+      "uri": "DL_CityColumnRuined_Diffuse_norm.png"
+    },
+    {
+      "uri": "DL_CityColumnRuined_Diffuse_emis.png"
+    }
+  ],
+  "animations": [
+    {
+      "name": "Stand 1",
+      "samplers": [],
+      "channels": []
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "asset": {
+    "version": "2.0",
+    "generator": "Wc3ModelViewer"
+  },
+  "buffers": [
+    {
+      "uri": "fx_b0ef1704b21d.bin",
+      "byteLength": 289964
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 256
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 256,
+      "byteLength": 55860,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 56116,
+      "byteLength": 55860,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 111976,
+      "byteLength": 37240,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 149216,
+      "byteLength": 37240,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 186456,
+      "byteLength": 74480,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 260936,
+      "byteLength": 28620,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 289556,
+      "byteLength": 408
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 4,
+      "type": "MAT4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 4655,
+      "type": "VEC3",
+      "min": [
+        -11.2037,
+        -0.41068003,
+        -8.1071005
+      ],
+      "max": [
+        5.5357003,
+        14.786334,
+        11.308467
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 4655,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 4655,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 4655,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 4655,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5123,
+      "count": 14310,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 102,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        3.333
+      ]
+    }
+  ]
+}

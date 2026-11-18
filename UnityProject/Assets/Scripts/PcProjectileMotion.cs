@@ -8,7 +8,7 @@ public sealed partial class PcGame {
     readonly List<int> retiredProjectiles=new List<int>();
     float projectileLatest,projectileRender,projectileSince;bool projectileClock;
     Vector3 NetworkProjectilePoint(JArray p)=>new Vector3((networkSlot==1?-1:1)*(float)p[0],(float)p[1],-(float)p[2]);
-    void ClearOnlineProjectiles(){foreach(var obj in onlineProjectiles.Values)if(obj)Destroy(obj);onlineProjectiles.Clear();projectileTracks.Clear();projectileClock=false;}
+    void ClearOnlineProjectiles(){foreach(var obj in onlineProjectiles.Values)if(obj)Destroy(obj);onlineProjectiles.Clear();projectileTracks.Clear();HdModels.ShotPaths.Clear();projectileClock=false;}
     void ProjectileStamp(float stamp){
         if(!projectileClock||stamp<projectileLatest-.001f){ClearOnlineProjectiles();projectileRender=stamp-ProjectileMotion.Delay;projectileClock=true;}
         projectileLatest=stamp;projectileSince=0;
@@ -22,12 +22,19 @@ public sealed partial class PcGame {
         retiredProjectiles.Clear();
         foreach(var pair in projectileTracks)if(onlineProjectiles.TryGetValue(pair.Key,out var obj)&&obj){
             var track=pair.Value;var pose=track.motion.Sample(Mathf.Min(projectileRender,track.retire));obj.transform.SetPositionAndRotation(pose.position,pose.rotation);
-            obj.SetActive(projectileRender>=track.born&&(!onlineMatch||!onlineFog||FogVisible(new Vector2(pose.position.x,-pose.position.z))));
+            bool visible=projectileRender>=track.born&&(!onlineMatch||!onlineFog||FogVisible(new Vector2(pose.position.x,-pose.position.z)));
+            bool hd=false;
+            if(visible&&HdArt040&&HdModels.ShotPaths.TryGetValue(pair.Key,out var path)){
+                var layers=HdLayers040(HdMissileKey040(path));
+                float elapsed=float.IsNegativeInfinity(track.born)?projectileRender:projectileRender-track.born;
+                hd=DrawHdLayers040(layers,pose.position,elapsed,angle:HdShotAngle040(pose.position,pose.rotation*Vector3.forward),flight:true);
+            }
+            obj.SetActive(visible&&!hd);
             if(projectileRender>=track.retire)retiredProjectiles.Add(pair.Key);
         }
         foreach(int id in retiredProjectiles){
             if(onlineProjectiles.TryGetValue(id,out var obj)&&obj){var classic=obj.GetComponent<ClassicProjectileModel>();if(classic&&obj.activeSelf)Destroy(obj,classic.Finish());else Destroy(obj);}
-            onlineProjectiles.Remove(id);projectileTracks.Remove(id);
+            onlineProjectiles.Remove(id);projectileTracks.Remove(id);HdModels.ShotPaths.Remove(id);
         }
     }
     bool ProjectileBorn(int id)=>!projectileTracks.TryGetValue(id,out var track)||projectileRender>=track.born;

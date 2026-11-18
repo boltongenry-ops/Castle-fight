@@ -7,12 +7,13 @@ public sealed partial class PcGame {
     readonly Dictionary<int,GameObject> wispBursts=new Dictionary<int,GameObject>(); Material wispMaterial,wispMeshMaterial;GameObject wispMeshPrefab;
     void RenderWispBursts(){
         if(match==null)return;
-        if(!options.hdTextures){foreach(var go in wispBursts.Values)if(go)Destroy(go);wispBursts.Clear();return;}
-        if(!wispMaterial){var shader=Shader.Find("CastleFight/ReforgedFlame");var texture=ContentResources.Load<Texture2D>("RefFx/wisp_dust");if(!shader||!texture){Debug.LogError("CF_NATIVE_WISP_MISSING");return;}wispMaterial=new Material(shader);wispMaterial.mainTexture=texture;Debug.Log("CF_NATIVE_WISP_READY");}
-        foreach(var p in match.Pulses.Where(x=>x.fx=="wisp")){
+        if(!HdParticleAssets040){foreach(var go in wispBursts.Values)if(go)Destroy(go);wispBursts.Clear();return;}
+        if(!wispMaterial){var shader=HdFlameShader040();var texture=HdFxTexture040("wisp_dust");if(!shader||!texture){Debug.LogError("CF_NATIVE_WISP_MISSING");return;}wispMaterial=new Material(shader);wispMaterial.mainTexture=texture;Debug.Log("CF_NATIVE_WISP_READY");}
+        foreach(var p in match.Pulses.Where(x=>x.fx=="wisp"&&ShowPulse036(x))){
+            Art036.rendered.Add(p.id);
             if(!wispBursts.TryGetValue(p.id,out var go)){
                 go=new GameObject("Reforged WispExplode PRE2");go.transform.SetParent(visuals.transform);go.transform.position=World(p.position);wispBursts[p.id]=go;
-                if(!wispMeshPrefab)wispMeshPrefab=ContentResources.Load<GameObject>("RefFx/wisp_explode");
+                if(!wispMeshPrefab)wispMeshPrefab=HdFxModel040("wisp_explode");
                 if(wispMeshPrefab){var mesh=Instantiate(wispMeshPrefab,go.transform).GetComponent<PcModel>();foreach(var skin in mesh.GetComponentsInChildren<SkinnedMeshRenderer>()){
                     if(!wispMeshMaterial){wispMeshMaterial=new Material(skin.sharedMaterial);wispMeshMaterial.SetInt("_SrcBlend",(int)BlendMode.SrcAlpha);wispMeshMaterial.SetInt("_DstBlend",(int)BlendMode.OneMinusSrcAlpha);wispMeshMaterial.SetInt("_ZWrite",0);wispMeshMaterial.SetFloat("_Unlit",1);wispMeshMaterial.renderQueue=(int)RenderQueue.Transparent;}
                     var materials=skin.sharedMaterials;for(int i=0;i<materials.Length;i++)materials[i]=wispMeshMaterial;skin.sharedMaterials=materials;
@@ -22,7 +23,7 @@ public sealed partial class PcGame {
             }
             foreach(var ps in go.GetComponentsInChildren<ParticleSystem>())if(page==Page.Match){if(ps.isPaused)ps.Play();}else if(ps.isPlaying)ps.Pause();
         }
-        foreach(int id in wispBursts.Keys.Where(id=>!match.Pulses.Any(p=>p.id==id)).ToArray()){var go=wispBursts[id];wispBursts.Remove(id);if(go){foreach(var model in go.GetComponentsInChildren<PcModel>())model.gameObject.SetActive(false);Destroy(go,1f);}}
+        foreach(int id in wispBursts.Keys.Where(id=>!match.Pulses.Any(p=>p.id==id&&ShowPulse036(p))).ToArray()){var go=wispBursts[id];wispBursts.Remove(id);if(go){foreach(var model in go.GetComponentsInChildren<PcModel>())model.gameObject.SetActive(false);Destroy(go,1f);}}
     }
     void WispEmitter(Transform parent,string name,float delay,float life,float speed,float first,float middle,float last,bool ring){
         var go=new GameObject(name);go.transform.SetParent(parent,false);var ps=go.AddComponent<ParticleSystem>();ps.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);

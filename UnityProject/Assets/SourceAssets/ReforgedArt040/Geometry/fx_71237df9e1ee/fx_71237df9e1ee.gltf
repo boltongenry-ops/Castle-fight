@@ -1,0 +1,380 @@
+{
+  "nodes": [
+    {
+      "name": "fx_71237df9e1ee",
+      "rotation": [
+        -0.70710677,
+        0,
+        0,
+        0.70710677
+      ],
+      "children": [
+        4,
+        1,
+        2
+      ]
+    },
+    {
+      "name": "root_bind_jnt",
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "children": [
+        3
+      ]
+    },
+    {
+      "name": "WyvernSpearMissile",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "W3R_ClassicRibbon_0",
+      "translation": [
+        -2.9360635,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fx_71237df9e1ee_mesh",
+      "mesh": 0,
+      "skin": 0
+    }
+  ],
+  "skins": [
+    {
+      "inverseBindMatrices": 0,
+      "joints": [
+        1,
+        2,
+        3
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "fx_71237df9e1ee",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3,
+            "JOINTS_0": 4,
+            "WEIGHTS_0": 5
+          },
+          "indices": 6,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "WyvernSpear_Diffuse",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        },
+        "metallicFactor": 1.0,
+        "roughnessFactor": 1.0
+      },
+      "occlusionTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "emissiveTexture": {
+        "index": 3
+      },
+      "emissiveFactor": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "extras": {
+        "teamColorMask": 4,
+        "teamColorMaskUri": "WyvernSpear_Diffuse_team.png"
+      },
+      "alphaMode": "MASK",
+      "alphaCutoff": 0.75
+    }
+  ],
+  "textures": [
+    {
+      "source": 0
+    },
+    {
+      "source": 1
+    },
+    {
+      "source": 2
+    },
+    {
+      "source": 3
+    },
+    {
+      "source": 4
+    }
+  ],
+  "images": [
+    {
+      "uri": "WyvernSpear_Diffuse_diff.png"
+    },
+    {
+      "uri": "WyvernSpear_Diffuse_orm.png"
+    },
+    {
+      "uri": "WyvernSpear_Diffuse_norm.png"
+    },
+    {
+      "uri": "WyvernSpear_Diffuse_emis.png"
+    },
+    {
+      "uri": "WyvernSpear_Diffuse_team.png"
+    }
+  ],
+  "animations": [
+    {
+      "name": "Birth",
+      "samplers": [
+        {
+          "input": 7,
+          "output": 8,
+          "interpolation": "LINEAR"
+        }
+      ],
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 1,
+            "path": "rotation"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stand 1",
+      "samplers": [
+        {
+          "input": 9,
+          "output": 10,
+          "interpolation": "LINEAR"
+        }
+      ],
+      "channels": [
+        {
+          "sampler": 0,
+          "target": {
+            "node": 1,
+            "path": "rotation"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Death 1",
+      "samplers": [],
+      "channels": []
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "asset": {
+    "version": "2.0",
+    "generator": "Wc3ModelViewer"
+  },
+  "buffers": [
+    {
+      "uri": "fx_71237df9e1ee.bin",
+      "byteLength": 48920
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 192
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 192,
+      "byteLength": 9024,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 9216,
+      "byteLength": 9024,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 18240,
+      "byteLength": 6016,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 24256,
+      "byteLength": 6016,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 30272,
+      "byteLength": 12032,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 42304,
+      "byteLength": 5556,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 47860,
+      "byteLength": 8
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 47868,
+      "byteLength": 32
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 47900,
+      "byteLength": 196
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 48096,
+      "byteLength": 784
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 48880,
+      "byteLength": 40
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 3,
+      "type": "MAT4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 752,
+      "type": "VEC3",
+      "min": [
+        -3.2526436,
+        -0.5263967,
+        -0.26009002
+      ],
+      "max": [
+        0.86347336,
+        0.58820003,
+        0.26324
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 752,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 752,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 752,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 752,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5123,
+      "count": 2778,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 2,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        0.033
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 2,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 49,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        1.566
+      ]
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 49,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5126,
+      "count": 10,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        0.266
+      ]
+    }
+  ]
+}

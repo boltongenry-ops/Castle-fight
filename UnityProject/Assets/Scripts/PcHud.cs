@@ -171,7 +171,8 @@ public sealed partial class PcGame {
             foreach(var tr in portraitModel.GetComponentsInChildren<Transform>())tr.gameObject.layer=31;
             portraitModel.transform.localRotation=Quaternion.identity;
             portraitModel.SamplePose();var head=portraitModel.GetComponentsInChildren<Transform>().FirstOrDefault(t=>string.Equals(t.name,"Bone_Head",StringComparison.OrdinalIgnoreCase));
-            if(portraitModel.reforged&&portraitModel.raw=="h016") {
+            if(ClassicWispBody040.IsWisp(portraitModel.raw))FrameWisp040(portraitModel);
+            else if(portraitModel.reforged&&portraitModel.raw=="h016") {
                 // The rider's frontal camera is occluded by the Gryphon's wing.
                 // Frame the mounted actor until a dedicated rider portrait is imported.
                 var bounds=portraitModel.BodyBounds();float size=Mathf.Max(bounds.size.x,Mathf.Max(bounds.size.y,bounds.size.z));
@@ -203,7 +204,6 @@ public sealed partial class PcGame {
                 var point=portraitModel.transform.position+Vector3.up*(height*.78f);
                 portraitCamera.transform.position=point+new Vector3(0,span*.03f,span*3.3f);portraitCamera.transform.LookAt(point);
             }
-            else if(!portraitModel.reforged&&raw=="h051"){var bounds=portraitModel.BodyBounds();float size=Mathf.Max(.75f,Mathf.Max(bounds.size.x,bounds.size.y));var point=bounds.center;portraitCamera.transform.position=point+new Vector3(0,size*.05f,size*2.5f);portraitCamera.transform.LookAt(point);}
             else if(builderSelected&&!portraitModel.reforged&&new[]{"h075","hUAv","hPBu"}.Contains(raw)) {
                 var bounds=portraitModel.BodyBounds();float height=Mathf.Max(.5f,bounds.size.y);
                 var point=head?head.position+Vector3.up*height*.025f:bounds.center+Vector3.up*height*.22f;
@@ -222,6 +222,7 @@ public sealed partial class PcGame {
             else if((SelectedUnit!=null||builderSelected)&&head){var point=head.position+Vector3.up*.08f;portraitCamera.transform.position=point+new Vector3(0,.04f,1.6f);portraitCamera.transform.LookAt(point);}
             else {var bounds=portraitModel.BodyBounds();float size=Mathf.Max(bounds.size.x,bounds.size.y);var centre=bounds.center;portraitCamera.transform.position=centre+new Vector3(0,size*.07f,Mathf.Max(2,size*1.9f));portraitCamera.transform.LookAt(centre);}
         }
+        if(HdArt040&&portraitModel&&portraitModel.reforged)DrawHdActor040(portraitModel,false,Time.unscaledTime,portraitCamera,31);
         portraitCamera.Render();
     }
     void DestroyHud(){if(portraitStage)Destroy(portraitStage);if(portraitTexture){portraitTexture.Release();Destroy(portraitTexture);}}

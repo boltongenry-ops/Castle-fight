@@ -17,6 +17,7 @@ public sealed partial class PcGame {
         return null;
     }
     void PlaceNorthernFx(HashSet<string> wanted,string id,string art,Vector3 position) {
+        if(TryPlaceHdArt040(id,art,0,position))return;
         wanted.Add(id);if(!northernAttachments.TryGetValue(id,out var model)||!model){var prefab=NorthernFx(art);if(!prefab)return;model=Instantiate(prefab,visuals.transform).GetComponent<PcModel>();northernAttachments[id]=model;model.Play("Stand");}
         model.transform.position=position;
     }

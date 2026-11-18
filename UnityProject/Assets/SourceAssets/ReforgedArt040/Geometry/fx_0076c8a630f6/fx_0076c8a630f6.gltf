@@ -1,0 +1,326 @@
+{
+  "nodes": [
+    {
+      "name": "fx_0076c8a630f6",
+      "rotation": [
+        -0.70710677,
+        0,
+        0,
+        0.70710677
+      ],
+      "children": [
+        5,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "MineCart_geo",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "MineCart_geo_LOD1",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "MineCart_geo_LOD2",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "MineCart_geo_LOD3",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fx_0076c8a630f6_mesh",
+      "mesh": 0,
+      "skin": 0
+    }
+  ],
+  "skins": [
+    {
+      "inverseBindMatrices": 0,
+      "joints": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "fx_0076c8a630f6",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3,
+            "JOINTS_0": 4,
+            "WEIGHTS_0": 5
+          },
+          "indices": 6,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "DG_Props_MineCart_Main_Diffuse",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        },
+        "metallicFactor": 1.0,
+        "roughnessFactor": 1.0
+      },
+      "occlusionTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "emissiveTexture": {
+        "index": 3
+      },
+      "emissiveFactor": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "source": 0
+    },
+    {
+      "source": 1
+    },
+    {
+      "source": 2
+    },
+    {
+      "source": 3
+    }
+  ],
+  "images": [
+    {
+      "uri": "DG_Props_MineCart_Main_Diffuse_diff.png"
+    },
+    {
+      "uri": "DG_Props_MineCart_Main_Diffuse_orm.png"
+    },
+    {
+      "uri": "DG_Props_MineCart_Main_Diffuse_norm.png"
+    },
+    {
+      "uri": "DG_Props_MineCart_Main_Diffuse_emis.png"
+    }
+  ],
+  "animations": [
+    {
+      "name": "Stand Wounded 1",
+      "samplers": [],
+      "channels": []
+    },
+    {
+      "name": "Spell 1",
+      "samplers": [],
+      "channels": []
+    },
+    {
+      "name": "Stand 1",
+      "samplers": [],
+      "channels": []
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "asset": {
+    "version": "2.0",
+    "generator": "Wc3ModelViewer"
+  },
+  "buffers": [
+    {
+      "uri": "fx_0076c8a630f6.bin",
+      "byteLength": 136524
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 256
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 256,
+      "byteLength": 25764,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 26020,
+      "byteLength": 25764,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 51784,
+      "byteLength": 17176,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 68960,
+      "byteLength": 17176,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 86136,
+      "byteLength": 34352,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 120488,
+      "byteLength": 13740,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 134228,
+      "byteLength": 152
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 134380,
+      "byteLength": 412
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 134792,
+      "byteLength": 1732
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 4,
+      "type": "MAT4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2147,
+      "type": "VEC3",
+      "min": [
+        -1.4735469,
+        0.002706667,
+        -1.6462668
+      ],
+      "max": [
+        1.4364234,
+        2.5953302,
+        1.6161268
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 2147,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 2147,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 2147,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 2147,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5123,
+      "count": 6870,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 38,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        1.2
+      ]
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5126,
+      "count": 103,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        3.334
+      ]
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 433,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        14.233
+      ]
+    }
+  ]
+}

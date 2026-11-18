@@ -55,6 +55,8 @@ public sealed partial class PcGame {
     string AspectId(int race,int index)=>AspectField(race,index,"id");
     Texture2D AspectIcon(int race,int index) {
         string id=AspectId(race,index);if(string.IsNullOrEmpty(id))return null;
+        var hd=HdModels.Icon(ReforgedModelPack.IconAddress("Aspect-"+id));
+        if(hd)return hd;
         if(!aspectIconCache.TryGetValue(id,out var texture)){texture=ContentResources.Load<Texture2D>("Aspect-"+id);aspectIconCache[id]=texture;}
         return texture;
     }
@@ -216,7 +218,8 @@ public sealed partial class PcGame {
             menuPortraitModel.transform.localRotation=Quaternion.identity;
             menuPortraitModel.SamplePose();
             var workerHead=menuPortraitModel.GetComponentsInChildren<Transform>().FirstOrDefault(v=>v.name.Equals("Bone_Head",StringComparison.OrdinalIgnoreCase));
-            if(menuPortraitModel.raw=="h018"&&workerHead){var point=workerHead.position+Vector3.up*.08f;portraitCamera.transform.position=point+new Vector3(0,.05f,1.9f);portraitCamera.transform.LookAt(point);}
+            if(ClassicWispBody040.IsWisp(menuPortraitModel.raw))FrameWisp040(menuPortraitModel);
+            else if(menuPortraitModel.raw=="h018"&&workerHead){var point=workerHead.position+Vector3.up*.08f;portraitCamera.transform.position=point+new Vector3(0,.05f,1.9f);portraitCamera.transform.LookAt(point);}
             else if(menuPortraitModel.HeadBounds(out var face)) {
                 var anchor=menuPortraitModel.GetComponentsInChildren<Transform>().FirstOrDefault(t=>string.Equals(t.name,"Head Ref",StringComparison.OrdinalIgnoreCase));
                 float span=Mathf.Clamp(Mathf.Max(face.size.x,face.size.y),.28f,.7f);
@@ -228,6 +231,7 @@ public sealed partial class PcGame {
                 portraitCamera.transform.position=point+new Vector3(0,size*.1f,Mathf.Max(2f,size*1.9f));portraitCamera.transform.LookAt(point);
             }
         }
+        if(HdArt040&&menuPortraitModel&&menuPortraitModel.reforged)DrawHdActor040(menuPortraitModel,false,Time.unscaledTime,portraitCamera,31);
         portraitCamera.Render();
     }
 }

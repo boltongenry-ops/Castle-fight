@@ -1,0 +1,282 @@
+{
+  "nodes": [
+    {
+      "name": "fx_340eb6d7ea74",
+      "rotation": [
+        -0.70710677,
+        0,
+        0,
+        0.70710677
+      ],
+      "children": [
+        5,
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "LS_Props_ArcheryTarget_geo",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "LS_Props_ArcheryTarget_geo_LOD1",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "LS_Props_ArcheryTarget_geo_LOD2",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "LS_Props_ArcheryTarget_geo_LOD3",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fx_340eb6d7ea74_mesh",
+      "mesh": 0,
+      "skin": 0
+    }
+  ],
+  "skins": [
+    {
+      "inverseBindMatrices": 0,
+      "joints": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "fx_340eb6d7ea74",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3,
+            "JOINTS_0": 4,
+            "WEIGHTS_0": 5
+          },
+          "indices": 6,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "LS_Props_ArcheryTarget_Diffuse",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        },
+        "metallicFactor": 1.0,
+        "roughnessFactor": 1.0
+      },
+      "occlusionTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "emissiveTexture": {
+        "index": 3
+      },
+      "emissiveFactor": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "source": 0
+    },
+    {
+      "source": 1
+    },
+    {
+      "source": 2
+    },
+    {
+      "source": 3
+    }
+  ],
+  "images": [
+    {
+      "uri": "LS_Props_ArcheryTarget_Diffuse_diff.png"
+    },
+    {
+      "uri": "LS_Props_ArcheryTarget_Diffuse_orm.png"
+    },
+    {
+      "uri": "LS_Props_ArcheryTarget_Diffuse_norm.png"
+    },
+    {
+      "uri": "LS_Props_ArcheryTarget_Diffuse_emis.png"
+    }
+  ],
+  "animations": [
+    {
+      "name": "Stand 1",
+      "samplers": [],
+      "channels": []
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "asset": {
+    "version": "2.0",
+    "generator": "Wc3ModelViewer"
+  },
+  "buffers": [
+    {
+      "uri": "fx_340eb6d7ea74.bin",
+      "byteLength": 45700
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 256
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 256,
+      "byteLength": 8796,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 9052,
+      "byteLength": 8796,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 17848,
+      "byteLength": 5864,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 23712,
+      "byteLength": 5864,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 29576,
+      "byteLength": 11728,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 41304,
+      "byteLength": 4230,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 45536,
+      "byteLength": 164
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 4,
+      "type": "MAT4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 733,
+      "type": "VEC3",
+      "min": [
+        -1.2463135,
+        -0.040910006,
+        -1.2296568
+      ],
+      "max": [
+        2.151917,
+        2.1124635,
+        1.1527468
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 733,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 733,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 733,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 733,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5123,
+      "count": 2115,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 41,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        1.3
+      ]
+    }
+  ]
+}

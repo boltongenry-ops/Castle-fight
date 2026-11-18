@@ -59,12 +59,17 @@ public sealed partial class PcGame {
         if(!options.hdTextures)foreach(var pulse in match.Pulses){
             string key=ClassicCastKey036(pulse);
             if(key==null||!ShowPulse036(pulse))continue;
+            if(state.rendered.Contains(pulse.id)){
+                if(state.casts.TryGetValue(pulse.id,out var previous)&&previous)previous.gameObject.SetActive(false);
+                continue;
+            }
             if(!state.casts.TryGetValue(pulse.id,out var model)||!model){
                 var prefab=SpellPrefab036(key);if(!prefab)continue;
                 model=Instantiate(prefab,visuals.transform).GetComponent<ClassicProjectileModel>();
                 model.PlayCast();state.casts[pulse.id]=model;
             }
             model.transform.position=World(pulse.position);
+            model.gameObject.SetActive(true);
             if(pulse.visualUnitId>0&&units.TryGetValue(pulse.visualUnitId,out var actor)&&actor)
                 model.transform.position=actor.transform.position;
             state.rendered.Add(pulse.id);

@@ -1,0 +1,252 @@
+{
+  "nodes": [
+    {
+      "name": "fx_d848897f78f4",
+      "rotation": [
+        -0.70710677,
+        0,
+        0,
+        0.70710677
+      ],
+      "children": [
+        2,
+        1
+      ]
+    },
+    {
+      "name": "NR_Structures_Rubble_V1",
+      "translation": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "name": "fx_d848897f78f4_mesh",
+      "mesh": 0,
+      "skin": 0
+    }
+  ],
+  "skins": [
+    {
+      "inverseBindMatrices": 0,
+      "joints": [
+        1
+      ]
+    }
+  ],
+  "meshes": [
+    {
+      "name": "fx_d848897f78f4",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 1,
+            "NORMAL": 2,
+            "TEXCOORD_0": 3,
+            "JOINTS_0": 4,
+            "WEIGHTS_0": 5
+          },
+          "indices": 6,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "NR_Structures_Rubble_V1_Diffuse",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        },
+        "metallicFactor": 1.0,
+        "roughnessFactor": 1.0
+      },
+      "occlusionTexture": {
+        "index": 1
+      },
+      "normalTexture": {
+        "index": 2
+      },
+      "emissiveTexture": {
+        "index": 3
+      },
+      "emissiveFactor": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "source": 0
+    },
+    {
+      "source": 1
+    },
+    {
+      "source": 2
+    },
+    {
+      "source": 3
+    }
+  ],
+  "images": [
+    {
+      "uri": "NR_Structures_Rubble_V1_Diffuse_diff.png"
+    },
+    {
+      "uri": "NR_Structures_Rubble_V1_Diffuse_orm.png"
+    },
+    {
+      "uri": "NR_Structures_Rubble_V1_Diffuse_norm.png"
+    },
+    {
+      "uri": "NR_Structures_Rubble_V1_Diffuse_emis.png"
+    }
+  ],
+  "animations": [
+    {
+      "name": "Stand",
+      "samplers": [],
+      "channels": []
+    }
+  ],
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "scene": 0,
+  "asset": {
+    "version": "2.0",
+    "generator": "Wc3ModelViewer"
+  },
+  "buffers": [
+    {
+      "uri": "fx_d848897f78f4.bin",
+      "byteLength": 17968
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 64
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 64,
+      "byteLength": 3288,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3352,
+      "byteLength": 3288,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 6640,
+      "byteLength": 2192,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 8832,
+      "byteLength": 2192,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 11024,
+      "byteLength": 4384,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 15408,
+      "byteLength": 1752,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 17160,
+      "byteLength": 808
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 1,
+      "type": "MAT4"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 274,
+      "type": "VEC3",
+      "min": [
+        -1.8385701,
+        0.007596667,
+        -1.5332501
+      ],
+      "max": [
+        1.8456568,
+        2.31341,
+        1.5198134
+      ]
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 274,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 274,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5123,
+      "count": 274,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 274,
+      "type": "VEC4"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5123,
+      "count": 876,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 202,
+      "type": "SCALAR",
+      "min": [
+        0
+      ],
+      "max": [
+        6.633
+      ]
+    }
+  ]
+}

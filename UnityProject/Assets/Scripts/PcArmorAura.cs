@@ -17,7 +17,7 @@ public sealed partial class PcGame {
         }
         return anchors[slot]?anchors[slot]:anchors[0];
     }
-    GameObject OrcDecorPrefab(string key){if(!orcDecorPrefabs.TryGetValue(key,out var prefab)){prefab=ContentResources.Load<GameObject>("RefFx/"+key);orcDecorPrefabs[key]=prefab;}return prefab;}
+    GameObject OrcDecorPrefab(string key){if(!orcDecorPrefabs.TryGetValue(key,out var prefab)){prefab=HdFxModel040(key);orcDecorPrefabs[key]=prefab;}return prefab;}
     void ApplyOrcDecorMaterial(PcModel model,string name){
         if(name!="aura_armor"&&name!="orc_rune")return;
         foreach(var skin in model.GetComponentsInChildren<SkinnedMeshRenderer>()){
@@ -34,8 +34,8 @@ public sealed partial class PcGame {
     }
     void RenderOrcArmorAuras(){
         if(match==null)return;var live=new HashSet<string>();
-        if(options.hdTextures){LoadReforgedFx();foreach(var h in match.Huts){
-            if(h.hp<=0||!match.TeamOrc[h.team]||!huts.TryGetValue(h.id,out var actor))continue;
+        if(HdParticleAssets040){LoadReforgedFx();foreach(var h in match.Huts){
+            if(h.hp<=0||!CanInspectHut(h)||!match.TeamOrc[h.team]||!huts.TryGetValue(h.id,out var actor))continue;
             string raw=match.Lines[h.kind].building;float t=match.Elapsed+(h.id%19)*.037f;float scale=Mathf.Clamp(HumanMatch.F(match.Lines[h.kind].buildingStats,"model_scale",1),.3f,3)*actor.transform.localScale.x;
             if(raw=="h035"||raw=="h092"){
                 string fx=raw=="h035"?"orc_damage_aura":"magic_sentry";
@@ -48,8 +48,8 @@ public sealed partial class PcGame {
             }
             if(raw=="h02N")OrcDecorModel(live,h,actor,"serpent_rock",0,scale/Mathf.Max(.001f,actor.transform.localScale.x));
         }}
-        if(options.hdTextures)foreach(var h in match.Huts){
-            if(h.hp<=0||!match.TeamNaga[h.team]||!huts.TryGetValue(h.id,out var actor))continue;
+        if(HdParticleAssets040)foreach(var h in match.Huts){
+            if(h.hp<=0||!CanInspectHut(h)||!match.TeamNaga[h.team]||!huts.TryGetValue(h.id,out var actor))continue;
             string raw=match.Lines[h.kind].building;float t=match.Elapsed+(h.id%19)*.037f;float scale=Mathf.Clamp(HumanMatch.F(match.Lines[h.kind].buildingStats,"model_scale",1),.3f,3)*actor.transform.localScale.x;
             float modelScale=scale/Mathf.Max(.001f,actor.transform.localScale.x);
             if(raw=="h020"||raw=="h021"||raw=="h022")OrcDecorModel(live,h,actor,"naga_roots",0,modelScale);

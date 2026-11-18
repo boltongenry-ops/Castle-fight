@@ -50,6 +50,8 @@ public sealed partial class PcGame {
     void DrawSelectionMarquee(){if(!selectionDragging||!selectionPending)return;var rect=SelectionRect(GuiPoint(selectionStart),GuiPoint(selectionEnd));Fill(rect,new Color(.15f,.8f,.22f,.10f));Border(rect,new Color(.25f,1,.3f),1);}
     Texture2D GroupIcon(HumanMatch.Unit unit){
         string actor=match.Lines[unit.kind].unit;
+        var icon=HdModels.Icon(ReforgedModelPack.IconAddress("Unit-"+actor));
+        if(icon)return icon;
         var portrait=HdActorIcon(actor);
         if(portrait)return portrait;
         var revised=ContentResources.Load<Texture2D>("NerubianUnitIcon/"+actor);

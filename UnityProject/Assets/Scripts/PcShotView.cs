@@ -29,7 +29,7 @@ public sealed class PcShotView : MonoBehaviour {
         var end=Vector2.Lerp(previousEnd,currentEnd,visualBlend);var start=world(s.start)+Vector3.up*s.startHeight;
         return Vector3.Lerp(start,world(end)+Vector3.up*Mathf.Lerp(previousHeight,currentHeight,visualBlend),t)+Vector3.up*(4*t*(1-t)*Vector2.Distance(s.start,end)*s.arc);
     }
-    public void Draw(HumanMatch.Shot s,Func<Vector2,Vector3> world,float behind,bool nativeFx=false,GameObject prefab=null) {
+    public void Draw(HumanMatch.Shot s,Func<Vector2,Vector3> world,float behind,bool nativeFx=false,GameObject prefab=null,Func<HumanMatch.Shot,PcShotView,bool> drawHd=null) {
         if(observed!=s){observed=s;observedAge=s.age;previousEnd=currentEnd=s.end;previousHeight=currentHeight=s.endHeight;previousDuration=currentDuration=s.duration;hitObserved=s.hit;VisualHit=false;}
         else if(observedAge!=s.age){
             observedAge=s.age;previousEnd=currentEnd;previousHeight=currentHeight;previousDuration=currentDuration;
@@ -41,6 +41,10 @@ public sealed class PcShotView : MonoBehaviour {
         VisualHit=hit;
         if(hit)t=1;
         transform.position=DrawPosition(s,t,world);
+        if(drawHd?.Invoke(s,this)==true){
+            prefab=null;
+            nativeFx=true;
+        }
         if(prefab&&s.kind!=4){
             if(prefab!=nativePrefab){if(nativeObject)Destroy(nativeObject);nativeObject=Instantiate(prefab,transform);nativeModel=nativeObject.GetComponent<PcModel>();nativePrefab=prefab;}
             if(body)body.gameObject.SetActive(false);flash.gameObject.SetActive(false);streak.gameObject.SetActive(false);nativeObject.SetActive(true);

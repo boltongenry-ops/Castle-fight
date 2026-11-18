@@ -54,6 +54,7 @@ public sealed partial class PcGame {
         if(float.IsNaN(stamp))stamp=Time.unscaledTime;ProjectileStamp(stamp);
         var live=new HashSet<int>();if(rows!=null)foreach(var row in rows.OfType<JObject>()) {
             int id=(int?)row["id"]??0;var p=row["p"] as JArray;if(id<=0||p==null||p.Count<3)continue;live.Add(id);
+            HdModels.ShotPaths[id]=(string)row["path"];
             if(!onlineProjectiles.TryGetValue(id,out var obj)||!obj){var prefab=ClassicOnlineMissile(row);if(prefab){obj=Instantiate(prefab,visuals.transform);}else{obj=GameObject.CreatePrimitive(PrimitiveType.Sphere);Destroy(obj.GetComponent<Collider>());obj.GetComponent<Renderer>().sharedMaterial=shellMaterial;obj.transform.localScale=Vector3.one*.35f;obj.transform.SetParent(visuals.transform);}obj.name="Сетевой снаряд "+id;onlineProjectiles[id]=obj;}
             float yaw=(float?)row["yaw"]??0,pitch=(float?)row["pitch"]??0;var forward=new Vector3((networkSlot==1?-1:1)*Mathf.Sin(yaw)*Mathf.Cos(pitch),-Mathf.Sin(pitch),-Mathf.Cos(yaw)*Mathf.Cos(pitch));var rotation=Quaternion.LookRotation(forward);
             if(!projectileTracks.TryGetValue(id,out var track)){

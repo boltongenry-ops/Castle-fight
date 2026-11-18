@@ -8,9 +8,9 @@ public sealed partial class PcGame {
     readonly Dictionary<int,PcModel> reforgedNets=new Dictionary<int,PcModel>(),reforgedAirNets=new Dictionary<int,PcModel>();GameObject reforgedNetPrefab,reforgedAirNetPrefab;
     void RenderOrcNets() {
         var netted=match.Units.Where(u=>u.hp>0&&CanSeeUnit(u)&&!match.Hidden(u)&&u.effects.Any(IsEnsnareArt036)).ToArray();
-        if(options.hdTextures&&!reforgedNetPrefab)reforgedNetPrefab=ContentResources.Load<GameObject>("RefFx/net");if(options.hdTextures&&!reforgedAirNetPrefab)reforgedAirNetPrefab=ContentResources.Load<GameObject>("RefFx/net_air");
+        if(HdParticleAssets040&&!reforgedNetPrefab)reforgedNetPrefab=HdFxModel040("net");if(HdParticleAssets040&&!reforgedAirNetPrefab)reforgedAirNetPrefab=HdFxModel040("net_air");
         foreach(var u in netted) {
-            if(options.hdTextures&&reforgedNetPrefab){
+            if(HdParticleAssets040&&reforgedNetPrefab){
                 if(netViews.TryGetValue(u.id,out var old)){Destroy(old.gameObject);netViews.Remove(u.id);netSizes.Remove(u.id);}
                 if(!reforgedNets.TryGetValue(u.id,out var fx)){fx=Instantiate(reforgedNetPrefab,visuals.transform).GetComponent<PcModel>();reforgedNets[u.id]=fx;fx.transform.position=World(u.position);fx.Play("Stand");fx.SamplePose();var native=fx.BodyBounds();var target=units.TryGetValue(u.id,out var actor)?actor.BodyBounds():new Bounds(Vector3.zero,new Vector3(3,3,3));float factor=Mathf.Clamp(Mathf.Max(target.size.x,target.size.z)*1.4f/Mathf.Max(.1f,Mathf.Max(native.size.x,native.size.z)),.2f,5);fx.transform.localScale=Vector3.one*factor;}
                 fx.transform.position=World(u.position);fx.Play("Stand");
