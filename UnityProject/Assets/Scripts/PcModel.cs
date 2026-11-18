@@ -22,10 +22,11 @@ public sealed class PcModel : MonoBehaviour {
         player[clip.name].speed=speed;
         bool once=requested.StartsWith("Attack")||requested.StartsWith("Spell")||requested.StartsWith("Birth"),terminal=requested.StartsWith("Death");
         if(pose==requested&&(!once||attackSerial==previousAttack))return;
-        if(!reforged&&ClassicWispBody040.IsWisp(raw)&&TryGetComponent<ClassicWispBody040>(out var wisp))wisp.SetPose(requested);
         previousAttack=attackSerial;pose=requested;player[clip.name].wrapMode=terminal||once?WrapMode.ClampForever:WrapMode.Loop;
         if(once)player[clip.name].time=0;
         if(player.isPlaying)player.CrossFade(clip.name,.12f);else player.Play(clip.name);appearance.SetClip(clip.name);
+        if(!reforged&&ClassicWispBody040.IsWisp(raw)&&TryGetComponent<ClassicWispBody040>(out var wisp))
+            wisp.SetClip(clip.name,!terminal&&!once);
     }
     static string[] Tokens(string value)=>(value??"").ToLowerInvariant().Split(new[]{' ', '-',','},StringSplitOptions.RemoveEmptyEntries);
     AnimationClip Choose(string requested) {

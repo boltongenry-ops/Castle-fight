@@ -232,6 +232,7 @@ public sealed partial class PcGame {
             }
         }
         if(HdArt040&&menuPortraitModel&&menuPortraitModel.reforged)DrawHdActor040(menuPortraitModel,false,Time.unscaledTime,portraitCamera,31);
+        ClassicWispBody040.FacePortrait(menuPortraitModel,portraitCamera);
         portraitCamera.Render();
     }
 }

@@ -145,7 +145,8 @@ public sealed partial class PcGame {
     void FrameWisp040(PcModel model){
         if(!model.reforged&&model.TryGetComponent<ClassicWispBody040>(out var wisp)){
             Vector3 core=wisp.Center;
-            portraitCamera.transform.position=core+new Vector3(.23f,.07f,2f);
+            float distance=Mathf.Max(2.8f,model.ClassicHeight*1.9f);
+            portraitCamera.transform.position=core+new Vector3(0,distance*.08f,distance);
             portraitCamera.transform.LookAt(core);
             return;
         }

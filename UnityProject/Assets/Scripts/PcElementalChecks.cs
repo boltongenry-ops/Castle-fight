@@ -13,10 +13,17 @@ public sealed partial class PcGame {
     void ElementalTick(float dt)=>CorruptedCall("TickElemental",dt);
     IEnumerator ExerciseElementalOnly(){
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"elemental-validation"));Directory.CreateDirectory(folder);MainMenu();aspectsOn=false;botRaceChoice=0;yield return Action("main.play");yield return Action("setup.elemental");
-        Check(raceChoice==9&&elementalPack&&AllRaceIds[RaceOfUnity(9)]=="elementals","Elementals source menu card and separate race pack");yield return Shot(folder,"01-elemental-selection");startGold=1000;yield return Action("setup.start");testHoldAuthority=true;
+        Check(raceChoice==9&&elementalPack&&AllRaceIds[RaceOfUnity(9)]=="elementals","Elementals source menu card and separate race pack");yield return Shot(folder,"01-elemental-selection");
+        if(BattleLab.Arg("--pc-wisp-preview")=="1"){
+            Check(menuPortraitModel&&menuPortraitModel.TryGetComponent<ClassicWispBody040>(out var menuWisp)&&menuWisp.FacingPlanes>0&&menuWisp.Alignment(portraitCamera)>.99f,
+                "Race selection faces the imported Wisp planes toward the portrait camera");
+        }
+        startGold=1000;yield return Action("setup.start");testHoldAuthority=true;
         Check(match.TeamElemental[0]&&!match.TeamHuman[0]&&match.TeamHuman[1]&&builders[0].raw=="h051","Wisp builder and mixed offline identities");Check(match.BaseKinds.Length==11&&elementalPack.buildingIcons.Length==22&&AspectCount(9)==2,"Twenty-one native rows, one retained lava actor row, both aspects");Check(CommandIcon(0)==elementalPack.builderIcon&&CommandIcon(6)==elementalPack.buildIcon,"Builder and construction command art");Check(builders[0].GetComponentsInChildren<ParticleSystem>().Length>0,"Wisp uses its own source particle emitters");Check(!builders[0].clips.Any(c=>c.name.StartsWith("Walk",StringComparison.OrdinalIgnoreCase)),"No invented Wisp walking clip");
         foreach(string id in new[]{"A0DV","A0EI","A0FG","A0E1","A0DW","A0DX","A0DY","A0F5","A0CH","A0CU","A0EN","A03Y"})Check(AbilityArt(id),"Elemental source icon "+id);
-        builderSelected=true;selectedUnit=selectedHut=-1;yield return Shot(folder,"02-elemental-worker");match.Gold[0]=match.Wood[0]=100000;match.LegendaryLimit[0]=12;
+        builderSelected=true;selectedUnit=selectedHut=-1;
+        if(BattleLab.Arg("--pc-wisp-preview")=="1"){yield return ExerciseClassicWisp(folder);yield break;}
+        yield return Shot(folder,"02-elemental-worker");match.Gold[0]=match.Wood[0]=100000;match.LegendaryLimit[0]=12;
         for(int i=0;i<match.BaseKinds.Length;i++){
             int k=match.BaseKinds[i];var l=match.Lines[k];float gold=match.Gold[0];int wood=match.Wood[0];var h=QaBuild(k,3+i%6*4,15+i/6*4);h.paused=true;RenderMatch();
             Check(h.paid&&h.spent==l.cost&&Mathf.Abs(h.income-l.cost*l.incomeRate)<.001f,"Elemental construction and native income "+l.building);Check(match.Wood[0]==wood-l.woodCost+l.woodReward&&match.Gold[0]<=gold-l.cost+match.Income(0)+1,"Elemental construction resource payment "+l.building);Check(huts[h.id].raw==l.building&&!huts[h.id].reforged,"Classic native base model "+l.building);
@@ -33,6 +40,39 @@ public sealed partial class PcGame {
         yield return ElementalPassiveChecks(folder);yield return ElementalMagicChecks(folder);yield return ElementalAspectChecks(folder);
         MainMenu();raceChoice=0;botRaceChoice=9;aspectsOn=false;yield return Action("main.play");yield return Action("setup.start");testHoldAuthority=true;NorthTime(8);RenderMatch();Check(match.TeamElemental[1]&&builders[1].raw=="h051"&&match.Huts.Any(h=>h.team==1&&h.paid&&match.Lines[h.kind].building=="h03X"),"Elemental bot uses its own worker and source branch");var enemy=ElementalUnit(1,"h03V",new Vector2(-148,32));RenderMatch();selectedUnit=enemy.id;builderSelected=false;controls.FocusWorld(World(enemy.position),30);Check(AbilityArt("A0E1")&&AbilityArt("A03Y"),"Enemy card ability lookup includes elemental pack");yield return Shot(folder,"16-elemental-enemy-card");
         var models=new JArray(elementalPack.units.Concat(elementalPack.builders).Where(v=>v).Select(v=>new JObject{["raw"]=v.GetComponent<PcModel>().raw,["scale"]=v.GetComponent<PcModel>().animatedRoot.transform.localScale.x,["clips"]=new JArray(v.GetComponent<PcModel>().clips.Select(c=>c.name))}));var result=new JObject{["status"]=testFailures==0?"PASS":"FAIL",["checks"]=testChecks,["failures"]=testFailures,["build"]=Version,["catalog"]=JObject.Parse(elementalPack.catalog.text),["models"]=models};File.WriteAllText(Path.Combine(folder,"elemental-verification.json"),result.ToString());Debug.Log("CF_ELEMENTAL_TARGETED_"+(testFailures==0?"PASS":"FAIL")+" checks="+testChecks.Count);Application.Quit(testFailures==0?0:1);
+    }
+    IEnumerator ExerciseClassicWisp(string folder){
+        var model=builders[0];
+        var glow=model.GetComponent<ClassicWispBody040>();
+        var skin=model.GetComponentInChildren<SkinnedMeshRenderer>();
+        Check(glow&&glow.FacingPlanes==30&&skin.sharedMesh.subMeshCount==6&&!model.GetComponentInChildren<MeshRenderer>(),
+            "The six imported geosets and their 30 camera-facing nodes supply the entire model");
+        Check(skin.sharedMaterials[2].mainTexture.name=="WC3 TeamGlow01"&&
+            model.GetComponentsInChildren<ParticleSystemRenderer>().All(renderer=>!renderer.forceRenderingOff),
+            "The allied Wisp keeps its source particles and uses the blue Warcraft team texture");
+        options.fogOfWar=false;
+        var worker=match.Builders[0];
+        worker.previous=worker.position+=new Vector2(10,7);
+        controls.FocusWorld(World(match.Builders[0].position),31);
+        yield return Shot(folder,"02-wisp-field-and-card");
+        Check(glow.Alignment(Camera.main)>.99f,"The original Wisp planes face the world camera");
+        Check(portraitModel&&portraitModel.gameObject.layer==31&&portraitModel.TryGetComponent<ClassicWispBody040>(out var portraitWisp)&&
+            portraitWisp.FacingPlanes==glow.FacingPlanes&&portraitWisp.Alignment(portraitCamera)>.99f,
+            "The selection portrait uses the same planes with its own camera");
+        worker.pose="Stand Work";
+        yield return new WaitForSecondsRealtime(.4f);
+        Check(glow.CurrentClip=="Stand Work"&&model.GetComponentsInChildren<NativeMapEmitter>().Any(emitter=>
+            emitter.name=="Native emitter 5"&&emitter.Emitting),"The work animation activates its source emitter");
+        yield return Shot(folder,"03-wisp-work");
+        model.Play("Death");
+        Check(glow.CurrentClip=="Death"&&glow.enabled&&
+            model.GetComponentsInChildren<ParticleSystemRenderer>().All(renderer=>!renderer.forceRenderingOff),
+            "Death keeps the original geoset and emitter animation");
+        File.WriteAllText(Path.Combine(folder,"wisp-verification.json"),new JObject{
+            ["status"]=testFailures==0?"PASS":"FAIL",["build"]=Version,["checks"]=testChecks
+        }.ToString());
+        Debug.Log("CF_CLASSIC_WISP_TEST failures="+testFailures+" checks="+testChecks.Count);
+        Application.Quit(testFailures==0?0:1);
     }
     IEnumerator ElementalPassiveChecks(string folder){
         foreach(string raw in new[]{"h034","h03N"}){ElementalClear();var earth=ElementalUnit(0,raw,new Vector2(-148,32));earth.hp=earth.maxHp*.5f;var victim=ElementalDummy(1,earth.position);victim.armor=100;CorruptedCall("ElementalAfterDamage",earth,victim,10f,false);float expected=25*HumanMatch.F(match.Lines[earth.kind].stats,"level",1)*match.Multiplier("siege",match.Lines[victim.kind].armorType);Check(Mathf.Abs(10000-victim.hp-expected)<.01f,"Earth native level/current-life siege bonus ignores armor "+raw);Check(match.Lines[earth.kind].weapons[0].range==0,"Earth retains zero native weapon range "+raw);victim.hp=10000;earth.hp=earth.maxHp;CorruptedCall("ElementalAfterDamage",earth,victim,10f,false);Check(Mathf.Abs(10000-victim.hp-expected*2)<.01f,"Earth bonus follows current health ratio "+raw);}

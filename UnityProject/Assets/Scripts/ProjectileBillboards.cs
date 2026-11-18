@@ -11,9 +11,13 @@ public sealed class ProjectileBillboards {
     static readonly Dictionary<Mesh,Dictionary<int,Vector3>> normals=new Dictionary<Mesh,Dictionary<int,Vector3>>();
     readonly List<Binding> bindings=new List<Binding>();
     public int Count=>bindings.Count;
-    public ProjectileBillboards(string key,GameObject geometry){
+    public ProjectileBillboards(string key,GameObject geometry):this(geometry,Names(key)){}
+    static string[] Names(string key){
         if(source==null)source=JObject.Parse(ProjectileBillboardData.Json).Properties().ToDictionary(p=>p.Name,p=>((JArray)p.Value).Select(v=>(string)v).ToArray());
-        if(!geometry||!source.TryGetValue(key,out var names))return;
+        return source.TryGetValue(key,out var names)?names:null;
+    }
+    internal ProjectileBillboards(GameObject geometry,string[] names){
+        if(!geometry||names==null)return;
         var wanted=new HashSet<string>(names);var seen=new HashSet<Transform>();
         foreach(var skin in geometry.GetComponentsInChildren<SkinnedMeshRenderer>()){
             var mesh=skin.sharedMesh;if(!mesh)continue;

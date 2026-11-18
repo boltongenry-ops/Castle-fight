@@ -15,6 +15,10 @@ class CompareManaged {
  static readonly HashSet<string> WorkshopRuntimeFields=new HashSet<string>{
   "workshops038","WorkshopCategories","WorkshopShelf","WorkshopLook","WorkshopGold","WorkshopIvory","WorkshopText"
  };
+ static readonly HashSet<string> ClassicWispRuntimeFields=new HashSet<string>{
+  "sphere","material","nextPhase","Tint","core","first","second","working","phase",
+  "planes","clips","materials","teamGlow","billboards","emitters","anchor","worldCamera","currentClip","blueGlow","redGlow"
+ };
  static IEnumerable<FieldDefinition> VerifyPrivateRuntimeFields(TypeDefinition type,HashSet<string> names,bool staticOnly){
   foreach(var field in type.Fields){
    if(!names.Contains(field.Name)){yield return field;continue;}
@@ -28,7 +32,8 @@ class CompareManaged {
    var n=b.MainModule.Types.SelectMany(Walk).Single(x=>x.FullName==t.FullName);
    bool raceFog=t.FullName=="CastleFight.PcGame"&&args.Contains("--verify-race-fog-private-fields");
    bool workshop=t.FullName=="CastleFight.PcGame"&&args.Contains("--verify-workshop-static-fields");
-   var ignored=raceFog?RaceFogRuntimeFields:workshop?WorkshopRuntimeFields:null;
+   bool wisp=t.FullName=="CastleFight.ClassicWispBody040";
+   var ignored=raceFog?RaceFogRuntimeFields:workshop?WorkshopRuntimeFields:wisp?ClassicWispRuntimeFields:null;
    var oldFields=ignored!=null?VerifyPrivateRuntimeFields(t,ignored,workshop):t.Fields;
    var newFields=ignored!=null?VerifyPrivateRuntimeFields(n,ignored,workshop):n.Fields;
    if(Layout(t,oldFields)!=Layout(n,newFields))throw new Exception("Changed field layout: "+t.FullName);

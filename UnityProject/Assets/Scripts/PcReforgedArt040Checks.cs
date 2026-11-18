@@ -84,11 +84,12 @@ public sealed partial class PcGame {
         Check(!HdArt040&&HdModels.ArtInstalled&&!builders[0].reforged&&!units[fire.id].reforged&&reforgedFx.Count==0,
             "Classic restores actor art, clears HD effects and retains the download");
         var wisp=builders[0].GetComponent<ClassicWispBody040>();
-        var surfaces=wisp?wisp.GetComponentsInChildren<MeshFilter>():new MeshFilter[0];
-        Check(wisp&&surfaces.Count(mesh=>mesh.sharedMesh&&mesh.sharedMesh.bounds.size.z>.9f)==3,"Classic Wisp has a solid lit core and two orbiting 3D meshes");
-        Check(builders[0].GetComponentsInChildren<ParticleSystem>().Length>0,"Classic Wisp keeps its native outer glow");
+        Check(wisp&&wisp.FacingPlanes==30&&wisp.GetComponentInChildren<SkinnedMeshRenderer>().sharedMesh.subMeshCount==6,
+            "Classic Wisp restores the source geosets and billboard nodes");
+        Check(builders[0].GetComponentsInChildren<ParticleSystemRenderer>().All(renderer=>!renderer.forceRenderingOff),
+            "Classic particle renderers remain visible");
         builders[0].Play("Death");
-        Check(!wisp.enabled,"Classic core disappears on death");
+        Check(wisp.CurrentClip=="Death","Classic Wisp switches to the source death animation");
         builders[0].Play("Stand");
         yield return Shot(folder,"02-elemental-classic");
         HdModels.Select(true);

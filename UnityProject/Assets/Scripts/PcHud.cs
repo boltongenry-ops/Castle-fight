@@ -223,6 +223,7 @@ public sealed partial class PcGame {
             else {var bounds=portraitModel.BodyBounds();float size=Mathf.Max(bounds.size.x,bounds.size.y);var centre=bounds.center;portraitCamera.transform.position=centre+new Vector3(0,size*.07f,Mathf.Max(2,size*1.9f));portraitCamera.transform.LookAt(centre);}
         }
         if(HdArt040&&portraitModel&&portraitModel.reforged)DrawHdActor040(portraitModel,false,Time.unscaledTime,portraitCamera,31);
+        ClassicWispBody040.FacePortrait(portraitModel,portraitCamera);
         portraitCamera.Render();
     }
     void DestroyHud(){if(portraitStage)Destroy(portraitStage);if(portraitTexture){portraitTexture.Release();Destroy(portraitTexture);}}
