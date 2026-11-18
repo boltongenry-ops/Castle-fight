@@ -198,7 +198,7 @@ public sealed partial class PcGame {
         for(int i=0;i<AttackTypes.Length;i++)b.Append(AttackLabels[i]).Append(":  ").Append(Mathf.RoundToInt(100*match.Multiplier(AttackTypes[i],armor))).Append("%\n");
         return b.Append("Без учёта числовой брони.").ToString();}
     GameObject PortraitPrefab(out string raw) {
-        raw="";if(builderSelected){raw=BuilderRaw;return BuilderModels[0];}
+        raw="";if(builderSelected){raw=BuilderRaw;return RaceBuilder(0);}
         var h=SelectedHut;if(h!=null){raw=match.Lines[h.kind].building;return RaceModel(h.team,h.kind,true);}
         var u=SelectedUnit;if(u!=null){raw=match.Lines[u.kind].unit;return RaceModel(u.team,u.kind,false);}return null;
     }

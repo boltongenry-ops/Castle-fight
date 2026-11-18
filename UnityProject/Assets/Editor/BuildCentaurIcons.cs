@@ -12,13 +12,17 @@ public static class BuildCentaurIcons {
     public static Texture2D Capture(GameObject prefab,JObject profile,int family,bool upgrade,bool actor){
         var obj=UnityEngine.Object.Instantiate(prefab);obj.transform.position=new Vector3(12000,0,12000);obj.transform.rotation=Quaternion.Euler(0,actor?150:0,0);
         foreach(var tr in obj.GetComponentsInChildren<Transform>())tr.gameObject.layer=30;
-        var model=obj.GetComponent<PcModel>();var stand=model.clips.First(c=>c.name=="Stand"||c.name.StartsWith("Stand"));stand.SampleAnimation(model.animatedRoot,.2f);
-        var surfaces=(JArray)profile["surfaces"];var interval=(JArray)profile["clips"][stand.name];var skin=obj.GetComponentInChildren<SkinnedMeshRenderer>();
-        var baked=new Mesh();skin.BakeMesh(baked);var vertices=baked.vertices;Bounds bounds=new Bounds();bool found=false;
+        var model=obj.GetComponent<PcModel>();
+        var stand=model.reforged?model.StandClip():model.clips.First(c=>c.name=="Stand"||c.name.StartsWith("Stand"));
+        float time=Mathf.Min(.2f,stand.length*.5f);
+        stand.SampleAnimation(model.animatedRoot,time);
+        var surfaces=(JArray)profile["surfaces"];var interval=(JArray)profile["clips"][stand.name]??new JArray(0,0);var skin=obj.GetComponentInChildren<SkinnedMeshRenderer>();
+        bool effectPortrait=model.reforged&&surfaces.All(s=>(string)s["blend"]=="additive");
+        var baked=new Mesh();skin.BakeMesh(baked,model.reforged&&model.godotHeight>0);var vertices=baked.vertices;Bounds bounds=new Bounds();bool found=false;
         for(int s=0;s<baked.subMeshCount;s++){
-            float alpha=NativeAppearance.Sample((JObject)surfaces[s]["geoset"],interval,200)*NativeAppearance.Sample((JObject)surfaces[s]["layer"],interval,200);
-            var block=new MaterialPropertyBlock();block.SetFloat("_NativeAlpha",alpha);skin.SetPropertyBlock(block,s);if(alpha<.01f||(string)surfaces[s]["blend"]=="additive")continue;
-            foreach(int index in baked.GetTriangles(s)){var point=skin.transform.position+skin.transform.rotation*vertices[index];if(!found){bounds=new Bounds(point,Vector3.zero);found=true;}else bounds.Encapsulate(point);}
+            float alpha=NativeAppearance.Sample((JObject)surfaces[s]["geoset"],interval,time*1000)*NativeAppearance.Sample((JObject)surfaces[s]["layer"],interval,time*1000);
+            var block=new MaterialPropertyBlock();block.SetFloat("_NativeAlpha",alpha);skin.SetPropertyBlock(block,s);if(alpha<.01f||!effectPortrait&&(string)surfaces[s]["blend"]=="additive")continue;
+            foreach(int index in baked.GetTriangles(s)){var point=model.reforged?skin.transform.TransformPoint(vertices[index]):skin.transform.position+skin.transform.rotation*vertices[index];if(!found){bounds=new Bounds(point,Vector3.zero);found=true;}else bounds.Encapsulate(point);}
         }
         if(!found)throw new Exception("No visible icon geometry "+model.raw);
         if(actor&&model.HeadBounds(out var head)&&head.size.magnitude>.1f){bounds=head;bounds.Expand(new Vector3(head.size.y*.6f,head.size.y*.65f,head.size.y*.2f));}

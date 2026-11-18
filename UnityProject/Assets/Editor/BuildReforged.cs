@@ -13,7 +13,9 @@ public static class BuildReforged {
     static JObject manifest,appearance;static readonly Dictionary<string,GameObject> prefabs=new Dictionary<string,GameObject>();
     static T Save<T>(T value,string path) where T:UnityEngine.Object {var existing=AssetDatabase.LoadAssetAtPath<T>(path);if(existing){EditorUtility.CopySerialized(value,existing);UnityEngine.Object.DestroyImmediate(value);EditorUtility.SetDirty(existing);return existing;}AssetDatabase.CreateAsset(value,path);return value;}
     static Texture2D Map(string raw,JObject entry,JToken texture,bool linear=false) {
-        if(texture==null)return null;int index=texture is JObject?(int)texture["index"]:(int)texture;int source=(int)entry["textures"][index]["source"];string path=Root+raw+"/"+(string)entry["images"][source]["uri"];
+        if(texture==null)return null;int index=texture is JObject?(int)texture["index"]:(int)texture;int source=(int)entry["textures"][index]["source"];
+        string path=Path.GetRelativePath(Directory.GetCurrentDirectory(),Path.GetFullPath(Root+raw+"/"+(string)entry["images"][source]["uri"])).Replace('\\','/');
+        if(!path.StartsWith(Root,StringComparison.Ordinal))throw new InvalidDataException("Reforged texture outside its source folder: "+path);
         var importer=AssetImporter.GetAtPath(path) as TextureImporter;if(!importer)throw new Exception("Missing Reforged texture: "+path);
         if(!importer.mipmapEnabled||importer.sRGBTexture==linear||importer.maxTextureSize!=1024||importer.textureCompression!=TextureImporterCompression.Compressed) {
             importer.mipmapEnabled=true;importer.sRGBTexture=!linear;importer.maxTextureSize=1024;importer.textureCompression=TextureImporterCompression.Compressed;importer.compressionQuality=75;importer.filterMode=FilterMode.Trilinear;importer.wrapMode=TextureWrapMode.Repeat;importer.SaveAndReimport();
@@ -35,11 +37,15 @@ public static class BuildReforged {
             var emission=Map(raw,entry,material["emissiveTexture"]);if(emission)m.SetTexture("_EmissionMap",emission);
             var teamMask=Map(raw,entry,material["extras"]?["teamColorMask"],true);if(teamMask)m.SetTexture("_TeamMask",teamMask);
             m.SetColor("_TeamColor",team==0?new Color(.1f,.3f,.95f):new Color(.85f,.08f,.06f));m.SetFloat("_Cutoff",(float?)surfaces[i]["cutoff"]??.001f);
-            m.SetInt("_SrcBlend",(int)BlendMode.One);m.SetInt("_DstBlend",0);m.SetInt("_ZWrite",1);m.renderQueue=2450;
+            bool additive=(string)surfaces[i]["blend"]=="additive";
+            m.SetInt("_SrcBlend",(int)(additive?BlendMode.SrcAlpha:BlendMode.One));
+            m.SetInt("_DstBlend",(int)(additive?BlendMode.One:BlendMode.Zero));
+            m.SetInt("_ZWrite",additive?0:1);m.SetFloat("_Unlit",additive?1:0);m.renderQueue=additive?3000:2450;
             mats[i]=Save(m,Generated+key+"-s"+i+".mat");
         }
         skins[0].sharedMaterials=mats;skins[0].shadowCastingMode=ShadowCastingMode.Off;skins[0].updateWhenOffscreen=true;
-        var clips=AssetDatabase.LoadAllAssetsAtPath((string)entry["asset"]).OfType<AnimationClip>().Select((sourceClip,i)=>{var clip=UnityEngine.Object.Instantiate(sourceClip);clip.legacy=true;clip.name=sourceClip.name;var saved=Save(clip,Generated+key+"-clip"+i+".anim");saved.name=sourceClip.name;EditorUtility.SetDirty(saved);return saved;}).ToArray();
+        var clips=team==1?Model(raw,0).GetComponent<PcModel>().clips:
+            AssetDatabase.LoadAllAssetsAtPath((string)entry["asset"]).OfType<AnimationClip>().Select((sourceClip,i)=>{var clip=UnityEngine.Object.Instantiate(sourceClip);clip.legacy=true;clip.name=sourceClip.name;var saved=Save(clip,Generated+key+"-clip"+i+".anim");saved.name=sourceClip.name;EditorUtility.SetDirty(saved);return saved;}).ToArray();
         var view=root.AddComponent<PcModel>();view.raw=raw;view.reforged=true;view.appearanceKey=raw+"_ref";view.animatedRoot=instance;view.clips=clips;
         view.animationProperties=(string)JObject.Parse(File.ReadAllText("Assets/Resources/native-animation-properties.json"))[raw]?["properties"]??"";if(raw=="hcas")view.animationProperties="upgrade,second";
         foreach(string required in raw=="h00C"?new[]{"Stand","Walk","Stand Work"}:raw=="fx_wisp_explode"?new[]{"Birth"}:new[]{"Stand"})if(!clips.Any(c=>c.name.StartsWith(required,StringComparison.OrdinalIgnoreCase)))throw new Exception("Reforged missing "+required+" "+raw);
@@ -84,7 +90,7 @@ public static class BuildReforged {
     public static void PrepareModels(string[] rawcodes) {
         AssetDatabase.Refresh();ConfigureTextures();Directory.CreateDirectory(Generated);prefabs.Clear();manifest=JObject.Parse(File.ReadAllText(Root+"manifest.json"));
         foreach(var raw in rawcodes)for(int team=0;team<2;team++)Model(raw,team);
-        AssetDatabase.SaveAssets();
+        AssetDatabase.SaveAssets();prefabs.Clear();
     }
     public static void Validate(PcGame app) {
         int mats=0,models=0;foreach(var prefab in app.reforgedUnits.Concat(app.reforgedBuildings).Concat(app.reforgedBuilders).Concat(app.reforgedCastles).Where(p=>p)) {

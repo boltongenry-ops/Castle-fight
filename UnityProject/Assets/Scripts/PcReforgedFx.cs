@@ -11,7 +11,40 @@ public sealed partial class PcGame {
     readonly Dictionary<string,FxArt> reforgedFx=new Dictionary<string,FxArt>();Mesh reforgedFxQuad;MaterialPropertyBlock fxBlock;bool reforgedFxLoaded;
     void LoadReforgedFx(){if(reforgedFxLoaded)return;reforgedFxLoaded=true;fxBlock=new MaterialPropertyBlock();var shader=Shader.Find("CastleFight/ReforgedEffect");if(!shader){Debug.LogError("CF_REFORGED_FX_SHADER_MISSING");return;}
         foreach(var data in ContentResources.LoadAll<TextAsset>("RefFx")){try{var info=JsonUtility.FromJson<FxInfo>(data.text);var texture=ContentResources.Load<Texture2D>("RefFx/"+data.name);if(info==null||!texture||info.Columns<1||info.Rows<1||info.Duration<=0)continue;var material=new Material(shader);material.mainTexture=texture;material.SetFloat("_DstBlend",info.Additive?(float)BlendMode.One:(float)BlendMode.OneMinusSrcAlpha);reforgedFx[data.name]=new FxArt{info=info,texture=texture,material=material};}catch(Exception ex){Debug.LogError("CF_REFORGED_FX_INVALID "+data.name+" "+ex.Message);}}
-        reforgedFxQuad=new Mesh{name="Reforged effects billboard"};reforgedFxQuad.vertices=new[]{new Vector3(-.5f,-.5f,0),new Vector3(.5f,-.5f,0),new Vector3(.5f,.5f,0),new Vector3(-.5f,.5f,0)};reforgedFxQuad.uv=new[]{new Vector2(0,0),new Vector2(1,0),new Vector2(1,1),new Vector2(0,1)};reforgedFxQuad.triangles=new[]{0,1,2,0,2,3};reforgedFxQuad.RecalculateBounds();Debug.Log("CF_REFORGED_FX_READY count="+reforgedFx.Count);
+        EnsureReforgedFxQuad();Debug.Log("CF_REFORGED_FX_READY count="+reforgedFx.Count);
+    }
+    void EnsureReforgedFxQuad(){
+        if(reforgedFxQuad)return;
+        reforgedFxQuad=new Mesh{name="Reforged effects billboard"};
+        reforgedFxQuad.vertices=new[]{new Vector3(-.5f,-.5f,0),new Vector3(.5f,-.5f,0),new Vector3(.5f,.5f,0),new Vector3(-.5f,.5f,0)};
+        reforgedFxQuad.uv=new[]{new Vector2(0,0),new Vector2(1,0),new Vector2(1,1),new Vector2(0,1)};
+        reforgedFxQuad.triangles=new[]{0,1,2,0,2,3};reforgedFxQuad.RecalculateBounds();
+        if(fxBlock==null)fxBlock=new MaterialPropertyBlock();
+    }
+    void DrawOptionalVortices(){
+        const string key="optional-vortex";
+        if(!HdModels.Active)return;
+        foreach(var unit in match.Units){
+            if(unit.hp<=0||match.Lines[unit.kind].unit!="n02E"||!CanSeeUnit(unit)||!units.TryGetValue(unit.id,out var view)||!view)continue;
+            if(!reforgedFx.ContainsKey(key)){
+                var texture=HdModels.Asset<Texture2D>("vortex-texture");
+                var config=HdModels.Asset<TextAsset>("vortex-animation");
+                var shader=HdModels.Asset<Shader>("vortex-shader");
+                if(!texture||!config||!shader)return;
+                var info=JsonUtility.FromJson<FxInfo>(config.text);
+                if(info==null||info.Columns<1||info.Rows<1||info.Duration<=0)return;
+                var material=new Material(shader){mainTexture=texture};
+                material.SetFloat("_DstBlend",info.Additive?(float)BlendMode.One:(float)BlendMode.OneMinusSrcAlpha);
+                reforgedFx[key]=new FxArt{info=info,texture=texture,material=material};
+                EnsureReforgedFxQuad();
+            }
+            view.gameObject.SetActive(false);
+            DrawRefFx(key,view.transform.position,match.Elapsed+unit.id*.07f);
+        }
+    }
+    void ReleaseOptionalVortex(){
+        const string key="optional-vortex";
+        if(reforgedFx.TryGetValue(key,out var art)){Destroy(art.material);reforgedFx.Remove(key);}
     }
     void DrawRefFx(string name,Vector3 position,float time,float modelScale=1,float angle=0){if(!reforgedFx.TryGetValue(name,out var art)||!Camera.main)return;var viewport=Camera.main.WorldToViewportPoint(position);if(viewport.z<=0||viewport.x<-.3f||viewport.x>1.3f||viewport.y<-.3f||viewport.y>1.3f)return;var cfg=art.info;var centre=cfg.Centre;position+=new Vector3(centre.X,centre.Z,-centre.Y)*(modelScale/30f);float size=2*cfg.HalfSize*modelScale/30f;var matrix=Matrix4x4.TRS(position,Camera.main.transform.rotation*Quaternion.AngleAxis(angle,Vector3.forward),Vector3.one*size);
         if(cfg.Loops&&!cfg.Static){float a=Mathf.Repeat(time/cfg.Duration,1);float weight=.5f-.5f*Mathf.Cos(a*2*Mathf.PI);DrawFxFrame(art,matrix,a,weight);DrawFxFrame(art,matrix,Mathf.Repeat(a+.5f,1),1-weight);}

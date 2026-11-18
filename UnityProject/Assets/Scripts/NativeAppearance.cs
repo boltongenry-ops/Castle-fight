@@ -33,8 +33,21 @@ public sealed class NativeAppearance : MonoBehaviour {
     SkinnedMeshRenderer skin; MaterialPropertyBlock block;float[] previous;
     float untilRefresh;
     public float AuthoredHeight=>config?.height??2.2f;
-    public void Configure(string raw,Animation animation) {
+    static void LoadDatabase(){
         if(database==null)database=JObject.Parse(ContentResources.Load<TextAsset>("native-appearance").text).Properties().ToDictionary(p=>p.Name,p=>new Model((JObject)p.Value));
+    }
+    internal static string[] AddOptionalProfiles(string text){
+        var catalog=JObject.Parse(text).Properties().ToDictionary(p=>p.Name,p=>new Model((JObject)p.Value));
+        if(catalog.Count==0||catalog.Keys.Any(key=>!key.EndsWith("_ref",StringComparison.Ordinal)))throw new ArgumentException("Invalid Reforged appearance catalog");
+        LoadDatabase();
+        foreach(var entry in catalog)database[entry.Key]=entry.Value;
+        return catalog.Keys.ToArray();
+    }
+    internal static void RemoveOptionalProfiles(IEnumerable<string> keys){
+        if(database!=null)foreach(string key in keys)database.Remove(key);
+    }
+    public void Configure(string raw,Animation animation) {
+        LoadDatabase();
         if(!database.TryGetValue(raw,out var model)){var extra=ContentResources.Load<TextAsset>("pc-centaur");var profile=extra?JObject.Parse(extra.text)["centaurAppearance"]?[raw] as JObject:null;if(profile==null)throw new Exception("Missing appearance "+raw);database[raw]=model=new Model(profile);}
         ConfigureModel(model,animation);
     }

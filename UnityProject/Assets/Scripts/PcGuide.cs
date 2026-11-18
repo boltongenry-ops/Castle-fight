@@ -48,7 +48,7 @@ public sealed partial class PcGame {
     GameObject GuidePrefab(int kind,bool unit)=>CatalogModel(guideRace,0,kind,guideAuthority.Lines[kind].building,!unit);
     int[] GuideUnitKinds(int kind){if(GuidePrefab(kind,true))return new[]{kind};if(guideAuthority.Lines[kind].unit=="e00E")return Enumerable.Range(0,guideAuthority.Lines.Length).Where(k=>new[]{"n02K","n02L"}.Contains(guideAuthority.Lines[k].unit)&&GuidePrefab(k,true)).ToArray();return new int[0];}
     int GuideActorKind=>guideUnit?GuideUnitKinds(guideEntry)[guideActorIndex]:guideEntry;
-    Texture2D GuideIcon(int kind)=>CatalogBuildingIcon(guideRace,kind,guideAuthority.Lines[kind].building);
+    Texture2D GuideIcon(int kind)=>HdIcon(CatalogBuildingIcon(guideRace,kind,guideAuthority.Lines[kind].building));
     void GuideSelectEntry(int kind,bool remember=false){if(remember&&guideEntry>=0)guideHistory.Push(guideEntry);guideEntry=kind;guideTextScroll=Vector2.zero;guideActorIndex=0;guideUnit=GuideUnitKinds(kind).Length>0;GuideRefreshPreview();}
     void GuideBack(){
         if(guideEntry>=0&&guideHistory.Count>0){int previous=guideHistory.Pop();GuideSelectEntry(previous);return;}

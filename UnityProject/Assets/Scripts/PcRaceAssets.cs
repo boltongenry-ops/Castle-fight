@@ -79,6 +79,7 @@ public sealed partial class PcGame {
     }
 
     void ClearRacePrefabCaches(){
+        HdModels.ClearPrefabs();
         northernFxPrefabs.Clear();mechFxPrefabs.Clear();undeadFxPrefabs.Clear();corruptedFxPrefabs.Clear();
         elementalFxPrefabs.Clear();nightFxPrefabs.Clear();elvenFxPrefabs.Clear();finalFxPrefabs.Clear();
         classicProjectilePrefabs.Clear();portraitRaw=null;

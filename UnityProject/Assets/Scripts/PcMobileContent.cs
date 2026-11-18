@@ -51,7 +51,8 @@ public sealed partial class PcGame {
         if(page==Page.Guide)GuideChooseRace(race);
         MobileContent.Current.Ready();
     }
-    GameObject MenuBuilder(int race){
+    GameObject MenuBuilder(int race)=>OptionalModel(ClassicMenuBuilder(race),0);
+    GameObject ClassicMenuBuilder(int race){
         if(race==0)return FirstModel(builderModels);
         if(MobileContent.Active)return ContentResources.Load<GameObject>("MobileBuilders/"+race);
         if(desktopMenuBuilders)return desktopMenuBuilders.LoadAsset<GameObject>("builders/"+race);

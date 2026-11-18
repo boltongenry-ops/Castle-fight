@@ -39,7 +39,7 @@ public sealed partial class PcGame {
         if(match==null)return;
         foreach(var unit in match.Units)if(units.TryGetValue(unit.id,out var view)&&unit.hp>0)view.gameObject.SetActive(CanSeeUnit(unit)&&(match.MechMine(unit)?unit.team==0||unit.mechMineAge<2:!match.Hidden(unit)));
         foreach(var hut in match.Huts)if(huts.TryGetValue(hut.id,out var view))view.gameObject.SetActive(!FogActive||hut.team==0||fogKnownHuts.Contains(hut.id));
-        bool castleKnown=!FogActive||fog.Known(HumanMatch.CastlePosition(1));castleObjects[1].SetActive(castleKnown&&!options.hdTextures);if(castleViews[1])castleViews[1].gameObject.SetActive(castleKnown&&options.hdTextures);
+        bool castleKnown=!FogActive||fog.Known(HumanMatch.CastlePosition(1));castleObjects[1].SetActive(castleKnown&&!castleViews[1]);if(castleViews[1])castleViews[1].gameObject.SetActive(castleKnown);
         if(builders[1])builders[1].gameObject.SetActive(FogVisible(match.Builders[1].position));
         foreach(var shot in match.Shots)if(projectiles.TryGetValue(shot.id,out var view))view.gameObject.SetActive(!elvenBeams.ContainsKey(shot.id)&&(shot.kind!=4||ShowBeam036(shot))&&FogVisible(new Vector2(view.transform.position.x,-view.transform.position.z)));
         if(onlineMatch)foreach(var pair in onlineProjectiles)if(pair.Value)pair.Value.SetActive(ProjectileBorn(pair.Key)&&FogVisible(new Vector2(pair.Value.transform.position.x,-pair.Value.transform.position.z)));

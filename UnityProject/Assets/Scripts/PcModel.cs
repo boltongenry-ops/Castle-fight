@@ -10,7 +10,8 @@ public sealed class PcModel : MonoBehaviour {
         foreach(var animator in GetComponentsInChildren<Animator>())animator.enabled=false;
         player=animatedRoot.GetComponent<Animation>();if(!player)player=animatedRoot.AddComponent<Animation>();
         foreach(var clip in clips)player.AddClip(clip,clip.name);
-        player.cullingType=AnimationCullingType.AlwaysAnimate;
+        player.cullingType=reforged?AnimationCullingType.BasedOnRenderers:AnimationCullingType.AlwaysAnimate;
+        if(reforged)foreach(var skin in GetComponentsInChildren<SkinnedMeshRenderer>())skin.updateWhenOffscreen=false;
         appearance=animatedRoot.AddComponent<NativeAppearance>();appearance.Configure(string.IsNullOrEmpty(appearanceKey)?raw:appearanceKey,player);Play("Stand");
     }
     public void Play(string requested,float speed=1,int attackSerial=0) {
@@ -31,15 +32,15 @@ public sealed class PcModel : MonoBehaviour {
             ??clips.FirstOrDefault(c=>c.name.StartsWith(requested.Split(' ')[0],StringComparison.OrdinalIgnoreCase));
     }
     public void SamplePose(){if(player)player.Sample();}
-    public float ClassicHeight=>appearance?appearance.AuthoredHeight*animatedRoot.transform.localScale.x:0;
+    public AnimationClip StandClip()=>Choose("Stand");
+    public float ClassicHeight=>reforged&&godotHeight>0?godotHeight:appearance?appearance.AuthoredHeight*animatedRoot.transform.localScale.x:0;
     public bool HeadBounds(out Bounds result) {
         result=new Bounds();bool found=false;
         foreach(var skin in GetComponentsInChildren<SkinnedMeshRenderer>()) {
             var headBones=skin.bones.Select((b,i)=>new {b,i}).Where(v=>v.b&&(v.b.name.ToLowerInvariant().Contains("head")||v.b.name.ToLowerInvariant().Contains("hd_anim"))&&!v.b.name.ToLowerInvariant().Contains("mount")&&!v.b.name.ToLowerInvariant().StartsWith("ride_")&&!v.b.name.ToLowerInvariant().Contains("horse")&&!v.b.name.ToLowerInvariant().Contains("gryphon")&&!v.b.name.ToLowerInvariant().Contains("ref")&&!v.b.name.ToLowerInvariant().Contains("over")).Select(v=>v.i).ToHashSet();
             if(headBones.Count==0)continue;var weights=skin.sharedMesh.boneWeights;var baked=new Mesh();skin.BakeMesh(baked,godotHeight>0);var vertices=baked.vertices;
-            // BakeMesh already includes the inherited skeleton scale. Apply only the renderer rotation and translation.
-            for(int i=0;i<vertices.Length&&i<weights.Length;i++) {var w=weights[i];float influence=(headBones.Contains(w.boneIndex0)?w.weight0:0)+(headBones.Contains(w.boneIndex1)?w.weight1:0)+(headBones.Contains(w.boneIndex2)?w.weight2:0)+(headBones.Contains(w.boneIndex3)?w.weight3:0);if(influence<.4f)continue;var point=skin.transform.position+skin.transform.rotation*vertices[i];if(!found){result=new Bounds(point,Vector3.zero);found=true;}else result.Encapsulate(point);}
-            Destroy(baked);
+            for(int i=0;i<vertices.Length&&i<weights.Length;i++) {var w=weights[i];float influence=(headBones.Contains(w.boneIndex0)?w.weight0:0)+(headBones.Contains(w.boneIndex1)?w.weight1:0)+(headBones.Contains(w.boneIndex2)?w.weight2:0)+(headBones.Contains(w.boneIndex3)?w.weight3:0);if(influence<.4f)continue;var point=BoundsVertex(skin,vertices[i]);if(!found){result=new Bounds(point,Vector3.zero);found=true;}else result.Encapsulate(point);}
+            if(Application.isPlaying)Destroy(baked);else DestroyImmediate(baked);
         }
         return found;
     }
@@ -49,12 +50,14 @@ public sealed class PcModel : MonoBehaviour {
             var baked=new Mesh();skin.BakeMesh(baked,godotHeight>0);var vertices=baked.vertices;var mats=skin.sharedMaterials;
             for(int s=0;s<baked.subMeshCount;s++) {
                 if(s<mats.Length&&mats[s].GetInt("_DstBlend")!=0)continue;if(godotHeight>0&&appearance&&!appearance.SurfaceVisible(s))continue;
-                foreach(int index in baked.GetTriangles(s)){var point=skin.transform.position+skin.transform.rotation*vertices[index];if(!found){result=new Bounds(point,Vector3.zero);found=true;}else result.Encapsulate(point);}
+                foreach(int index in baked.GetTriangles(s)){var point=BoundsVertex(skin,vertices[index]);if(!found){result=new Bounds(point,Vector3.zero);found=true;}else result.Encapsulate(point);}
             }
             Destroy(baked);
         }
         return found?result:GetComponentInChildren<SkinnedMeshRenderer>().bounds;
     }
+    Vector3 BoundsVertex(SkinnedMeshRenderer skin,Vector3 point)=>reforged&&godotHeight>0?
+        skin.transform.TransformPoint(point):skin.transform.position+skin.transform.rotation*point;
     public void Face(Vector2 direction,bool instant=false) {
         if(direction.sqrMagnitude<.001f)return;
         // The source Godot actor faces local +Z; glTFast preserves that axis.
