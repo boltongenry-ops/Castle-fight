@@ -84,6 +84,7 @@ public sealed partial class PcGame {
         bool hover=r.Contains(HudPointer)&&GUI.enabled;
         GUI.BeginGroup(r);var local=new Rect(0,0,r.width,r.height);
         Fill(local,new Color(.025f,.025f,.015f));if(art)GUI.DrawTexture(local,art,ScaleMode.StretchToFill);
+        if(BattleTheme is HudTheme theme)Border(local,theme.Edge);
         if(selected)Border(local,new Color(1,.85f,.26f),2);
         if(hover){Border(local,new Color(1,.95f,.64f),2);hudTip=tip;}
         if(!string.IsNullOrEmpty(key)){

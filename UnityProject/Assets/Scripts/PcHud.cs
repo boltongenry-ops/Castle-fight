@@ -28,6 +28,7 @@ public sealed partial class PcGame {
         GUI.DrawTextureWithTexCoords(target,texture,new Rect(source.x/texture.width,1-source.yMax/texture.height,source.width/texture.width,source.height/texture.height));
     }
     void StoneFrame(Rect r) {
+        if(BattleTheme is HudTheme theme){theme.DrawFrame(r);return;}
         GUI.DrawTexture(r,panel);
         if(hudTiles==null||hudTiles.Length==0||!hudTiles[0])return;
         var texture=hudTiles[0];float b=10;
@@ -49,10 +50,20 @@ public sealed partial class PcGame {
     // 04's continuation. Each button stays inside the painted black cell.
     static Rect ConsoleCell(float x,float y,float width,float height)=>new Rect(819.2f+x*.8f,520+(y-176)*200/336f,width*.8f,height*200/336f);
     static Rect CommandSlot(int column,int row,bool mobile)=>mobile?new Rect(970+column*76,492+row*76,70,70):ConsoleCell(209+column*87,245+row*87,80,80);
-    Rect Slot(int column,int row)=>CommandSlot(column,row,Application.isMobilePlatform);
+    Rect Slot(int column,int row)=>HudThemeIndex==0?CommandSlot(column,row,Application.isMobilePlatform):ThemedCommandSlot(column,row);
     static Rect InventorySlot(int cell)=>ConsoleCell(5+cell%2*84,290+cell/2*73,64,62);
     void DrawWarcraftHud() {
         InitHud();hudTip=null;hudTipTable=false;
+        var theme=BattleTheme;
+        if(theme==null){DrawHudConsole(null);return;}
+        var savedText=hudText;var savedSmall=hudSmall;
+        hudText=theme.Name(hudText);hudSmall=theme.Detail(hudSmall);
+        try{DrawHudConsole(theme);}
+        finally{hudText=savedText;hudSmall=savedSmall;}
+    }
+    void DrawHudConsole(HudTheme theme) {
+        if(theme!=null)DrawThemedConsole(theme);
+        else{
         Fill(new Rect(0,0,1280,28),new Color(.025f,.035f,.018f,.98f));
         Fill(new Rect(0,558,1280,162),Color.black);
         for(int i=0;i<4;i++) {
@@ -62,7 +73,8 @@ public sealed partial class PcGame {
         }
         Source(hudTiles[1],new Rect(170,0,180,110),new Rect(546,0,144,66));
         GUI.DrawTexture(new Rect(619,5,42,42),timeIndicator);
-        var topButton=new GUIStyle(button){fontSize=Application.isMobilePlatform?15:13,alignment=TextAnchor.MiddleCenter,padding=new RectOffset(3,3,0,0)};float topHeight=Application.isMobilePlatform?40:24;
+        }
+        var topButton=theme?.Top(button)??new GUIStyle(button){fontSize=Application.isMobilePlatform?15:13,alignment=TextAnchor.MiddleCenter,padding=new RectOffset(3,3,0,0)};float topHeight=Application.isMobilePlatform?40:24;
         if(Button("match.help",new Rect(5,1,132,topHeight),Application.isMobilePlatform?"Справка":"Справка (F9)",false,topButton))page=Page.Help;
         float builderTop=Application.isMobilePlatform?46:31;var builderFrame=new Rect(5,builderTop,52,52);StoneFrame(builderFrame);
         if(Icon("hud.builder",new Rect(9,builderTop+4,44,44),0,"F1","Строитель (F1)\nВыделить и перейти к строителю",builderSelected))FocusBuilder();
@@ -94,7 +106,7 @@ public sealed partial class PcGame {
         if(MinimapButton("hud.terrain",1,"Ландшафт миникарты"))minimapTerrain=!minimapTerrain;
         if(MinimapButton("hud.battle",2,"Показать бой у реки"))controls.Focus("river");
         if(MinimapButton("hud.colors",3,"Цвета сторон на миникарте"))minimapTeamColors=!minimapTeamColors;
-        if(Application.isMobilePlatform){Fill(new Rect(960,482,320,238),new Color(.02f,.025f,.025f,.94f));Border(new Rect(960,482,320,238),new Color(.42f,.36f,.25f));}DrawHumanSelection();DrawItemInventory();DrawSelectionMarquee();
+        if(Application.isMobilePlatform&&theme==null){Fill(new Rect(960,482,320,238),new Color(.02f,.025f,.025f,.94f));Border(new Rect(960,482,320,238),new Color(.42f,.36f,.25f));}DrawHumanSelection();DrawItemInventory();DrawSelectionMarquee();
         foreach(var u in match.Units)if(u.hp>0&&!match.Hidden(u)&&CanSeeUnit(u)&&match.Lines[u.kind].unit!="n02E"&&units.TryGetValue(u.id,out var view)) {
             var p=Camera.main.WorldToScreenPoint(view.transform.position+Vector3.up*(view.godotHeight>0?view.godotHeight+.4f:(view.raw.StartsWith("cU",StringComparison.Ordinal)?view.ClassicHeight+.4f:FinalMarkerHeight(view.raw))));if(p.z<=0)continue;
             float x=(p.x-guiOrigin.x)/guiScale,y=(Screen.height-p.y-guiOrigin.y)/guiScale;
@@ -141,7 +153,7 @@ public sealed partial class PcGame {
         if(Button("info.close",new Rect(500,472,280,46),"Вернуться в матч",true))page=Page.Match;
     }
     void DrawMinimap() {
-        var rect=new Rect(14,577,224,107);Fill(rect,new Color(.025f,.035f,.025f));if(minimapTerrain)Source(minimapTexture,new Rect(0,52,256,153),rect);
+        var rect=HudMap;Fill(rect,new Color(.025f,.035f,.025f));if(minimapTerrain)Source(minimapTexture,new Rect(0,52,256,153),rect);
         DrawMinimapFog(rect);
         Func<Vector2,Vector2> point=p=>new Vector2(rect.x+(p.x+204.8f)/409.6f*rect.width,rect.y+(p.y+3584f/30)/(7168f/30)*rect.height);
         foreach(var hut in match.Huts.Where(h=>!FogActive||h.team==0||fogKnownHuts.Contains(h.id))){var p=point(hut.position);Fill(new Rect(p.x-2,p.y-2,4,4),hut.team==0?new Color(.25f,.55f,1):Color.red);}
@@ -226,7 +238,7 @@ public sealed partial class PcGame {
         ClassicWispBody040.FacePortrait(portraitModel,portraitCamera);
         portraitCamera.Render();
     }
-    void DestroyHud(){if(portraitStage)Destroy(portraitStage);if(portraitTexture){portraitTexture.Release();Destroy(portraitTexture);}}
+    void DestroyHud(){HudTheme.Dispose();if(portraitStage)Destroy(portraitStage);if(portraitTexture){portraitTexture.Release();Destroy(portraitTexture);}}
 }
 }
 
