@@ -60,7 +60,7 @@ public sealed partial class HumanMatch {
         if(u.castPause>0){u.pose=u.finalCastPose??"Spell";return;}u.finalCastPose=null;
         if(Ethereal(u)||Disarmed(u))u.strikeLeft=-1;
         if(u.strikeLeft>=0){u.strikeLeft-=dt;if(u.strikeLeft<=0){Release(u);u.strikeLeft=-1;}u.pose=u.attackPoseLeft>0?"Attack":"Stand";return;}
-        if(TryAutocast(u))return;if(TickNightHunt(u,dt))return;
+        if(PepeTryHeal(u)||TryAutocast(u))return;if(TickNightHunt(u,dt))return;
         if(Ethereal(u)||Disarmed(u)){u.strikeLeft=-1;var etherealGoal=BuilderWaypoint(u.position,CastlePosition(1-u.team));u.direction=(etherealGoal-u.position).normalized;u.position=Vector2.MoveTowards(u.position,etherealGoal,MoveSpeed(u)*dt);u.pose="Walk";return;}
         if(!u.onRoad&&!Flying(u)) {if(Rooted(u)){u.pose="Stand";return;}var goal=u.leaveCastleLane?u.exitWaypoint:new Vector2(u.position.x,0);var travel=goal-u.position;if(travel.sqrMagnitude>.0001f)u.direction=travel.normalized;u.position=Vector2.MoveTowards(u.position,goal,MoveSpeed(u)*dt);u.pose="Walk";if((goal-u.position).sqrMagnitude<.0025f){if(u.leaveCastleLane)u.leaveCastleLane=false;else u.onRoad=true;}return;}
         u.onRoad=true;
@@ -155,6 +155,7 @@ public sealed partial class HumanMatch {
                 using(var snapshot035_3=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_3)if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&h.team!=shot.team&&h.hp>0&&h.paid&&w.structure&&(artillery||HutTarget(h)!=shot.target)){float f=Splash(w,Vector2.Distance(h.position,shot.end));if(f>0){DamageHut(h,shot.damage*f,w.attack,shot.team);var owner=FindUnit(shot.sourceId);if(h.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")h.dragonArmorRank=Mathf.Min(3,h.dragonArmorRank+1);}}
                 int enemy=1-shot.team;float factor=Splash(w,Vector2.Distance(CastlePosition(enemy),shot.end));if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&w.structure&&factor>0&&(artillery||shot.target!=-1))DamageCastle(enemy,shot.damage*factor,w.attack);
             }
+            if(artillery&&Lines[shot.line].unit?.StartsWith("pU",StringComparison.Ordinal)==true)PepeArtilleryImpact(shot);
             if(artillery&&shot.incendiary)AddFire(shot.team,shot.end,Lines[shot.line].unit=="o001"?"A02J":"A02K");
         }
     }
@@ -168,6 +169,7 @@ public sealed partial class HumanMatch {
         if(!spell&&!execute&&!pandaDebt)amount=CentaurPhysicalBlock(victim,amount);
         if(!spell&&!execute&&!pandaDebt)foreach(var id in victim.abilities){var c=Abilities[id];var p=c?["profile"];if((string)c?["kind"]=="hardened"&&Roll()<F(p,"chance"))amount=Mathf.Min(amount,Mathf.Max(F(p,"minimum",1),amount-F(p,"block")));}
         if(!execute&&!pandaDebt&&TeamMech[victim.team]&&Aspects[victim.team]==0&&MechFighter(victim))amount=Mathf.Min(amount,Mathf.Min(unblockedAmount,Mathf.Max(5,unblockedAmount-12)));
+        if(!execute&&!pandaDebt)amount=PepeMitigate(victim,amount,spell,team);
         float before=victim.hp;
         if(!pandaDebt&&!suppressUndead&&killer!=null)UndeadAfterDamage(killer,victim,Mathf.Min(before,amount),before);
         if(victim.hp<=0)return before;
@@ -187,8 +189,11 @@ public sealed partial class HumanMatch {
     void ResolveAttack(int ownerId,int team,int target,float amount,Weapon w,float stun,bool passives=true) {
         var victim=FindUnit(target);var owner=FindUnit(ownerId);
         if(victim!=null) {
-            if(victim.team==team||CorruptedAirborne(victim))return;Ensure(victim);if(NightEvasion(victim)>0&&Roll()<NightEvasion(victim)){PulseAt(victim.position,1,Color.white,"Уклонение");return;}
+            if(victim.team==team||CorruptedAirborne(victim))return;Ensure(victim);float evasion=Mathf.Max(NightEvasion(victim),PepeEvasion(victim));if(evasion>0&&Roll()<evasion){PulseAt(victim.position,1,Color.white,"Уклонение");return;}
+            bool pepeHit=passives&&owner!=null&&owner.team==team&&Lines[owner.kind].unit?.StartsWith("pU",StringComparison.Ordinal)==true&&!Invulnerable(victim)&&(!Ethereal(victim)||w.attack=="magic"||w.attack=="spells");
+            if(pepeHit)amount+=PepeWeaponBonus(owner,victim,w);
             float bonus=passives&&owner!=null&&owner.hp>0?CorruptedIncinerate(owner,victim):0;float before=victim.hp;DamageUnit(victim,amount*NerubHuntMultiplier(owner,victim),team,w.attack,false,false,owner);if(bonus>0&&victim.hp>0)DamageUnit(victim,bonus,team,"magic",true,false,owner);float dealt=before-victim.hp;ElvenBlood(owner,victim,dealt,w.attack);if(dealt>0&&victim.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")NatureDragonArmor(victim);if(owner==null&&victim.hp>0&&Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0) is Hut feedbackTower)foreach(string id in Lines[feedbackTower.kind].abilities){var cfg=Abilities[id];if((string)cfg?["kind"]=="feedback"){float drained=Mathf.Min(victim.mana,F(cfg,"power"));victim.mana-=drained;DamageUnit(victim,drained*F(cfg,"ratio",1),team);}}if(victim.hp>0&&stun>0){victim.stun=Mathf.Max(victim.stun,stun);PulseAt(victim.position,1,Color.yellow,"Оглушение");}
+            if(pepeHit&&owner.hp>0)PepeWeaponHit(owner,victim,w);
             if(passives){CentaurAfterWeapon(owner,victim,dealt);var nativeTower=owner==null?Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0):null;NerubAfterWeapon(owner,nativeTower,victim,dealt);PandaAfterWeapon(owner,nativeTower,victim);ElementalAfterWeapon(owner,dealt);}ElementalTowerHit(ownerId,team,victim,dealt);UndeadWeaponHit(owner,victim,dealt,w);MechTowerHit(ownerId,team,victim,dealt);NorthernAfterWeapon(ownerId,victim,w);if(owner!=null&&owner.hp>0&&passives){OnHit(owner,victim,dealt,w);if(w.type=="normal"&&victim.auraThorns>0)DamageUnit(owner,dealt*victim.auraThorns,victim.team,"magic",true,false,victim);if(w.type=="normal")foreach(var id in victim.abilities){var cfg=Abilities[id];if((string)cfg?["kind"]=="spiked"&&F(cfg,"reflect")>0){DamageUnit(owner,dealt*F(cfg,"reflect")+F(cfg,"bonus"),victim.team,"magic",true,false,victim);SpikedHits++;}}}else if(victim.hp>0&&Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0&&h.paid) is Hut tower&&Lines[tower.kind].abilities.Contains("A020")&&Valid(victim,team,Abilities["A020"],false))ApplyEffect(victim,"A020",team);
         } else {
             Vector2 center=TargetPosition(target,team);float elementalBefore=target==-1?CastleHp[1-team]:FindHut(target)?.hp??0;

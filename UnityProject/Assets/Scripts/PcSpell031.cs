@@ -18,7 +18,7 @@ public sealed partial class PcGame {
         var cfg=unit!=null?UnitSkillConfig(unit,id,match.Abilities[id]):match.Abilities[id];var kind=(string)cfg?["kind"]??"";
         var timers=unit?.spellTimers??hut.spellTimers;float timer=timers.TryGetValue(id,out float t)?t:0;
         var s=new SpellDisplay{mana=unit?.mana??hut.mana,cost=HumanMatch.F(cfg,"mana"),regen=unit!=null?UnitManaRegen(unit):HutManaRegen(hut),total=HumanMatch.F(cfg,"cd"),blocked=""};
-        s.active=new[]{"CT23","CT24","CT26"}.Contains(id)||(s.cost>0||s.total>0)&&!new[]{"marker","aura","native_helper","pending","manual","human_artillery_fire","orc_artillery_fire"}.Contains(kind)||timer>.25f&&s.total>0;
+        s.active=(bool?)cfg?["custom_autocast"]==true||new[]{"CT23","CT24","CT26"}.Contains(id)||(s.cost>0||s.total>0)&&!new[]{"marker","aura","native_helper","pending","manual","human_artillery_fire","orc_artillery_fire"}.Contains(kind)||timer>.25f&&s.total>0;
         if(!s.active)return s;
         if(hut!=null){s.total=match.BuildingCooldown(hut,s.total);if(hut.paused)s.blocked="Постройка приостановлена";else if(!hut.paid)s.blocked="Идёт строительство";else if(match.BuildingDisabled(hut)>0)s.blocked="Постройка отключена";}
         else {if(match.TeamPandaren[unit.team]&&match.Aspects[unit.team]==1&&kind=="panda_brew")s.total*=.8f;if(match.TeamOrc[unit.team]&&match.Aspects[unit.team]==1&&id=="A02M")s.total/=1.35f;s.casting=unit.pendingSpell==id&&unit.castLeft>=0;if(match.Silenced(unit))s.blocked="Безмолвие";else if(unit.stun>0||match.Disabled(unit))s.blocked="Юнит оглушён или отключён";}

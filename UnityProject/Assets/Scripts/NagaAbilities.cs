@@ -49,7 +49,7 @@ public sealed partial class HumanMatch {
             if(raw=="h00M") {
                 bool blocked=NagaShieldBlock(target);
                 if(!blocked&&Valid(target,h.team,Abilities["A00N"],false)&&!IsNagaHero(target)&&F(Lines[target.kind].stats,"level",1)<=F(cfg,"level_limit",5)) {
-                    target.team=h.team;ApplyUltimate(target);target.combatTarget=target.attackTarget=-1;target.strikeLeft=-1;target.castLeft=-1;target.pendingSpell=null;target.leaveCastleLane=false;target.onRoad=true;target.direction=h.team==0?Vector2.right:Vector2.left;NagaControls++;
+                    PepeChangeTeam(target);target.team=h.team;ApplyUltimate(target);target.combatTarget=target.attackTarget=-1;target.strikeLeft=-1;target.castLeft=-1;target.pendingSpell=null;target.leaveCastleLane=false;target.onRoad=true;target.direction=h.team==0?Vector2.right:Vector2.left;NagaControls++;
                     PulseAt(target.position,2,new Color(.4f,.8f,1),"Подчинение",3.3f,"naga_charm");
                 }
             } else {

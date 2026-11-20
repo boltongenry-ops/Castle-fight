@@ -52,7 +52,7 @@ public static class BuildMobileContent {
         string previous=PlayerSettings.bundleVersion;
         try{
             Move("Assets/Resources",Source);Move("Assets/StreamingAssets",Streaming);
-            PlayerSettings.bundleVersion="0.40.2";PlayerSettings.Android.bundleVersionCode=Math.Max(30,PlayerSettings.Android.bundleVersionCode);
+            PlayerSettings.bundleVersion="0.41.0";PlayerSettings.Android.bundleVersionCode=Math.Max(31,PlayerSettings.Android.bundleVersionCode);
             var result=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/MobileBootstrap/Startup.unity"},target=BuildTarget.Android,locationPathName="Builds/MapAndroid/CastleFight-Android-OnlineAssets.apk",assetBundleManifestPath=File.Exists(Output+"/ContentAndroid021.manifest")?Output+"/ContentAndroid021.manifest":null,options=BuildOptions.CompressWithLz4|(Environment.GetEnvironmentVariable("CF_ANDROID_CLEAN_BURST")=="1"?BuildOptions.CleanBuildCache:BuildOptions.None)});
             if(result.summary.result!=BuildResult.Succeeded)throw new Exception("Small Android rebuild failed: "+result.summary.result);
             Debug.Log("CF_ANDROID_CONTENT_PLAYER_PASS apkBytes="+result.summary.totalSize);
@@ -64,7 +64,7 @@ public static class BuildMobileContent {
         var oldVersion=PlayerSettings.bundleVersion;int oldCode=PlayerSettings.Android.bundleVersionCode;
         try {
             Move("Assets/Resources",Source);Move("Assets/StreamingAssets",Streaming);
-            var resources=Paths(Source);var packs=MobileContent.RaceResources.Skip(1).ToDictionary(n=>n,n=>AssetDatabase.LoadAssetAtPath<PcRacePack>(Source+"/"+n+".asset"));
+            var resources=Paths(Source);var packs=MobileContent.RaceResources.Take(PepeContent.Race).Skip(1).ToDictionary(n=>n,n=>AssetDatabase.LoadAssetAtPath<PcRacePack>(Source+"/"+n+".asset"));
             if(packs.Any(p=>!p.Value))throw new Exception("Race pack missing");
             var common=resources.Where(p=>{var t=AssetDatabase.GetMainAssetTypeAtPath(p);return t==typeof(TextAsset)||t==typeof(Font)||t==typeof(AudioClip)||(t==typeof(Texture2D)&&!p.Substring(Source.Length+1).Contains("/"))||p.StartsWith(Source+"/PcStickers/")||p.StartsWith(Source+"/PcLobby/");}).ToArray();
             Claim("frontend",common);
@@ -75,13 +75,13 @@ public static class BuildMobileContent {
 
             // Builders have their own small bundle: opening setup/reference book
             // never traverses a race pack and its complete model dependency tree.
-            for(int race=1;race<MobileContent.RaceResources.Length;race++){var pack=packs[MobileContent.RaceResources[race]];var builder=AssetDatabase.GetAssetPath(pack.builders[0]);Claim("builders",new[]{builder});lookup.Add(new JObject{["key"]="MobileBuilders/"+race,["asset"]=builder});var data=AssetDatabase.GetAssetPath(pack.catalog);Claim("frontend",new[]{data});lookup.Add(new JObject{["key"]="MobileCatalogs/"+race,["asset"]=data});}
+            for(int race=1;race<PepeContent.Race;race++){var pack=packs[MobileContent.RaceResources[race]];var builder=AssetDatabase.GetAssetPath(pack.builders[0]);Claim("builders",new[]{builder});lookup.Add(new JObject{["key"]="MobileBuilders/"+race,["asset"]=builder});var data=AssetDatabase.GetAssetPath(pack.catalog);Claim("frontend",new[]{data});lookup.Add(new JObject{["key"]="MobileCatalogs/"+race,["asset"]=data});}
             // The scene must be isolated from non-scene assets in build maps.
             foreach(string p in AssetDatabase.GetDependencies(Scene,true).Where(p=>p!=Scene&&RuntimeAsset(p)))if(!owner.ContainsKey(p))owner[p]="world";
             owner[Scene]="mapscene";
             foreach(string dir in AssetDatabase.GetSubFolders(Source).OrderBy(x=>x,StringComparer.Ordinal))Claim("fx-"+Path.GetFileName(dir).ToLowerInvariant(),Paths(dir));
             // Ultimate goes last because its cross-race art reuses prior bundles.
-            foreach(int race in Enumerable.Range(1,MobileContent.RaceResources.Length-1).OrderBy(n=>n==12?99:n))Claim("race-"+race,new[]{AssetDatabase.GetAssetPath(packs[MobileContent.RaceResources[race]])});
+            foreach(int race in Enumerable.Range(1,PepeContent.Race-1).OrderBy(n=>n==12?99:n))Claim("race-"+race,new[]{AssetDatabase.GetAssetPath(packs[MobileContent.RaceResources[race]])});
             Claim("frontend",resources.Where(p=>!owner.ContainsKey(p)));
             foreach(string p in resources){string rel=p.Substring(Source.Length+1);lookup.Add(new JObject{["key"]=rel.Substring(0,rel.Length-Path.GetExtension(rel).Length),["asset"]=p});}
             foreach(var row in lookup)row["bundle"]=owner[(string)row["asset"]];

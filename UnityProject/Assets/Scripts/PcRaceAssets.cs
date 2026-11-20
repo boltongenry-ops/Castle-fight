@@ -7,7 +7,7 @@ namespace CastleFight {
 public sealed partial class PcGame {
     AssetBundle desktopMenuBuilders;
     AsyncOperation raceAssetSweep;
-    static readonly string[] DesktopRaceCatalogs={"human","orcs","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur"};
+    static readonly string[] DesktopRaceCatalogs={"human","orcs","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe"};
 
     IEnumerator OpenDesktopMenuBuilders(){
         if(MobileContent.Active)yield break;
@@ -46,7 +46,7 @@ public sealed partial class PcGame {
         foreach(int race in player==opponent?new[]{player}:new[]{player,opponent}){
             if(generation!=versusSerial)yield break;
             if(race==0||Pack(race))continue;
-            if(race==15){LoadDesktopRace(race);continue;}
+            if(race==15||race==PepeContent.Race){LoadDesktopRace(race);continue;}
             var request=Resources.LoadAsync<PcRacePack>(MobileContent.RaceResources[race]);
             yield return request;
             if(generation!=versusSerial){SweepRaceAssets();yield break;}
@@ -93,7 +93,7 @@ public sealed partial class PcGame {
     }
 
     void PreserveAssetAuditForHistoricalTests(){
-        for(int race=1;race<MobileContent.RaceResources.Length;race++)LoadDesktopRace(race);
+        for(int race=1;race<MobileContent.RaceResources.Length;race++)if(RaceStaged(race))LoadDesktopRace(race);
         AuditMaterials();AuditUndeadParticles();AuditCorruptedParticles();AuditElementalParticles();AuditNightParticles();AuditElvenParticles();AuditFinalParticles();
     }
 }

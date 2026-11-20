@@ -38,10 +38,10 @@ public sealed partial class PcGame {
     }
     void DisposeFrontend(){StopDirectory();DisposeStickers();if(menuAudio)Destroy(menuAudio);}
     // Only the current pair is decoded; fifteen source paintings stay on disk.
-    static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur"};
-    static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей"};
+    static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe"};
+    static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе"};
     Texture2D versusLeft,versusRight;int versusA,versusB,versusSerial;float versusAt;bool versusActive,versusPrepared,versusNetwork;string versusNameA,versusNameB;
-    void DisposeVersusArt(){if(versusLeft)Destroy(versusLeft);if(versusRight)Destroy(versusRight);versusLeft=versusRight=null;}
+    void DisposeVersusArt(){if(versusLeft&&versusA!=PepeContent.Race)Destroy(versusLeft);if(versusRight&&versusB!=PepeContent.Race)Destroy(versusRight);versusLeft=versusRight=null;}
     void CloseVersus(){versusSerial++;versusActive=false;versusPrepared=false;mobileRoundPrepared=false;DisposeVersusArt();}
     void BeginVersus(int a,int b,bool online){
         DisposeVersusArt();versusSerial++;versusA=Mathf.Clamp(a,0,VersusKeys.Length-1);versusB=Mathf.Clamp(b,0,VersusKeys.Length-1);versusActive=true;versusPrepared=false;versusNetwork=online;versusAt=Time.realtimeSinceStartup;
@@ -49,7 +49,13 @@ public sealed partial class PcGame {
     }
     IEnumerator LoadVersusArt(int generation){
         for(int side=0;side<2;side++){
-            string path=MobileContent.MediaRoot+"/Frontend/Versus/"+VersusKeys[side==0?versusA:versusB]+".png";
+            int race=side==0?versusA:versusB;
+            if(race==PepeContent.Race){
+                var painting=PepeContent.Load<Texture2D>("Pepe/Versus-pepe");
+                if(painting){if(side==0)versusLeft=painting;else versusRight=painting;}
+                continue;
+            }
+            string path=MobileContent.MediaRoot+"/Frontend/Versus/"+VersusKeys[race]+".png";
             if(MobileContent.Active){yield return MobileContent.Current.EnsureMedia("Frontend/Versus/"+VersusKeys[side==0?versusA:versusB]+".png");path=new Uri(path).AbsoluteUri;}
             byte[] data=null;
             if(Application.isMobilePlatform){using(var req=UnityEngine.Networking.UnityWebRequest.Get(path)){yield return req.SendWebRequest();if(req.result==UnityEngine.Networking.UnityWebRequest.Result.Success)data=req.downloadHandler.data;}}
@@ -68,7 +74,7 @@ public sealed partial class PcGame {
         else yield return PrepareDesktopMatch(versusA,versusB,generation);
         if(generation!=versusSerial){mobileRoundPrepared=false;yield break;}
         if(next)StartRound();else NewMatch();
-        if(matchRace!=versusA||matchBotRace!=versusB){versusA=matchRace;versusB=matchBotRace;DisposeVersusArt();yield return LoadVersusArt(generation);}
+        if(matchRace!=versusA||matchBotRace!=versusB){DisposeVersusArt();versusA=matchRace;versusB=matchBotRace;yield return LoadVersusArt(generation);}
         RenderMatch();versusPrepared=true;yield return new WaitForEndOfFrame();
         while(generation==versusSerial&&Time.realtimeSinceStartup-versusAt<1.5f)yield return null;
         if(generation==versusSerial)CloseVersus();
@@ -97,7 +103,10 @@ public sealed partial class PcGame {
         Text(550,377,180,32,"1 × 1",new GUIStyle(label){alignment=TextAnchor.MiddleCenter,normal={textColor=new Color(.76f,.8f,.83f)}});
         for(int side=0;side<2;side++){
             float x=side==0?42:714;Fill(new Rect(x-12,521,548,109),new Color(.008f,.016f,.024f,.83f));Fill(new Rect(x,521,500,1),new Color(.75f,.59f,.32f,.7f));
-            Text(x,534,500,40,VersusNames[side==0?versusA:versusB],new GUIStyle(heading){fontSize=29,alignment=TextAnchor.MiddleCenter,normal={textColor=gold}});
+            int race=side==0?versusA:versusB;
+            var emblem=RaceEmblem(race);
+            if(emblem)GUI.DrawTexture(new Rect(x+8,545,57,57),emblem,ScaleMode.ScaleToFit);
+            Text(x+64,534,432,40,VersusNames[race],new GUIStyle(heading){fontSize=29,alignment=TextAnchor.MiddleCenter,normal={textColor=gold}});
             Text(x,580,500,33,side==0?versusNameA:versusNameB,new GUIStyle(label){fontSize=22,alignment=TextAnchor.MiddleCenter});
         }
         Fill(new Rect(0,637,1280,83),new Color(.008f,.014f,.021f,.97f));

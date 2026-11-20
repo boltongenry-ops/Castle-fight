@@ -13,10 +13,11 @@ public sealed partial class PcGame {
     string GuideRaceName(int race)=>AllRaceNames[RaceOfUnity(race)];
     void OpenGuide(){
         MainMenu();page=Page.Guide;guideRace=guideEntry=-1;guideOpened=0;guideQuery="";guideHistory.Clear();
-        if(!guideGarden){guideGarden=new GameObject("Guide clearing — fifteen classic builders");
+        if(!guideGarden){guideGarden=new GameObject("Guide clearing — classic builders");
             for(int race=0;race<MobileContent.RaceResources.Length;race++){
+                if(!RaceStaged(race))continue;
                 var prefab=MenuBuilder(race);var model=Instantiate(prefab?prefab:FirstModel(builderModels),guideGarden.transform).GetComponent<PcModel>();
-                int column=race%5,row=race/5;if(race==15){column=3;row=-1;}if(column==4){column=row;row=-1;}Vector2 p=guideClearing+new Vector2((column-2)*20,(row-1)*13);var ground=World(p);model.transform.position=ground;model.Face(Vector2.up,true);model.Play("Stand");model.SamplePose();
+                int column=race%5,row=race/5;if(race==15){column=3;row=-1;}if(race==PepeContent.Race){column=0;row=3;}if(column==4){column=row;row=-1;}Vector2 p=guideClearing+new Vector2((column-2)*20,(row-1)*13);var ground=World(p);model.transform.position=ground;model.Face(Vector2.up,true);model.Play("Stand");model.SamplePose();
                 var bounds=model.BodyBounds();float scale=4.6f/Mathf.Max(.1f,bounds.size.y);model.transform.localScale*=scale;model.transform.position=ground+Vector3.up*(ground.y-bounds.min.y)*scale;guideBuilders.Add(model);
             }
         }
@@ -63,10 +64,15 @@ public sealed partial class PcGame {
             if(!guideLayerReserved){guideMainMask=Camera.main.cullingMask;Camera.main.cullingMask&=~(1<<30);guideLayerReserved=true;}
         }
         guideModel=Instantiate(GuidePrefab(GuideActorKind,guideUnit),guideStage.transform).GetComponent<PcModel>();guideModel.transform.localPosition=Vector3.zero;guideModel.transform.localRotation=Quaternion.identity;guideModel.Play("Stand");guideModel.SamplePose();
-        if(guideRace==15){guideAngle=180;guideModel.transform.localRotation=Quaternion.Euler(0,guideAngle,0);guideModel.SamplePose();}
+        guideAngle=guideRace==PepeContent.Race?142:guideRace==15?180:0;
+        guideModel.transform.localRotation=Quaternion.Euler(0,guideAngle,0);guideModel.SamplePose();
         foreach(var t in guideModel.GetComponentsInChildren<Transform>(true))t.gameObject.layer=30;
         var bounds=guideModel.BodyBounds();Vector3 anchor=guideStage.transform.position;guideModel.transform.position-=bounds.center-anchor;
-        float radius=Mathf.Max(.4f,bounds.extents.magnitude);float distance=radius/Mathf.Sin(guideCamera.fieldOfView*Mathf.Deg2Rad*.5f)*1.12f;guideCamera.transform.position=anchor+new Vector3(0,radius*.14f,-distance);guideCamera.transform.LookAt(anchor);guideCamera.farClipPlane=Mathf.Max(50,distance+radius*4);guideCamera.enabled=true;
+        float radius=Mathf.Max(.4f,bounds.extents.magnitude);
+        bool wingedRider=guideRace==PepeContent.Race&&guideModel.raw=="pU04";
+        float distance=radius/Mathf.Sin(guideCamera.fieldOfView*Mathf.Deg2Rad*.5f)*(wingedRider?1.75f:guideRace==PepeContent.Race?1.45f:1.12f);
+        guideCamera.transform.position=anchor+new Vector3(0,wingedRider?distance*.38f:radius*.14f,-distance);
+        guideCamera.transform.LookAt(anchor);guideCamera.farClipPlane=Mathf.Max(50,distance+radius*4);guideCamera.enabled=true;
         guideDescription=GuideEntryText();
     }
     int GuideInvestment(int kind,HashSet<int> seen=null){seen=seen??new HashSet<int>();if(!seen.Add(kind))return 0;var line=guideAuthority.Lines[kind];int parent=Array.FindIndex(guideAuthority.Lines,l=>l.upgrades.Contains(line.building));return line.cost+(parent>=0?GuideInvestment(parent,seen):0);}
@@ -95,7 +101,7 @@ public sealed partial class PcGame {
                 if(Button("guide.race."+race,new Rect(at.x-89,at.y+12,178,39),GuideRaceName(race),false,new GUIStyle(menuButton){fontSize=14,wordWrap=true,alignment=TextAnchor.MiddleCenter,padding=new RectOffset(4,4,2,2)})){GuideChooseRace(race);break;}
                 var screen=Camera.main.WorldToScreenPoint(model.transform.position+Vector3.up*2.3f);var hit=GuiPoint(new Vector2(screen.x,screen.y));if(Event.current.type==EventType.MouseDown&&Event.current.button==0&&new Rect(hit.x-32,hit.y-44,64,88).Contains(Event.current.mousePosition)){GuideChooseRace(race);Event.current.Use();break;}
             }
-            Fill(new Rect(300,655,680,38),new Color(.025f,.04f,.045f,.85f));Text(320,659,640,28,"16 рас · классические модели · характеристики и улучшения",small);return;
+            Fill(new Rect(300,655,680,38),new Color(.025f,.04f,.045f,.85f));Text(320,659,640,28,guideBuilders.Count+" рас · классические модели · характеристики и улучшения",small);return;
         }
         if(guideEntry<0){DrawGuideGrid();return;}
         DrawGuideEntry();

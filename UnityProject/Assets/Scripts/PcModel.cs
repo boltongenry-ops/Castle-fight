@@ -12,7 +12,7 @@ public sealed class PcModel : MonoBehaviour {
         foreach(var clip in clips)player.AddClip(clip,clip.name);
         player.cullingType=reforged?AnimationCullingType.BasedOnRenderers:AnimationCullingType.AlwaysAnimate;
         if(reforged)foreach(var skin in GetComponentsInChildren<SkinnedMeshRenderer>())skin.updateWhenOffscreen=false;
-        appearance=animatedRoot.AddComponent<NativeAppearance>();appearance.Configure(string.IsNullOrEmpty(appearanceKey)?raw:appearanceKey,player);
+        if(appearanceKey!="pepe"){appearance=animatedRoot.AddComponent<NativeAppearance>();appearance.Configure(string.IsNullOrEmpty(appearanceKey)?raw:appearanceKey,player);}
         if(!reforged&&ClassicWispBody040.IsWisp(raw))gameObject.AddComponent<ClassicWispBody040>();
         Play("Stand");
     }
@@ -24,7 +24,7 @@ public sealed class PcModel : MonoBehaviour {
         if(pose==requested&&(!once||attackSerial==previousAttack))return;
         previousAttack=attackSerial;pose=requested;player[clip.name].wrapMode=terminal||once?WrapMode.ClampForever:WrapMode.Loop;
         if(once)player[clip.name].time=0;
-        if(player.isPlaying)player.CrossFade(clip.name,.12f);else player.Play(clip.name);appearance.SetClip(clip.name);
+        if(player.isPlaying)player.CrossFade(clip.name,.12f);else player.Play(clip.name);if(appearance)appearance.SetClip(clip.name);
         if(!reforged&&ClassicWispBody040.IsWisp(raw)&&TryGetComponent<ClassicWispBody040>(out var wisp))
             wisp.SetClip(clip.name,!terminal&&!once);
     }
@@ -53,14 +53,18 @@ public sealed class PcModel : MonoBehaviour {
         foreach(var skin in GetComponentsInChildren<SkinnedMeshRenderer>())if(skin.enabled) {
             var baked=new Mesh();skin.BakeMesh(baked,godotHeight>0);var vertices=baked.vertices;var mats=skin.sharedMaterials;
             for(int s=0;s<baked.subMeshCount;s++) {
-                if(s<mats.Length&&mats[s].GetInt("_DstBlend")!=0)continue;if(godotHeight>0&&appearance&&!appearance.SurfaceVisible(s))continue;
+                if(appearanceKey!="pepe"&&s<mats.Length&&mats[s].GetInt("_DstBlend")!=0)continue;if(godotHeight>0&&appearance&&!appearance.SurfaceVisible(s))continue;
                 foreach(int index in baked.GetTriangles(s)){var point=BoundsVertex(skin,vertices[index]);if(!found){result=new Bounds(point,Vector3.zero);found=true;}else result.Encapsulate(point);}
             }
             Destroy(baked);
         }
-        return found?result:GetComponentInChildren<SkinnedMeshRenderer>().bounds;
+        if(found)return result;
+        foreach(var renderer in GetComponentsInChildren<Renderer>())if(renderer.enabled){
+            if(!found){result=renderer.bounds;found=true;}else result.Encapsulate(renderer.bounds);
+        }
+        return result;
     }
-    Vector3 BoundsVertex(SkinnedMeshRenderer skin,Vector3 point)=>reforged&&godotHeight>0?
+    Vector3 BoundsVertex(SkinnedMeshRenderer skin,Vector3 point)=>appearanceKey=="pepe"||reforged&&godotHeight>0?
         skin.transform.TransformPoint(point):skin.transform.position+skin.transform.rotation*point;
     public void Face(Vector2 direction,bool instant=false) {
         if(direction.sqrMagnitude<.001f)return;

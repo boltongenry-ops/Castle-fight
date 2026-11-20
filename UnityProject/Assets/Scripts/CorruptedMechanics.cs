@@ -49,7 +49,7 @@ public sealed partial class HumanMatch {
         string id=(string)child?["id"];if(id=="A04Q"||id=="A055"||id=="A0AB"){if(Valid(target,source.team,child,false)){ApplyEffect(target,id,source.team);PulseAt(target.position,1,Color.magenta,"",.5f,"corrupted:"+id+":caster");}return true;}
         if(id=="A04O"){
             if(Valid(target,source.team,child,false)&&!IsNagaHero(target)&&F(Lines[target.kind].stats,"level",1)<=F(child,"level_limit",10)&&!target.abilities.Contains("A070")&&!target.abilities.Contains("A06V")){
-                target.team=source.team;target.combatTarget=target.attackTarget=-1;target.strikeLeft=target.castLeft=-1;target.pendingSpell=null;target.leaveCastleLane=false;target.onRoad=true;target.direction=source.team==0?Vector2.right:Vector2.left;ChaosSealBonus(target);CorruptedCharms++;PulseAt(target.position,2,Color.magenta,"Подчинение",1.2f,"corrupted:A04O:target");
+                PepeChangeTeam(target);target.team=source.team;target.combatTarget=target.attackTarget=-1;target.strikeLeft=target.castLeft=-1;target.pendingSpell=null;target.leaveCastleLane=false;target.onRoad=true;target.direction=source.team==0?Vector2.right:Vector2.left;ChaosSealBonus(target);CorruptedCharms++;PulseAt(target.position,2,Color.magenta,"Подчинение",1.2f,"corrupted:A04O:target");
             }return true;
         }
         if(id=="A04X"){if(Valid(target,source.team,child,false))LaunchCorruptedWave(source,target.position);return true;}return false;

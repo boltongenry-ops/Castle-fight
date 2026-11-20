@@ -58,6 +58,7 @@ public sealed partial class PcGame {
         if(revised)return revised;
         int race=unit.team==0?matchRace:matchBotRace;
         if(race==15)return CentaurUnitIcon(actor);
+        if(race==PepeContent.Race)return PepeContent.FighterIcon(actor);
         var pack=Pack(race);
         string raw=match.Lines[unit.kind].building;
         if(!raceIndices[race].TryGetValue(raw,out int index))return CommandIcon(0);

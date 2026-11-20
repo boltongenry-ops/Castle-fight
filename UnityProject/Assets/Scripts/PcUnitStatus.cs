@@ -2,7 +2,7 @@ using System.Linq;
 using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame {
-    bool Debuff(HumanMatch.Effect e){string k=(string)e.config?["kind"];return e.left>0&&(k=="debuff"||k=="poison"||k=="incinerate"||(bool?)e.config?["disable"]==true||e.root||e.ground||e.speed<0||e.haste<0||e.armor<0||e.incoming>0);}
+    bool Debuff(HumanMatch.Effect e){string k=(string)e.config?["kind"];return e.left>0&&(e.id==PepeRules.PepeMarkId||k=="debuff"||k=="poison"||k=="incinerate"||(bool?)e.config?["disable"]==true||e.root||e.ground||e.speed<0||e.haste<0||e.armor<0||e.incoming>0);}
     Texture2D DebuffArt(HumanMatch.Effect e){return AbilityArt(e.id=="corrupted_impale_air"?"A0AE":e.id=="A0AF"?"A0AE":e.id.StartsWith("aspect_plague_")?"A05R":e.id)??(e.root?AbilityArt("A06I"):null)??Extra("debuff");}
     void DrawUnitDebuffs(HumanMatch.Unit u,float x,float y){
         var debtStatus=match.PandaStagger(u)>0?new[]{new HumanMatch.Effect{id="APSt",left=4,config=new Newtonsoft.Json.Linq.JObject{["name"]="Выдержка · долг "+match.PandaStagger(u).ToString("F0")}}}:System.Array.Empty<HumanMatch.Effect>();var debuffs=debtStatus.Concat(u.effects.Where(Debuff)).Take(4).ToArray();var hostile=u.auraIds.Where(id=>(bool?)match.Abilities[id]?["profile"]?["enemy"]==true).Take(Mathf.Max(0,4-debuffs.Length)).ToArray();int count=debuffs.Length+hostile.Length+(u.stun>0?1:0);if(count==0)return;

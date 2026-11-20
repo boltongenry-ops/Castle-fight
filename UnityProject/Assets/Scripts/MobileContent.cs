@@ -24,7 +24,7 @@ public sealed class MobileContent : MonoBehaviour {
     JObject index;string cache,baseUrl,status="Подготовка загрузки",error="";float progress;bool retry;
     public static string MediaRoot=>Active?Path.Combine(Current.cache,"media"):Application.streamingAssetsPath;
     public static string Media(string relative)=>Path.Combine(MediaRoot,relative.Replace('/',Path.DirectorySeparatorChar));
-    public static string[] RaceResources={"","OrcStageOne","NagaStageOne","NatureStageOne","ChaosStageOne","NorthernRealms","MechCoalition","UndeadForces","CorruptedConglomerate","ElementalsUniverse","NightElves","ElvenUnion","UltimateBuilder","NerubianSwarm","PandarenOrder","CentaurKhanates"};
+    public static string[] RaceResources={"","OrcStageOne","NagaStageOne","NatureStageOne","ChaosStageOne","NorthernRealms","MechCoalition","UndeadForces","CorruptedConglomerate","ElementalsUniverse","NightElves","ElvenUnion","UltimateBuilder","NerubianSwarm","PandarenOrder","CentaurKhanates",PepeContent.Pack};
     public static string[] RaceEffects={"NativeFX","NativeFX","NativeFX","NativeFX","NativeFX","NorthernFx","MechFx","UndeadFx","CorruptedFx","ElementalFx","NightFx","ElvenFx","FinalFx","FinalFx","FinalFx","NativeFX"};
     void Awake(){if(Current){Destroy(gameObject);return;}Current=this;DontDestroyOnLoad(gameObject);Application.targetFrameRate=60;QualitySettings.vSyncCount=0;Application.backgroundLoadingPriority=ThreadPriority.Low;QualitySettings.asyncUploadTimeSlice=2;QualitySettings.asyncUploadBufferSize=8;QualitySettings.asyncUploadPersistentBuffer=false;}
     IEnumerator Start(){
@@ -69,7 +69,7 @@ public sealed class MobileContent : MonoBehaviour {
     public IEnumerator LoadNamedAsync<T>(string path,Action<T> complete) where T:UnityEngine.Object {var bundle=NamedBundle(path);if(!bundle){complete(null);yield break;}var request=bundle.LoadAssetAsync<T>(path);yield return request;complete(request.asset as T);}
     public IEnumerator EnsureRace(int race){
         yield return EnsurePrefix("ClassicMissiles","Классические снаряды");
-        if(race==0){yield return EnsurePrefix("NativeFX","Подготовка эффектов");yield break;}
+        if(race==0||race==PepeContent.Race){yield return EnsurePrefix("NativeFX","Подготовка эффектов");yield break;}
         yield return EnsureResources(new[]{RaceResources[race]},"Подготовка расы");
         yield return EnsurePrefix(RaceEffects[race],"Подготовка эффектов");
         yield return EnsurePrefix(RaceEffects[race]+"Materials","Подготовка эффектов");
@@ -77,7 +77,7 @@ public sealed class MobileContent : MonoBehaviour {
     }
     public IEnumerator CacheRaces(IEnumerable<int> races){
         var wanted=new HashSet<string>(StringComparer.OrdinalIgnoreCase){"ClassicMissiles","NativeFX"};
-        foreach(int race in races){if(race>0)wanted.Add(RaceResources[race]);wanted.Add(RaceEffects[race]);wanted.Add(RaceEffects[race]+"Materials");}
+        foreach(int race in races){if(race==PepeContent.Race)continue;if(race>0)wanted.Add(RaceResources[race]);wanted.Add(RaceEffects[race]);wanted.Add(RaceEffects[race]+"Materials");}
         var roots=resources.Where(p=>wanted.Any(prefix=>p.Key.Equals(prefix,StringComparison.OrdinalIgnoreCase)||p.Key.StartsWith(prefix+"/",StringComparison.OrdinalIgnoreCase))).SelectMany(p=>p.Value.Select(row=>(string)row["bundle"]));
         var seen=new HashSet<string>();var rows=roots.SelectMany(key=>Dependencies(key,seen)).Select(key=>files[key]).Where(row=>!Cached(row)).ToArray();long total=rows.Sum(row=>(long)row["size"]),done=0;
         foreach(var row in rows){yield return Download(row,"Случайные расы · загрузка на диск",done,total);done+=(long)row["size"];}
@@ -152,7 +152,7 @@ public sealed class MobileContent : MonoBehaviour {
 
 }
 public static class ContentResources {
-    public static T Load<T>(string key) where T:UnityEngine.Object=>MobileContent.Active?MobileContent.Current.Load<T>(key):CentaurContent.Load<T>(key)??Resources.Load<T>(key);
+    public static T Load<T>(string key) where T:UnityEngine.Object=>PepeContent.Load<T>(key)??(MobileContent.Active?MobileContent.Current.Load<T>(key):CentaurContent.Load<T>(key)??Resources.Load<T>(key));
     public static T[] LoadAll<T>(string key) where T:UnityEngine.Object=>MobileContent.Active?MobileContent.Current.LoadAll<T>(key):Resources.LoadAll<T>(key);
 }
 }

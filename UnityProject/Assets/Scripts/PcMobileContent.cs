@@ -24,12 +24,13 @@ public sealed partial class PcGame {
         MobileContent.Current.Ready();if(networkSlot>=0&&network!=null&&network.Connected)SendNetwork(new Newtonsoft.Json.Linq.JObject{["type"]="ready",["ready"]=true});
     }
     bool mobileRoundPrepared;
-    void AssignPack(int race,PcRacePack value){switch(race){case 1:orcPack=value;break;case 2:nagaPack=value;break;case 3:naturePack=value;break;case 4:chaosPack=value;break;case 5:northernPack=value;break;case 6:mechPack=value;break;case 7:undeadPack=value;break;case 8:corruptedPack=value;break;case 9:elementalPack=value;break;case 10:nightPack=value;break;case 11:elvenPack=value;break;case 12:ultimatePack=value;if(!value){var state=MobileUltimate034.For(this);if(state.shell)Destroy(state.shell);state.shell=null;state.draw=null;}break;case 13:nerubianPack=value;break;case 14:pandarenPack=value;break;case 15:centaurPack=value;break;}}
+    void AssignPack(int race,PcRacePack value){switch(race){case 1:orcPack=value;break;case 2:nagaPack=value;break;case 3:naturePack=value;break;case 4:chaosPack=value;break;case 5:northernPack=value;break;case 6:mechPack=value;break;case 7:undeadPack=value;break;case 8:corruptedPack=value;break;case 9:elementalPack=value;break;case 10:nightPack=value;break;case 11:elvenPack=value;break;case 12:ultimatePack=value;if(!value){var state=MobileUltimate034.For(this);if(state.shell)Destroy(state.shell);state.shell=null;state.draw=null;}break;case 13:nerubianPack=value;break;case 14:pandarenPack=value;break;case 15:centaurPack=value;break;case PepeContent.Race:pepePack=value;break;}}
     IEnumerator PrepareMobileRace(int race){
         if(!MobileContent.Active)yield break;
         yield return MobileContent.Current.EnsureRace(race);
         if(race==0)yield break;
-        if(race==12){yield return PrepareUltimateShell034();}else if(!Pack(race)){yield return MobileContent.Current.LoadAsync<PcRacePack>(MobileContent.RaceResources[race],value=>AssignPack(race,value));if(!Pack(race))throw new InvalidOperationException("Missing downloaded race "+race);}
+        if(race==PepeContent.Race)AssignPack(race,PepeContent.Load<PcRacePack>(PepeContent.Pack));
+        else if(race==12){yield return PrepareUltimateShell034();}else if(!Pack(race)){yield return MobileContent.Current.LoadAsync<PcRacePack>(MobileContent.RaceResources[race],value=>AssignPack(race,value));if(!Pack(race))throw new InvalidOperationException("Missing downloaded race "+race);}
         ApplyRaceMaterialDefaults(race);
         Debug.Log("CF_MOBILE_RACE_READY race="+race);
     }
@@ -54,6 +55,7 @@ public sealed partial class PcGame {
     GameObject MenuBuilder(int race)=>OptionalModel(ClassicMenuBuilder(race),0);
     GameObject ClassicMenuBuilder(int race){
         if(race==0)return FirstModel(builderModels);
+        if(race==PepeContent.Race)return PepeContent.Load<GameObject>("Pepe/Builder")??PepeContent.Load<PcRacePack>(PepeContent.Pack)?.builders[0];
         if(MobileContent.Active)return ContentResources.Load<GameObject>("MobileBuilders/"+race);
         if(desktopMenuBuilders)return desktopMenuBuilders.LoadAsset<GameObject>("builders/"+race);
         var pack=Pack(race);

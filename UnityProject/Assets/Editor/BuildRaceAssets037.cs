@@ -18,7 +18,7 @@ public static class BuildRaceAssets037 {
         var paths=new List<string>();
         var addresses=new List<string>();
         var supplement=JObject.Parse(File.ReadAllText("Assets/Centaur028/index.json"));
-        for(int race=1;race<MobileContent.RaceResources.Length;race++){
+        for(int race=1;race<PepeContent.Race;race++){
             string key=MobileContent.RaceResources[race];
             string path=race==15?(string)supplement[key]:"Assets/Resources/"+key+".asset";
             string yaml=File.ReadAllText(path);
