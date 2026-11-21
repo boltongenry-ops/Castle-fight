@@ -137,8 +137,9 @@ public sealed partial class HumanMatch {
     }
 
     bool PepeTryHeal(Unit sage) {
-        if (!sage.abilities.Contains("PHea") || !PepeReady(sage.spellTimers, "PHea") || Silenced(sage)) return false;
-        var cfg = Abilities["PHea"];
+        string heal=sage.abilities.Contains("PHe2")?"PHe2":"PHea";
+        if (!sage.abilities.Contains(heal) || !PepeReady(sage.spellTimers, heal) || Silenced(sage)) return false;
+        var cfg = Abilities[heal];
         float mana = F(cfg, "mana");
         if (sage.mana < mana) return false;
         var ally = PepeInRange(sage.position, F(cfg, "area"))
@@ -147,14 +148,14 @@ public sealed partial class HumanMatch {
             .OrderBy(unit => unit.hp / unit.maxHp).ThenBy(unit => unit.id).FirstOrDefault();
         if (ally == null) return false;
         sage.mana -= mana;
-        sage.spellTimers["PHea"] = F(cfg, "cd");
+        sage.spellTimers[heal] = F(cfg, "cd");
         sage.castPause = .35f;
         sage.pose = sage.finalCastPose = "Attack";
         sage.attackSerial++;
         ally.hp = Mathf.Min(ally.maxHp, ally.hp + F(cfg, "power"));
         Heals++;
         SpellsCast++;
-        PulseAt(ally.position, 1, ReedGreen, "", .85f, "pepe:PHea",ally.id);
+        PulseAt(ally.position, 1, ReedGreen, "", .85f, "pepe:"+heal,ally.id);
         return true;
     }
 

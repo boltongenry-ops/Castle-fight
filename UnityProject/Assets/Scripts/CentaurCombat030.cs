@@ -21,7 +21,7 @@ public sealed partial class HumanMatch {
         if(target.hp<=0)return;
         if(thrust&&hits%4==0){float ratio=Lines[source.kind].unit=="cU11"?.7f:.5f;DamageUnit(target,source.shotDamage*ratio,source.team,Lines[source.kind].weapons[0].attack,false,false,source);CentaurThrusts++;PulseAt(target.position,1.2f,new Color(1,.75f,.25f),"Выпад",.4f,"cleave");}
         if(crack&&hits%3==0&&!Invulnerable(target)&&!CorruptedAirborne(target)){
-            string effect=Lines[source.kind].unit=="cU13"?"CT22":"CT21";ApplyEffect(target,effect,source.team);CentaurBreaks++;PulseAt(target.position,1.2f,new Color(.85f,.5f,.2f),"Раскол брони",.4f);
+            string effect=Lines[source.kind].unit=="cU13"?"CT22":"CT21";ApplyEffect(target,effect,source.team);CentaurBreaks++;PulseAt(target.position,1.2f,new Color(.85f,.5f,.2f),"Раскол брони",.4f,"steppe:break");
         }
     }
     void TickCentaurCombat(){
@@ -34,7 +34,7 @@ public sealed partial class HumanMatch {
                 var target=Units.Where(v=>CentaurVisible(unit,v)&&!Flying(v)&&v.spellResist<1&&Vector2.Distance(v.position,unit.position)<=18).OrderBy(v=>(v.position-unit.position).sqrMagnitude).FirstOrDefault();
                 if(target!=null){unit.mana-=25;unit.spellTimers["CT23"]=8;unit.castPause=.4f;float damage=Lines[unit.kind].unit=="cU15"?120:60;
                     foreach(var victim in Units.Where(v=>CentaurVisible(unit,v)&&!Flying(v)&&v.spellResist<1&&Vector2.Distance(v.position,target.position)<=5).ToArray())DamageUnit(victim,damage,unit.team,"magic",true,false,unit);
-                    CentaurNeedles++;PulseAt(target.position,5,new Color(.95f,.68f,.27f),"Песчаные иглы",.65f);
+                    CentaurNeedles++;PulseAt(target.position,5,new Color(.95f,.68f,.27f),"Песчаные иглы",.65f,"steppe:needles");
                 }
             }
             if(unit.abilities.Contains("CT24")&&unit.mana>=30&&CentaurReady(unit,"CT24")){
@@ -45,7 +45,7 @@ public sealed partial class HumanMatch {
             // that pause would reset the stride and suppress the Khan's cry.
             if(unit.abilities.Contains("CT26")&&CentaurReady(unit,"CT26")&&CentaurChargeProgress(unit)<1){
                 var victims=Units.Where(v=>CentaurVisible(unit,v)&&!Flying(v)&&v.spellResist<1&&Vector2.Distance(v.position,unit.position)<=6).ToArray();
-                if(victims.Length>0){unit.spellTimers["CT26"]=10;unit.castPause=.4f;foreach(var victim in victims){if(NagaShieldBlock(victim))continue;DamageUnit(victim,90,unit.team,"magic",true,false,unit);if(victim.hp>0)victim.stun=Mathf.Max(victim.stun,Lines[victim.kind].armorType=="hero"||victim.abilities.Any(id=>(string)Abilities[id]?["kind"]=="resistant_skin")?.5f:1);}CentaurStomps++;PulseAt(unit.position,6,new Color(.9f,.7f,.3f),"Топот покорителя",.7f);}
+                if(victims.Length>0){unit.spellTimers["CT26"]=10;unit.castPause=.4f;foreach(var victim in victims){if(NagaShieldBlock(victim))continue;DamageUnit(victim,90,unit.team,"magic",true,false,unit);if(victim.hp>0)victim.stun=Mathf.Max(victim.stun,Lines[victim.kind].armorType=="hero"||victim.abilities.Any(id=>(string)Abilities[id]?["kind"]=="resistant_skin")?.5f:1);}CentaurStomps++;PulseAt(unit.position,6,new Color(.9f,.7f,.3f),"Топот покорителя",.7f,"steppe:stomp");}
             }
         }
     }

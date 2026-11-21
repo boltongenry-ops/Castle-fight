@@ -116,8 +116,18 @@ public sealed partial class HumanMatch {
         mirrored.Sell(0,mirrored.Huts.First().id);
         check(mirrored.Upgrade(0,house.id,mirrored.Kind("pB13"),out _)&&mirrored.Interval(house)==41,
             "Finishing the legendary chain produces Quak at 41 seconds");
-        check(mirrored.BaseKinds.Length==11&&mirrored.Lines.Count(x=>x.Producer)==10,
-            "The race catalog exposes eleven buildings and ten fighters");
+        check(mirrored.BaseKinds.Length==11&&mirrored.Lines.Count(x=>x.Producer)==12,
+            "The race catalog exposes eleven base buildings and twelve fighters");
+        foreach(var pair in new[]{("pB04","pB17",35f),("pB05","pB18",31.75f)}){
+            var trial=new HumanMatch(pepe,250,1,0,-1,humans);trial.Gold[0]=2000;
+            bool built=trial.TryBuild(0,trial.Kind(pair.Item1),17,15,out _);
+            var hut=trial.Huts.Last();hut.paid=true;
+            check(built&&trial.Upgrade(0,hut.id,trial.Kind(pair.Item2),out _)&&trial.Interval(hut)==pair.Item3,"Producer upgrade "+pair.Item2);
+        }
+        var healing=new HumanMatch(pepe,250,1,0,-1,humans);
+        var elder=healing.Spawn(0,healing.Kind("pB18"),Vector2.zero);
+        var ally=healing.Spawn(0,healing.Kind("pB31"),Vector2.right);ally.hp=120;elder.mana=35;
+        check(healing.PepeTryHeal(elder)&&ally.hp==265&&elder.mana==0&&!healing.PepeTryHeal(elder),"Elder heal and cooldown");
         var ambush=new HumanMatch(pepe,250,1,1,-1,humans);
         var marked=ambush.Spawn(1,ambush.Kind("h000"),Vector2.zero);
         check(ambush.PepeMark(marked,0)&&marked.effects.Single(e=>e.id==PepeRules.PepeMarkId).left==7,
@@ -171,7 +181,7 @@ public sealed partial class PcGame {
         }
         Check(pepePack.abilityIds.All(id=>AbilityArt(id)), "Every Pepe skill resolves in the live HUD");
         Check(roster.All(row=>PepeContent.FighterIcon(row.line.unit)),"Every producer has a fighter portrait");
-        Check(roster.Select(row=>PepeContent.FighterIcon(row.line.unit)).Distinct().Count()==10,"Ten distinct production portraits");
+        Check(roster.Select(row=>PepeContent.FighterIcon(row.line.unit)).Distinct().Count()==12,"Twelve distinct production portraits");
         var firstHut=match.Huts.First(h=>match.Lines[h.kind].building=="pB31");
         controls.FocusWorld(World(firstHut.position),27);
         QaSelect(firstHut);
@@ -246,7 +256,7 @@ public sealed partial class PcGame {
         var center=new Vector2(-124,12);
         controls.FocusWorld(World(center),36);
         string[] spells={"PMrk","PMr2","PTmp","PGSh","PShd","PBr1","PBr2","PAr1","PAr2","PSg1",
-            "PSg2","PEva","PDiv","PHea","PLea","PQua","PHrn","PHr2","PLil","PBll"};
+            "PSg2","PEva","PDiv","PHea","PHe2","PLea","PQua","PHrn","PHr2","PLil","PBll","reed-tower"};
         for(int i=0;i<spells.Length;i++){
             match.PulseAt(center+new Vector2((i%5-2)*5,(i/5-1.5f)*4),1.8f,Color.white,"",1,"pepe:"+spells[i]);
             match.Pulses.Last().age=.28f;
@@ -254,6 +264,10 @@ public sealed partial class PcGame {
         RenderMatch();
         foreach(string spell in spells)Check(match.Pulses.Any(p=>p.fx=="pepe:"+spell&&Art036.rendered.Contains(p.id)),
             "Dedicated effect draws "+spell);
+        string[] otherFx={"steppe:charge","steppe:break","steppe:harpoon","steppe:needles","steppe:stomp","steppe:sand","jade:panda_brew","jade:panda_keg","jade:panda_gust","jade:panda_stomp","jade:panda_tower","jade:combo"};
+        foreach(var fx in otherFx)match.PulseAt(center,1.5f,Color.white,"",.8f,fx);
+        RenderMatch();
+        foreach(var fx in otherFx)Check(match.Pulses.Any(p=>p.fx==fx&&Art036.rendered.Contains(p.id)),"Dedicated effect draws "+fx);
         var swamp=visuals.transform.Find("Swamp spells");
         Check(swamp && swamp.GetComponent<MeshFilter>().sharedMesh.vertexCount>900
             && swamp.GetComponent<Renderer>().sharedMaterial.shader.isSupported,"Swamp skills share one supported mesh renderer");

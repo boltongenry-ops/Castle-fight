@@ -132,6 +132,20 @@ public sealed class PepeSkillFx : MonoBehaviour {
             case "pepe:PEva":Wings();break;
             case "pepe:PDiv":Wings();Wave(.2f+.8f*age,.07f,.12f,Water);break;
             case "pepe:PHea":Bloom();break;
+            case "pepe:PHe2":Bloom();Wave(.28f+.6f*age,.16f,.06f,Mint);break;
+            case "pepe:reed-tower":Reeds(5,true);break;
+            case "steppe:charge":case "steppe:break":case "steppe:harpoon":case "steppe:needles":
+                for(int i=0;i<5;i++){var dir=Rad(phase+i*1.2566f);Petal(dir*(.2f+age*.18f),dir*(.5f+.48f*age)+Vector3.up*.52f,Rad(phase+i*1.2566f+1.57f)*.07f,Bronze,Gold);}break;
+            case "steppe:stomp":case "steppe:sand":
+                for(int i=0;i<4;i++)Wave(.38f+.48f*Mathf.Repeat(age*2+i*.25f,1),.06f+.10f*i,.055f,i%2==0?Gold:Bronze,phase+i*1.57f+age*4,2.3f);break;
+            case "jade:panda_brew":case "jade:panda_keg":
+                Wave(.22f+age*.72f,.04f,.09f,Bronze);
+                for(int i=0;i<8;i++){var dir=Rad(phase+i*.785f);var drop=dir*(.2f+.65f*age)+Vector3.up*(.12f+.7f*Mathf.Sin(age*Mathf.PI));Petal(drop,drop+Vector3.up*.16f,Rad(phase+i*.785f+1.57f)*.055f,Gold,Pearl);}break;
+            case "jade:panda_gust":
+                for(int i=0;i<3;i++)Wave(.3f+.18f*i+age*.22f,.18f*i,.075f,Mint,phase+age*5+i*2.1f,3.3f);break;
+            case "jade:panda_stomp":case "jade:panda_tower":case "jade:combo":
+                Wave(.18f+.78f*age,.08f,.09f,Gold);
+                for(int i=0;i<4;i++){var dir=Rad(phase+i*1.57f);Petal(dir*.15f,dir*(.52f+age*.42f)+Vector3.up*.37f,Rad(phase+(i+1)*1.57f)*.09f,Mint,Pearl);}break;
             case "pepe:PLea":
                 for(int i=0;i<6;i++){float a=phase+i*1.0472f;var d=Rad(a);var tip=d*(.4f+age*.6f)+Vector3.up*(.15f+.75f*Mathf.Sin(age*Mathf.PI));Petal(tip-d*.17f,tip+Vector3.up*.18f,Rad(a+1.57f)*.08f,Water,Pearl);}break;
             case "pepe:PQua":
@@ -155,7 +169,7 @@ public sealed partial class PcGame {
         visuals.TryGetComponent<PepeSkillFx>(out var batch);
         if(batch)batch.Begin();
         foreach(var p in match.Pulses){
-            if(p.fx==null||!p.fx.StartsWith("pepe:",System.StringComparison.Ordinal)||!ShowPulse036(p))continue;
+            if(p.fx==null||!(p.fx.StartsWith("pepe:",System.StringComparison.Ordinal)||p.fx.StartsWith("jade:",System.StringComparison.Ordinal)||p.fx.StartsWith("steppe:",System.StringComparison.Ordinal))||!ShowPulse036(p))continue;
             if(!batch)batch=visuals.AddComponent<PepeSkillFx>();
             var center=World(p.position);
             if(p.visualUnitId>0&&units.TryGetValue(p.visualUnitId,out var unit)&&unit)

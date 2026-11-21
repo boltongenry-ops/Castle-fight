@@ -30,7 +30,7 @@ public sealed partial class HumanMatch {
     void CentaurOpening(Unit u){
         if(CentaurChargeProgress(u)<1)return;var s=centaurStrides[u.id];s.running=0;s.quiet=0;s.after=Elapsed+6;
         u.shotDamage*=IsCentaur(u.team)&&Aspects[u.team]==0?1.6f:1.4f;CentaurCharges++;
-        PulseAt(u.position,1.8f,new Color(.95f,.75f,.3f),"Натиск",.45f);
+        PulseAt(u.position,1.8f,new Color(.95f,.75f,.3f),"Натиск",.45f,"steppe:charge");
         if(u.abilities.Contains("CT02"))ApplyEffect(u,"CT13",u.team);
         if(u.abilities.Contains("CT07"))foreach(var ally in Units.Where(v=>v.hp>0&&v.team==u.team&&!Invulnerable(v)&&!Hidden(v)&&Vector2.Distance(v.position,u.position)<=15).OrderBy(v=>(v.position-u.position).sqrMagnitude).Take(8))ApplyEffect(ally,"CT10",u.team);
     }
@@ -39,7 +39,7 @@ public sealed partial class HumanMatch {
         if(source==null||target==null||dealt<=0||source.hp<=0||target.hp<=0||!source.abilities.Contains("CT03")||!Flying(target)||target.spellResist>=1||Invulnerable(target)||!NightCanDetect(source.team,target))return;
         if(source.spellTimers.TryGetValue("CT03",out float left)&&left>0)return;
         source.spellTimers["CT03"]=8;if(NagaShieldBlock(target))return;
-        ApplyEffect(target,"CT12",source.team);CentaurNets++;PulseAt(target.position,1.3f,Color.yellow,"Гарпун",.5f);
+        ApplyEffect(target,"CT12",source.team);CentaurNets++;PulseAt(target.position,1.3f,Color.yellow,"Гарпун",.5f,"steppe:harpoon");
     }
     float CentaurMissChance(Unit source,Weapon weapon)=>weapon.type=="normal"?Mathf.Clamp01(source.effects.Where(e=>e.left>0&&e.id!="CT11").Sum(e=>F(e.config,"miss"))):MissChance(source);
     void TickCentaur(float dt){
@@ -52,7 +52,7 @@ public sealed partial class HumanMatch {
             var victim=Units.Where(u=>u.team!=h.team&&u.hp>0&&!Flying(u)&&u.spellResist<1&&!Invulnerable(u)&&!Hidden(u)&&NightCanDetect(h.team,u)&&(VisionTest==null||VisionTest(h.team,u.position))&&(h.team!=1||BotSeesUnit(u))&&Vector2.Distance(u.position,h.position)<=30).OrderBy(u=>(u.position-h.position).sqrMagnitude).FirstOrDefault();
             if(victim==null)continue;h.mana-=45;h.spellTimers["CT15"]=12;
             CentaurSands.Add(new CentaurSand{team=h.team,rank=Lines[h.kind].building=="c01B"?2:1,point=victim.position});if(CentaurSands.Count>64)CentaurSands.RemoveAt(0);CentaurSandCasts++;
-            PulseAt(victim.position,6,new Color(.68f,.48f,.19f),"Зыбучие пески",6);
+            PulseAt(victim.position,6,new Color(.68f,.48f,.19f),"Зыбучие пески",6,"steppe:sand");
         }
         var sandBurns=new HashSet<int>();
         foreach(var sand in CentaurSands.Where(s=>s.rank==2))foreach(var victim in Units.Where(u=>u.team!=sand.team&&u.hp>0&&!Flying(u)&&u.spellResist<1&&!Invulnerable(u)&&!Hidden(u)&&Vector2.Distance(sand.point,u.position)<=6).OrderBy(u=>(u.position-sand.point).sqrMagnitude).Take((int)F(Abilities["CT15"],"legendary_count",8)))sandBurns.Add(victim.id);
@@ -72,7 +72,7 @@ public sealed partial class HumanMatch {
             if(witch.spellTimers.TryGetValue("CT04",out float left)&&left>0)continue;
             var target=Units.Where(v=>CentaurVisible(witch,v)&&v.spellResist<1&&Lines[v.kind].weapons.Any(w=>w.type!="normal")&&Vector2.Distance(v.position,witch.position)<=18).OrderBy(v=>(v.position-witch.position).sqrMagnitude).FirstOrDefault();
             if(target==null)continue;witch.mana-=35;witch.spellTimers["CT04"]=10;witch.castPause=.5f;
-            CentaurClouds.Add(new CentaurCloud{team=witch.team,point=target.position});if(CentaurClouds.Count>32)CentaurClouds.RemoveAt(0);CentaurCasts++;PulseAt(target.position,6,new Color(.78f,.62f,.32f),"Песчаная завеса",5);
+            CentaurClouds.Add(new CentaurCloud{team=witch.team,point=target.position});if(CentaurClouds.Count>32)CentaurClouds.RemoveAt(0);CentaurCasts++;PulseAt(target.position,6,new Color(.78f,.62f,.32f),"Песчаная завеса",5,"steppe:sand");
         }
         foreach(var u in Units)if(u.hp>0&&u.spellResist<1&&!Invulnerable(u)&&Lines[u.kind].weapons.Any(w=>w.type!="normal")&&CentaurClouds.Any(c=>c.team!=u.team&&Vector2.Distance(c.point,u.position)<=6))ApplyEffect(u,"CT11",1-u.team);
         if(centaurHealing<=0){centaurHealing=2;for(int team=0;team<2;team++)if(IsCentaur(team)){

@@ -69,7 +69,7 @@ public sealed partial class PcGame {
         foreach(var t in guideModel.GetComponentsInChildren<Transform>(true))t.gameObject.layer=30;
         var bounds=guideModel.BodyBounds();Vector3 anchor=guideStage.transform.position;guideModel.transform.position-=bounds.center-anchor;
         float radius=Mathf.Max(.4f,bounds.extents.magnitude);
-        bool wingedRider=guideRace==PepeContent.Race&&guideModel.raw=="pU04";
+        bool wingedRider=guideRace==PepeContent.Race&&(guideModel.raw=="pU04"||guideModel.raw=="pU17");
         float distance=radius/Mathf.Sin(guideCamera.fieldOfView*Mathf.Deg2Rad*.5f)*(wingedRider?1.75f:guideRace==PepeContent.Race?1.45f:1.12f);
         guideCamera.transform.position=anchor+new Vector3(0,wingedRider?distance*.38f:radius*.14f,-distance);
         guideCamera.transform.LookAt(anchor);guideCamera.farClipPlane=Mathf.Max(50,distance+radius*4);guideCamera.enabled=true;

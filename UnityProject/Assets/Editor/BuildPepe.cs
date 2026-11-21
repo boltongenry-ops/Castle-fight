@@ -24,6 +24,8 @@ public static class BuildPepe {
         var rows = (JArray)data["lines"];
         var art = JObject.Parse(File.ReadAllText(Source + "/presentation.json"));
         var textures = JObject.Parse(File.ReadAllText(Source + "/textures.json"));
+        foreach (var pair in new[]{("pU04","pU17"),("pU05","pU18"),("pB04","pB17"),("pB05","pB18"),("PHea","PHe2")})
+            PrepareTierIcon(pair.Item1,pair.Item2);
         ImportTextures();
         var icons = HumanMatch.Strings(data["raceAbilityIds"]);
         var pack = ScriptableObject.CreateInstance<PcRacePack>();
@@ -50,6 +52,25 @@ public static class BuildPepe {
         SaveAsset(pack, PackPath);
         AssetDatabase.SaveAssets();
         ValidateArt();
+    }
+
+    static void PrepareTierIcon(string source,string target) {
+        string dir=Resources+"/Pepe/";
+        var icon=new Texture2D(2,2,TextureFormat.RGBA32,false);
+        try {
+            if(!icon.LoadImage(File.ReadAllBytes(dir+source+".png")))throw new InvalidDataException(source);
+            int w=icon.width,h=icon.height;
+            for(int y=h/24;y<h/4;y++)for(int x=w*7/10;x<w*23/24;x++){
+                float u=(float)x/w,v=(float)y/h;
+                Color gold=new Color(1f,.81f,.37f);
+                bool numeral=v>.073f&&v<.21f&&((u>.75f&&u<.79f)||(u>.85f&&u<.89f));
+                icon.SetPixel(x,y,numeral?gold:new Color(.13f,.16f,.075f));
+            }
+            icon.Apply();string path=dir+target+".png";byte[] bytes=icon.EncodeToPNG();
+            if(!File.Exists(path)||!File.ReadAllBytes(path).SequenceEqual(bytes)){
+                File.WriteAllBytes(path,bytes);AssetDatabase.ImportAsset(path);
+            }
+        }finally{UnityEngine.Object.DestroyImmediate(icon);}
     }
 
     static Texture2D Icon(string key) => AssetDatabase.LoadAssetAtPath<Texture2D>(Resources + "/Pepe/" + key + ".png");
@@ -184,15 +205,19 @@ public static class BuildPepe {
 
     public static void ValidateArt() {
         var pack = AssetDatabase.LoadAssetAtPath<PcRacePack>(PackPath);
-        if (!pack || !pack.catalog || pack.units.Count(p => p) != 20 || pack.buildings.Count(p => p) != 32
+        if (!pack || !pack.catalog || pack.units.Count(p => p) != 24 || pack.buildings.Count(p => p) != 36
             || pack.builders.Count(p => p) != 2 || pack.buildingIcons.Any(icon => !icon) || pack.abilityIcons.Any(icon => !icon))
             throw new InvalidDataException("Incomplete Pepe race pack");
         if (pack.Prefabs.Any(p => !p.GetComponent<PcModel>() || p.GetComponentsInChildren<Renderer>().Any(
             r => r.sharedMaterials.Any(m => !m || !m.mainTexture)))) throw new InvalidDataException("Invalid Pepe visuals");
-        Debug.Log("CF_PEPE_ART_PASS units=10 buildings=16 builders=1 teams=2");
+        Debug.Log("CF_PEPE_ART_PASS units=12 buildings=18 builders=1 teams=2");
     }
 
     public static void Windows() {
+        WindowsContent();
+        BuildFrontendRich.RebuildPlayerOnlyWindows();
+    }
+    public static void WindowsContent() {
         Prepare();
         string directory = "Builds/PepeWindows";
         Directory.CreateDirectory(directory);

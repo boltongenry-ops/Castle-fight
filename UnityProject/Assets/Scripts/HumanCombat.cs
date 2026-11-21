@@ -150,6 +150,8 @@ public sealed partial class HumanMatch {
                 var owner=FindUnit(shot.sourceId);var hut=Huts.FirstOrDefault(h=>h.id==shot.sourceId&&h.hp>0);int returnTarget=owner?.id??(hut!=null?HutTarget(hut):-1000000);
                 if(returnTarget!=-1000000){var reflected=AddShot(victim.team,victim.kind,victim.id,returnTarget,shot.end,owner?.position??hut.position,shot.damage,w,shot.stun,3);reflected.reflections=shot.reflections+1;PulseAt(victim.position,1,Color.yellow,"Отражение");continue;}
             }
+            if(Lines[shot.line].building=="pB10"&&victim!=null&&victim.team!=shot.team&&victim.hp>0)
+                PulseAt(victim.position,1.35f,PepeRules.ReedGreen,"",.42f,"pepe:reed-tower",victim.id);
             if(!artillery&&TargetAlive(shot.target))ResolveAttack(shot.sourceId,shot.team,shot.target,shot.damage,w,shot.stun,!shot.nightSecondary);
             if(!ElvenWeaponPattern(shot))NightBounce(shot);if(w.full>0||w.half>0||w.quarter>0) {
                 using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_2)if(u.team!=shot.team&&u.hp>0&&(artillery||u.id!=shot.target)&&(Flying(u)?w.air:w.ground)){float f=Splash(w,Vector2.Distance(u.position,shot.end));if(f>0)ResolveAttack(shot.sourceId,shot.team,u.id,shot.damage*f,w,shot.stun,false);}
