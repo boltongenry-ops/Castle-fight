@@ -110,7 +110,7 @@ public sealed partial class HumanMatch {
         else if(kind=="undead_raise_unit"){if(!CastUndeadUnit(source,cfg))return false;}
         else if(kind=="debuff"&&id=="A01M"){if(!Valid(target,source.team,cfg,false)||Vector2.Distance(target.position,source.position)>F(cfg,"range")||target.effects.Any(e=>e.id==id))return false;ApplyEffect(target,id,source.team);}
         else if(kind=="mech_mines"||kind=="mech_grenade"){if(!CastMechUnit(source,cfg,target))return false;}
-        else if(id=="A09F"){if(!CastMechAutoFire(source,cfg,target))return false;source.mana-=F(cfg,"mana");source.spellTimers[id]=F(cfg,"cd");SpellsCast++;return true;}
+        else if(id=="A09F"){if(!CastMechAutoFire(source,cfg,target))return false;BattleAudio.For(this)?.Spell(id,source.position);source.mana-=F(cfg,"mana");source.spellTimers[id]=F(cfg,"cd");SpellsCast++;return true;}
         else if(kind!=null&&kind.StartsWith("north_",StringComparison.Ordinal)){if(!CastNorthernUnit(source,cfg,target))return false;}
         else if(kind=="twins_blast"){if(!CastChaosBlast(source,target))return false;}
         else if(kind=="chaos_roar"){if(!CastChaosRoar(source))return false;}
@@ -143,7 +143,7 @@ public sealed partial class HumanMatch {
             foreach(var v in Units.Where(v=>Valid(v,source.team,Abilities["A0I1"],true)&&Vector2.Distance(source.position,v.position)<=15).ToArray()){Heal(v,50);v.mana=Mathf.Min(v.maxMana,v.mana+50);}
             QueueHumanJob035(new HumanJob {kind="prayer_buff",team=source.team,center=source.position,left=.1f,count=1+(int)(Roll()*3)});Prayers++;PulseAt(source.position,15,new Color(1,.9f,.5f),"Молитва");
         } else return false;
-        source.mana-=F(cfg,"mana");source.castPause=Mathf.Max(source.castPause,id=="A0CG"?1.2f:kind=="warlock_blast"?.35f:F(cfg,"cast_pause",.2f));source.finalCastPose=(string)cfg["animation"];source.pose=source.finalCastPose??"Spell";SpellsCast++;return true;
+        BattleAudio.For(this)?.Spell(id,source.position);source.mana-=F(cfg,"mana");source.castPause=Mathf.Max(source.castPause,id=="A0CG"?1.2f:kind=="warlock_blast"?.35f:F(cfg,"cast_pause",.2f));source.finalCastPose=(string)cfg["animation"];source.pose=source.finalCastPose??"Spell";SpellsCast++;return true;
     }
     public void Heal(Unit u,float amount)=>Heal(u,amount,null);
     void Heal(Unit u,float amount,string fx){if(u==null||u.hp<=0)return;float healed=Mathf.Min(amount,u.maxHp-u.hp);if(healed<=0)return;u.hp+=healed;Heals++;PulseAt(u.position,1,Color.green,"+"+Mathf.RoundToInt(healed),fx==null?.8f:1.833f,fx,fx==null?-1:u.id);}

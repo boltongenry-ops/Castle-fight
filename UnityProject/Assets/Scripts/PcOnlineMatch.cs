@@ -59,6 +59,8 @@ public sealed partial class PcGame {
             float yaw=(float?)row["yaw"]??0,pitch=(float?)row["pitch"]??0;var forward=new Vector3((networkSlot==1?-1:1)*Mathf.Sin(yaw)*Mathf.Cos(pitch),-Mathf.Sin(pitch),-Mathf.Cos(yaw)*Mathf.Cos(pitch));var rotation=Quaternion.LookRotation(forward);
             if(!projectileTracks.TryGetValue(id,out var track)){
                 track=new ProjectileTrack();projectileTracks[id]=track;
+                var originPoint=row["origin"] as JArray??p;var soundPoint=NetworkProjectilePoint(originPoint);
+                BattleAudio.For(match)?.Missile((string)row["path"],3,false,new Vector2(soundPoint.x,-soundPoint.z));
                 if(row["origin"] is JArray origin&&origin.Count==3){track.born=Mathf.Min(stamp,(float?)row["born"]??stamp);track.motion.Push(NetworkProjectilePoint(origin),rotation,track.born);}
             }
             track.retire=float.PositiveInfinity;track.motion.Push(NetworkProjectilePoint(p),rotation,stamp);
@@ -69,6 +71,7 @@ public sealed partial class PcGame {
             var track=pair.Value;track.retire=stamp;
             if(effects!=null)foreach(var effect in effects.OfType<JObject>())if((string)effect["kind"]=="missile_end"&&(int?)effect["id"]==pair.Key&&effect["p"] is JArray end&&end.Count==3){
                 track.retire=Mathf.Max(track.motion.LastTime,Mathf.Min(stamp,(float?)effect["time"]??stamp));
+                var impactPoint=NetworkProjectilePoint(end);HdModels.ShotPaths.TryGetValue(pair.Key,out var missile);BattleAudio.For(match)?.Missile(missile,3,true,new Vector2(impactPoint.x,-impactPoint.z));
                 track.motion.Push(NetworkProjectilePoint(end),track.motion.Sample(track.motion.LastTime).rotation,track.retire);break;
             }
         }

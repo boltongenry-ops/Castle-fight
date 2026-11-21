@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.41.1";
+    string Version=>MobileContent.Active?Application.version:"0.42.1";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -47,7 +47,7 @@ public sealed partial class PcGame : MonoBehaviour {
         terrain=new NativeMapTerrain(terrainBytes.bytes,JObject.Parse(terrainMetadata.text),(JObject)JObject.Parse(waterMetadata.text)["water"]);
         settingsPath=BattleLab.Arg("--pc-settings-file",Path.Combine(Application.persistentDataPath,"pc-settings.json"));
         string testMode=BattleLab.Arg("--pc-test");testing=testMode=="pepe"||testMode=="hud-themes"||testMode=="art040"||testMode=="models039"||testMode=="workshop038"||testMode=="spell-audit036"||testMode=="optimization035"||testMode=="challenge034"||testMode=="nerubian033"||testMode=="nerubian032"||testMode=="structure031"||testMode=="combat030"||testMode=="centaur028"||testMode=="bot027"||testMode=="units026"||testMode=="cards025"||testMode=="motion024"||testMode=="network023"||testMode=="polish022"||testMode=="recovery"||testMode=="social"||testMode=="guide"||testMode=="fog"||testMode=="frontend"||testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"||testMode=="elven"||testMode=="polish"||testMode=="night"||testMode=="elemental"||testMode=="corrupted"||testMode=="undead"||testMode=="mech"||testMode=="northern"||testMode=="1"||testMode=="naga"||testMode=="nature"||testMode=="classic"||testMode=="menu"||testMode=="chaos";
-        LoadSettings();if(HdModels.Preferred)StartCoroutine(HdModels.OpenCached());LoadMatchRules();Apply(options,false);controls.HideToolbar=true;controls.TouchOverUi=TouchOverUi;controls.TouchPanAllowed=()=>chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder;
+        LoadSettings();if(MapArt.Preferred)yield return MapArt.Apply(controls);if(HdModels.Preferred)StartCoroutine(HdModels.OpenCached());LoadMatchRules();Apply(options,false);controls.HideToolbar=true;controls.TouchOverUi=TouchOverUi;controls.TouchPanAllowed=()=>chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder;
         controls.AllowGridToggle=false;controls.buildGrid.SetActive(false);
         if(testing&&!MobileContent.Active&&testMode!="hud-themes"&&testMode!="workshop038"&&testMode!="models039"&&testMode!="art040"&&testMode!="pepe")PreserveAssetAuditForHistoricalTests();
         yield return LoadClassicProjectiles();
@@ -68,6 +68,7 @@ public sealed partial class PcGame : MonoBehaviour {
 #if CF_ONLINE_QA
         if(BattleLab.Arg("--pc-online-qa")!="")StartCoroutine(ExerciseOnlineMatch());
 #endif
+        string mapCheck=BattleLab.Arg("--pc-map-art-check");if(mapCheck!="")StartCoroutine(VerifyMapArt(mapCheck));
         string startupShot=BattleLab.Arg("--pc-startup-shot");if(startupShot!="")StartCoroutine(CaptureStartup(startupShot));
     }
     IEnumerator CaptureStartup(string path){yield return new WaitForEndOfFrame();ScreenCapture.CaptureScreenshot(path);Debug.Log("CF_PC_STARTUP_CAPTURE page="+page);}
@@ -104,13 +105,13 @@ public sealed partial class PcGame : MonoBehaviour {
         HudThemePreference.For(result).Choice=HudThemePreference.For(value).Choice;
         return result;
     }
-    void OpenSettings(){settingsReturn=page;draft=Copy(options);HdModels.Draft=HdModels.Preferred;HdModels.Panel=false;page=Page.Settings;}
+    void OpenSettings(){settingsReturn=page;draft=Copy(options);MapArt.Draft=MapArt.Preferred;MapArt.Panel=false;HdModels.Draft=HdModels.Preferred;HdModels.Panel=false;page=Page.Settings;}
     void SaveSettings() {
         options=Copy(draft);Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(settingsPath)));
         string temp=settingsPath+".tmp";var saved=JObject.Parse(JsonUtility.ToJson(options,true));saved["softFog"]=options.softFog;saved["modelStyle"]=HdModels.Draft?"reforged":"classic";
-        saved["hudTheme"]=HudTheme.Keys[HudThemeIndex];File.WriteAllText(temp,saved.ToString());
+        saved["mapStyle"]=MapArt.Draft?"reforged":"classic";saved["hudTheme"]=HudTheme.Keys[HudThemeIndex];File.WriteAllText(temp,saved.ToString());
         if(File.Exists(settingsPath))File.Replace(temp,settingsPath,null);else File.Move(temp,settingsPath);
-        HdModels.Select(HdModels.Draft);if(HdModels.Preferred)StartCoroutine(HdModels.OpenCached());else ReleaseOptionalVortex();
+        MapArt.Preferred=MapArt.Draft;StartCoroutine(MapArt.Apply(controls));HdModels.Select(HdModels.Draft);if(HdModels.Preferred)StartCoroutine(HdModels.OpenCached());else ReleaseOptionalVortex();
         Apply(options,false);confirmDisplay=false;page=settingsReturn;Notice("Настройки сохранены");
     }
     void PreviewSettings() {
@@ -136,6 +137,7 @@ public sealed partial class PcGame : MonoBehaviour {
         challengeReward=0;challengeSettled=false;AspectBeginRound(aspectRound);
         page=Page.Match;chosen=-1;accumulator=0;
         visuals=new GameObject("Offline "+RaceEnglish+" 1v1");
+        visuals.AddComponent<BattleAudio>().Bind(match,World,FogVisible);
         constructionPage=0;builderSelected=true;selectedCastle=false;selectedItem=-1;selectedHut=selectedUnit=-1;targetedSpell=null;buildMenu=false;moveOrder=false;
         foreach(var c in castleObjects)c.SetActive(true);
         controls.Focus("west");controls.buildGrid.SetActive(false);Notice("Рабочий выбран.");
@@ -320,7 +322,7 @@ public sealed partial class PcGame : MonoBehaviour {
         RenderWispBursts();
         RenderClassicSpells036();
         RenderNativeFlame();RenderOrcArmorAuras();
-        RenderReforgedEffects();RenderNorthernEffects(alpha);RenderMechEffects();RenderUndeadEffects();RenderCorruptedEffects();RenderElementalEffects(alpha);RenderNightEffects();RenderElvenEffects();RenderFinalEffects();RenderHumanEffects();RenderBuilderCosmetic();ApplyFogViews();DrawOptionalVortices();
+        RenderReforgedEffects();RenderNorthernEffects(alpha);RenderMechEffects();RenderUndeadEffects();RenderCorruptedEffects();RenderElementalEffects(alpha);RenderNightEffects();RenderElvenEffects();RenderFinalEffects();RenderPepeSkills();RenderHumanEffects();RenderBuilderCosmetic();ApplyFogViews();DrawOptionalVortices();
         SweepHdEffects040();
         foreach(int id in projectiles.Keys.Where(id=>!match.Shots.Any(s=>s.id==id)).ToArray()){projectiles[id].Finish();Destroy(projectiles[id].gameObject);projectiles.Remove(id);}
     }
@@ -494,7 +496,7 @@ public sealed partial class PcGame : MonoBehaviour {
         Text(290,472,310,31,"Туман войны",label);GUI.enabled=!confirmDisplay&&activeChallenge==null;if(Button("settings.fog",SettingsLayout035.Control(8),activeChallenge!=null?"Включён в испытании":draft.fogOfWar?"Включён":"Выключен"))draft.fogOfWar=!draft.fogOfWar;GUI.enabled=!confirmDisplay;
         Text(290,516,310,31,"Простое затемнение",label);GUI.enabled=!confirmDisplay;if(Button("settings.softfog",SettingsLayout035.Control(9),draft.softFog?"Включено  [x]":"Выключено  [ ]"))draft.softFog=!draft.softFog;GUI.enabled=!confirmDisplay;
         if(Button("settings.theme",new Rect(290,565,189,38),"Тема интерфейса"))ThemesOpen=true;
-        if(Button("settings.models",new Rect(491,565,160,38),HdModels.Draft?"Модели: Reforged":"Модели: классика"))HdModels.Panel=true;
+        if(Button("settings.models",new Rect(491,565,160,38),"Модели и карта"))HdModels.Panel=true;
         if(MobileContent.Active||SettingsLayout035.PreviewMobile){if(Button("settings.downloads",SettingsLayout035.Downloads,"Ресурсы игры"))showResourceDownloads=true;}
         if(Button("settings.updates",SettingsLayout035.Updates,"Обновления")){showUpdatePanel=true;StartCoroutine(CheckGameRelease());}
         if(Button("settings.cancel",SettingsLayout035.Cancel,"Отмена")){if(confirmDisplay)RevertDisplay();page=settingsReturn;}
@@ -536,7 +538,7 @@ public sealed partial class PcGame : MonoBehaviour {
             if(Button("result.menu",new Rect(450,450,380,48),onlineMatch?"Вернуться в комнату":"Главное меню")){if(onlineMatch){onlineDecision=true;SendNetwork(new JObject { ["type"]="return_lobby" });}else MainMenu();}GUI.enabled=true;
         }
     }
-    void OnDestroy(){HdModels.Cancel();HdModels.Select(false);if(ownChatBubble)Destroy(ownChatBubble);if(peerChatBubble)Destroy(peerChatBubble);if(chatToolbarIcon)Destroy(chatToolbarIcon);if(micToolbarIcon)Destroy(micToolbarIcon);CloseVersus();if(resultEmblem)Destroy(resultEmblem);if(rankSheet)Destroy(rankSheet);if(castleLogo)Destroy(castleLogo);DisposeVoice();DisposeFrontend();DisposeWorkshop();DisposeRichAura();DisposeFog();DisposeGuide();if(Art036.bundle)Art036.bundle.Unload(false);if(builderCosmeticMaterial)Destroy(builderCosmeticMaterial);DisposeReforgedFx();if(flameMaterial)Destroy(flameMaterial);if(wispMaterial)Destroy(wispMaterial);if(wispMeshMaterial)Destroy(wispMeshMaterial);if(armorAuraMaterial)Destroy(armorAuraMaterial);if(orcRuneMaterial)Destroy(orcRuneMaterial);DestroyHud();foreach(var t in new[]{panel,normal,hot,active})if(t)Destroy(t);if(ringMesh)Destroy(ringMesh);}
+    void OnDestroy(){MapArt.Abort();MapArt.Restore();HdModels.Cancel();HdModels.Select(false);if(ownChatBubble)Destroy(ownChatBubble);if(peerChatBubble)Destroy(peerChatBubble);if(chatToolbarIcon)Destroy(chatToolbarIcon);if(micToolbarIcon)Destroy(micToolbarIcon);CloseVersus();if(resultEmblem)Destroy(resultEmblem);if(rankSheet)Destroy(rankSheet);if(castleLogo)Destroy(castleLogo);DisposeVoice();DisposeFrontend();DisposeWorkshop();DisposeRichAura();DisposeFog();DisposeGuide();if(Art036.bundle)Art036.bundle.Unload(false);if(builderCosmeticMaterial)Destroy(builderCosmeticMaterial);DisposeReforgedFx();if(flameMaterial)Destroy(flameMaterial);if(wispMaterial)Destroy(wispMaterial);if(wispMeshMaterial)Destroy(wispMeshMaterial);if(armorAuraMaterial)Destroy(armorAuraMaterial);if(orcRuneMaterial)Destroy(orcRuneMaterial);DestroyHud();foreach(var t in new[]{panel,normal,hot,active})if(t)Destroy(t);if(ringMesh)Destroy(ringMesh);}
 
     // Exercises the same GUI button branches as a click, using the rendered native player.
     IEnumerator Action(string id) {Debug.Log("CF_QA_ACTION "+id);pendingTestAction=id;float until=Time.realtimeSinceStartup+3;while(pendingTestAction!=null&&Time.realtimeSinceStartup<until)yield return null;Check(pendingTestAction==null,"button "+id);yield return null;}

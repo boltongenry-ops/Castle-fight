@@ -198,6 +198,8 @@ public static class BuildPepe {
         Directory.CreateDirectory(directory);
         var assets = new[] {PackPath, CatalogPath, AssetDatabase.GetAssetPath(
             AssetDatabase.LoadAssetAtPath<PcRacePack>(PackPath).builders[0])}
+            .Concat(new[]{Resources + "/Pepe/SwampMagic.shader",Resources + "/Pepe/BattleSounds.json"})
+            .Concat(Directory.GetFiles(Resources + "/Pepe","BattleSamples*.bytes").Select(path=>path.Replace('\\','/')))
             .Concat(Directory.GetFiles(Resources + "/Pepe", "*.png").Select(path => path.Replace('\\', '/'))).ToArray();
         var addresses = new[] {"PepeBrotherhood", "pc-pepe", "Pepe/Builder"}
             .Concat(assets.Skip(3).Select(path => "Pepe/" + Path.GetFileNameWithoutExtension(path))).ToArray();

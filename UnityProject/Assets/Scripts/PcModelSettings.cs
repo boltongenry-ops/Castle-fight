@@ -6,16 +6,19 @@ public sealed partial class PcGame {
     ReforgedModelPack HdModels=>ReforgedModelPack.For(this);
 
     void LoadModelPreference(string json){
-        HdModels.SetCache(settingsPath);
+        HdModels.SetCache(settingsPath);MapArt.Init(settingsPath);
+        try{MapArt.Preferred=(string)JObject.Parse(json)["mapStyle"]=="reforged";}catch(Newtonsoft.Json.JsonException){MapArt.Preferred=false;}
         try{var style=JObject.Parse(json)["modelStyle"];HdModels.Select(style?.Type==JTokenType.String&&(string)style=="reforged");}
         catch(Newtonsoft.Json.JsonException){HdModels.Select(false);}
     }
 
     void DrawModelSettings(){
+        if(MapArt.Panel){DrawMapArtSettings();return;}
         var models=HdModels;
         Box(new Rect(240,66,800,588));
         Text(286,93,710,50,"Модели",heading);Accent(286,153,708);
         bool interactive=GUI.enabled;GUI.enabled=interactive&&!models.Busy;
+        if(Button("models.map",new Rect(755,96,239,43),"Оформление карты"))MapArt.Panel=true;
         if(Button("models.classic",new Rect(286,179,330,52),"Классические",!models.Draft))models.Draft=false;
         if(Button("models.reforged",new Rect(644,179,350,52),"Reforged",models.Draft))models.Draft=true;
         GUI.enabled=interactive;

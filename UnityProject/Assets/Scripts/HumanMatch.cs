@@ -170,6 +170,6 @@ public sealed partial class HumanMatch {
     }
     public void Surrender(int team){if(!Finished&&team>=0&&team<2)Winner=1-team;}
     public float Roll(){randomState^=randomState<<13;randomState^=randomState>>17;randomState^=randomState<<5;return (randomState&0xFFFFFF)/16777216f;}
-    public void PulseAt(Vector2 p,float radius,Color color,string text,float duration=.8f,string fx=null,int visualUnitId=-1){Pulses.Add(new Pulse {id=nextId++,position=p,radius=radius,color=color,text=text,duration=duration,fx=fx,visualUnitId=visualUnitId});}
+    public void PulseAt(Vector2 p,float radius,Color color,string text,float duration=.8f,string fx=null,int visualUnitId=-1){if(fx!=null)BattleAudio.For(this)?.Spell(fx,p);Pulses.Add(new Pulse {id=nextId++,position=p,radius=radius,color=color,text=text,duration=duration,fx=fx,visualUnitId=visualUnitId});}
 }
 }

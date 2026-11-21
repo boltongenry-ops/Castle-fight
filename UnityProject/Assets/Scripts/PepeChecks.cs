@@ -206,6 +206,58 @@ public sealed partial class PcGame {
         yield return Action("builder.build");
         Check(buildMenu&&ConstructionPageKinds().Length==11,"Builder exposes all race structures in one menu");
         yield return Shot(folder,"03-pepe-construction");
+        foreach(string raw in new[]{"pU02","pU14"}){
+            var fighter=match.Units.First(u=>match.Lines[u.kind].unit==raw);
+            var model=units[fighter.id];
+            match.DamageUnit(fighter,100000,1,"chaos",true,true);
+            RenderMatch();
+            var death=model.clips.Single(c=>c.name=="Death");
+            var track=model.animatedRoot.GetComponent<Animation>()["Death"];
+            Check(fighter.hp<=0 && track.enabled && track.wrapMode==WrapMode.ClampForever,
+                raw+" plays and holds Death after a lethal hit");
+            var head=model.GetComponentsInChildren<Transform>(true).First(t=>t.name=="Bone_Head");
+            death.SampleAnimation(model.animatedRoot,0);
+            float standing=head.position.y, height=model.BodyBounds().size.y;
+            death.SampleAnimation(model.animatedRoot,1.05f);
+            var fallen=head.position;
+            death.SampleAnimation(model.animatedRoot,1.34f);
+            Check(standing-fallen.y>height*.22f && Vector3.Distance(head.position,fallen)<height*.035f,
+                raw+" falls to the ground and stays down");
+        }
+        buildMenu=false;builderSelected=false;selectedHut=-1;selectedUnit=-1;
+        var guard=match.Units.First(x=>match.Lines[x.kind].unit=="pU01");
+        controls.FocusWorld(World(guard.position),21);
+        match.Pulses.Clear();
+        guard.effects.Add(new HumanMatch.Effect{id="PShd",sourceTeam=guard.team,power=45,left=2.2f,lifetime=3});
+        RenderMatch();
+        var barrier=visuals.transform.Find("Swamp spells").GetComponent<MeshRenderer>();
+        Check(barrier.enabled,"The shield stays visible after its acquisition flash expires");
+        yield return Shot(folder,"08-pepe-shield");
+        guard.effects.First(x=>x.id=="PShd").power=0;
+        RenderMatch();Check(!barrier.enabled,"The barrier disappears on the hit that exhausts absorption");
+        var battleSounds=BattleAudio.For(match);
+        battleSounds.Missile(@"Abilities\Weapons\Arrow\ArrowMissile.mdl",3,false,guard.position);
+        var shotSource=visuals.GetComponents<AudioSource>().FirstOrDefault(a=>a.clip && a.clip.name.StartsWith("WC3 combat"));
+        Check(shotSource!=null,"Archive combat audio starts on the battle mixer");
+        if(shotSource){
+            var pcm=new float[shotSource.clip.samples];shotSource.clip.GetData(pcm,0);
+            Check(pcm.Any(x=>Mathf.Abs(x)>.025f),"The decoded Warcraft recording contains audible PCM");
+        }
+        var center=new Vector2(-124,12);
+        controls.FocusWorld(World(center),36);
+        string[] spells={"PMrk","PMr2","PTmp","PGSh","PShd","PBr1","PBr2","PAr1","PAr2","PSg1",
+            "PSg2","PEva","PDiv","PHea","PLea","PQua","PHrn","PHr2","PLil","PBll"};
+        for(int i=0;i<spells.Length;i++){
+            match.PulseAt(center+new Vector2((i%5-2)*5,(i/5-1.5f)*4),1.8f,Color.white,"",1,"pepe:"+spells[i]);
+            match.Pulses.Last().age=.28f;
+        }
+        RenderMatch();
+        foreach(string spell in spells)Check(match.Pulses.Any(p=>p.fx=="pepe:"+spell&&Art036.rendered.Contains(p.id)),
+            "Dedicated effect draws "+spell);
+        var swamp=visuals.transform.Find("Swamp spells");
+        Check(swamp && swamp.GetComponent<MeshFilter>().sharedMesh.vertexCount>900
+            && swamp.GetComponent<Renderer>().sharedMaterial.shader.isSupported,"Swamp skills share one supported mesh renderer");
+        yield return Shot(folder,"07-pepe-skills");
         MainMenu();OpenGuide();GuideChooseRace(PepeContent.Race);GuideSelectEntry(3);
         Check(guideModel&&guideModel.raw=="pU04"&&guideDescription.Contains("Вираж"),"Guide uses live model and personal ability description");
         yield return Shot(folder,"04-pepe-guide");

@@ -34,21 +34,22 @@ public sealed partial class HumanMatch {
     bool PepeCanMark(Unit unit, int team) => PepeGround(unit, team) &&
         PepeReady(unit.spellTimers, MarkImmunity) && !PepeHasMark(unit, team);
 
-    bool PepeMark(Unit unit, int team) {
+    bool PepeMark(Unit unit, int team, string sourceSkill = "PTmp") {
         if (!PepeCanMark(unit, team)) return false;
         float duration = PepeAspect(team, 1) ? 7 : 5;
         unit.effects.Add(new Effect {id=PepeMarkId, group=PepeMarkId, left=duration, lifetime=duration,
             sourceTeam=team, config=(JObject)Abilities[PepeMarkId]});
+        PulseAt(unit.position,1.6f,ReedGreen,"",.7f,"pepe:"+sourceSkill,unit.id);
         return true;
     }
 
-    Effect PepeShield(Unit unit) => unit.effects.Find(effect => effect.id == PepeShieldId &&
+    internal Effect PepeShield(Unit unit) => unit.effects.Find(effect => effect.id == PepeShieldId &&
         effect.left > 0 && effect.power > 0 && effect.sourceTeam == unit.team);
 
-    void PepeGiveShield(Unit unit, float points, float seconds) {
+    void PepeGiveShield(Unit unit, float points, float seconds, string sourceSkill = "PShd") {
         unit.effects.Add(new Effect {id=PepeShieldId, group=PepeShieldId, left=seconds, lifetime=seconds,
             power=points, sourceTeam=unit.team, config=(JObject)Abilities[PepeShieldId]});
-        PulseAt(unit.position, 1.2f, ReedGreen, "", .55f, "defend");
+        PulseAt(unit.position, 1.2f, ReedGreen, "", .65f, "pepe:"+sourceSkill,unit.id);
     }
 
     float PepeMitigate(Unit victim, float amount, bool spell, int team) {
@@ -58,7 +59,7 @@ public sealed partial class HumanMatch {
             var cfg = Abilities[id];
             amount = Mathf.Max(0, amount - F(cfg, "power"));
             victim.spellTimers[id] = F(cfg, "cd");
-            PulseAt(victim.position, 1.1f, ReedGreen, "", .4f, "defend");
+            PulseAt(victim.position, 1.1f, ReedGreen, "", .45f, "pepe:"+id,victim.id);
         }
         if (amount > 0 && PepeShield(victim) is Effect shield) {
             float absorbed = Mathf.Min(shield.power, amount);
@@ -89,21 +90,21 @@ public sealed partial class HumanMatch {
         if (id == null || !PepeReady(owner.spellTimers, id)) return 0;
         var cfg = Abilities[id];
         owner.spellTimers[id] = F(cfg, "cd");
-        PulseAt(target.position, 1, ReedGreen, "", .3f);
+        PulseAt(target.position, 1.45f, ReedGreen, "", .55f, "pepe:"+id,target.id);
         return F(cfg, "power");
     }
 
     void PepeWeaponHit(Unit owner, Unit target, Weapon weapon) {
         string markSkill = owner.abilities.Contains("PMrk") ? "PMrk" :
             owner.abilities.Contains("PMr2") ? "PMr2" : null;
-        if (markSkill != null && PepeReady(owner.spellTimers, markSkill) && PepeMark(target, owner.team))
+        if (markSkill != null && PepeReady(owner.spellTimers, markSkill) && PepeMark(target, owner.team, markSkill))
             owner.spellTimers[markSkill] = F(Abilities[markSkill], "cd");
         if (weapon.type != "normal") return;
         if (owner.abilities.Contains("PGSh") && PepeShield(owner) == null && PepeHasMark(target, owner.team)) {
             target.effects.RemoveAll(effect => effect.id == PepeMarkId && effect.sourceTeam == owner.team);
             target.spellTimers[MarkImmunity] = 3;
             float amount = owner.abilities.Contains("PQua") ? 105 : owner.abilities.Contains("PBr2") ? 75 : 45;
-            PepeGiveShield(owner, amount * (PepeAspect(owner.team, 0) ? 1.25f : 1), 3);
+            PepeGiveShield(owner, amount * (PepeAspect(owner.team, 0) ? 1.25f : 1), 3,"PGSh");
         }
         if (!owner.abilities.Contains("PQua") || !PepeReady(owner.spellTimers, "PQua")) return;
         var cfg = Abilities["PQua"];
@@ -115,7 +116,7 @@ public sealed partial class HumanMatch {
             DamageUnit(unit, F(cfg, "power"), owner.team, "normal", false, false, owner);
             ApplyEffect(unit, "PQDb", owner.team);
         }
-        PulseAt(target.position, F(cfg, "area"), ReedGreen, "Громовой квак", .6f);
+        PulseAt(target.position, F(cfg, "area"), ReedGreen, "Громовой квак", .8f,"pepe:PQua");
     }
 
     IEnumerable<Unit> PepeInRange(Vector2 center, float radius) => RadiusUnits035(center, radius)
@@ -132,7 +133,7 @@ public sealed partial class HumanMatch {
         if (enemies.Length == 0) return;
         source.spellTimers[id] = F(cfg, "cd");
         foreach (var enemy in enemies) ApplyEffect(enemy, (string)cfg["effect"], shot.team);
-        PulseAt(shot.end, F(cfg, "area"), ReedGreen, "", .35f);
+        PulseAt(shot.end, F(cfg, "area"), ReedGreen, "", .65f,"pepe:"+id);
     }
 
     bool PepeTryHeal(Unit sage) {
@@ -153,7 +154,7 @@ public sealed partial class HumanMatch {
         ally.hp = Mathf.Min(ally.maxHp, ally.hp + F(cfg, "power"));
         Heals++;
         SpellsCast++;
-        PulseAt(ally.position, 1, ReedGreen, "", .55f, "heal");
+        PulseAt(ally.position, 1, ReedGreen, "", .85f, "pepe:PHea",ally.id);
         return true;
     }
 
@@ -210,7 +211,7 @@ public sealed partial class HumanMatch {
         building.mana -= mana;
         building.spellTimers[id] = F(cfg, "cd");
         SpellsCast++;
-        PulseAt(center, id == "PLil" ? F(cfg,"radius") : 2, ReedGreen, name, .65f);
+        PulseAt(center, id == "PLil" ? F(cfg,"radius") : 2, ReedGreen, name, .9f,"pepe:"+id);
     }
 }
 }

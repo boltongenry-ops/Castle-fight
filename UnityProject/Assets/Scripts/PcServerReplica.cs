@@ -56,6 +56,12 @@ public sealed class PcServerReplica {
                 if(world.Abilities[code] is JObject definition)foreach(var property in definition.Properties())if(cfg[property.Name]==null)cfg[property.Name]=property.Value.DeepClone();
                 unit.effects.Add(new HumanMatch.Effect{id=(string)status["id"]??code,group=(string)status["stack_group"]??code,left=Number(status["remaining"]),lifetime=Number(status["lifetime"]),sourceTeam=Team((int?)status["source_team"]??team),power=Number(status["power"]),armor=Number(status["armor"]),haste=Number(status["haste"]),speed=-Number(status["slow"]),root=(bool?)status["root"]??false,ground=(bool?)status["ground"]??false,config=cfg});
             }
+            if(old!=null){
+                var line=world.Lines[kind];
+                if(old.hp>0&&unit.hp<=0)BattleAudio.For(world)?.Death(line.unit,point);
+                else if(unit.attackSerial!=old.attackSerial&&pose.StartsWith("Attack",StringComparison.OrdinalIgnoreCase)
+                    &&line.weapons.Length>0&&line.weapons[0].type=="normal")BattleAudio.For(world)?.Contact(line.unit,null,false,point);
+            }
             nextUnits.Add(unit);
         }
         foreach(JObject row in structures.OfType<JObject>()) {
