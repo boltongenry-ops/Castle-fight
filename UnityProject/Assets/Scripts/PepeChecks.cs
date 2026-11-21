@@ -7,7 +7,40 @@ using UnityEngine;
 
 namespace CastleFight {
 public sealed partial class HumanMatch {
+    static void CheckPepeShieldDamage(JObject pepe, JObject humans, Action<bool,string> check) {
+        var game = new HumanMatch(pepe, 250, 1, -1, -1, humans);
+        foreach (var line in game.Lines.Where(l => l.Producer && l.unit.StartsWith("pU", StringComparison.Ordinal))) {
+            var shooter = game.Spawn(0, game.Kind(line.building), Vector2.zero);
+            var target = game.Spawn(1, game.Kind("h000"), Vector2.right);
+            var weapon = line.weapons[0];
+            float Attack() {
+                target.hp = target.maxHp = 100000;
+                shooter.spellTimers.Clear();
+                game.BeginAttack(shooter, weapon, target.id);
+                game.Release(shooter);
+                game.TickShots(3);
+                return target.maxHp - target.hp;
+            }
+            float initial = Attack();
+            game.PepeGiveShield(shooter, 170, 6);
+            float full = Attack();
+            game.DamageUnit(shooter, 50, 1, "normal", false);
+            float remaining = game.PepeShield(shooter)?.power ?? 0;
+            float partial = Attack();
+            check(initial > 0 && Mathf.Abs(full - initial) < .05f && Mathf.Abs(partial - initial) < .05f
+                && remaining > 0 && remaining < 170,
+                "Shielded weapon damage " + line.unit + " unshielded/full/partial: "
+                + initial.ToString("F2") + "/" + full.ToString("F2") + "/" + partial.ToString("F2"));
+            shooter.effects.Add(new Effect { id="testDamageBuff", left=5, power=.25f });
+            game.BeginAttack(shooter, weapon, target.id);
+            check(Mathf.Abs(shooter.shotDamage - weapon.damage * 1.25f) < .01f,
+                "Shield preserves an ordinary 25% weapon buff on " + line.unit);
+            shooter.hp = target.hp = 0;
+        }
+    }
+
     public static void CheckPepe(JObject pepe,JObject humans,Action<bool,string> check) {
+        CheckPepeShieldDamage(pepe, humans, check);
         var game = new HumanMatch(pepe, 250, 1, 0, -1, humans);
         Unit Add(string row, int team, float x, float y=0) => game.Spawn(team,game.Kind(row),new Vector2(x,y));
         void Hit(Unit source, Unit target) {

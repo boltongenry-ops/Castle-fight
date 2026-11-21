@@ -33,6 +33,7 @@ public sealed partial class HumanMatch {
     }
     public sealed class Effect {
         public string id,group;public float left,lifetime,power,armor,haste,speed,strength,incoming,dotTick;public bool root,ground;public int sourceTeam;public JObject config;
+        public float WeaponDamageModifier => id == PepeRules.PepeShieldId || (string)config?["kind"] == "regen" ? 0 : power;
         public Effect Copy()=>(Effect)MemberwiseClone();
     }
     public sealed class Unit {

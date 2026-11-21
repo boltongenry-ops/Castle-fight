@@ -31,7 +31,7 @@ public sealed partial class HumanMatch {
     public bool Organic(Unit u)=>UnitConfig035(u.kind).organic;
     public float Height(Unit u)=>u.natureSpirit?1:Flying(u)?Lines[u.kind].flyHeight:0;
     public float Stat(Unit u,string name) {
-        float value=(name=="haste"?ChaosHaste(u):0)+UltimateMod(u,name);double effects035=0;foreach(var e in u.effects)effects035+=name=="armor"?e.armor:name=="damage"?((string)e.config?["kind"]=="regen"?0:e.power):name=="haste"?e.haste:name=="speed"?e.speed:name=="incoming"?e.incoming:0;value+=(float)effects035;
+        float value=(name=="haste"?ChaosHaste(u):0)+UltimateMod(u,name);double effects035=0;foreach(var e in u.effects)effects035+=name=="armor"?e.armor:name=="damage"?e.WeaponDamageModifier:name=="haste"?e.haste:name=="speed"?e.speed:name=="incoming"?e.incoming:0;value+=(float)effects035;
         if(name=="armor")value+=u.auraArmor+u.auraArmorNegative+NerubArmorOverlap(u);if(name=="haste")value+=u.auraHaste+u.auraHasteNegative;if(name=="speed")value+=u.auraSpeed+u.auraSpeedNegative;
         foreach(var id in AbilityView035.Get(u,Abilities).passives){var c=Ranked(u,id);if((string)c?["kind"]=="self_passive"&&name!="armor")value+=F(c,name);}
         return value;
