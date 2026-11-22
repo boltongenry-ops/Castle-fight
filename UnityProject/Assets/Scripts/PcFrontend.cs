@@ -38,10 +38,10 @@ public sealed partial class PcGame {
     }
     void DisposeFrontend(){StopDirectory();DisposeStickers();if(menuAudio)Destroy(menuAudio);}
     // Only the current pair is decoded; fifteen source paintings stay on disk.
-    static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe"};
-    static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе"};
+    static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
+    static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};
     Texture2D versusLeft,versusRight;int versusA,versusB,versusSerial;float versusAt;bool versusActive,versusPrepared,versusNetwork;string versusNameA,versusNameB;
-    void DisposeVersusArt(){if(versusLeft&&versusA!=PepeContent.Race)Destroy(versusLeft);if(versusRight&&versusB!=PepeContent.Race)Destroy(versusRight);versusLeft=versusRight=null;}
+    void DisposeVersusArt(){if(versusLeft&&versusA!=PepeContent.Race&&versusA!=BlackHand.Race)Destroy(versusLeft);if(versusRight&&versusB!=PepeContent.Race&&versusB!=BlackHand.Race)Destroy(versusRight);versusLeft=versusRight=null;}
     void CloseVersus(){versusSerial++;versusActive=false;versusPrepared=false;mobileRoundPrepared=false;DisposeVersusArt();}
     void BeginVersus(int a,int b,bool online){
         DisposeVersusArt();versusSerial++;versusA=Mathf.Clamp(a,0,VersusKeys.Length-1);versusB=Mathf.Clamp(b,0,VersusKeys.Length-1);versusActive=true;versusPrepared=false;versusNetwork=online;versusAt=Time.realtimeSinceStartup;
@@ -50,8 +50,8 @@ public sealed partial class PcGame {
     IEnumerator LoadVersusArt(int generation){
         for(int side=0;side<2;side++){
             int race=side==0?versusA:versusB;
-            if(race==PepeContent.Race){
-                var painting=PepeContent.Load<Texture2D>("Pepe/Versus-pepe");
+            if(race==PepeContent.Race||race==BlackHand.Race){
+                var painting=race==BlackHand.Race?BlackHandUi.Versus():PepeContent.Load<Texture2D>("Pepe/Versus-pepe");
                 if(painting){if(side==0)versusLeft=painting;else versusRight=painting;}
                 continue;
             }

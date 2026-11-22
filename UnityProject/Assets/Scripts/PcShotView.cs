@@ -41,6 +41,22 @@ public sealed class PcShotView : MonoBehaviour {
         VisualHit=hit;
         if(hit)t=1;
         transform.position=DrawPosition(s,t,world);
+        if(s.chaosSpell=="hand-shard"||s.chaosSpell=="hand-stone"||s.chaosSpell=="hand-pierce"||s.chaosSpell=="hand-raven"){
+            bool shard=s.chaosSpell=="hand-shard";
+            bool bolt=s.chaosSpell=="hand-pierce"||s.chaosSpell=="hand-raven";
+            var color=bolt?(s.chaosSpell=="hand-raven"?new Color(.54f,.33f,.87f):new Color(.96f,.79f,.44f)):BlackHand.StoneColor(s.donorId);
+            if(nativeObject)nativeObject.SetActive(false);
+            body.gameObject.SetActive(!hit);
+            body.position=transform.position;
+            body.localScale=bolt?new Vector3(.15f,.15f,.86f):shard?new Vector3(.18f,.18f,.55f):Vector3.one*.7f;
+            Vector3 path=DrawPosition(s,Mathf.Min(1,t+.02f),world)-transform.position;
+            if(path.sqrMagnitude>.000001f)body.rotation=Quaternion.LookRotation(path);
+            block.SetColor("_Color",color);body.GetComponent<Renderer>().SetPropertyBlock(block);
+            streak.gameObject.SetActive(!hit);streak.positionCount=2;streak.startWidth=.04f;streak.endWidth=shard?.12f:.24f;
+            streak.SetPosition(0,DrawPosition(s,Mathf.Max(0,t-.18f),world));streak.SetPosition(1,transform.position);streak.SetPropertyBlock(block);
+            flash.gameObject.SetActive(false);
+            return;
+        }
         if(drawHd?.Invoke(s,this)==true){
             prefab=null;
             nativeFx=true;

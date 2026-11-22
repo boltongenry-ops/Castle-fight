@@ -79,7 +79,7 @@ public sealed partial class PcGame {
     void ClearHumanEffects(){ClearGroupSelection();humanEffects.Clear();netViews.Clear();netSizes.Clear();reforgedNets.Clear();reforgedAirNets.Clear();wispBursts.Clear();orcDecorModels.Clear();orcDecorAnchors.Clear();effectAnchors.Clear();rangeRing=null;selectedHut=selectedUnit=-1;targetedSpell=null;showRange=false;}
     Texture2D Extra(string name){int i=Array.IndexOf(extraCommandIds,name);return i>=0?HdIcon(extraCommandIcons[i]):CommandIcon(8);}
     // Native A03Y has an empty aart; share the original Bfro frost-attack icon.
-    Texture2D AbilityArt(string id){var hd=HdModels.Icon(ReforgedModelPack.IconAddress("Ability-"+id));if(hd)return hd;var ultimateArt=UltimateAbility034(id);if(ultimateArt)return HdIcon(ultimateArt);if(id=="ANDB")return ContentResources.Load<Texture2D>("CombatType/attack-piercing");if(id=="A064")id="A03C";if(id=="A03Y")id="A03C";foreach(var pack in new[]{pepePack,centaurPack,ultimatePack,nerubianPack,pandarenPack,elvenPack,nightPack,elementalPack,corruptedPack,undeadPack,mechPack,northernPack,chaosPack,naturePack,nagaPack,orcPack}){if(!pack)continue;int index=Array.IndexOf(pack.abilityIds,id);if(index>=0&&pack.abilityIcons[index])return HdIcon(pack.abilityIcons[index]);}int i=Array.IndexOf(abilityIds,id);return i>=0?HdIcon(abilityIcons[i]):null;}
+    Texture2D AbilityArt(string id){var clan=BlackHandUi.Ability(id);if(clan)return clan;var hd=HdModels.Icon(ReforgedModelPack.IconAddress("Ability-"+id));if(hd)return hd;var ultimateArt=UltimateAbility034(id);if(ultimateArt)return HdIcon(ultimateArt);if(id=="ANDB")return ContentResources.Load<Texture2D>("CombatType/attack-piercing");if(id=="A064")id="A03C";if(id=="A03Y")id="A03C";foreach(var pack in new[]{pepePack,centaurPack,ultimatePack,nerubianPack,pandarenPack,elvenPack,nightPack,elementalPack,corruptedPack,undeadPack,mechPack,northernPack,chaosPack,naturePack,nagaPack,orcPack}){if(!pack)continue;int index=Array.IndexOf(pack.abilityIds,id);if(index>=0&&pack.abilityIcons[index])return HdIcon(pack.abilityIcons[index]);}int i=Array.IndexOf(abilityIds,id);return i>=0?HdIcon(abilityIcons[i]):null;}
     bool ArtButton(string id,Rect r,Texture2D art,string key,string tip,bool selected=false) {
         bool hover=r.Contains(HudPointer)&&GUI.enabled;
         GUI.BeginGroup(r);var local=new Rect(0,0,r.width,r.height);
@@ -155,10 +155,12 @@ public sealed partial class PcGame {
     void DrawBuildingCard(HumanMatch.Hut h) {
         var l=match.Lines[h.kind];DrawBuildingCombat(h);
         string info=BuildingStatus(h);
-        bool pepeProducer=l.Producer && (h.team==0?matchRace:matchBotRace)==PepeContent.Race;
-        float inset=pepeProducer?34:0;
-        if(pepeProducer){
-            var icon=PepeContent.FighterIcon(l.unit);
+        int race=h.team==0?matchRace:matchBotRace;
+        var productionIcon=l.Producer?(race==PepeContent.Race?PepeContent.FighterIcon(l.unit):
+            race==BlackHand.Race?BlackHandUi.Fighter(l.unit):null):null;
+        float inset=productionIcon?34:0;
+        if(productionIcon){
+            var icon=productionIcon;
             var rect=new Rect(504,658,30,30);
             if(icon)GUI.DrawTexture(rect,icon,ScaleMode.ScaleToFit);
             if(rect.Contains(HudPointer))hudTip="Выпуск: "+l.unitName;

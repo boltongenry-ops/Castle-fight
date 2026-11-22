@@ -6,18 +6,18 @@ public sealed class PcModel : MonoBehaviour {
     public bool reforged,particleOnly;public string appearanceKey;public GameObject animatedRoot;public string raw,animationProperties;public AnimationClip[] clips;public float godotHeight,visualScale=1;
     Animation player;NativeAppearance appearance;string pose;int previousAttack=-1;
     void Awake() {
-        if(particleOnly)return;
+        if(particleOnly||appearanceKey=="blackhand"&&clips.Length==0)return;
         foreach(var animator in GetComponentsInChildren<Animator>())animator.enabled=false;
         player=animatedRoot.GetComponent<Animation>();if(!player)player=animatedRoot.AddComponent<Animation>();
         foreach(var clip in clips)player.AddClip(clip,clip.name);
         player.cullingType=reforged?AnimationCullingType.BasedOnRenderers:AnimationCullingType.AlwaysAnimate;
         if(reforged)foreach(var skin in GetComponentsInChildren<SkinnedMeshRenderer>())skin.updateWhenOffscreen=false;
-        if(appearanceKey!="pepe"){appearance=animatedRoot.AddComponent<NativeAppearance>();appearance.Configure(string.IsNullOrEmpty(appearanceKey)?raw:appearanceKey,player);}
+        if(appearanceKey!="pepe"&&appearanceKey!="blackhand"){appearance=animatedRoot.AddComponent<NativeAppearance>();appearance.Configure(string.IsNullOrEmpty(appearanceKey)?raw:appearanceKey,player);}
         if(!reforged&&ClassicWispBody040.IsWisp(raw))gameObject.AddComponent<ClassicWispBody040>();
         Play("Stand");
     }
     public void Play(string requested,float speed=1,int attackSerial=0) {
-        if(particleOnly)return;var clip=Choose(requested);
+        if(particleOnly||!player)return;var clip=Choose(requested);
         if(!clip)return;
         player[clip.name].speed=speed;
         bool once=requested.StartsWith("Attack")||requested.StartsWith("Spell")||requested.StartsWith("Birth"),terminal=requested.StartsWith("Death");
@@ -53,7 +53,7 @@ public sealed class PcModel : MonoBehaviour {
         foreach(var skin in GetComponentsInChildren<SkinnedMeshRenderer>())if(skin.enabled) {
             var baked=new Mesh();skin.BakeMesh(baked,godotHeight>0);var vertices=baked.vertices;var mats=skin.sharedMaterials;
             for(int s=0;s<baked.subMeshCount;s++) {
-                if(appearanceKey!="pepe"&&s<mats.Length&&mats[s].GetInt("_DstBlend")!=0)continue;if(godotHeight>0&&appearance&&!appearance.SurfaceVisible(s))continue;
+                if(appearanceKey!="pepe"&&appearanceKey!="blackhand"&&s<mats.Length&&mats[s].GetInt("_DstBlend")!=0)continue;if(godotHeight>0&&appearance&&!appearance.SurfaceVisible(s))continue;
                 foreach(int index in baked.GetTriangles(s)){var point=BoundsVertex(skin,vertices[index]);if(!found){result=new Bounds(point,Vector3.zero);found=true;}else result.Encapsulate(point);}
             }
             Destroy(baked);
@@ -64,7 +64,7 @@ public sealed class PcModel : MonoBehaviour {
         }
         return result;
     }
-    Vector3 BoundsVertex(SkinnedMeshRenderer skin,Vector3 point)=>appearanceKey=="pepe"||reforged&&godotHeight>0?
+    Vector3 BoundsVertex(SkinnedMeshRenderer skin,Vector3 point)=>appearanceKey=="pepe"||appearanceKey=="blackhand"||reforged&&godotHeight>0?
         skin.transform.TransformPoint(point):skin.transform.position+skin.transform.rotation*point;
     public void Face(Vector2 direction,bool instant=false) {
         if(direction.sqrMagnitude<.001f)return;

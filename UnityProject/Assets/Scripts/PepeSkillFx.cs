@@ -4,7 +4,7 @@ using UnityEngine.Rendering;
 
 namespace CastleFight {
 // One vertex-coloured mesh for visible swamp spells in a match.
-public sealed class PepeSkillFx : MonoBehaviour {
+public sealed partial class PepeSkillFx : MonoBehaviour {
     readonly List<Vector3> points = new List<Vector3>(2048);
     readonly List<Color32> colors = new List<Color32>(2048);
     readonly List<int> triangles = new List<int>(3072);
@@ -119,6 +119,7 @@ public sealed class PepeSkillFx : MonoBehaviour {
         if(!mesh)return false;
         origin=transform.InverseTransformPoint(point+Vector3.up*.16f);radius=Mathf.Max(.65f,size);
         age=Mathf.Clamp01(progress);opacity=Mathf.Clamp01((1-age)*3);phase=(seed%31)*.2f;
+        if(id.StartsWith("blackhand:",System.StringComparison.Ordinal))return PaintBlackHand(id);
         switch(id){
             case "pepe:PMrk": case "pepe:PMr2":case "pepe:PTmp":
                 int leaves=id=="pepe:PMr2"?5:3;
@@ -169,7 +170,7 @@ public sealed partial class PcGame {
         visuals.TryGetComponent<PepeSkillFx>(out var batch);
         if(batch)batch.Begin();
         foreach(var p in match.Pulses){
-            if(p.fx==null||!(p.fx.StartsWith("pepe:",System.StringComparison.Ordinal)||p.fx.StartsWith("jade:",System.StringComparison.Ordinal)||p.fx.StartsWith("steppe:",System.StringComparison.Ordinal))||!ShowPulse036(p))continue;
+            if(p.fx==null||!(p.fx.StartsWith("pepe:",System.StringComparison.Ordinal)||p.fx.StartsWith("jade:",System.StringComparison.Ordinal)||p.fx.StartsWith("steppe:",System.StringComparison.Ordinal)||p.fx.StartsWith("blackhand:",System.StringComparison.Ordinal))||!ShowPulse036(p))continue;
             if(!batch)batch=visuals.AddComponent<PepeSkillFx>();
             var center=World(p.position);
             if(p.visualUnitId>0&&units.TryGetValue(p.visualUnitId,out var unit)&&unit)
@@ -177,8 +178,14 @@ public sealed partial class PcGame {
             if(batch.Paint(p.fx,center,p.radius,p.age/p.duration,p.id))Art036.rendered.Add(p.id);
         }
         foreach(var fighter in match.Units){
-            if(fighter.hp<=0 || fighter.effects.Count==0 || match.PepeShield(fighter)==null ||
-                !units.TryGetValue(fighter.id,out var view) || !ShowUnitArt036(fighter,view))continue;
+            if(fighter.hp<=0||fighter.effects.Count==0||
+               !units.TryGetValue(fighter.id,out var view)||!ShowUnitArt036(fighter,view))continue;
+            var status=fighter.effects.Find(e=>e.left>0&&BlackHand.IsStatus(e.id));
+            if(status!=null){
+                if(!batch)batch=visuals.AddComponent<PepeSkillFx>();
+                batch.BlackHandStatus(view.transform.position,status.id,Time.time,fighter.id);
+            }
+            if(match.PepeShield(fighter)==null)continue;
             if(!batch)batch=visuals.AddComponent<PepeSkillFx>();
             float height=view.godotHeight>0?view.godotHeight:Mathf.Clamp(1.8f+Mathf.Sqrt(fighter.maxHp)*.025f,2.1f,3.7f);
             batch.Shield(view.transform.position,height,Time.time,fighter.id);

@@ -36,8 +36,10 @@ public sealed partial class PcGame {
         if(page!=Page.Guide){CloseGuide();return;}if(guideRace<0){guideOpened=Mathf.Min(1.25f,guideOpened+Mathf.Min(Time.unscaledDeltaTime,.05f));float t=guideOpened/1.25f;float ease=t*t*(3-2*t);controls.FocusWorld(World(guideClearing)+Vector3.up*Mathf.Lerp(75,0,ease),Mathf.Lerp(155,80,ease));}
         if(guideModel&&guideEntry>=0){if(guideSpin)guideAngle+=Time.unscaledDeltaTime*18;guideModel.transform.localRotation=Quaternion.Euler(0,guideAngle,0);}
     }
+    System.Collections.IEnumerator OpenBlackHandGuide(){yield return BlackHandArt.Open();if(page==Page.Guide)GuideChooseRace(BlackHand.Race);}
     void GuideChooseRace(int race){
-        if(MobileContent.Active&&race!=0&&!Pack(race)){StartCoroutine(PrepareMobileGuide(race));return;}
+        if(race==BlackHand.Race&&!BlackHandArt.Ready){StartCoroutine(OpenBlackHandGuide());return;}
+        if(MobileContent.Active&&race!=0&&race!=BlackHand.Race&&!Pack(race)){StartCoroutine(PrepareMobileGuide(race));return;}
         if(!MobileContent.Active){
             if(DiscardRaceAssets(race)){ClearRacePrefabCaches();SweepRaceAssets();}
             LoadDesktopRace(race);

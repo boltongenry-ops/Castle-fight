@@ -28,7 +28,8 @@ public sealed partial class PcGame {
     IEnumerator PrepareMobileRace(int race){
         if(!MobileContent.Active)yield break;
         yield return MobileContent.Current.EnsureRace(race);
-        if(race==0)yield break;
+        if(race==BlackHand.Race)yield return BlackHandArt.Open();
+        if(race==0||race==BlackHand.Race)yield break;
         if(race==PepeContent.Race)AssignPack(race,PepeContent.Load<PcRacePack>(PepeContent.Pack));
         else if(race==12){yield return PrepareUltimateShell034();}else if(!Pack(race)){yield return MobileContent.Current.LoadAsync<PcRacePack>(MobileContent.RaceResources[race],value=>AssignPack(race,value));if(!Pack(race))throw new InvalidOperationException("Missing downloaded race "+race);}
         ApplyRaceMaterialDefaults(race);
@@ -54,7 +55,7 @@ public sealed partial class PcGame {
     }
     GameObject MenuBuilder(int race)=>OptionalModel(ClassicMenuBuilder(race),0);
     GameObject ClassicMenuBuilder(int race){
-        if(race==0)return FirstModel(builderModels);
+        if(race==0||race==BlackHand.Race)return FirstModel(builderModels);
         if(race==PepeContent.Race)return PepeContent.Load<GameObject>("Pepe/Builder")??PepeContent.Load<PcRacePack>(PepeContent.Pack)?.builders[0];
         if(MobileContent.Active)return ContentResources.Load<GameObject>("MobileBuilders/"+race);
         if(desktopMenuBuilders)return desktopMenuBuilders.LoadAsset<GameObject>("builders/"+race);

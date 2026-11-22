@@ -7,7 +7,7 @@ namespace CastleFight {
 public sealed partial class PcGame {
     AssetBundle desktopMenuBuilders;
     AsyncOperation raceAssetSweep;
-    static readonly string[] DesktopRaceCatalogs={"human","orcs","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe"};
+    static readonly string[] DesktopRaceCatalogs={"human","orcs","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
 
     IEnumerator OpenDesktopMenuBuilders(){
         if(MobileContent.Active)yield break;
@@ -32,7 +32,7 @@ public sealed partial class PcGame {
     }
 
     void LoadDesktopRace(int race,PcRacePack pack=null){
-        if(race==0||Pack(race))return;
+        if(race==0||race==BlackHand.Race||Pack(race))return;
         pack=pack?pack:ContentResources.Load<PcRacePack>(MobileContent.RaceResources[race]);
         if(!pack)throw new InvalidDataException("Не удалось загрузить ресурсы расы "+RaceTitle(race));
         AssignPack(race,pack);
@@ -41,11 +41,12 @@ public sealed partial class PcGame {
 
     IEnumerator PrepareDesktopMatch(int player,int opponent,int generation){
         ClearMatch();
+        if(player==BlackHand.Race||opponent==BlackHand.Race)yield return BlackHandArt.Open();
         if(DiscardRaceAssets(player,opponent))SweepRaceAssets();
         if(raceAssetSweep!=null&&!raceAssetSweep.isDone)yield return raceAssetSweep;
         foreach(int race in player==opponent?new[]{player}:new[]{player,opponent}){
             if(generation!=versusSerial)yield break;
-            if(race==0||Pack(race))continue;
+            if(race==0||race==BlackHand.Race||Pack(race))continue;
             if(race==15||race==PepeContent.Race){LoadDesktopRace(race);continue;}
             var request=Resources.LoadAsync<PcRacePack>(MobileContent.RaceResources[race]);
             yield return request;

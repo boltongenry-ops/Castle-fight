@@ -64,6 +64,11 @@ public sealed partial class PcGame {
         if(!raceIndices[race].TryGetValue(raw,out int index))return CommandIcon(0);
         if(MobileContent.Active&&race==12)return UltimateIcon034(index);
         if(pack)return pack.buildingIcons[index];
+        if(race==BlackHand.Race){
+            var clanPortrait=BlackHandUi.Fighter(actor);
+            if(clanPortrait)return clanPortrait;
+            index=BlackHand.ArtRow(index);
+        }
         return index<unitIcons.Length?unitIcons[index]:CommandIcon(0);
     }
     void DrawGroupCard(){

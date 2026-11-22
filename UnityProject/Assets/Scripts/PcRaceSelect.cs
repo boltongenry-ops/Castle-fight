@@ -8,9 +8,9 @@ namespace CastleFight {
 // selectable, the battle rules panel on the right and the saved match rules.
 // Race names, tags and lore are copied from the Godot menu_style.gd tables.
 public sealed partial class PcGame {
-    static readonly string[] AllRaceIds={"chaos","elf","corrupted","human","orc","naga","northern","nightelf","undead","mechanical","nature","elementals","builder","nerubian","pandaren","centaur","pepe"};
-    static readonly string[] AllRaceNames={"Легионы Хаоса","Союз эльфов","Осквернённые","Альянс людей","Орочья Орда","Наги","Северные королевства","Ночные эльфы","Силы нежити","Коалиция механизмов","Силы природы","Мир элементалей","Высший строитель","Рой нерубов","Орден Нефритового Хмеля","Ханства Пустошей","Болотное братство Пепе"};
-    static readonly string[] AllRaceTags={"Демоны · разрушение","Стрелки · чародеи","Скверна · проклятия","Пехота · артиллерия","Воины · шаманы","Глубины · морская магия","Лёд · северные воины","Охотницы · лунная магия","Некромантия · нежить","Машины · взрывчатка","Друиды · лесные создания","Четыре стихии","Случайные линии всех рас","Паутина · панцирь · яд","Выдержка · настои · три духа","Разгон · пески · поддержка","Ряска · щиты · засада"};
+    static readonly string[] AllRaceIds={"chaos","elf","corrupted","human","orc","naga","northern","nightelf","undead","mechanical","nature","elementals","builder","nerubian","pandaren","centaur","pepe","blackhand"};
+    static readonly string[] AllRaceNames={"Легионы Хаоса","Союз эльфов","Осквернённые","Альянс людей","Орочья Орда","Наги","Северные королевства","Ночные эльфы","Силы нежити","Коалиция механизмов","Силы природы","Мир элементалей","Высший строитель","Рой нерубов","Орден Нефритового Хмеля","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};
+    static readonly string[] AllRaceTags={"Демоны · разрушение","Стрелки · чародеи","Скверна · проклятия","Пехота · артиллерия","Воины · шаманы","Глубины · морская магия","Лёд · северные воины","Охотницы · лунная магия","Некромантия · нежить","Машины · взрывчатка","Друиды · лесные создания","Четыре стихии","Случайные линии всех рас","Паутина · панцирь · яд","Выдержка · настои · три духа","Разгон · пески · поддержка","Ряска · щиты · засада","Пехота · проклятия · осада"};
     static readonly string[] AllRaceLore={
         "Демоны, огонь и разрушительная магия Хаоса.",
         "Стрелки, чародеи и древнее мастерство эльфов.",
@@ -28,9 +28,9 @@ public sealed partial class PcGame {
         "Панцирный передний ряд, паутина против летунов и разъедающий яд. Хранители лечат рой, матриарх укрепляет строй.",
         "Выдержка, очищающие настои и хмельная магия. Монахи поддерживают передний ряд, а три духа меняют ход сражения.",
         "Лагеря автоматически выпускают кентавров. После разгона они усиливают первый удар. Тотемы замедляют врагов, барабанщицы поддерживают армию, а обоз лечит раненых. Новая раса: пока доступна в игре с ботом. Модели: Maximal, Ujimasa Hojo, Mephestrial и Filip95; иконки: Villagerino.",
-        "Лучники помечают врагов Ряской, латники получают щит за удар по метке. Стрекозы атакуют с воздуха, баллисты замедляют группу, знахари лечат бойцов."};
+        "Лучники помечают врагов Ряской, латники получают щит за удар по метке. Стрекозы атакуют с воздуха, баллисты замедляют группу, знахари лечат бойцов.","Пехота удерживает строй. Палачи добивают раненых, чернокнижники карают быстрых стрелков, камнемёты обстреливают площадь."};
     // Unity race index (0 humans, 1 orcs, 2 naga, 3 nature) where the race is staged.
-    static readonly int[] AllRaceUnity={4,11,8,0,1,2,5,10,7,6,3,9,12,13,14,15,PepeContent.Race};
+    static readonly int[] AllRaceUnity={4,11,8,0,1,2,5,10,7,6,3,9,12,13,14,15,PepeContent.Race,BlackHand.Race};
     int matchMode;bool aspectsOn;Vector2 raceLoreScroll,raceRulesScroll;
     readonly JArray[] raceAspects=new JArray[MobileContent.RaceResources.Length];
     readonly Dictionary<string,Texture2D> raceEmblemCache=new Dictionary<string,Texture2D>();
@@ -55,6 +55,7 @@ public sealed partial class PcGame {
     string AspectField(int race,int index,string field)=>index>=0&&index<AspectCount(race)?(string)AspectOptions(race)[index][field]??"":"";
     string AspectId(int race,int index)=>AspectField(race,index,"id");
     Texture2D AspectIcon(int race,int index) {
+        if(race==BlackHand.Race&&index>=0&&index<2)return BlackHandUi.Aspect(index);
         string id=AspectId(race,index);if(string.IsNullOrEmpty(id))return null;
         var hd=HdModels.Icon(ReforgedModelPack.IconAddress("Aspect-"+id));
         if(hd)return hd;
@@ -62,14 +63,15 @@ public sealed partial class PcGame {
         return texture;
     }
     Texture2D RaceEmblemAt(int godot) {
-        if(godot<0||godot>=AllRaceIds.Length)return null;string id=AllRaceIds[godot];
+        if(godot<0||godot>=AllRaceIds.Length)return null;
+        if(AllRaceUnity[godot]==BlackHand.Race)return BlackHandUi.Emblem();
+        string id=AllRaceIds[godot];
         if(!raceEmblemCache.TryGetValue(id,out var texture)){texture=ContentResources.Load<Texture2D>("RaceIcon-"+id);raceEmblemCache[id]=texture;}
         return texture;
     }
     Texture2D RaceEmblem(int race) {
-        int godot=race>=0&&race<MobileContent.RaceResources.Length?RaceOfUnity(race):-1;if(godot<0)return null;string id=AllRaceIds[godot];
-        if(!raceEmblemCache.TryGetValue(id,out var texture)){texture=ContentResources.Load<Texture2D>("RaceIcon-"+id);raceEmblemCache[id]=texture;}
-        return texture;
+        int godot=race>=0&&race<MobileContent.RaceResources.Length?RaceOfUnity(race):-1;
+        return RaceEmblemAt(godot);
     }
     string RaceTitle(int race){int godot=race>=0&&race<MobileContent.RaceResources.Length?RaceOfUnity(race):-1;return godot<0?"Раса":AllRaceNames[godot];}
 
