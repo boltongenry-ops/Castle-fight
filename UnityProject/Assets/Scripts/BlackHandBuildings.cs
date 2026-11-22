@@ -47,7 +47,7 @@ internal static class BlackHandBuildings {
         int jsonSize=BitConverter.ToInt32(data,12);
         var document=JObject.Parse(System.Text.Encoding.UTF8.GetString(data,20,jsonSize));
         var slots=document["meshes"][0]["primitives"].Select(p=>document["materials"][(int)p["material"]]).ToArray();
-        var shader=Shader.Find("Standard");
+        var shader=BlackHandArt.SurfaceShader();
         var clips=importer.GetAnimationClips()??Array.Empty<AnimationClip>();
         var stand=clips.FirstOrDefault(clip=>clip.name=="Stand");
         var source=new GameObject("Building import");
@@ -70,7 +70,7 @@ internal static class BlackHandBuildings {
                 var material=new Material(shader){name=texture,mainTexture=importer.GetTexture(index)};
                 if((string)descriptor["alphaMode"]=="MASK") {
                     material.SetOverrideTag("RenderType","TransparentCutout");
-                    material.SetFloat("_Mode",1);
+                    if(material.HasProperty("_Mode"))material.SetFloat("_Mode",1);
                     material.SetFloat("_Cutoff",.45f);
                     material.EnableKeyword("_ALPHATEST_ON");
                     material.renderQueue=(int)RenderQueue.AlphaTest;

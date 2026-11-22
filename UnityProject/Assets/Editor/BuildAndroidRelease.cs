@@ -50,7 +50,9 @@ public static class BuildAndroidRelease {
         AssetDatabase.ImportAsset("Assets/MobileBootstrap/content.json",ImportAssetOptions.ForceSynchronousImport);
         Debug.Log("CF_ANDROID_SUPPLEMENT_PASS version=0.33.0 sha256="+hash);
     }
-    public static void Build(){
+    public static void Build()=>BuildSigned(null,0);
+    public static void BuildBlackHandPreview()=>BuildSigned("0.43.0",38);
+    static void BuildSigned(string version,int code){
         string key=Environment.GetEnvironmentVariable("CF_KEYSTORE_PATH");
         string password=Environment.GetEnvironmentVariable("CF_KEYSTORE_PASSWORD");
         if(string.IsNullOrEmpty(key)||!File.Exists(key)||string.IsNullOrEmpty(password))
@@ -76,7 +78,8 @@ public static class BuildAndroidRelease {
             PlayerSettings.Android.keyaliasName=Environment.GetEnvironmentVariable("CF_KEY_ALIAS")??"androiddebugkey";
             PlayerSettings.Android.keystorePass=password;
             PlayerSettings.Android.keyaliasPass=password;
-            BuildMobileContent.RebuildPlayer();
+            if(version==null)BuildMobileContent.RebuildPlayer();
+            else BuildMobileContent.RebuildPlayerForRelease(version,code);
         }finally{
             PlayerSettings.Android.keystorePass="";PlayerSettings.Android.keyaliasPass="";
             PlayerSettings.Android.useCustomKeystore=custom;

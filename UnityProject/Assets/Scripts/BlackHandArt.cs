@@ -41,6 +41,14 @@ internal static class BlackHandArt {
         string path=MobileContent.Media("Frontend/BlackHand/"+key+".bytes");
         return File.Exists(path)?File.ReadAllBytes(path):null;
     }
+    internal static Shader SurfaceShader() {
+        if(Application.isMobilePlatform) {
+            var mobile=Resources.Load<Shader>("BlackHand/ClanSurface");
+            if(mobile)return mobile;
+        }
+        return Shader.Find("Standard")??Shader.Find("Unlit/Texture");
+    }
+
     static async Task Import(int row,byte[] data) {
         var importer=new GltfImport();
         if(!await importer.LoadGltfBinary(data,importSettings:new ImportSettings{AnimationMethod=AnimationMethod.Legacy})){
@@ -50,7 +58,7 @@ internal static class BlackHandArt {
         var json=Newtonsoft.Json.Linq.JObject.Parse(System.Text.Encoding.UTF8.GetString(data,20,BitConverter.ToInt32(data,12)));
         var slots=json["meshes"][0]["primitives"].Select(primitive=>(int)json["materials"][(int)primitive["material"]]["pbrMetallicRoughness"]["baseColorTexture"]["index"]).ToArray();
         var palette=new Dictionary<(int,int),Material>();
-        var shader=Shader.Find("Standard")??Shader.Find("Unlit/Texture");
+        var shader=SurfaceShader();
         foreach(int role in roleIndices[row])for(int team=0;team<2;team++){
             var root=new GameObject("Black Legion "+names[row]+" "+team);
             root.transform.SetParent(library.transform,false);

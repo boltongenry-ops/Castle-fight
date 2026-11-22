@@ -47,12 +47,25 @@ public static class BuildMobileContent {
             File.WriteAllText("Assets/MobileBootstrap/link.xml","<linker><assembly fullname=\"Assembly-CSharp\" preserve=\"all\"/><assembly fullname=\"UnityEngine\" preserve=\"all\"/><assembly fullname=\"UnityEngine.AnimationModule\" preserve=\"all\"/><assembly fullname=\"UnityEngine.VideoModule\" preserve=\"all\"/><assembly fullname=\"UnityEngine.ParticleSystemModule\" preserve=\"all\"/></linker>");AssetDatabase.Refresh();RebuildPlayer();
         } finally {PlayerSettings.bundleVersion=previous;Restore();AssetDatabase.SaveAssets();}
     }
-    public static void RebuildPlayer(){
+    public static void RebuildPlayer()=>RebuildPlayerCore("0.42.2",37);
+    public static void RebuildPlayerForRelease(string version,int code) {
+        string oldVersion=PlayerSettings.bundleVersion;
+        int oldCode=PlayerSettings.Android.bundleVersionCode;
+        try {
+            RebuildPlayerCore(version,code);
+        } finally {
+            PlayerSettings.bundleVersion=oldVersion;
+            PlayerSettings.Android.bundleVersionCode=oldCode;
+            AssetDatabase.SaveAssets();
+        }
+    }
+
+    static void RebuildPlayerCore(string version,int code){
         if(!File.Exists(Output+"/manifest.json"))throw new Exception("Build downloadable content first");
         string previous=PlayerSettings.bundleVersion;
         try{
             Move("Assets/Resources",Source);Move("Assets/StreamingAssets",Streaming);
-            PlayerSettings.bundleVersion="0.42.2";PlayerSettings.Android.bundleVersionCode=Math.Max(37,PlayerSettings.Android.bundleVersionCode);
+            PlayerSettings.bundleVersion=version;PlayerSettings.Android.bundleVersionCode=Math.Max(code,PlayerSettings.Android.bundleVersionCode);
             var result=BuildPipeline.BuildPlayer(new BuildPlayerOptions{scenes=new[]{"Assets/MobileBootstrap/Startup.unity"},target=BuildTarget.Android,locationPathName="Builds/MapAndroid/CastleFight-Android-OnlineAssets.apk",assetBundleManifestPath=File.Exists(Output+"/ContentAndroid021.manifest")?Output+"/ContentAndroid021.manifest":null,options=BuildOptions.CompressWithLz4|(Environment.GetEnvironmentVariable("CF_ANDROID_CLEAN_BURST")=="1"?BuildOptions.CleanBuildCache:BuildOptions.None)});
             if(result.summary.result!=BuildResult.Succeeded)throw new Exception("Small Android rebuild failed: "+result.summary.result);
             Debug.Log("CF_ANDROID_CONTENT_PLAYER_PASS apkBytes="+result.summary.totalSize);
