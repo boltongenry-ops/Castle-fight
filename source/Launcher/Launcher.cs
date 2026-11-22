@@ -175,7 +175,7 @@ sealed class LauncherForm:Form {
         if(busy)return;busy=true;phase="ОБНОВЛЯЕМ ИГРУ";Invalidate();check.Enabled=play.Enabled=guest.Enabled=false;cancel.Enabled=true;cancel.Visible=true;progress.Maximum=1000;stopping=new CancellationTokenSource();ready=null;
         try{
             bool failed=false;
-            try{ready=await Task.Run(delegate{var release=core.Fetch();core.Apply(release,ShowProgress,stopping.Token);return release;});status.Text="Версия "+ready.version+" установлена. Всё готово к новой битве.";phase="ИГРА ГОТОВА";progress.Value=1000;percent.Text="100%";play.Enabled=true;}
+            try{ready=await Task.Run(delegate{var release=core.Fetch();core.Apply(release,ShowProgress,stopping.Token);return release;});status.Text="Версия "+ready.WindowsVersion()+" установлена. Всё готово к новой битве.";phase="ИГРА ГОТОВА";progress.Value=1000;percent.Text="100%";play.Enabled=true;}
             catch(Exception e){failed=true;phase="ЗАГРУЗКА ПРИОСТАНОВЛЕНА";status.Text=e is OperationCanceledException?"Загрузка отложена. Проверка продолжится при следующем запуске.":"Не удалось обновить игру: "+e.GetBaseException().Message;}
             if(failed)try{var installed=await Task.Run(delegate{return core.Installed();});if(installed!=null){await Task.Run(delegate{core.Apply(installed,delegate(string t,float p){},CancellationToken.None);});ready=installed;play.Enabled=true;phase="ДОСТУПНА СОХРАНЁННАЯ ВЕРСИЯ";status.Text+=" Сохранённая версия доступна.";}}catch(Exception){}
         }finally{busy=false;check.Enabled=true;guest.Visible=true;guest.Enabled=play.Enabled;cancel.Enabled=false;cancel.Visible=false;stopping.Dispose();stopping=null;tips.SetToolTip(status,status.Text);Invalidate();}

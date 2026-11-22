@@ -10,8 +10,11 @@ using System.Web.Script.Serialization;
 
 namespace CastleFightLauncher {
 public sealed class FileRow {public string path,sha256;public long size,offset,compressedSize;public int method;}
-public sealed class WindowsRelease {public string url,sha256,entryPoint;public long size;public List<FileRow> files;}
-public sealed class Release {public int schema;public string version;public WindowsRelease windows;}
+public sealed class WindowsRelease {public string url,sha256,entryPoint,version;public long size;public List<FileRow> files;}
+public sealed class Release {
+    public int schema;public string version;public WindowsRelease windows;
+    public string WindowsVersion(){return windows.version??version;}
+}
 public sealed class UpdateResult {public int checkedFiles,changedFiles;public long networkBytes;}
 public sealed class UpdateCore {
     public const string ManifestUrl="https://raw.githubusercontent.com/boltongenry-ops/Castle-fight/main/release.json";
@@ -26,6 +29,7 @@ public sealed class UpdateCore {
     public Release Parse(string text){var r=Json.Deserialize<Release>(text);Validate(r);return r;}
     public void Validate(Release r){
         Uri uri;Version v;if(r==null||r.schema!=1||!Version.TryParse(r.version,out v)||r.windows==null||r.windows.files==null||r.windows.files.Count<1||r.windows.files.Count>5000||!Uri.TryCreate(r.windows.url,UriKind.Absolute,out uri)||(uri.Scheme!="https"&&!(fixture&&uri.IsLoopback&&uri.Scheme=="http")))throw new InvalidDataException("Некорректный каталог версии");
+        if(!Version.TryParse(r.WindowsVersion(),out v))throw new InvalidDataException("Некорректная версия Windows");
         var paths=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach(var row in r.windows.files){Target(row.path);if(!paths.Add(row.path)||row.size<0||row.size>12L*1024*1024*1024||row.offset<0||row.compressedSize<0||row.offset>r.windows.size-row.compressedSize||row.sha256==null||row.sha256.Length!=64||!row.sha256.All(Uri.IsHexDigit)||row.method!=0&&row.method!=8)throw new InvalidDataException("Некорректный файл обновления");}
         if(!paths.Contains(r.windows.entryPoint)||r.windows.entryPoint!="CastleFightMap.exe")throw new InvalidDataException("Не найден исполняемый файл игры");
@@ -39,7 +43,7 @@ public sealed class UpdateCore {
     public UpdateResult Apply(Release release,Action<string,float> progress,CancellationToken cancel){
         Validate(release);Directory.CreateDirectory(Root);string state=Path.Combine(Root,".updater");Directory.CreateDirectory(state);
         using(var gate=new FileStream(Path.Combine(state,"update.lock"),FileMode.OpenOrCreate,FileAccess.ReadWrite,FileShare.None)){
-            Release installedRelease=null;try{installedRelease=Installed();}catch(Exception){}if(installedRelease!=null&&new Version(release.version)<new Version(installedRelease.version))throw new InvalidOperationException("Установленная версия новее каталога обновлений");
+            Release installedRelease=null;try{installedRelease=Installed();}catch(Exception){}if(installedRelease!=null&&new Version(release.WindowsVersion())<new Version(installedRelease.WindowsVersion()))throw new InvalidOperationException("Установленная версия новее каталога обновлений");
             var result=new UpdateResult();var missing=new List<FileRow>();int count=release.windows.files.Count;
             foreach(var row in release.windows.files){cancel.ThrowIfCancellationRequested();progress("Проверяем файлы · "+(++result.checkedFiles)+" / "+count,.2f*result.checkedFiles/count);if(!Matches(Target(row.path),row))missing.Add(row);}
             result.changedFiles=missing.Count;long total=missing.Sum(r=>r.compressedSize),done=0;
@@ -65,7 +69,7 @@ public sealed class UpdateCore {
                 for(int i=installed.Count-1;i>=0;i--){string target=Target(installed[i]),saved=Path.Combine(backup,i.ToString());if(File.Exists(saved)){if(File.Exists(target))File.Replace(saved,target,null);else File.Move(saved,target);}else if(File.Exists(target))File.Delete(target);}throw;
             }
             // This directory is created above, never derived from remote paths.
-            try{Directory.Delete(backup,true);Directory.Delete(stage,true);}catch(IOException){}catch(UnauthorizedAccessException){}progress("Готово · версия "+release.version,1);return result;
+            try{Directory.Delete(backup,true);Directory.Delete(stage,true);}catch(IOException){}catch(UnauthorizedAccessException){}progress("Готово · версия "+release.WindowsVersion(),1);return result;
         }
     }
     static void Copy(Stream input,Stream output,long maximum,CancellationToken cancel){byte[] buffer=new byte[128*1024];long count=0;int n;while((n=input.Read(buffer,0,buffer.Length))>0){cancel.ThrowIfCancellationRequested();count+=n;if(count>maximum)throw new InvalidDataException("Размер файла превышен");output.Write(buffer,0,n);}if(count!=maximum)throw new InvalidDataException("Неполный файл обновления");}
