@@ -64,8 +64,8 @@ internal static class BlackHandArt {
             root.transform.SetParent(library.transform,false);
             var model=new GameObject("Model");
             model.transform.SetParent(root.transform,false);
+            // The GLB's Facing node already aligns the rig with PcModel.Face.
             if(!await importer.InstantiateMainSceneAsync(model.transform))throw new InvalidDataException("mesh");
-            model.transform.localRotation=Quaternion.Euler(0,90,0);
             if(role==8)model.transform.localScale=Vector3.one*1.12f;
             var view=root.AddComponent<PcModel>();
             view.raw="bU"+role.ToString("00");view.appearanceKey="blackhand";
