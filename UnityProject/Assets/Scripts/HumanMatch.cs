@@ -122,6 +122,74 @@ public sealed partial class HumanMatch {
     void RemoveHut(Hut h){Huts.Remove(h);var b=Builders[h.team];if(b.jobs.Remove(h.id)&&b.jobs.Count==0){b.goal=b.position;b.pose="Stand";}}
     public bool Sell(int team,int id){var h=Huts.FirstOrDefault(v=>v.id==id&&v.team==team);if(h==null||Finished)return false;if(h.paid)Gold[team]+=(int)(h.baseCost*.2f);RemoveHut(h);return true;}
     public bool PauseHut(int team,int id,bool paused){var h=Huts.FirstOrDefault(v=>v.id==id&&v.team==team&&v.paid);if(h==null||Finished)return false;h.paused=paused;return true;}
+    readonly Dictionary<Hut,int>[] synchronizedHuts={new Dictionary<Hut,int>(),new Dictionary<Hut,int>()};
+    int reservedWaveSlots;
+
+    public int SynchronizeProduction(int team) {
+        if(Finished||NetworkReplica||team<0||team>=synchronizedHuts.Length)return 0;
+        var producers=Huts.Where(h=>h.team==team&&h.paid&&h.hp>0&&!h.paused&&Lines[h.kind].Producer).ToArray();
+        if(producers.Length<2)return 0;
+        if(producers.Sum(WaveSlots)>ArmyLimit)return -1;
+        float latest=Mathf.Max(0,producers.Max(h=>h.spawnLeft));
+        var wave=synchronizedHuts[team];
+        wave.Clear();
+        foreach(var h in producers) {
+            wave.Add(h,h.kind);
+            h.spawnLeft=latest;
+        }
+        return producers.Length;
+    }
+
+    int WaveSlots(Hut h) {
+        if(Lines[h.kind].unit=="e00E")return 2;
+        return Mathf.Max(1,ProdRoster033(h.kind)?.Length??0)+(HasPair033(h.kind)?1:0);
+    }
+
+    void TickSynchronizedProduction(float dt) {
+        for(int team=0;team<synchronizedHuts.Length;team++) {
+            var wave=synchronizedHuts[team];
+            if(wave.Count==0)continue;
+            using(var snapshot=SimulationBuffers035.Take(wave.Keys))
+                foreach(var h in snapshot)
+                    if(h.hp<=0||h.kind!=wave[h]||!Huts.Contains(h))wave.Remove(h);
+            if(wave.Count==0||wave.Keys.Any(h=>h.paused||BuildingDisabled(h)>0))continue;
+            float left=Mathf.Max(0,wave.Keys.Max(h=>h.spawnLeft)-dt);
+            foreach(var h in wave.Keys)h.spawnLeft=left;
+            if(left>0)continue;
+            int slots=wave.Keys.Sum(WaveSlots);
+            if(ArmyCount(team)+slots>ArmyLimit)continue;
+            try {
+                reservedWaveSlots=slots;
+                foreach(var h in Huts) {
+                    if(!wave.ContainsKey(h))continue;
+                    int ownSlots=WaveSlots(h);
+                    Produce(h,ownSlots);
+                    reservedWaveSlots-=ownSlots;
+                }
+            } finally {
+                reservedWaveSlots=0;
+                wave.Clear();
+            }
+        }
+    }
+
+    void Produce(Hut h,int waveSlots=0) {
+        var roster=ProdRoster033(h.kind);
+        int length=roster?.Length??0;
+        int required=Lines[h.kind].unit=="e00E"?2:Mathf.Max(1,length);
+        if(ArmyCount(h.team)+required>ArmyLimit){h.spawnLeft=0;return;}
+        h.spawnLeft+=Interval(h);
+        bool pair=HasPair033(h.kind);
+        float lane=pair?Mathf.Max(1.1f,StatCollision033(h.kind)*1.1f):0;
+        if(length>1) {
+            var kinds=ProdKinds033(h.kind);
+            for(int i=0;i<length;i++) {
+                int kind=kinds[i];
+                if(kind>=0)Spawn(h.team,kind,h.position+Vector2.up*((i-(length-1)*.5f)*2.2f),true,h);
+            }
+        }else Spawn(h.team,h.kind,h.position+Vector2.up*lane,true,h);
+        if(pair&&(waveSlots>0||ArmyCount(h.team)<ArmyLimit))Spawn(h.team,h.kind,h.position-Vector2.up*lane,false,h);
+    }
     public void PauseAll(int team,bool paused){if(Finished)return;foreach(var h in Huts.Where(h=>h.team==team&&h.paid&&h.hp>0&&Lines[h.kind].Producer))h.paused=paused;}
     public bool InsideBase(int t,Vector2 p)=>Mathf.Abs(p.y)<=2016f/30&&(t==0?p.x>=-6144f/30&&p.x<=-2016f/30:p.x>=2016f/30&&p.x<=6144f/30);
     public bool MoveBuilder(int team,Vector2 point) {
@@ -162,7 +230,8 @@ public sealed partial class HumanMatch {
         foreach(var c in Corpses)c.left-=dt;Corpses.RemoveAll(c=>c.left<=0);
         foreach(var p in Pulses)p.age+=dt;Pulses.RemoveAll(p=>p.age>p.duration);
         SimulationPhase035.Mark("economy_builders");TickCentaur(dt);TickInventory(dt);TickHumanJobs(dt);TickNagaJobs(dt);TickNagaWaves(dt);TickNatureJobs(dt);TickChaosJobs(dt);TickNorthern(dt);TickMech(dt);TickUndead(dt);TickCorrupted(dt);TickElemental(dt);TickNight(dt);TickElven(dt);TickFinal(dt);FlushUndeadBirths();TickAspects(dt);TickBotRescue(dt);EnsureUnitIndex033();RebuildElementalLinkCache033();SetBuildingActive033(true);SimulationPhase035.Mark("race_controllers");
-        using(var snapshot035_2=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_2)if(h.paid&&h.hp>0&&!h.paused){var l=Lines[h.kind];h.hp=Mathf.Min(h.maxHp,h.hp+BuildingConfig035(h.kind).hpRegen*dt);h.mana=Mathf.Min(BuildingConfig035(h.kind).maxMana,h.mana+(BuildingManaRegen(h,BuildingConfig035(h.kind).manaRegen)+ElementalManaBonus(h)+(MechPowered(h)?F(Abilities["A09P"]?["fields"],"Hab1"):0))*dt);TickBuilding(h,dt);if(BuildingDisabled(h)>0)continue;if(l.Producer){h.spawnLeft-=dt;if(h.spawnLeft<=0){var pr=ProdRoster033(h.kind);int rosterLen=pr!=null?pr.Length:0;if(ArmyCount(h.team)+(l.unit=="e00E"?2:Mathf.Max(1,rosterLen))<=ArmyLimit){h.spawnLeft+=Interval(h);bool pair=HasPair033(h.kind);float lane=pair?Mathf.Max(1.1f,StatCollision033(h.kind)*1.1f):0;if(rosterLen>1){var pk=ProdKinds033(h.kind);for(int i=0;i<rosterLen;i++){int k=pk[i];if(k>=0)Spawn(h.team,k,h.position+Vector2.up*((i-(rosterLen-1)*.5f)*2.2f),true,h);}}else Spawn(h.team,h.kind,h.position+Vector2.up*lane,true,h);if(pair&&ArmyCount(h.team)<ArmyLimit)Spawn(h.team,h.kind,h.position-Vector2.up*lane,false,h);}else h.spawnLeft=0;}}}SetBuildingActive033(false);SimulationPhase035.Mark("buildings_production");
+        using(var snapshot035_2=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_2)if(h.paid&&h.hp>0&&!h.paused){var l=Lines[h.kind];h.hp=Mathf.Min(h.maxHp,h.hp+BuildingConfig035(h.kind).hpRegen*dt);h.mana=Mathf.Min(BuildingConfig035(h.kind).maxMana,h.mana+(BuildingManaRegen(h,BuildingConfig035(h.kind).manaRegen)+ElementalManaBonus(h)+(MechPowered(h)?F(Abilities["A09P"]?["fields"],"Hab1"):0))*dt);TickBuilding(h,dt);if(BuildingDisabled(h)>0)continue;if(l.Producer&&!synchronizedHuts[h.team].ContainsKey(h)){h.spawnLeft-=dt;if(h.spawnLeft<=0)Produce(h);}}
+        TickSynchronizedProduction(dt);SetBuildingActive033(false);SimulationPhase035.Mark("buildings_production");
         foreach(var u in Units){Ensure(u);u.previous=u.position;if(u.hp<=0){u.deadAge+=dt;continue;}if(u.summonLeft>0&&(u.summonLeft-=dt)<=0){u.hp=0;u.deathProcessed=true;u.pose="Death";continue;}u.cooldown-=dt;u.stun=Mathf.Max(0,u.stun-dt);u.stasisLeft=Mathf.Max(0,u.stasisLeft-dt);u.castPause=Mathf.Max(0,u.castPause-dt);u.attackPoseLeft=Mathf.Max(0,u.attackPoseLeft-dt);TickEffects(u,dt);if(u.hp<=0)continue;u.hp=Mathf.Min(u.maxHp,u.hp+(Lines[u.kind].regen+u.auraRegen+Stat(u,"regen")+(TeamNaga[u.team]&&Aspects[u.team]==0?4:0))*dt);u.mana=Mathf.Min(u.maxMana,u.mana+(u.manaRegen+u.auraMana)*dt);using(var snapshot035_3=SimulationBuffers035.Take(u.spellTimers.Keys))foreach(var id in snapshot035_3)u.spellTimers[id]=Mathf.Max(0,u.spellTimers[id]-dt);}
         SimulationPhase035.Mark("unit_statuses");auraAge-=dt;if(auraAge<=0){auraAge=.5f;UpdateAuras();}
         SimulationPhase035.Mark("auras");BlackHandZones(dt);TickShots(dt);SimulationPhase035.Mark("projectiles");BeginUnitBatch033();using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_4)if(u.hp>0){TickUnit(u,dt);UnitMoved033(u);}EndUnitBatch033();SimulationPhase035.Mark("unit_decisions_movement");FlushUndeadBirths();FlushFinalBirths();

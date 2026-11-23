@@ -39,6 +39,7 @@ public sealed partial class PcGame {
                 if(Input.GetKeyDown(KeyCode.R))RepairOrder();
                 if(Input.GetKeyDown(KeyCode.P))SetProductionPaused(true);
                 if(Input.GetKeyDown(KeyCode.O))SetProductionPaused(false);
+                if(Input.GetKeyDown(KeyCode.Y))SynchronizeSquad();
             }
         } else if(SelectedHut is HumanMatch.Hut h&&h.team==0) {
             if(Input.GetKeyDown(KeyCode.P))ToggleProduction(h);
@@ -51,6 +52,15 @@ public sealed partial class PcGame {
     void ExecuteBuilderSpell(Vector2 p){if(onlineMatch){try{NetworkCommand(PcServerReplica.BuilderSpell(targetedSpell,p));targetedSpell=null;}catch(ArgumentOutOfRangeException){Notice("Точка вне карты");}return;}bool ok=targetedSpell=="blink"?match.Blink(0,p):match.Rescue(0,p);Notice(ok?"Приказ выполнен":"Недоступно: проверьте область, заряд и перезарядку");if(ok)targetedSpell=null;}
     void RepairOrder(){if(onlineMatch){NetworkCommand(PcServerReplica.Command("repair"));selectedItem=chosen=-1;buildMenu=moveOrder=false;targetedSpell=null;return;}if(match.RepairCastle(0)){selectedItem=chosen=-1;buildMenu=moveOrder=false;targetedSpell=null;Notice("Рабочий отправляется ремонтировать замок");}else Notice(match.ChallengeBuilderRepairAllowed(0)?"Замок полностью восстановлен":"В испытании строитель не может ремонтировать замок");}
     void SetProductionPaused(bool paused){if(onlineMatch)NetworkCommand(PcServerReplica.PauseAll(paused));else match.PauseAll(0,paused);Notice(paused?"Выпуск бойцов остановлен":"Выпуск бойцов возобновлён");}
+    void SynchronizeSquad(){
+        if(onlineMatch){
+            if(networkProductionSync)NetworkCommand(PcServerReplica.Command("sync_production"));
+            return;
+        }
+        int count=match.SynchronizeProduction(0);
+        Notice(count>0?"Следующий выпуск соберёт отряд из "+count+" зданий":
+            count<0?"Отряд превышает лимит армии":"Нужно хотя бы два действующих здания выпуска");
+    }
     void ToggleProduction(HumanMatch.Hut h){if(onlineMatch)NetworkCommand(PcServerReplica.BuildingAction("pause",h.id));else match.PauseHut(0,h.id,!h.paused);}
     void UpgradeSelected(int kind){var h=SelectedHut;if(h==null||kind<0||kind>=match.Lines.Length)return;if(onlineMatch){NetworkCommand(PcServerReplica.BuildingAction("upgrade",h.id,match.Lines[kind].building));return;}Notice(match.Upgrade(0,h.id,kind,out var error)?"Улучшено: "+match.Lines[kind].name:error);}
     void SellSelected(){var h=SelectedHut;if(h==null)return;if(onlineMatch){NetworkCommand(PcServerReplica.BuildingAction("sell",h.id));selectedHut=-1;return;}if(match.Sell(0,h.id)){selectedHut=-1;Notice(h.paid?"Здание продано: 20% начальной цены возвращено":"Стройка отменена: резерв освобождён");}}
@@ -146,6 +156,8 @@ public sealed partial class PcGame {
         DrawPassiveAspect(0,Slot(2,2));
         bool productionPaused=match.Huts.Any(h=>h.team==0&&h.paid&&match.Lines[h.kind].Producer)&&!match.Huts.Any(h=>h.team==0&&h.paid&&match.Lines[h.kind].Producer&&!h.paused);
         if(ArtButton(productionPaused?"builder.resume-all":"builder.pause-all",Slot(0,1),ProductionToggleArt(),productionPaused?"O":"P",productionPaused?"Возобновить выпуск бойцов (O)":"Остановить выпуск бойцов (P)\nБашни и специальные здания продолжают работать"))SetProductionPaused(!productionPaused);
+        if((!onlineMatch||networkProductionSync)&&ArtButton("builder.sync",Slot(2,1),ProductionToggleArt(),"Y",
+            "Синхронизация отряда (Y)\nСледующая волна выйдет по самому длинному оставшемуся таймеру."))SynchronizeSquad();
     }
     string BuildingSummary(string raw)=>raw=="pB07"||raw=="pB16"?"Ряска · метки по наземным целям":raw=="pB08"?"Кувшинка · замедление группы":raw=="pB09"?"Колокол · щиты союзным бойцам":raw=="pB10"?"Камышовая вышка · только по воздуху":raw=="pK01"?"Легендарная бочка · 180 урона, до 8 целей":raw=="pF01"?"Источник · глобальное лечение трёх бойцов":raw=="pG01"?"Боевой гонг · ускорение союзников":raw=="c01B"?"Легендарная песчаная буря · замедление и урон":raw=="c00B"||raw=="c01B"?"Зыбучие пески · замедление наземных врагов":raw=="c009"?"Походные припасы · лечение бойцов в своей базе":raw=="h059"?"Благодать · возвращение павших":raw=="h00Z"?"Сглаз · превращение в животное":raw=="h014"?"Башня · до пяти целей":raw=="h005"?"Обелиск света · глобальный снаряд":raw=="h07H"?"Обелиск чащи · постоянное благословение":raw=="h08P"?"Лунные заряды для защиты армии":raw=="h07I"?"Звездопад · неподвижная область":raw=="h073"?"Фонарь Элуны · сжигание маны":raw=="h05Z"?"Книга стихий · выберите вид дождя улучшением":raw=="h06E"?"Метеоритный дождь по летунам":raw=="h06F"?"Буран или гроза по наземным врагам":raw=="h060"?"Постоянное зачарование союзных бойцов":raw=="h062"?"Генератор маны · радиус 500":raw=="h063"?"Связь стихий · лечение при гибели союзника":raw=="h061"?"Страж стихий · камень с оглушением":raw=="h04T"?"Взор порчи · глобальное снижение брони":raw=="h04R"?"Тюрьма щупалец":raw=="h04K"?"Касание боли":raw=="h01P"||raw=="h056"?"Поднятие скелетов из тел":raw=="h00A"?"Внезапная смерть":raw=="h01Q"?"Разложение · глобальная аура":raw=="h01O"?"Башня душ · похищение души":raw=="h09T"?"Энергостанция · усиление и очищение":raw=="h100"?"Ремонтная станция · броня и регенерация":raw=="h06J"||raw=="h05R"?"Магические щиты для союзных бойцов":raw=="h05L"?"Энергобашня · цепная молния":raw=="h05I"?"Дар Хаоса · случайный исход":raw=="h01M"||raw=="h01W"||raw=="h01X"?"Стирание всех врагов одного типа":raw=="h01F"?"Извержение · огонь по области":raw=="h01E"?"Кулак ада · отключение здания":raw=="h010"?"Святая сила · +50% скорости атаки":raw=="h05G"?"17% шанс дополнительного бойца":raw=="h008"?"Особая постройка · доход 1,4%":raw=="h001"?"Обстрел базы врага и горючая смесь":raw=="h02R"?"Ритуальное благословение":raw=="h02O"?"Глобальный стазис":raw=="h02N"?"Кислотные бомбы":raw=="o000"?"Башня · яд по воздуху и земле":raw=="n02D"?"Древний защитник · оглушение":raw=="h02A"?"Вихрь · магический урон и замедление":raw=="h02C"?"Астрал · глобальное изгнание":raw=="h02D"?"Зов природы · шесть духов":"Оборонительная башня";
     string[] BuildingCardAbilities(HumanMatch.Hut h) {

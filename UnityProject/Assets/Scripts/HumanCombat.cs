@@ -9,7 +9,7 @@ public sealed partial class HumanMatch {
         // Godot gameplay.route_through_arch: leave the keep's column before
         // heading to the road. Flying units can cross the footprint directly.
         if(!Flying(u)&&Mathf.Abs(position.x-(team==0?-5120f/30:5120f/30))<320f/30&&Mathf.Abs(position.y)>256f/30){u.leaveCastleLane=true;u.exitWaypoint=new Vector2(team==0?-4736f/30:4736f/30,position.y);}
-        if(production&&!u.abilities.Contains("A070"))foreach(var shrine in Huts.Where(h=>h.team==team&&h.paid&&h.hp>0&&Lines[h.kind].building=="h05G").Take(2).ToArray())if(Roll()<.17f&&ArmyCount(team)<ArmyLimit){Spawn(team,kind,position);ShrineExtras++;PulseAt(position,2,Color.yellow,"Призыв к оружию");}
+        if(production&&!u.abilities.Contains("A070"))foreach(var shrine in Huts.Where(h=>h.team==team&&h.paid&&h.hp>0&&Lines[h.kind].building=="h05G").Take(2).ToArray())if(Roll()<.17f&&ArmyCount(team)+reservedWaveSlots<ArmyLimit){Spawn(team,kind,position);ShrineExtras++;PulseAt(position,2,Color.yellow,"Призыв к оружию");}
         return u;
     }
     public void Ensure(Unit u) {

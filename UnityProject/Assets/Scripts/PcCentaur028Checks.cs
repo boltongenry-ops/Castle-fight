@@ -9,7 +9,7 @@ public sealed partial class PcGame {
     IEnumerator ExerciseCentaur028(){
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"centaur028"));Directory.CreateDirectory(folder);MainMenu();
         var scenarios=Centaur028Scenarios.Run(JObject.Parse(RaceCatalog(15)),JObject.Parse(RaceCatalog(0)),Check);
-        Check(centaurPack&&AllRaceNames.Length==16&&RaceStaged(15)&&networkRaceNames.Length==15,"Sixteenth race is available offline while native server roster is unchanged");
+        Check(centaurPack&&AllRaceNames.Length==16&&RaceStaged(15)&&networkRaceNames.Length==18,"Sixteenth race is available offline and listed in the network picker");
         raceChoice=15;botRaceChoice=0;aspectsOn=false;page=Page.Setup;yield return Shot(folder,"01-centaur-setup");
         startGold=100000;NewMatch();testHoldAuthority=true;options.fogOfWar=false;match.Wood[0]=100000;
         foreach(int kind in match.BaseKinds){int i=Array.IndexOf(match.BaseKinds,kind);var h=QaBuild(kind,17+i%4*4,12+i/4*3);h.paused=true;RenderMatch();Check(huts[h.id].raw==match.Lines[kind].building,"Packaged classic building "+match.Lines[kind].building);}

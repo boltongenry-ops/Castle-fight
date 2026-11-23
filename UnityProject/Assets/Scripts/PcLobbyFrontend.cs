@@ -8,12 +8,16 @@ public sealed partial class PcGame {
     string directoryEndpoint="wss://45-15-156-101.fatmetal.net/play",directoryStatus="Подключитесь, чтобы посмотреть комнаты";
     JArray directoryRooms=new JArray(),roomMessages=new JArray();JObject networkRoom;
     Vector2 directoryScroll,chatScroll;PcNetworkClient network;
+    bool networkProductionSync;
     bool directoryLoading,directoryReady,directoryCanCreate,showNetworkProfile,profilePending;
     float directoryDeadline;
     int networkSlot=-1,networkRace;string networkName="",networkChat="",connectedEndpoint="";
+    string[] networkServerRaces;
+    bool NetworkRaceAvailable(int index)=>index>=0&&index<networkRaceNames.Length&&(networkServerRaces??networkRaceNames.Take(15).ToArray()).Contains(networkRaceNames[index]);
+    int NetworkRaceCount=>(networkServerRaces??networkRaceNames.Take(15).ToArray()).Length;
     string profileName="",profilePassword="";JObject networkProfile;
-    readonly string[] networkRaceNames={"Human Alliance","Orcish Horde","Naga Faction","Nature Force","Chaos Legions","Northern Realms","Mech Coalition","Undead Forces","Corrupted Conglomerate","Elementals' Universe","Night Elfs","Elven Union","Ultimate Builder","Nerubian Swarm","Pandaren Order"};
-    readonly string[] networkRaceLabels={"Люди","Орки","Наги","Природа","Хаос","Северяне","Механизмы","Нежить","Осквернённые","Элементали","Ночные эльфы","Союз эльфов","Высший строитель","Нерубы","Пандарены"};
+    readonly string[] networkRaceNames={"Human Alliance","Orcish Horde","Naga Faction","Nature Force","Chaos Legions","Northern Realms","Mech Coalition","Undead Forces","Corrupted Conglomerate","Elementals' Universe","Night Elfs","Elven Union","Ultimate Builder","Nerubian Swarm","Pandaren Order","Centaur Khanates","Pepe Brotherhood","Black Hand"};
+    readonly string[] networkRaceLabels={"Люди","Орки","Наги","Природа","Хаос","Северяне","Механизмы","Нежить","Осквернённые","Элементали","Ночные эльфы","Союз эльфов","Высший строитель","Нерубы","Пандарены","Кентавры","Пепе","Чёрная Рука"};
     void PollLobby() {
         if(profilePending&&profileDeadline>0&&Time.realtimeSinceStartup>profileDeadline){profilePending=false;directoryStatus="Сервис профилей не ответил. Повторите вход";}TickRecovery();UpdateSocial();if(network==null)return;
         if(directoryLoading&&Time.realtimeSinceStartup>=directoryDeadline){network.Dispose();network=null;directoryLoading=false;directoryReady=false;directoryStatus="Сервер не ответил вовремя";return;}
@@ -23,11 +27,17 @@ public sealed partial class PcGame {
                     string status=(string)packet["message"]??"";
                     if(status!="Подключено к серверу"){directoryStatus=status;directoryLoading=false;}break;
                 case "_disconnected":if(onlineMatch&&!string.IsNullOrEmpty(recoveryToken)){RecoveryDisconnected();}else if(onlineMatch){NetworkReturnToMenu();Notice("Соединение с сервером потеряно");}else{directoryLoading=false;directoryReady=false;networkSlot=-1;networkRoom=null;networkProfile=null;profilePending=false;profilePassword="";}break;
+                case "production_sync":
+                    int count=(int?)packet["count"]??0;
+                    if(onlineMatch)Notice(count>=2?"Следующий выпуск соберёт отряд из "+count+" зданий":"Нужно хотя бы два действующих здания выпуска");
+                    break;
                 case "directory":
+                    networkProductionSync=(int?)packet["production_sync"]==1;
                     socialSupported=(int?)packet["social_supported"]==1;directoryRooms=packet["rooms"] as JArray??new JArray();directoryReady=true;directoryLoading=false;directoryCanCreate=(bool?)packet["can_create"]??false;
+                    networkServerRaces=packet["races"] is JArray roster?roster.Select(row=>(string)row).Where(name=>!string.IsNullOrEmpty(name)).ToArray():null;
                     if(!HasNetworkProfile&&!profilePending&&!string.IsNullOrEmpty(networkSessionToken)&&networkSessionEndpoint==connectedEndpoint){profilePending=true;SendNetwork(new JObject{["type"]="profile_auth",["action"]="token",["token"]=networkSessionToken});}
                     directoryStatus="Сервер ответил · версия "+((string)packet["build"]??"?")+" · комнат: "+directoryRooms.Count;break;
-                case "joined":recoveryToken=(string)packet["resume_token"]??"";networkSlot=(int?)packet["slot"]??-1;directoryStatus="Вы в комнате";break;
+                case "joined":networkProductionSync=(int?)packet["production_sync"]==1;recoveryToken=(string)packet["resume_token"]??"";networkSlot=(int?)packet["slot"]??-1;directoryStatus="Вы в комнате";break;
                 case "lobby":networkRoom=packet;roomMessages=(JArray)(packet["messages"]?.DeepClone()??new JArray());break;
                 case "chat":if(packet["message"] is JObject message){roomMessages.Add(message.DeepClone());while(roomMessages.Count>40)roomMessages.RemoveAt(0);chatScroll.y=100000;}break;
                 case "profile":
@@ -72,7 +82,7 @@ public sealed partial class PcGame {
         SendNetwork(PcNetworkClient.Handshake(action,code,networkName,networkRaceNames[networkRace]));directoryStatus=action=="create"?"Создаём комнату…":"Входим в комнату…";
     }
     void ChangeRace(){showNetworkRacePicker=true;}
-    void ChooseNetworkRace(int index){networkRace=index;showNetworkRacePicker=false;if(networkSlot>=0)SendNetwork(new JObject{["type"]="race",["race"]=networkRaceNames[index]});}
+    void ChooseNetworkRace(int index){if(!NetworkRaceAvailable(index))return;networkRace=index;showNetworkRacePicker=false;if(networkSlot>=0)SendNetwork(new JObject{["type"]="race",["race"]=networkRaceNames[index]});}
     void Configure(string key,JToken value){if(networkSlot!=0||!(networkRoom?["config"] is JObject old))return;var cfg=(JObject)old.DeepClone();cfg[key]=value;SendNetwork(new JObject { ["type"]="configure",["config"]=cfg });}
     GUIStyle lobbyButtonStyle,lobbyPrimaryStyle;Font lobbyFont;
     // The layout and palette follow the Godot lobby: a common header, two player
@@ -142,7 +152,7 @@ public sealed partial class PcGame {
         }
         GUI.EndScrollView();
         Text(42,580,240,23,"АДРЕС СЕРВЕРА",small);directoryEndpoint=GUI.TextField(new Rect(42,608,842,42),directoryEndpoint,256,menuInput);
-        Text(42,665,1150,32,"15 рас · выбранные, зеркальные или случайные расы · туман и аспекты настраиваются в комнате",small);
+        Text(42,665,1150,32,NetworkRaceCount+" рас · выбранные, зеркальные или случайные расы · туман и аспекты настраиваются в комнате",small);
     }
     void DrawRoom() {
         var players=networkRoom["players"] as JArray??new JArray();var config=networkRoom["config"] as JObject??new JObject();

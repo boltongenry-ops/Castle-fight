@@ -27,7 +27,7 @@ public sealed partial class PcGame {
         var races=packet["races"] as JArray;var config=packet["config"] as JObject;
         int a=races!=null&&races.Count==2&&(networkSlot==0||networkSlot==1)?Array.IndexOf(networkRaceNames,(string)races[networkSlot]):-1;
         int b=races!=null&&races.Count==2&&(networkSlot==0||networkSlot==1)?Array.IndexOf(networkRaceNames,(string)races[1-networkSlot]):-1;
-        if(a<0||b<0||(a!=0&&!Pack(a))||(b!=0&&!Pack(b))) {
+        if(a<0||b<0||(a!=0&&a!=BlackHand.Race&&!Pack(a))||(b!=0&&b!=BlackHand.Race&&!Pack(b))) {
             FailNetworkLoad("Не удалось подготовить выбранную расу. Повторите загрузку ресурсов и вход в комнату.");return;
         }
         SaveOfflineNetworkSetup();matchMode=0;raceChoice=a;botRaceChoice=b;startGold=(int?)config?["gold"]??250;aspectsOn=(bool?)config?["aspects"]??false;

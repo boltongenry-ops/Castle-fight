@@ -45,8 +45,9 @@ public sealed partial class PcGame {
         Text(215,96,620,48,"ВЫБЕРИТЕ РАСУ",heading);
         if(LobbyButton("network.race.close",new Rect(900,98,165,42),"Закрыть"))showNetworkRacePicker=false;
         for(int i=0;i<networkRaceNames.Length;i++){
-            int col=i%3,row=i/3;var rect=new Rect(215+col*287,166+row*85,267,66);
-            if(LobbyButton("network.race.select."+i,rect,networkRaceLabels[i],i==networkRace))ChooseNetworkRace(i);
+            int col=i%3,row=i/3;var rect=new Rect(215+col*287,166+row*80,267,64);
+            bool available=NetworkRaceAvailable(i),previous=GUI.enabled;if(!available)GUI.enabled=false;
+            try{if(LobbyButton("network.race.select."+i,rect,networkRaceLabels[i]+(available?"":"  · нет на сервере"),i==networkRace))ChooseNetworkRace(i);}finally{GUI.enabled=previous;}
         }
     }
     bool ValidateNetworkLoadouts(int a,int b,JArray loadouts){

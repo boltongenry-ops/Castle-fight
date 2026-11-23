@@ -9,7 +9,7 @@ public sealed partial class PcGame {
     IEnumerator ExerciseNetwork023(){
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"network023"));Directory.CreateDirectory(folder);MainMenu();
         directoryEndpoint=BattleLab.Arg("--pc-directory-url","ws://127.0.0.1:49395");networkName="Isolated Unity QA";networkSessionToken="";
-        Check(networkRaceNames.Length==15&&networkRaceLabels.Length==15,"All fifteen race names have native protocol mappings");
+        Check(networkRaceNames.Length==18&&networkRaceLabels.Length==18&&Array.IndexOf(networkRaceNames,"Black Hand")==17,"All eighteen races are listed in the network picker, including the three new ones");
         raceChoice=3;botRaceChoice=0;matchMode=0;aspectsOn=false;NewMatch();testHoldAuthority=true;match.Aspects[0]=match.Aspects[1]=0;scoreExpanded=true;
         Check(AspectPassiveChoice(0)==0&&!HudContains(new Vector2(100,50)),"Aspect is a passive card icon; old top-left badge no longer blocks controls");yield return Action("ability.aspect.0");Check(aspectInfoOpen&&aspectInfoTeam==0,"Builder passive opens selected aspect description");yield return Shot(folder,"00a-builder-passive");yield return Action("ability.aspect.close");
         MainMenu();raceChoice=9;botRaceChoice=9;NewMatch();testHoldAuthority=true;match.Aspects[0]=1;match.Aspects[1]=0;
@@ -21,7 +21,8 @@ public sealed partial class PcGame {
         var enemyFire=match.Spawn(1,fire.kind,new Vector2(-144,24));selectedUnit=enemyFire.id;RenderMatch();yield return null;yield return Action("ability.aspect.1");Check(aspectInfoOpen&&aspectInfoTeam==1,"Enemy unit opens opponent aspect instead of player aspect");yield return Shot(folder,"00d-enemy-aspect");aspectInfoOpen=false;
         match.Aspects[0]=-1;Check(AspectPassiveChoice(0)==-1,"Unchosen aspect has no passive icon");testHoldAuthority=false;MainMenu();
         BeginDirectory();yield return RecoveryWait(()=>directoryReady,"Initial authoritative directory",20);page=Page.Network;
-        yield return Action("network.race");Check(showNetworkRacePicker,"Race selector opens a grid instead of cycling four choices");yield return Shot(folder,"01-race-grid");yield return Action("network.race.select.14");Check(networkRace==14&&!showNetworkRacePicker,"Last race can be selected directly");
+        yield return Action("network.race");Check(showNetworkRacePicker,"Race selector opens a grid instead of cycling four choices");yield return Shot(folder,"01-race-grid");yield return Action("network.race.select.14");Check(networkRace==14&&!showNetworkRacePicker,"Native race can be selected directly");
+        yield return Action("network.race");Check(!NetworkRaceAvailable(17),"Unity-only Black Hand stays locked while server roster has 15 races");yield return Shot(folder,"01-race-grid-new");yield return Action("network.race.close");
         raceChoice=3;botRaceChoice=7;matchMode=2;startGold=1000;roundsChoice=7;aspectsOn=true;
         var rows=new JArray();
         for(int scenario=0;scenario<17;scenario++){
