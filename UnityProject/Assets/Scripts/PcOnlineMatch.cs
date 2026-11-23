@@ -10,6 +10,8 @@ public sealed partial class PcGame {
     bool onlineMatch,onlineStarted,onlineDecision,onlineFog;float onlineSnapshotAt;
     JArray networkRoundLoadouts;string networkLoadError="";
     PcServerReplica onlineReplica;
+    JArray onlineTeamOverview;
+    float? onlineIncomeIn;
     readonly Dictionary<int,GameObject> onlineProjectiles=new Dictionary<int,GameObject>();
     sealed class OnlineSticker {public StickerItem item;public string name;public float started;}
     readonly OnlineSticker[] onlineStickers=new OnlineSticker[2];
@@ -53,6 +55,7 @@ public sealed partial class PcGame {
         var wins=packet["wins"] as JArray;series.SetNetworkRound((int?)packet["round"]??1,wins!=null&&wins.Count==2?(int?)wins[networkSlot]??0:0,wins!=null&&wins.Count==2?(int?)wins[1-networkSlot]??0:0);
         AspectBeginRound(false);aspectWaiting=false;aspectOnlinePending=-1;match.Aspects[0]=-1;match.Aspects[1]=-1;
         onlineMatch=true;onlineStarted=false;onlineDecision=false;ResetBattleSocial();showVoicePanel=false;match.NetworkReplica=true;onlineReplica=new PcServerReplica(match,networkSlot,OnlineKind);
+        onlineTeamOverview=null;onlineIncomeIn=null;
         Notice("Подключение к бою: ожидаем второго игрока");StartCoroutine(NetworkLoaded());
     }
     IEnumerator NetworkLoaded(){int generation=versusSerial;yield return new WaitForEndOfFrame();while(versusActive&&generation==versusSerial&&Time.realtimeSinceStartup-versusAt<1.5f)yield return null;if(generation==versusSerial&&onlineMatch&&network!=null)SendNetwork(new JObject { ["type"]="loaded" });}
@@ -60,6 +63,7 @@ public sealed partial class PcGame {
         if(!onlineMatch||onlineReplica==null||match==null)return;
         try {
             onlineReplica.Apply(packet);ApplyNetworkCards(packet);ApplyNetworkSight(packet);onlineSnapshotAt=Time.unscaledTime;RecoverySnapshotReceived();onlineBattleStats=packet["battle_stats"] as JArray??new JArray();AspectOnlineApply(packet["aspects"] as JObject);DrawOnlineProjectiles(packet["projectiles"] as JArray,(float?)packet["elapsed"]??match.Elapsed,packet["effects"] as JArray);
+            onlineTeamOverview=packet["team_overview"] as JArray;onlineIncomeIn=(float?)packet["income_in"];
             if(onlineReplica.UnknownUnits+onlineReplica.UnknownBuildings>0)Debug.LogWarning("CF_NETWORK_UNKNOWN units="+onlineReplica.UnknownUnits+" buildings="+onlineReplica.UnknownBuildings);
             if(match.Finished&&!series.RoundFinished){if(packet["wins"] is JArray score&&score.Count==2)series.ApplyNetworkResult((int?)packet["round"]??1,(int?)score[networkSlot]??0,(int?)score[1-networkSlot]??0,(bool?)packet["series_finished"]??false,match.Winner<0);else series.FinishRound(match.Winner);page=Page.Result;chosen=-1;controls.buildGrid.SetActive(false);onlineDecision=false;}
         } catch(Exception e){Debug.LogError("CF_NETWORK_SNAPSHOT_ERROR "+e);Notice("Ошибка данных боя; соединение закрыто");NetworkReturnToMenu();}

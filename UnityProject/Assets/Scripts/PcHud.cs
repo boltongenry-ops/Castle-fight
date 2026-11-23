@@ -110,7 +110,8 @@ public sealed partial class PcGame {
         GUI.Label(new Rect(1035,60,45,18),"Постр.",hudSmall);GUI.Label(new Rect(1080,60,48,18),"Армия",hudSmall);
         GUI.Label(new Rect(1133,60,48,18),"Доход",hudSmall);GUI.Label(new Rect(1190,60,65,18),"Замок",hudSmall);
         DrawTeamRow(0,78,"Запад");DrawTeamRow(1,96,"Восток");
-        GUI.Label(new Rect(966,116,290,18),"Время: "+TimeSpan.FromSeconds(match.Elapsed).ToString(@"mm\:ss")+" · Доход через "+Mathf.CeilToInt(match.IncomeIn)+" с",new GUIStyle(hudSmall){fontSize=11});}
+        float incomeIn=onlineMatch?onlineIncomeIn??(10-match.Elapsed%10):match.IncomeIn;
+        GUI.Label(new Rect(966,116,290,18),"Время: "+TimeSpan.FromSeconds(match.Elapsed).ToString(@"mm\:ss")+" · Доход через "+Mathf.CeilToInt(incomeIn)+" с",new GUIStyle(hudSmall){fontSize=11});}
         DrawMinimap();
         if(MinimapButton("hud.worker",0,"Показать рабочего (F1)"))FocusBuilder();
         if(MinimapButton("hud.terrain",1,"Ландшафт миникарты"))minimapTerrain=!minimapTerrain;
@@ -159,11 +160,24 @@ public sealed partial class PcGame {
     }
     string GoldTooltip()=>"Золото: "+Mathf.FloorToInt(match.Gold[0])+"\nРезерв очереди: "+match.ReservedGold(0)+"\nДоступно: "+Mathf.FloorToInt(match.AvailableGold(0))+"\nДоход: "+match.Income(0).ToString("F2")+" / 10 с\nНачисление через: "+Mathf.CeilToInt(match.IncomeIn)+" с";
     void DrawTeamRow(int team,float y,string name) {
+        var stats=TeamOverview(team);
         GUI.Label(new Rect(966,y,60,19),name,new GUIStyle(hudSmall){normal={textColor=team==0?new Color(.4f,.7f,1):new Color(1,.38f,.3f)}});
-        GUI.Label(new Rect(1035,y,40,19),match.Huts.Count(h=>h.team==team).ToString(),hudSmall);
-        GUI.Label(new Rect(1080,y,40,19),match.ArmyCount(team).ToString(),hudSmall);
-        GUI.Label(new Rect(1133,y,48,19),match.Income(team).ToString("F1"),hudSmall);
-        GUI.Label(new Rect(1190,y,65,19),match.CastleHp[team].ToString("F0"),hudSmall);
+        GUI.Label(new Rect(1035,y,40,19),stats.buildings,hudSmall);
+        GUI.Label(new Rect(1080,y,40,19),stats.army,hudSmall);
+        GUI.Label(new Rect(1133,y,48,19),stats.income,hudSmall);
+        GUI.Label(new Rect(1190,y,65,19),stats.castle,hudSmall);
+    }
+
+    (string buildings,string army,string income,string castle) TeamOverview(int team){
+        string castle=Mathf.Max(0,match.CastleHp[team]).ToString("F0");
+        if(onlineMatch){
+            if(onlineTeamOverview?.Count!=2||networkSlot<0||networkSlot>1)
+                return ("—","—","—",castle);
+            var row=onlineTeamOverview[team==0?networkSlot:1-networkSlot];
+            return (((int?)row["buildings"]??0).ToString(),((int?)row["army"]??0).ToString(),
+                ((float?)row["income"]??0).ToString("F1"),castle);
+        }
+        return (match.Huts.Count(h=>h.team==team&&h.paid&&h.hp>0).ToString(),match.ArmyCount(team).ToString(),match.Income(team).ToString("F1"),castle);
     }
     HumanMatch helpMatch;
     bool HelpOpen => page==Page.Match && match!=null && helpMatch==match;
@@ -304,9 +318,30 @@ public sealed partial class PcGame {
         if(page==Page.Help)GUI.Label(new Rect(375,240,530,220),
             Application.isMobilePlatform ? "Коснитесь рабочего, бойца или здания, чтобы выбрать.\nВыберите постройку или команду на панели, затем коснитесь цели.\nКоснитесь пустого места, чтобы отправить выбранного рабочего.\nПроведите пальцем по полю для перемещения камеры.\nСведите или разведите два пальца для изменения масштаба.\nКоснитесь миникарты для быстрого перехода.\nЮниты из зданий сражаются автоматически." :
             "ЛКМ — выбрать рабочего, бойца или здание. ПКМ — идти или продолжить стройку.\nB — доступные постройки; затем клавиша на значке. U — улучшить здание.\nЛКМ — место постройки. Esc / ПКМ — отмена выбора.\nM — движение, S — стоп, D — скачок, R — ремонт, V — спасение.\nF1 — строитель. Стрелки / край окна — камера.\nКолесо — масштаб. Щелчок по миникарте — обзор.\nЮниты из зданий сражаются автоматически.",hudText);
-        else GUI.Label(new Rect(375,240,530,190),
-            "Запад — вы · "+RaceName+" / "+RaceEnglish+"\nВосток — "+(onlineMatch?"соперник":"бот")+" · "+BotRaceName+"\n\nОдинаковые цены, доход и правила строительства.\nЗадача: разрушить замок противника.\nРежим: "+(onlineMatch?"сетевой":"офлайн")+", 1 × 1.",hudText);
+        else DrawTeamOverview();
         if(Button("info.close",new Rect(500,472,280,46),"Вернуться в матч",true))page=Page.Match;
+    }
+    void DrawTeamOverview(){
+        var header=new GUIStyle(hudSmall){fontSize=14};
+        GUI.Label(new Rect(375,243,196,30),"Сторона",header);
+        GUI.Label(new Rect(590,243,112,30),"Золото / 10 с",header);
+        GUI.Label(new Rect(717,243,98,30),"Постройки",header);
+        GUI.Label(new Rect(830,243,78,30),"HP замка",header);
+        for(int team=0;team<2;team++){
+            float y=280+team*78;
+            var color=team==0?new Color(.49f,.73f,1):new Color(1,.48f,.37f);
+            Fill(new Rect(375,y,530,68),new Color(.045f,.066f,.071f,.93f));
+            Fill(new Rect(375,y,2,68),color);
+            string name=team==0?"Вы":onlineMatch?"Соперник":"Бот";
+            if(onlineMatch&&networkRoom?["players"] is Newtonsoft.Json.Linq.JArray players&&players.Count==2&&networkSlot>=0&&networkSlot<=1)
+                name=(string)players[team==0?networkSlot:1-networkSlot]?["name"]??name;
+            GUI.Label(new Rect(390,y+8,189,26),name,new GUIStyle(hudText){fontStyle=FontStyle.Bold,normal={textColor=color}});
+            GUI.Label(new Rect(390,y+35,189,20),team==0?RaceName:BotRaceName,hudSmall);
+            var stats=TeamOverview(team);
+            GUI.Label(new Rect(590,y,112,68),stats.income,hudText);
+            GUI.Label(new Rect(717,y,94,68),stats.buildings,hudText);
+            GUI.Label(new Rect(830,y,70,68),stats.castle,hudText);
+        }
     }
     void DrawMinimap() {
         var rect=HudMap;Fill(rect,new Color(.025f,.035f,.025f));if(minimapTerrain)Source(minimapTexture,new Rect(0,52,256,153),rect);

@@ -178,7 +178,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(localGrid)localGrid.SetActive(false);
         return true;
     }
-    void Tick(float dt) {match.Step(dt);if(match.Finished&&page==Page.Match){series.FinishRound(match.Winner);SettleChallenge();page=Page.Result;chosen=-1;controls.buildGrid.SetActive(false);Debug.Log("CF_PC_MATCH_END winner="+match.Winner+" time="+match.Elapsed);}}
+    void Tick(float dt) {match.Step(dt);if(match.Finished&&(page==Page.Match||page==Page.Teams)){series.FinishRound(match.Winner);SettleChallenge();page=Page.Result;chosen=-1;controls.buildGrid.SetActive(false);Debug.Log("CF_PC_MATCH_END winner="+match.Winner+" time="+match.Elapsed);}}
     void Update() {
         if(MobileContent.Active&&MobileContent.Current.Busy){controls.InputBlocked=true;if(network!=null)PollLobby();UpdateVoiceControls();return;}
         if(terrain==null)return;
@@ -233,9 +233,9 @@ public sealed partial class PcGame : MonoBehaviour {
         }
         if(aspectWaiting)AspectTick(Time.unscaledDeltaTime);
         if(page!=Page.Match){aspectWaiting=false;selectionPending=selectionDragging=false;}
-        if(page==Page.Match&&!aspectWaiting&&!NetworkBlocked) {
+        if((page==Page.Match||page==Page.Teams)&&!aspectWaiting&&!NetworkBlocked) {
             if(!onlineMatch){if(!testing||!testHoldAuthority)accumulator+=Mathf.Min(Time.unscaledDeltaTime,.2f);
-            while(accumulator>=.05f&&page==Page.Match){Tick(.05f);accumulator-=.05f;}}
+            while(accumulator>=.05f&&(page==Page.Match||page==Page.Teams)){Tick(.05f);accumulator-=.05f;}}
             if(HelpOpen){
                 if(preview)preview.SetActive(false);if(localGrid)localGrid.SetActive(false);
                 if(Application.isMobilePlatform)foreach(var finger in Input.touches)

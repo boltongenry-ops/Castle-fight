@@ -163,6 +163,11 @@ namespace CastleFight {
                 ["type"]="snapshot",["units"]=units,["huts"]=huts,
                 ["elapsed"]=match.Elapsed,["over"]=Finished,["winner"]=match.Winner,
                 ["castles"]=new JArray(match.CastleHp.Select(hp=>new JObject{["hp"]=hp})),
+                ["team_overview"]=new JArray(Enumerable.Range(0,2).Select(team=>new JObject{
+                    ["income"]=match.Income(team),["buildings"]=match.Huts.Count(h=>h.team==team&&h.paid&&h.hp>0),
+                    ["army"]=match.ArmyCount(team)
+                })),
+                ["income_in"]=match.IncomeIn,
                 ["banks"]=new JArray(Enumerable.Range(0,2).Select(Bank)),
                 ["rescue"]=new JArray(match.RescueCharges),["rescue_cd"]=new JArray(match.RescueCooldown),
                 ["kills"]=new JArray(match.TeamKills),

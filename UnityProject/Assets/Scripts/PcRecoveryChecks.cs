@@ -33,6 +33,14 @@ namespace CastleFight {public sealed partial class PcGame {
         Check(unitBuffs.Any(b=>b.id=="effect.BHIr")&&unitDebuffs.Any(b=>b.id=="effect.A02I")&&unitDebuffs.Any(b=>b.id=="stun"),
             "Selected unit renders friendly and hostile statuses in separate cells");
         yield return Shot(folder,"04-battle-statuses");
+        onlineTeamOverview=new JArray(new JObject{["income"]=16,["buildings"]=4,["army"]=9},
+            new JObject{["income"]=8,["buildings"]=2,["army"]=3});
+        networkSlot=1;match.CastleHp[0]=4096;match.CastleHp[1]=3520;
+        Check(TeamOverview(0)==("2","3",8f.ToString("F1"),"4096")&&TeamOverview(1)==("4","9",16f.ToString("F1"),"3520"),
+            "Online overview uses full authoritative totals and remaps east/west for the guest");
+        yield return Action("match.teams");
+        yield return Shot(folder,"05-battle-teams");
+        yield return Action("info.close");
         ResetBattleSocial();
         Check(onlineStickerSerials.All(serial=>serial==-1)&&onlineStickers.All(sticker=>sticker==null),
             "A fresh battle accepts restarted sticker serials");
