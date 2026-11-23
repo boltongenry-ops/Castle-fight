@@ -1,6 +1,6 @@
 from pathlib import Path
 import hashlib,subprocess,json,sys,zipfile
-base=Path('release_inputs'); m=json.loads((base/'recipe.json').read_bytes());repo='boltongenry-ops/Castle-fight';tag='v0.45.0'
+base=Path('release_inputs'); m=json.loads((base/'recipe.json').read_bytes());repo='boltongenry-ops/Castle-fight';tag='v0.45.1'
 def gh(*args):return subprocess.check_output(['gh',*args,'-R',repo],text=True)
 def sha(p):
  with p.open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
@@ -17,7 +17,7 @@ def ensure_asset(p,h):
 assert json.loads(gh('release','view',tag,'--json','isDraft'))['isDraft']
 gh('release','download',tag,'-p','*.part','-D','chunks')
 apk=Path('CastleFight-Android.apk');download_parts(m['android']['parts'],apk);assert sha(apk)==m['android']['sha'];ensure_asset(apk,sha(apk))
-old=Path('old/CastleFight-Portable.exe');gh('release','download','v0.44.2','-p',old.name,'-D','old');assert sha(old)==m['old']
+old=Path('old/CastleFight-Portable.exe');gh('release','download','v0.45.0','-p',old.name,'-D','old');assert sha(old)==m['old']
 lit=Path('literal');download_parts(m['parts'],lit);new=Path(old.name)
 with new.open('wb') as out,old.open('rb') as o,lit.open('rb') as l:
  for kind,offset,size in m['blocks']:
