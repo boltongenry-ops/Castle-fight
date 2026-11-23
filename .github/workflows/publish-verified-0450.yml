@@ -1,0 +1,20 @@
+name: Publish verified Castle Fight 0.45.0 players
+on:
+  push:
+    branches: ['release-build/0.45.0']
+    paths: ['release_inputs/ready']
+permissions:
+  contents: write
+jobs:
+  players:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: release_inputs
+          persist-credentials: false
+      - name: Reconstruct and verify both players
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python release_inputs/assemble.py
