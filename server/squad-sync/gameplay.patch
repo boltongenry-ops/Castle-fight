@@ -1,0 +1,107 @@
+--- a/scripts/game/gameplay.gd
++++ b/scripts/game/gameplay.gd
+@@ -596,15 +596,11 @@
+ 		if bool(hut.get("tower", false)):
+ 			_tick_tower(hut,delta)
+ 			continue
++		if bool(hut.get("sync_wave",false)): continue
+ 		hut["timer"] -= delta
+-		var interval := float(hut.get("interval", _hut_interval(hut)))
+-		hut["progress"] = clampf(1.0 - float(hut["timer"]) / maxf(interval, 0.1), 0.0, 1.0)
+-		if hut["timer"] <= 0.0:
+-			hut["timer"] += interval
+-			hut["progress"] = 0.0
+-			var goal: float = 5120.0 if hut["team"] == 0 else -5120.0
+-			spawn_unit(hut["team"], hut.get("unit_kind", "footman"), float(hut["x"]), float(hut["y"]), goal,
+-				false, hut.get("unit_model", ""), hut.get("rawcode", "hfoo"),true,caster)
++		_refresh_production_progress(hut)
++		if hut["timer"] <= 0.0: _release_production(hut)
++	_tick_production_waves(delta)
+ 
+ 	bot_build_cd -= delta
+ 	if bot_build_cd <= 0.0:
+@@ -1471,6 +1467,7 @@
+ 	else: bot_gold += amount
+ 
+ func prepare_network_server() -> void:
++	production_waves = [[], []]
+ 	for builder in network_builders:
+ 		if is_instance_valid(builder): builder.controlled = true
+ 	bot_build_cd = INF
+@@ -1647,6 +1644,76 @@
+ 		total += 1
+ 		if bool(hut.get("paused",false)): paused += 1
+ 	return {"total":total,"paused":paused,"all_paused":total>0 and total==paused}
++
++
++var production_waves: Array = [[], []]
++
++func synchronize_production(team: int) -> int:
++	if game_over or team not in [0,1] or aspects.waiting(): return 0
++	var wave: Array = []
++	var latest := 0.0
++	for hut in huts:
++		if int(hut.get("team",-1))!=team or bool(hut.get("paused",false)) or not _wave_producer(hut): continue
++		wave.append({"hut":hut,"raw":str(hut["line_raw"])})
++		latest = maxf(latest,float(hut["timer"]))
++	if wave.size()<2: return 0
++	for member in wave:
++		var hut: Dictionary = member["hut"]
++		hut["timer"] = latest
++		hut["sync_wave"] = true
++		_refresh_production_progress(hut)
++	for previous in production_waves[team]:
++		var hut: Dictionary = previous["hut"]
++		if not wave.any(func(member): return is_same(member["hut"],hut)): hut.erase("sync_wave")
++	production_waves[team] = wave
++	return wave.size()
++
++
++func _wave_producer(hut: Dictionary) -> bool:
++	var node: Node = hut.get("node")
++	return not bool(hut.get("tower", false)) and not str(hut.get("rawcode","")).is_empty() and is_instance_valid(node) and node.alive
++
++
++func _refresh_production_progress(hut: Dictionary) -> void:
++	var interval := float(hut.get("interval", _hut_interval(hut)))
++	hut["progress"] = clampf(1.0-float(hut["timer"])/maxf(interval,0.1),0.0,1.0)
++
++
++func _release_production(hut: Dictionary) -> void:
++	hut["timer"] += float(hut.get("interval", _hut_interval(hut)))
++	hut["progress"] = 0.0
++	var goal: float = 5120.0 if hut["team"]==0 else -5120.0
++	spawn_unit(hut["team"],hut.get("unit_kind","footman"),float(hut["x"]),float(hut["y"]),goal,
++		false,hut.get("unit_model",""),hut.get("rawcode","hfoo"),true,hut.get("node"))
++
++
++func _tick_production_waves(delta: float) -> void:
++	for team in [0,1]:
++		var wave: Array = production_waves[team]
++		if wave.is_empty(): continue
++		for index in range(wave.size()-1,-1,-1):
++			var member: Dictionary = wave[index]
++			var hut: Dictionary = member["hut"]
++			if not _wave_producer(hut) or not huts.has(hut) or member["raw"]!=str(hut["line_raw"]):
++				hut.erase("sync_wave")
++				wave.remove_at(index)
++		if wave.is_empty(): continue
++		var blocked := false
++		var latest := 0.0
++		for member in wave:
++			var hut: Dictionary = member["hut"]
++			blocked = blocked or bool(hut.get("paused",false)) or hut["node"].disabled_for>0
++			latest = maxf(latest,float(hut["timer"]))
++		if blocked: continue
++		latest = maxf(0.0,latest-delta)
++		for member in wave:
++			var hut: Dictionary = member["hut"]
++			hut["timer"] = latest
++			_refresh_production_progress(hut)
++			if latest<=0.0:
++				hut.erase("sync_wave")
++				_release_production(hut)
++		if latest<=0.0: wave.clear()
+ 
+ 
+ func set_all_production_paused(paused: bool, team := 0) -> bool:

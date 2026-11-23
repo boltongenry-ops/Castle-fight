@@ -1,0 +1,31 @@
+--- a/scripts/network/network_session_social.gd
++++ b/scripts/network/network_session_social.gd
+@@ -389,7 +389,7 @@
+ 			_reply(id,{"type":"error","message":"Этот аккаунт уже находится в комнате"});return
+ 		slots[slot] = {"peer":id,"name":str(identity.get("name",clean_text(str(packet.get("name","Игрок")),24))),"account_id":account_id,"avatar":str(identity.get("avatar","hfoo")),"equipped":identity.get("equipped",{}).duplicate(true),"wins":int(identity.get("wins",0)),"race":race,"ready":false,"loaded":false}
+ 		slots[slot]["resume_token"] = Crypto.new().generate_random_bytes(32).hex_encode()
+-		_reply(id,{"type":"joined","slot":slot,"resume_token":slots[slot]["resume_token"]})
++		_reply(id,{"type":"joined","slot":slot,"resume_token":slots[slot]["resume_token"],"production_sync":1})
+ 		_broadcast_lobby()
+ 		return
+ 	if slot not in [0,1]: return
+@@ -455,6 +455,10 @@
+ 		"command":
+ 			if not playing or not is_instance_valid(game) or not recovery.reserved.is_empty(): return
+ 			if not packet.get("command",{}) is Dictionary: return
++			if str(packet["command"].get("kind",""))=="sync_production":
++				var count: int = game.synchronize_production(slot)
++				_reply(id,{"type":"production_sync","count":count})
++				return
+ 			var result: Dictionary = load("res://scripts/network/server_commands.gd").execute(game,slot,packet.get("command",{}))
+ 			if not bool(result.get("ok",false)): _reply(id,{"type":"error","message":result.get("message","Команда недоступна")})
+ 		"next_round":
+@@ -750,7 +754,7 @@
+ 		for player in slots:
+ 			if not player.is_empty(): count += 1
+ 		listing.append({"id":code,"host":str(slots[0].get("name","Игрок")),"players":count,"capacity":2,"aspects":bool(config.get("aspects",false)),"state":"playing" if playing else ("loading" if loading else "waiting"),"joinable":not playing and not loading and slots[1].is_empty()})
+-	return {"type":"directory","rooms":listing,"can_create":code.is_empty(),"build":BUILD,"social_supported":1,"races":NETWORK_RACES.duplicate()}
++	return {"type":"directory","rooms":listing,"can_create":code.is_empty(),"build":BUILD,"social_supported":1,"races":NETWORK_RACES.duplicate(),"production_sync":1}
+ 
+ func _broadcast_directory() -> void:
+ 	var packet := _directory_packet()
