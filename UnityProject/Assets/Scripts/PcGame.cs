@@ -212,7 +212,7 @@ public sealed partial class PcGame : MonoBehaviour {
             else if(page==Page.Settings&&HdModels.Panel){if(HdModels.Busy)HdModels.Cancel();else HdModels.Panel=false;}
             else if(page==Page.Settings){page=settingsReturn;}
             else if(page==Page.Network&&showStickerPicker)showStickerPicker=false;
-            else if(page==Page.Network&&showNetworkProfile){profilePassword="";showNetworkProfile=false;}
+            else if(page==Page.Network&&showNetworkProfile)CloseNetworkAccount();
             else if(page==Page.Network&&!string.IsNullOrEmpty(socialViewed))socialViewed="";
             else if(page==Page.Network&&socialTab==2&&!string.IsNullOrEmpty(socialPeer))socialPeer="";
             else if(page==Page.Network&&socialTab>0)OpenSocialTab(0);

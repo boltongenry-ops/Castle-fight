@@ -9,7 +9,7 @@ public sealed partial class PcGame {
     string networkSessionToken="",networkSessionEndpoint="";float profileDeadline;bool socialTouchMoved;Vector2 socialTouchOrigin;int socialTab;bool socialSupported,socialPending;float socialDue,socialDeadline,socialNext;
     string socialSearch="",socialPeer="",socialDraft="",socialNickname="",socialViewed="",socialConfirm="",socialStickerPeer="";
     JObject socialQueued;string socialRequest="";JObject socialState=new JObject(),socialPlayer;JArray socialFound=new JArray(),socialMessages=new JArray(),socialMatches=new JArray();
-    Vector2 socialScroll,messageScroll,matchScroll,networkPageScroll;bool socialMore;long socialRead;Texture2D rankSheet,castleLogo;
+    Vector2 socialScroll,messageScroll,matchScroll;bool socialMore;long socialRead;Texture2D rankSheet,castleLogo;
     static readonly int[] RankThresholds={0,3,10,25,50,100};
     static readonly string[] RankNames={"Ополченец","Защитник","Страж","Воевода","Хранитель цитадели","Владыка замков"};
     bool HasNetworkProfile=>networkProfile!=null&&networkProfile.HasValues;
@@ -69,8 +69,8 @@ public sealed partial class PcGame {
     void SendDirect(string kind,string value){if(kind=="sticker"&&!CanSendSticker(value)){Notice("Сначала откройте рофлопак в магазине");return;}var request=new JObject{["peer"]=socialPeer,["kind"]=kind,["nonce"]=Guid.NewGuid().ToString("N")};request[kind=="sticker"?"sticker":"text"]=value;SocialRequest("send",request);}
     int SocialUnread=>((socialState["conversations"] as JArray)??new JArray()).Sum(c=>(int?)c["unread"]??0);
     void DrawSocialTabs(){
-        string[] captions={"Битвы","Друзья"+(((socialState["requests"] as JArray)?.Count(r=>(bool?)r["incoming"]==true)??0)>0?" ●":""),"Сообщения"+(SocialUnread>0?" · "+SocialUnread:""),"Мой профиль"};
-        for(int i=0;i<4;i++)if(LobbyButton("social.tab."+i,new Rect(42+i*301,78,291,48),captions[i],socialTab==i))OpenSocialTab(i);
+        string[] captions={"Битвы","Друзья"+(((socialState["requests"] as JArray)?.Count(r=>(bool?)r["incoming"]==true)??0)>0?" ●":""),"Сообщения"+(SocialUnread>0?" · "+SocialUnread:"")};
+        for(int i=0;i<captions.Length;i++)if(LobbyButton("social.tab."+i,new Rect(42+i*402,78,392,48),captions[i],socialTab==i))OpenSocialTab(i);
     }
     void DrawSocialContent(){
         if(!HasNetworkProfile){LobbyPanel(new Rect(42,149,1196,480));Text(78,194,1000,43,"Друзья, личные сообщения и ранг",heading);Text(78,257,1000,60,"Войдите в сетевой аккаунт. Он общий с Godot-версией — прогресс и друзья хранятся на VPS metal.",label);if(LobbyButton("social.login",new Rect(78,351,440,52),"Войти / создать аккаунт",true)){profileName=networkName;showNetworkProfile=true;}return;}

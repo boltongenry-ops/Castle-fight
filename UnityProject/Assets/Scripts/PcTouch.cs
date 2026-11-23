@@ -49,9 +49,9 @@ public sealed partial class PcGame {
         UpdatePassiveAspectTouch();UpdateSpellScroll();
         if(page!=Page.Network||showNetworkProfile||showStickerPicker||showVoicePanel){scrollFinger=-1;return;}
         for(int i=0;i<Input.touchCount;i++){var t=Input.GetTouch(i);var p=GuiPoint(t.position);
-            if(t.phase==TouchPhase.Began&&scrollFinger<0&&p.y>=205&&p.y<=675){scrollFinger=t.fingerId;socialTouchOrigin=t.position;socialTouchMoved=false;scrollTarget=socialTab==0?0:!string.IsNullOrEmpty(socialViewed)||socialTab==3?5:socialTab==2&&!string.IsNullOrEmpty(socialPeer)?4:3;}
+            if(t.phase==TouchPhase.Began&&scrollFinger<0&&p.y>=150&&p.y<=675&&(socialTab!=0||(networkSlot<0?new Rect(62,249,775,384):new Rect(648,183,572,278)).Contains(p))){scrollFinger=t.fingerId;socialTouchOrigin=t.position;socialTouchMoved=false;scrollTarget=socialTab==0?0:!string.IsNullOrEmpty(socialViewed)||socialTab==3?5:socialTab==2&&!string.IsNullOrEmpty(socialPeer)?4:3;}
             if(t.fingerId!=scrollFinger)continue;
-            if(t.phase==TouchPhase.Moved){if(Vector2.Distance(t.position,socialTouchOrigin)>14)socialTouchMoved=true;float d=t.deltaPosition.y/guiScale;if(scrollTarget==0){networkPageScroll.y=Mathf.Max(0,networkPageScroll.y+d);if(networkSlot<0)directoryScroll.y=Mathf.Max(0,directoryScroll.y+d);else chatScroll.y=Mathf.Max(0,chatScroll.y+d);}else if(scrollTarget==3)socialScroll.y=Mathf.Max(0,socialScroll.y+d);else if(scrollTarget==4)messageScroll.y=Mathf.Max(0,messageScroll.y+d);else matchScroll.y=Mathf.Max(0,matchScroll.y+d);}
+            if(t.phase==TouchPhase.Moved){if(Vector2.Distance(t.position,socialTouchOrigin)>14)socialTouchMoved=true;float d=t.deltaPosition.y/guiScale;if(scrollTarget==0){if(networkSlot<0)directoryScroll.y=Mathf.Max(0,directoryScroll.y+d);else chatScroll.y=Mathf.Max(0,chatScroll.y+d);}else if(scrollTarget==3)socialScroll.y=Mathf.Max(0,socialScroll.y+d);else if(scrollTarget==4)messageScroll.y=Mathf.Max(0,messageScroll.y+d);else matchScroll.y=Mathf.Max(0,matchScroll.y+d);}
             if(t.phase==TouchPhase.Ended||t.phase==TouchPhase.Canceled)scrollFinger=-1;
         }
     }

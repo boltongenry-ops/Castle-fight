@@ -14,6 +14,10 @@ public sealed partial class PcGame {
         var clip=ContentResources.Load<AudioClip>("PcMenuMusic");
         if(clip) { menuAudio=gameObject.AddComponent<AudioSource>(); menuAudio.clip=clip; menuAudio.loop=true; menuAudio.playOnAwake=false; menuAudio.volume=0;menuAudio.spatialBlend=0;menuAudio.ignoreListenerPause=true;clip.LoadAudioData(); }
         networkName=PlayerPrefs.GetString("cf-network-name","");if(networkName=="Игрок")networkName="";
+        if(!testing&&BattleLab.Arg("--pc-test")==""&&NetworkAccountStore.Read() is JObject saved){
+            networkSessionEndpoint=(string)saved["endpoint"]??"";
+            networkSessionToken=(string)saved["token"]??"";
+        }
     }
     // Godot MenuMusic.continue_after_intro: the soundtrack resumes at the frame the
     // intro movie stopped at instead of restarting from the beginning.

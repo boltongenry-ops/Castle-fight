@@ -9,6 +9,9 @@ public sealed partial class PcGame {
     JArray directoryRooms=new JArray(),roomMessages=new JArray();JObject networkRoom;
     Vector2 directoryScroll,chatScroll;PcNetworkClient network;
     bool networkProductionSync;
+    bool networkEntryAccount,networkGuest,networkEndpointOpen;
+    bool HasEndpointToken=>!string.IsNullOrEmpty(networkSessionToken)&&networkSessionEndpoint==directoryEndpoint.Trim();
+    bool WaitingForNetworkAccount=>networkEntryAccount&&!networkGuest&&!HasNetworkProfile;
     bool directoryLoading,directoryReady,directoryCanCreate,showNetworkProfile,profilePending;
     float directoryDeadline;
     int networkSlot=-1,networkRace;string networkName="",networkChat="",connectedEndpoint="";
@@ -35,17 +38,27 @@ public sealed partial class PcGame {
                     networkProductionSync=(int?)packet["production_sync"]==1;
                     socialSupported=(int?)packet["social_supported"]==1;directoryRooms=packet["rooms"] as JArray??new JArray();directoryReady=true;directoryLoading=false;directoryCanCreate=(bool?)packet["can_create"]??false;
                     networkServerRaces=packet["races"] is JArray roster?roster.Select(row=>(string)row).Where(name=>!string.IsNullOrEmpty(name)).ToArray():null;
-                    if(!HasNetworkProfile&&!profilePending&&!string.IsNullOrEmpty(networkSessionToken)&&networkSessionEndpoint==connectedEndpoint){profilePending=true;SendNetwork(new JObject{["type"]="profile_auth",["action"]="token",["token"]=networkSessionToken});}
-                    directoryStatus="Сервер ответил · версия "+((string)packet["build"]??"?")+" · комнат: "+directoryRooms.Count;break;
+                    if(!HasNetworkProfile&&!profilePending&&!string.IsNullOrEmpty(networkSessionToken)&&networkSessionEndpoint==connectedEndpoint&&(!networkGuest||showNetworkProfile)){profilePending=true;SendNetwork(new JObject{["type"]="profile_auth",["action"]="token",["token"]=networkSessionToken});}
+                    directoryStatus=profilePending?"Проверяем сохранённый вход…":"Подключено · открытых игр: "+directoryRooms.Count;break;
                 case "joined":networkProductionSync=(int?)packet["production_sync"]==1;recoveryToken=(string)packet["resume_token"]??"";networkSlot=(int?)packet["slot"]??-1;directoryStatus="Вы в комнате";break;
                 case "lobby":networkRoom=packet;roomMessages=(JArray)(packet["messages"]?.DeepClone()??new JArray());break;
                 case "chat":if(packet["message"] is JObject message){roomMessages.Add(message.DeepClone());while(roomMessages.Count>40)roomMessages.RemoveAt(0);chatScroll.y=100000;}break;
                 case "profile":
                     if((string)packet["request_type"]=="profile_social"){ReceiveSocial(packet);break;}
                     socialSupported=socialSupported||(int?)packet["social_supported"]==1;profilePending=false;profilePassword="";directoryStatus=(string)packet["message"]??((bool?)packet["ok"]==true?"Профиль обновлён":"Ошибка профиля");
-                    if((string)packet["request_type"]=="profile_auth"){if((bool?)packet["ok"]==true){bool supported=socialSupported;ResetSocial();socialSupported=supported;networkSessionToken=(string)packet["token"]??"";networkSessionEndpoint=connectedEndpoint;}else if((string)packet["action"]=="token")networkSessionToken="";}
-                    if((string)packet["request_type"]=="profile_logout"&&(bool?)packet["ok"]==true){networkSessionToken="";bool supported=socialSupported;ResetSocial();socialSupported=supported;}
-                    if((bool?)packet["ok"]==true){if(packet["profile"] is JObject updated)networkProfile=updated;if(networkProfile!=null&&networkProfile.HasValues)networkName=(string)networkProfile["name"]??networkName;socialDue=0;}break;
+                    if((string)packet["request_type"]=="profile_auth"){if((bool?)packet["ok"]==true){bool supported=socialSupported;ResetSocial();socialSupported=supported;networkSessionToken=(string)packet["token"]??"";networkSessionEndpoint=connectedEndpoint;if(!testing)NetworkAccountStore.Save(networkSessionEndpoint,networkSessionToken);}else if((string)packet["action"]=="token"){networkSessionToken="";if(!testing)NetworkAccountStore.Clear();}}
+                    if((string)packet["request_type"]=="profile_logout"&&(bool?)packet["ok"]==true){networkSessionToken="";if(!testing)NetworkAccountStore.Clear();bool supported=socialSupported;ResetSocial();socialSupported=supported;}
+                    if((bool?)packet["ok"]==true){
+                        if(packet["profile"] is JObject updated)networkProfile=updated;
+                        if(HasNetworkProfile){
+                            networkName=(string)networkProfile["name"]??networkName;
+                            networkGuest=false;
+                        }
+                        if(networkEntryAccount&&HasNetworkProfile){
+                            networkEntryAccount=false;showNetworkProfile=false;networkGuest=false;
+                        }
+                        socialDue=0;
+                    }break;
                 case "error":directoryStatus=(string)packet["message"]??"Ошибка сервера";Debug.LogWarning("CF_NETWORK_SERVER_ERROR "+directoryStatus);if(onlineMatch)Notice(directoryStatus);break;
                 case "room_closed":directoryStatus=(string)packet["message"]??"Комната закрыта";if(onlineMatch){string reason=directoryStatus;NetworkReturnToMenu();Notice(reason);}else{networkSlot=-1;networkRoom=null;}break;
                 case "resumed":case "connection_hold":case "connection_restored":case "resume_rejected":RecoveryPacket(packet);break;
@@ -72,7 +85,38 @@ public sealed partial class PcGame {
         networkProfile=null;ResetSocial();network?.Dispose();network=new PcNetworkClient();connectedEndpoint=directoryEndpoint.Trim();directoryLoading=true;directoryDeadline=Time.realtimeSinceStartup+15;directoryReady=false;directoryStatus="Подключение к серверу…";directoryRooms=new JArray();
         _=network.ConnectAsync(uri);
     }
-    void OpenNetwork(){page=Page.Network;if(testing){string endpoint=BattleLab.Arg("--pc-directory-url");if(endpoint=="")return;directoryEndpoint=endpoint;}BeginDirectory();}
+    void OpenNetwork(){
+        page=Page.Network;
+        if(testing){
+            string endpoint=BattleLab.Arg("--pc-directory-url");
+            if(endpoint=="")return;
+            directoryEndpoint=endpoint;
+        }
+        networkEntryAccount=!testing&&!HasNetworkProfile&&!networkGuest;
+        showNetworkProfile=networkEntryAccount;
+        profileName=HasEndpointToken?networkName:"";
+        BeginDirectory();
+    }
+
+    void CloseNetworkAccount(){
+        CloseAccountKeyboard();
+        profilePassword="";
+        showNetworkProfile=false;
+        if(!WaitingForNetworkAccount)return;
+        networkEntryAccount=false;
+        StopDirectory();
+        page=Page.Main;
+    }
+
+    void ContinueNetworkAsGuest(){
+        CloseAccountKeyboard();
+        profilePassword="";
+        networkGuest=true;
+        networkEntryAccount=false;
+        showNetworkProfile=false;
+        if(profilePending)StopDirectory();
+        if(!directoryReady)BeginDirectory();
+    }
     void EnterRoom(string action,string code) {
         if(MobileContent.Active){StartCoroutine(PrepareMobileRoom(action,code));return;}
         EnterRoomCore(action,code);
@@ -117,42 +161,65 @@ public sealed partial class PcGame {
     void DrawNetworkContent() {
         DrawMenuBackground();Fill(new Rect(0,0,1280,720),new Color(.01f,.025f,.035f,.45f));
         bool joined=networkSlot>=0&&networkRoom!=null;
-        Text(42,25,580,42,joined?"КОМНАТА  /  1 × 1":"ЗАЛ БИТВ  /  1 × 1",new GUIStyle(heading){fontSize=29,normal={textColor=new Color(.85f,.73f,.47f)}});
-        GUI.enabled=directoryReady;if(LobbyButton("network.profile",new Rect(718,24,206,44),networkProfile!=null&&networkProfile.HasValues?"Профиль: "+networkName:"Профиль / Войти")){if(HasNetworkProfile)OpenSocialTab(3);else{profileName=networkName;showNetworkProfile=true;}}GUI.enabled=true;
-        if(joined&&LobbyButton("network.leave",new Rect(936,24,144,44),"К комнатам")){StopDirectory();BeginDirectory();}
-        if(LobbyButton("network.back",new Rect(1092,24,146,44),"← В меню")){StopDirectory();page=Page.Main;}
+        Text(42,25,580,42,joined?"Игровая комната":"Сетевая игра",new GUIStyle(heading){fontSize=29,normal={textColor=new Color(.85f,.73f,.47f)}});
+        if(showNetworkProfile){DrawNetworkProfile();return;}
+        if((joined||socialTab>0)&&LobbyButton("network.profile",new Rect(690,24,184,44),"Профиль")){
+            if(HasNetworkProfile)OpenSocialTab(3);
+            else{profileName="";showNetworkProfile=true;}
+        }
+        if(joined&&LobbyButton("network.leave",new Rect(887,24,184,44),"К списку игр")){StopDirectory();BeginDirectory();}
+        if(LobbyButton("network.back",new Rect(1084,24,154,44),"В меню")){StopDirectory();page=Page.Main;}
         DrawSocialTabs();
         Text(44,687,1160,28,directoryStatus,small);
-        if(showNetworkProfile){DrawNetworkProfile();return;}if(showStickerPicker){DrawStickerPicker();return;}
+        if(showStickerPicker){DrawStickerPicker();return;}
         if(socialTab>0){DrawSocialContent();return;}
-        networkPageScroll=GUI.BeginScrollView(new Rect(0,136,1270,540),networkPageScroll,new Rect(0,0,1250,590));
-        GUI.BeginGroup(new Rect(0,-110,1280,720));
+        GUI.BeginGroup(new Rect(0,26,1280,650));
         if(networkSlot<0||networkRoom==null)DrawDirectory();else DrawRoom();
-        GUI.EndGroup();GUI.EndScrollView();
+        GUI.EndGroup();
     }
 
     void DrawDirectory() {
-        LobbyPanel(new Rect(42,112,1196,66));
-        Text(60,119,1100,28,"Создайте комнату — друг увидит её в этом списке.",label);
-        Text(60,148,1100,24,"Сетевая битва 1 × 1",small);
-        networkName=AccountText("guest.name",new Rect(42,194,810,48),networkName,24,false,"Имя игрока");
-        if(LobbyButton("network.race",new Rect(866,194,372,48),"Раса: "+networkRaceLabels[networkRace]+"  ▾"))ChangeRace();
-        GUI.enabled=directoryReady&&directoryCanCreate;if(LobbyButton("network.create",new Rect(42,255,956,50),"+ Создать комнату",true))EnterRoom("create","");GUI.enabled=true;
-        GUI.enabled=!directoryLoading;if(LobbyButton("network.refresh",new Rect(1012,255,226,50),directoryReady?"Обновить":"Подключиться"))BeginDirectory();GUI.enabled=true;
-        Text(44,319,550,26,"ОТКРЫТЫЕ КОМНАТЫ",new GUIStyle(small){normal={textColor=new Color(.85f,.73f,.47f)}});
-        LobbyPanel(new Rect(42,349,1196,212));
-        directoryScroll=GUI.BeginScrollView(new Rect(54,359,1172,192),directoryScroll,new Rect(0,0,1138,Mathf.Max(180,directoryRooms.Count*76)));
-        if(directoryRooms.Count==0)Text(16,20,1000,40,directoryLoading?"Подключаемся к серверу…":directoryReady?"Пока нет комнат. Создайте первую.":"Подключитесь к серверу.",label);
-        int row=0;foreach(var token in directoryRooms) {
-            if(!(token is JObject room))continue;string host=(string)room["host"]??"Игрок";if(host.Length>24)host=host.Substring(0,24);
-            string state=(string)room["state"]=="playing"?"Идёт сражение":(string)room["state"]=="loading"?"Загрузка боя":(bool?)room["joinable"]==true?"Ожидает соперника":"Все места заняты";
-            float y=row*76;Fill(new Rect(2,y+2,1120,68),new Color(.045f,.075f,.08f,.88f));
-            Text(16,y+5,850,29,"Комната · "+host,label);Text(16,y+36,850,24,((int?)room["players"]??0)+" / "+((int?)room["capacity"]??2)+" игроков  ·  "+state,small);
-            GUI.enabled=(bool?)room["joinable"]??false;if(LobbyButton("network.join."+row,new Rect(922,y+11,184,48),"Войти →",true))EnterRoom("join",(string)room["id"]??"");GUI.enabled=true;row++;
+        LobbyPanel(new Rect(42,112,816,519));
+        LobbyPanel(new Rect(877,112,361,519));
+        Text(64,129,490,41,"Открытые игры",heading);
+        GUI.enabled=!directoryLoading;
+        if(LobbyButton("network.refresh",new Rect(679,133,157,38),directoryReady?"Обновить":"Подключить"))BeginDirectory();
+        GUI.enabled=true;
+        Accent(64,181,772);
+        Text(74,188,466,33,"Игра",small);
+        Text(530,188,161,33,"Игроки",small);
+        directoryScroll=GUI.BeginScrollView(new Rect(62,223,775,384),directoryScroll,new Rect(0,0,747,Mathf.Max(376,directoryRooms.Count*74)));
+        if(directoryRooms.Count==0)Text(12,14,715,48,directoryLoading?"Подключаемся к серверу…":directoryReady?"Список пуст. Создайте игру, чтобы пригласить соперника.":"Нет соединения с сервером.",label);
+        int row=0;
+        foreach(var room in directoryRooms.OfType<JObject>()) {
+            bool joinable=(bool?)room["joinable"]==true;
+            string state=(string)room["state"]=="playing"?"Идёт бой":(string)room["state"]=="loading"?"Загрузка":joinable?"Ожидает игрока":"Места заняты";
+            float y=row*74;
+            Fill(new Rect(0,y,741,66),new Color(.053f,.084f,.096f,.9f));
+            Text(12,y+4,445,28,(string)room["host"]??"Игрок",label);
+            Text(12,y+33,445,24,state,small);
+            Text(470,y+12,72,42,((int?)room["players"]??0)+" / "+((int?)room["capacity"]??2),label);
+            GUI.enabled=directoryReady&&joinable;
+            if(LobbyButton("network.join."+row,new Rect(573,y+10,155,46),"Войти",true))EnterRoom("join",(string)room["id"]??"");
+            GUI.enabled=true;
+            row++;
         }
         GUI.EndScrollView();
-        Text(42,580,240,23,"АДРЕС СЕРВЕРА",small);directoryEndpoint=GUI.TextField(new Rect(42,608,842,42),directoryEndpoint,256,menuInput);
-        Text(42,665,1150,32,NetworkRaceCount+" рас · выбранные, зеркальные или случайные расы · туман и аспекты настраиваются в комнате",small);
+        Text(900,131,312,40,HasNetworkProfile?"Вы вошли":"Гостевой вход",heading);
+        if(HasNetworkProfile)Text(900,174,312,38,networkName,label);
+        else networkName=AccountText("guest.name",new Rect(900,173,315,44),networkName,24,false,"Имя в игре");
+        GUI.enabled=directoryReady;
+        if(LobbyButton("network.profile",new Rect(900,230,315,47),"Профиль")){
+            if(HasNetworkProfile)OpenSocialTab(3);
+            else{profileName="";showNetworkProfile=true;}
+        }
+        GUI.enabled=directoryReady&&directoryCanCreate;
+        if(LobbyButton("network.create",new Rect(900,301,315,58),"Создать игру",true))EnterRoom("create","");
+        GUI.enabled=true;
+        if(LobbyButton("network.endpoint",new Rect(900,500,315,41),"Адрес сервера"))networkEndpointOpen=!networkEndpointOpen;
+        if(networkEndpointOpen){
+            directoryEndpoint=GUI.TextField(new Rect(900,548,315,46),directoryEndpoint,256,menuInput);
+        }
     }
     void DrawRoom() {
         var players=networkRoom["players"] as JArray??new JArray();var config=networkRoom["config"] as JObject??new JObject();
@@ -160,7 +227,7 @@ public sealed partial class PcGame {
         for(int i=0;i<2;i++) {
             var player=i<players.Count?players[i] as JObject:null;float y=112+i*108;bool present=player!=null&&player.HasValues;
             LobbyPanel(new Rect(42,y,570,96));
-            Text(57,y+7,300,21,i==0?"01  /  СОЗДАТЕЛЬ":"02  /  СОПЕРНИК",new GUIStyle(small){normal={textColor=new Color(.85f,.73f,.47f)}});
+            Text(57,y+7,300,21,i==0?"Создатель":"Соперник",new GUIStyle(small){normal={textColor=new Color(.85f,.73f,.47f)}});
             Text(470,y+7,125,21,present?((bool?)player["ready"]==true?"ГОТОВ":"ВЫБИРАЕТ"):"ОЖИДАНИЕ",small);
             string name=present?(string)player["name"]??"Игрок":"Свободный слот";
             string account=(string)player?["id"]??"";if(!string.IsNullOrEmpty(account)){if(LobbyButton("network.player."+i,new Rect(58,y+31,232,42),name+(i==networkSlot?" · вы":""))){socialTab=1;OpenPlayer(account);}}else Text(58,y+31,232,42,name+(i==networkSlot?" · вы":""),new GUIStyle(label){wordWrap=false,clipping=TextClipping.Clip});
@@ -184,7 +251,7 @@ public sealed partial class PcGame {
         LobbyPanel(new Rect(630,112,608,401));Text(648,124,560,25,"ЧАТ КОМНАТЫ  ·  КОД "+((string)networkRoom["code"]??""),new GUIStyle(small){normal={textColor=new Color(.85f,.73f,.47f)}});
         var roomChatStyle=new GUIStyle(small){fontSize=15,wordWrap=true,padding=new RectOffset(0,0,0,0)};float chatHeight=roomMessages.Sum(item=>Mathf.Max(58,roomChatStyle.CalcHeight(new GUIContent((string)item["text"]??""),510)+34)+10);
         chatScroll=GUI.BeginScrollView(new Rect(648,157,572,278),chatScroll,new Rect(0,0,545,Mathf.Max(265,chatHeight)));
-        if(roomMessages.Count==0)Text(4,9,520,58,"Договоритесь о тактике\nили пожелайте удачи сопернику.",small);
+        if(roomMessages.Count==0)Text(4,9,520,58,"Сообщений пока нет.",small);
         float chatY=0;foreach(var item in roomMessages){string name=(string)item["name"]??"Игрок",body=(string)item["text"]??"";float height=Mathf.Max(58,roomChatStyle.CalcHeight(new GUIContent(body),510)+34);Fill(new Rect(0,chatY,535,height),new Color(.045f,.079f,.092f));Text(12,chatY+5,510,24,name,new GUIStyle(small){fontSize=13,wordWrap=false,normal={textColor=new Color(.84f,.72f,.48f)}});Text(12,chatY+30,510,height-30,body,roomChatStyle);chatY+=height+10;}GUI.EndScrollView();
         networkChat=GUI.TextField(new Rect(648,453,394,42),networkChat,180,menuInput);
         if(LobbyButton("network.chat",new Rect(1052,453,168,42),"Отправить")){string body=networkChat.Trim();if(body.Length>0){SendNetwork(new JObject { ["type"]="chat",["text"]=body });networkChat="";}}
@@ -204,12 +271,18 @@ public sealed partial class PcGame {
         SendNetwork(new JObject { ["type"]="profile_auth",["action"]=action,["name"]=name,["password"]=profilePassword });profilePassword="";
     }
     void DrawNetworkProfile() {
-        Fill(new Rect(0,0,1280,720),new Color(0,0,0,.7f));Box(new Rect(345,140,590,440));Text(380,169,500,40,"ПРОФИЛЬ ИГРОКА",heading);Accent(380,220,520);
-        if(networkProfile==null||!networkProfile.HasValues) {
-            Text(380,239,515,52,"Войдите или играйте гостем. Пароль не сохраняется. Сессия действует до закрытия игры.",small);
+        Fill(new Rect(0,0,1280,720),new Color(0,0,0,.72f));
+        LobbyPanel(new Rect(335,115,610,494));
+        Text(374,151,535,45,HasNetworkProfile?"Профиль игрока":"Вход в сетевую игру",heading);
+        Accent(375,204,530);
+        bool entryCheckingToken=WaitingForNetworkAccount&&HasEndpointToken&&(directoryLoading||profilePending||!directoryReady);
+        if(entryCheckingToken){
+            Text(380,264,500,74,"Восстанавливаем вход в сетевой аккаунт…",label);
+        }else if(!HasNetworkProfile) {
+            Text(380,221,515,48,"С аккаунтом сохраняются ранг и история матчей.",small);
             Text(380,295,150,29,"Имя",label);profileName=AccountText("account.login",new Rect(530,291,350,40),profileName,20,false,"Логин");
             Text(380,350,150,29,"Пароль",label);profilePassword=AccountText("account.password",new Rect(530,346,350,40),profilePassword,128,true,"Пароль");
-            GUI.enabled=!profilePending;
+            GUI.enabled=!profilePending&&directoryReady;
             if(Button("profile.login",new Rect(380,416,235,43),"Войти",true))AuthenticateProfile("login");
             if(Button("profile.register",new Rect(630,416,250,43),"Создать аккаунт"))AuthenticateProfile("register");GUI.enabled=true;
         } else {
@@ -218,7 +291,11 @@ public sealed partial class PcGame {
             GUI.enabled=!profilePending&&!socialPending&&Time.realtimeSinceStartup>=socialNext;if(Button("profile.logout",new Rect(380,416,500,43),"Выйти из аккаунта")){profilePending=true;SendNetwork(new JObject { ["type"]="profile_logout" });}GUI.enabled=true;
         }
         Text(380,478,500,38,directoryStatus,small);
-        if(Button("profile.close",new Rect(380,521,500,38),"Закрыть")){CloseAccountKeyboard();profilePassword="";showNetworkProfile=false;}
+        if(!HasNetworkProfile&&!directoryReady&&!directoryLoading&&!profilePending&&
+            LobbyButton("profile.retry",new Rect(380,263,500,30),"Подключиться снова"))BeginDirectory();
+        bool entry=WaitingForNetworkAccount;
+        if(entry&&Button("profile.guest",new Rect(380,542,318,40),"Играть гостем"))ContinueNetworkAsGuest();
+        if(Button("profile.close",new Rect(entry?716:380,542,entry?164:500,40),entry?"В меню":"Закрыть"))CloseNetworkAccount();
     }
     IEnumerator ExerciseNetworkLobby(string folder) {
         yield return Action("network.create");float until=Time.realtimeSinceStartup+12;

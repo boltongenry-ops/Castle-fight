@@ -84,6 +84,7 @@ public sealed partial class HumanMatch {
     }
     public bool PlayerHasLine(int kind)=>teamBuildings[0].Contains(Lines[kind].building);
     public int Kind(string building)=>Array.FindIndex(Lines,l=>l.building==building);
+    public bool PlayerVersusPlayer { get; set; }
     public bool NetworkReplica;public readonly int[] NetworkReservedGold=new int[2],NetworkReservedWood=new int[2],NetworkReservedSlots=new int[2];
     public int ReservedGold(int t)=>NetworkReplica?NetworkReservedGold[t]:Huts.Where(h=>h.team==t&&!h.paid).Sum(h=>Lines[h.kind].cost);
     public int ReservedWood(int t)=>NetworkReplica?NetworkReservedWood[t]:Huts.Where(h=>h.team==t&&!h.paid).Sum(h=>Lines[h.kind].woodCost);
@@ -219,7 +220,7 @@ public sealed partial class HumanMatch {
         }
         else b.pose="Stand";
     }
-    void Bot()=>ThinkBot();
+    void Bot(){if(!PlayerVersusPlayer)ThinkBot();}
     public void Step(float dt) {
         if(Finished||dt<=0)return;SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
         while(incomeAge>=10){incomeAge-=10;for(int t=0;t<2;t++){incomeFraction[t]+=Income(t);int payment=(int)(incomeFraction[t]+.00001f);incomeFraction[t]-=payment;Gold[t]+=payment;}}
@@ -229,7 +230,7 @@ public sealed partial class HumanMatch {
         for(int t=0;t<2;t++)RescueCooldown[t]=Mathf.Max(0,RescueCooldown[t]-dt);
         foreach(var c in Corpses)c.left-=dt;Corpses.RemoveAll(c=>c.left<=0);
         foreach(var p in Pulses)p.age+=dt;Pulses.RemoveAll(p=>p.age>p.duration);
-        SimulationPhase035.Mark("economy_builders");TickCentaur(dt);TickInventory(dt);TickHumanJobs(dt);TickNagaJobs(dt);TickNagaWaves(dt);TickNatureJobs(dt);TickChaosJobs(dt);TickNorthern(dt);TickMech(dt);TickUndead(dt);TickCorrupted(dt);TickElemental(dt);TickNight(dt);TickElven(dt);TickFinal(dt);FlushUndeadBirths();TickAspects(dt);TickBotRescue(dt);EnsureUnitIndex033();RebuildElementalLinkCache033();SetBuildingActive033(true);SimulationPhase035.Mark("race_controllers");
+        SimulationPhase035.Mark("economy_builders");TickCentaur(dt);TickInventory(dt);TickHumanJobs(dt);TickNagaJobs(dt);TickNagaWaves(dt);TickNatureJobs(dt);TickChaosJobs(dt);TickNorthern(dt);TickMech(dt);TickUndead(dt);TickCorrupted(dt);TickElemental(dt);TickNight(dt);TickElven(dt);TickFinal(dt);FlushUndeadBirths();TickAspects(dt);if(!PlayerVersusPlayer)TickBotRescue(dt);EnsureUnitIndex033();RebuildElementalLinkCache033();SetBuildingActive033(true);SimulationPhase035.Mark("race_controllers");
         using(var snapshot035_2=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_2)if(h.paid&&h.hp>0&&!h.paused){var l=Lines[h.kind];h.hp=Mathf.Min(h.maxHp,h.hp+BuildingConfig035(h.kind).hpRegen*dt);h.mana=Mathf.Min(BuildingConfig035(h.kind).maxMana,h.mana+(BuildingManaRegen(h,BuildingConfig035(h.kind).manaRegen)+ElementalManaBonus(h)+(MechPowered(h)?F(Abilities["A09P"]?["fields"],"Hab1"):0))*dt);TickBuilding(h,dt);if(BuildingDisabled(h)>0)continue;if(l.Producer&&!synchronizedHuts[h.team].ContainsKey(h)){h.spawnLeft-=dt;if(h.spawnLeft<=0)Produce(h);}}
         TickSynchronizedProduction(dt);SetBuildingActive033(false);SimulationPhase035.Mark("buildings_production");
         foreach(var u in Units){Ensure(u);u.previous=u.position;if(u.hp<=0){u.deadAge+=dt;continue;}if(u.summonLeft>0&&(u.summonLeft-=dt)<=0){u.hp=0;u.deathProcessed=true;u.pose="Death";continue;}u.cooldown-=dt;u.stun=Mathf.Max(0,u.stun-dt);u.stasisLeft=Mathf.Max(0,u.stasisLeft-dt);u.castPause=Mathf.Max(0,u.castPause-dt);u.attackPoseLeft=Mathf.Max(0,u.attackPoseLeft-dt);TickEffects(u,dt);if(u.hp<=0)continue;u.hp=Mathf.Min(u.maxHp,u.hp+(Lines[u.kind].regen+u.auraRegen+Stat(u,"regen")+(TeamNaga[u.team]&&Aspects[u.team]==0?4:0))*dt);u.mana=Mathf.Min(u.maxMana,u.mana+(u.manaRegen+u.auraMana)*dt);using(var snapshot035_3=SimulationBuffers035.Take(u.spellTimers.Keys))foreach(var id in snapshot035_3)u.spellTimers[id]=Mathf.Max(0,u.spellTimers[id]-dt);}

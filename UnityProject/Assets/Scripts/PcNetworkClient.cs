@@ -44,7 +44,7 @@ public sealed class PcNetworkClient : IDisposable {
     public static JObject Handshake(string action,string code,string name,string race)=>new JObject {
         ["type"]=action,["protocol"]=1,["build"]="0.6.19",["code"]=code??"",
         ["name"]=name??"Игрок",["race"]=race??"Human Alliance",["heartbeat"]=true,
-        ["post_match"]=1,["snapshot_delta"]=0,["aspects"]=1
+        ["authority"]=1,["post_match"]=1,["snapshot_delta"]=0,["aspects"]=1
     };
     public async Task SendAsync(JObject packet) {
         if(!Connected)return;
