@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 namespace CastleFight {
@@ -10,6 +11,78 @@ public sealed partial class PcGame {
         foreach(var effect in debuffs){var r=new Rect(start+i++*15,y-16,13,13);Fill(r,Color.black);var art=DebuffArt(effect);if(art)GUI.DrawTexture(r,art);Border(r,effect.id=="BHIr"?new Color(.43f,.74f,.97f):new Color(.9f,.28f,.12f));if(r.Contains(HudPointer)&&GUI.enabled)hudTip=Clean((string)effect.config?["name"]??effect.id)+((string)effect.config?["description"] is string detail&&BlackHand.IsStatus(effect.id)?"\n"+detail:"")+(float.IsPositiveInfinity(effect.left)?"\nПостоянно":"\nОсталось: "+Mathf.CeilToInt(effect.left)+" сек.");}
         foreach(var id in hostile){var r=new Rect(start+i++*15,y-16,13,13);Fill(r,Color.black);GUI.DrawTexture(r,AbilityArt(id)??Extra("debuff"));Border(r,new Color(.9f,.28f,.12f));if(r.Contains(HudPointer)&&GUI.enabled)hudTip=Clean((string)match.Abilities[id]?["name"]??id)+"\nВражеская аура";}
         if(u.stun>0){var r=new Rect(start+i*15,y-16,13,13);GUI.DrawTexture(r,Extra("debuff"));Border(r,new Color(.95f,.6f,.1f));if(r.Contains(HudPointer)&&GUI.enabled)hudTip=(u.stasisLeft>0?"Стазис":"Оглушение")+"\nОсталось: "+Mathf.CeilToInt(u.stasisLeft>0?u.stasisLeft:u.stun)+" сек.";}
+    }
+
+    readonly struct StatusBadge {
+        public readonly string name,tip,id;
+        public readonly Texture2D art;
+        public StatusBadge(string id,string name,string tip,Texture2D art){
+            this.id=id;this.name=name;this.tip=tip;this.art=art;
+        }
+    }
+
+    readonly List<StatusBadge> unitBuffs=new List<StatusBadge>(8),unitDebuffs=new List<StatusBadge>(8);
+    int inspectedStatusUnit=-1;
+    string inspectedStatus;
+
+    void DrawUnitStatusCard(HumanMatch.Unit unit){
+        unitBuffs.Clear();unitDebuffs.Clear();
+        if(inspectedStatusUnit!=unit.id){inspectedStatusUnit=unit.id;inspectedStatus=null;}
+        foreach(var effect in unit.effects){
+            if(effect.left<=0||string.IsNullOrEmpty(effect.id))continue;
+            bool harmful=effect.id!="BHIr"&&(Debuff(effect)||effect.sourceTeam==1-unit.team);
+            string name=Clean((string)effect.config?["name"]??effect.id);
+            string detail=(string)effect.config?["description"];
+            string duration=float.IsPositiveInfinity(effect.left)?"Постоянно":"Осталось: "+Mathf.CeilToInt(effect.left)+" с";
+            var art=harmful?DebuffArt(effect):AbilityArt(effect.id)??Extra("heal")??Extra("debuff");
+            (harmful?unitDebuffs:unitBuffs).Add(new StatusBadge("effect."+effect.id,name,
+                name+(string.IsNullOrEmpty(detail)?"":"\n"+Clean(detail))+"\n"+duration,art));
+        }
+        foreach(var id in unit.auraIds){
+            var ability=match.Abilities[id];
+            bool harmful=(bool?)ability?["profile"]?["enemy"]==true;
+            string name=Clean((string)ability?["name"]??id);
+            (harmful?unitDebuffs:unitBuffs).Add(new StatusBadge("aura."+id,name,
+                name+(harmful?"\nВражеская аура":"\nСоюзная аура"),AbilityArt(id)??Extra("debuff")));
+        }
+        if(unit.stun>0||unit.stasisLeft>0){
+            string name=unit.stasisLeft>0?"Стазис":"Оглушение";
+            unitDebuffs.Insert(0,new StatusBadge("stun",name,
+                name+"\nОсталось: "+Mathf.CeilToInt(Mathf.Max(unit.stasisLeft,unit.stun))+" с",Extra("debuff")));
+        }
+        float stagger=match.PandaStagger(unit);
+        if(stagger>0)unitDebuffs.Add(new StatusBadge("stagger","Выдержка",
+            "Выдержка\nОтложенный урон: "+stagger.ToString("F0"),AbilityArt("APSt")??Extra("debuff")));
+        DrawStatusCells(0,"Баффы",unitBuffs,new Color(.43f,.77f,.47f));
+        DrawStatusCells(2,"Дебаффы",unitDebuffs,new Color(.92f,.49f,.33f));
+    }
+
+    void DrawStatusCells(int column,string title,List<StatusBadge> badges,Color accent){
+        var first=Slot(column,2);var last=Slot(column+1,2);
+        var band=Rect.MinMaxRect(first.x,first.y,last.xMax,first.yMax);
+        Fill(band,new Color(.024f,.032f,.032f,.96f));Border(band,accent*.69f);
+        GUI.Label(new Rect(band.x+5,band.y+2,band.width-10,14),title,new GUIStyle(hudSmall){normal={textColor=accent}});
+        float size=Mathf.Min(Application.isMobilePlatform?33:24,band.height-19);
+        int capacity=Mathf.Max(1,Mathf.FloorToInt((band.width-8)/(size+3)));
+        int visible=badges.Count>capacity?capacity-1:badges.Count;
+        if(badges.Count==0)GUI.Label(new Rect(band.x+5,band.y+17,band.width-10,size),"—",hudSmall);
+        for(int i=0;i<visible;i++){
+            var badge=badges[i];var cell=new Rect(band.x+4+i*(size+3),band.y+17,size,size);
+            if(badge.art)GUI.DrawTexture(cell,badge.art,ScaleMode.ScaleToFit);
+            Border(cell,accent);
+            StatusTip(cell,badge.id,badge.tip);
+        }
+        if(visible<badges.Count){
+            var cell=new Rect(band.x+4+visible*(size+3),band.y+17,size,size);
+            Border(cell,accent);
+            GUI.Label(cell,"+"+(badges.Count-visible),new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter});
+            StatusTip(cell,"more."+column,title+"\n"+string.Join("\n",badges.Skip(visible).Select(b=>b.name)));
+        }
+    }
+
+    void StatusTip(Rect cell,string id,string detail){
+        if(Button("status."+id,cell,"",false,iconStyle))inspectedStatus=inspectedStatus==id?null:id;
+        if(GUI.enabled&&(cell.Contains(HudPointer)||inspectedStatus==id))hudTip=detail;
     }
 }
 }

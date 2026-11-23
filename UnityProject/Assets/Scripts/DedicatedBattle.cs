@@ -140,12 +140,14 @@ namespace CastleFight {
                     ["stun"]=u.stun,["armor"]=u.armor+match.Stat(u,"armor"),
                     ["a"]=new JArray(u.pose,0,0,u.attackSerial),["auras"]=new JArray(u.auraIds),["abilities"]=new JArray(u.abilities),
                     ["state"]=new JObject{["invisible"]=u.nightInvisible,["panda_split"]=u.pandaSplit,
+                        ["stasis"]=u.stasisLeft,["stagger"]=match.PandaStagger(u),
                         ["spell_resist"]=u.spellResist,["crit_chance"]=u.critChance,["crit_multiplier"]=u.critMultiplier,
                         ["evasion"]=u.evasion,["ability_levels"]=JObject.FromObject(u.abilityLevels)},
                     ["spell_ui"]=Timers(u.spellTimers,u.manaRegen+u.auraMana),
                     ["statuses"]=new JArray(u.effects.Where(e=>e.left>0).Select(e=>new JObject{
                         ["id"]=e.id,["code"]=e.id,["remaining"]=e.left,["lifetime"]=e.lifetime,["source_team"]=e.sourceTeam,
-                        ["stack_group"]=e.group,["power"]=e.power,["armor"]=e.armor,["haste"]=e.haste,
+                        ["stack_group"]=e.group,["power"]=e.power,["armor"]=e.armor,["haste"]=e.haste,["incoming"]=e.incoming,
+                        ["name"]=(string)e.config?["name"],["kind"]=(string)e.config?["kind"],
                         ["slow"]=-e.speed,["root"]=e.root,["ground"]=e.ground
                     }))
                 });

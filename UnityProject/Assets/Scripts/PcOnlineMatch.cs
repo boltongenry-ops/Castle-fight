@@ -12,8 +12,22 @@ public sealed partial class PcGame {
     PcServerReplica onlineReplica;
     readonly Dictionary<int,GameObject> onlineProjectiles=new Dictionary<int,GameObject>();
     sealed class OnlineSticker {public StickerItem item;public string name;public float started;}
-    readonly OnlineSticker[] onlineStickers=new OnlineSticker[2];int onlineStickerSerial=-1;
-    bool showBattleChat;string battleChat="";string onlineEmoteId="";
+    readonly OnlineSticker[] onlineStickers=new OnlineSticker[2];
+    readonly int[] onlineStickerSerials={-1,-1};
+    float nextBattleSticker,stickerDrawerProgress;
+    sealed class BattleMessage {public string text;public bool own;public float time;}
+    readonly List<BattleMessage> battleMessages=new List<BattleMessage>(4);
+    static readonly Rect BattleChatEntry=new Rect(18,459,478,55);
+    const string BattleChatField="battle-chat-input";
+    bool showBattleChat,focusBattleChat;
+    string battleChat="",onlineEmoteId="";
+
+    void ResetBattleSocial(){
+        battleChat="";battleMessages.Clear();showBattleChat=focusBattleChat=false;
+        showStickerPicker=false;stickerDrawerProgress=0;nextBattleSticker=0;
+        onlineEmoteId="";
+        for(int side=0;side<onlineStickers.Length;side++){onlineStickers[side]=null;onlineStickerSerials[side]=-1;}
+    }
     int OnlineKind(int team,string raw) {
         if(raw=="u00F")raw="h030"; // Native immediate lava replacement has no renderable parent model.
         int race=team==0?matchRace:matchBotRace;
@@ -38,7 +52,7 @@ public sealed partial class PcGame {
         try{series=new PcSeries(roundsChoice);StartRound();}finally{networkRoundLoadouts=null;}
         var wins=packet["wins"] as JArray;series.SetNetworkRound((int?)packet["round"]??1,wins!=null&&wins.Count==2?(int?)wins[networkSlot]??0:0,wins!=null&&wins.Count==2?(int?)wins[1-networkSlot]??0:0);
         AspectBeginRound(false);aspectWaiting=false;aspectOnlinePending=-1;match.Aspects[0]=-1;match.Aspects[1]=-1;
-        onlineMatch=true;onlineStarted=false;onlineDecision=false;showBattleChat=showStickerPicker=showVoicePanel=false;onlineStickers[0]=onlineStickers[1]=null;match.NetworkReplica=true;onlineReplica=new PcServerReplica(match,networkSlot,OnlineKind);
+        onlineMatch=true;onlineStarted=false;onlineDecision=false;ResetBattleSocial();showVoicePanel=false;match.NetworkReplica=true;onlineReplica=new PcServerReplica(match,networkSlot,OnlineKind);
         Notice("Подключение к бою: ожидаем второго игрока");StartCoroutine(NetworkLoaded());
     }
     IEnumerator NetworkLoaded(){int generation=versusSerial;yield return new WaitForEndOfFrame();while(versusActive&&generation==versusSerial&&Time.realtimeSinceStartup-versusAt<1.5f)yield return null;if(generation==versusSerial&&onlineMatch&&network!=null)SendNetwork(new JObject { ["type"]="loaded" });}
@@ -81,32 +95,144 @@ public sealed partial class PcGame {
         if(onlineMatch&&onlineStarted&&!NetworkBlocked&&network!=null&&network.Connected){SendNetwork(packet);return true;}
         Notice("Ожидаем соединение с боем");return false;
     }
+    void ToggleBattleChat(){
+        if(!onlineMatch||page!=Page.Match)return;
+        showBattleChat=!showBattleChat;
+        focusBattleChat=showBattleChat&&!Application.isMobilePlatform;
+        showStickerPicker=showVoicePanel=false;
+    }
+
+    void ToggleBattleStickers(){
+        if(!onlineMatch||page!=Page.Match)return;
+        if(!showStickerPicker){LoadStickerCatalog();stickerDrawerProgress=0;socialStickerPeer="";}
+        showStickerPicker=!showStickerPicker;
+        showBattleChat=showVoicePanel=false;
+    }
+
+    void AddBattleMessage(JObject message){
+        string body=(string)message["text"]??"";
+        if(body.Length==0)return;
+        bool own=(int?)message["slot"]==networkSlot;
+        string name=own?"Вы":(string)message["name"]??"Игрок";
+        if(battleMessages.Count==4)battleMessages.RemoveAt(0);
+        battleMessages.Add(new BattleMessage{text=name+": "+body,own=own,time=Time.unscaledTime});
+    }
+
+    void SendBattleChat(){
+        string body=battleChat.Trim();
+        if(body.Length==0)return;
+        if(NetworkCommand(new JObject{["type"]="chat",["text"]=body}))battleChat="";
+    }
+
+    Rect BattleStickerArea(){
+        int rows=stickerPacks==null?2:Mathf.CeilToInt(stickerPacks[stickerPack].items.Count/5f);
+        return new Rect(124,Application.isMobilePlatform?101:86,366,79+76*rows);
+    }
+
+    bool BattleSocialContains(Vector2 point)=>onlineMatch&&page==Page.Match&&
+        (showBattleChat&&BattleChatEntry.Contains(point)||showStickerPicker&&BattleStickerArea().Contains(point));
+
     void DrawNetworkHudOverlay() {
         if(!onlineMatch)return;
-        float socialTop=Application.isMobilePlatform?48:33;var chatRect=new Rect(68,socialTop,48,48);var stickersRect=new Rect(124,socialTop,48,48);var voiceRect=new Rect(180,socialTop,48,48);
-        if(SocialIconButton("battle.chat.open",chatRect,0,showBattleChat,"Чат сражения · F12")){showBattleChat=!showBattleChat;showStickerPicker=showVoicePanel=false;}
-        if(SocialIconButton("battle.sticker.open",stickersRect,1,showStickerPicker,"Стикеры · F8")){showStickerPicker=!showStickerPicker;showBattleChat=showVoicePanel=false;}
-        if(SocialIconButton("battle.voice.open",voiceRect,2,showVoicePanel,"Голосовой чат · F7")){showVoicePanel=!showVoicePanel;showStickerPicker=showBattleChat=false;}
+        float socialTop=Application.isMobilePlatform?48:33;
+        var chatRect=new Rect(68,socialTop,48,48);
+        var stickersRect=new Rect(124,socialTop,48,48);
+        var voiceRect=new Rect(180,socialTop,48,48);
+        if(SocialIconButton("battle.chat.open",chatRect,0,showBattleChat,"Чат сражения · Enter / F12"))ToggleBattleChat();
+        if(SocialIconButton("battle.sticker.open",stickersRect,1,showStickerPicker,"Стикеры · F8"))ToggleBattleStickers();
+        if(SocialIconButton("battle.voice.open",voiceRect,2,showVoicePanel,"Голосовой чат · F7")){
+            showVoicePanel=!showVoicePanel;showStickerPicker=showBattleChat=false;
+        }
         DrawMobileTalk();
         for(int side=0;side<2;side++)DrawOnlineSticker(side);
+        DrawBattleMessages();
         if(showBattleChat)DrawBattleChatPanel();
-        if(showStickerPicker)DrawStickerPicker();
-        
+        if(showStickerPicker)DrawBattleStickerDrawer();
     }
-    Vector2 battleChatScroll;
+
+    void DrawBattleMessages(){
+        if(Event.current.type!=EventType.Repaint)return;
+        var style=new GUIStyle(label){fontSize=16,wordWrap=true,richText=false,alignment=TextAnchor.UpperLeft,padding=new RectOffset()};
+        float y=BattleChatEntry.y-7;
+        for(int i=battleMessages.Count-1;i>=0;i--){
+            var line=battleMessages[i];
+            float alpha=Mathf.Clamp01((12-(Time.unscaledTime-line.time))/1.1f);
+            if(alpha<=0)break;
+            var content=new GUIContent(line.text);
+            float width=Mathf.Clamp(style.CalcSize(content).x+24,120,BattleChatEntry.width);
+            float height=Mathf.Max(30,style.CalcHeight(content,width-24)+12);
+            y-=height;
+            if(y<112)break;
+            var rect=new Rect(BattleChatEntry.x,y,width,height);
+            Fill(rect,new Color(.022f,.031f,.035f,.89f*alpha));
+            Fill(new Rect(rect.x,rect.y,2,height),line.own?new Color(.84f,.66f,.35f,alpha):new Color(.51f,.7f,.85f,alpha));
+            style.normal.textColor=new Color(.95f,.93f,.86f,alpha);
+            GUI.Label(new Rect(rect.x+12,rect.y+5,width-24,height-9),content,style);
+            y-=5;
+        }
+    }
+
     void DrawBattleChatPanel(){
-        Fill(new Rect(0,0,1280,720),new Color(0,0,0,.5f));LobbyPanel(new Rect(250,125,780,430));
-        Text(276,137,520,58,"ЧАТ СРАЖЕНИЯ",new GUIStyle(heading){fontSize=26,wordWrap=false,clipping=TextClipping.Overflow});
-        if(LobbyButton("battle.chat.close",new Rect(832,142,172,48),"Закрыть"))showBattleChat=false;
-        var messageStyle=ChatBodyStyle;float total=0;
-        foreach(var m in roomMessages){float width=Mathf.Clamp(Mathf.Max(messageStyle.CalcSize(new GUIContent((string)m["text"]??"")).x,new GUIStyle(small).CalcSize(new GUIContent((string)m["name"]??"Игрок")).x)+36,220,650);total+=Mathf.Max(84,messageStyle.CalcHeight(new GUIContent((string)m["text"]??""),width-36)+61)+14;}
-        battleChatScroll=GUI.BeginScrollView(new Rect(274,204,732,242),battleChatScroll,new Rect(0,0,700,Mathf.Max(225,total)));
-        float rowY=0;foreach(var m in roomMessages){string text=(string)m["text"]??"";bool own=(int?)m["slot"]==networkSlot;float width=Mathf.Clamp(Mathf.Max(messageStyle.CalcSize(new GUIContent(text)).x,new GUIStyle(small).CalcSize(new GUIContent((string)m["name"]??"Игрок")).x)+36,220,650),height=Mathf.Max(84,messageStyle.CalcHeight(new GUIContent(text),width-36)+61),x=own?688-width:10;
-            ChatBubble(new Rect(x,rowY,width,height),own);Text(x+18,rowY+9,width-36,26,own?"Вы":(string)m["name"]??"Игрок",new GUIStyle(small){fontSize=13,fontStyle=FontStyle.Bold,wordWrap=false});Text(x+18,rowY+39,width-36,height-51,text,messageStyle);rowY+=height+14;}
-        if(roomMessages.Count==0)Text(8,20,670,90,"Пожелайте сопернику удачи. Стикеры отправляются отдельной кнопкой рядом с чатом.",messageStyle);GUI.EndScrollView();
-        battleChat=GUI.TextField(new Rect(274,468,518,54),battleChat,180,menuInput);
-        if(LobbyButton("battle.chat.send",new Rect(806,468,200,54),"Отправить",true)){var body=battleChat.Trim();if(body.Length>0){SendNetwork(new JObject{["type"]="chat",["text"]=body});battleChat="";battleChatScroll.y=100000;}}
+        var rect=BattleChatEntry;
+        LobbyPanel(rect);
+        var field=new Rect(rect.x+7,rect.y+7,306,41);
+        GUI.SetNextControlName(BattleChatField);
+        battleChat=GUI.TextField(field,battleChat,180,menuInput);
+        if(focusBattleChat&&Event.current.type==EventType.Repaint){GUI.FocusControl(BattleChatField);focusBattleChat=false;}
+        if(battleChat.Length==0&&GUI.GetNameOfFocusedControl()!=BattleChatField)
+            Text(field.x+12,field.y+9,field.width-24,25,"Сообщение в бой",small);
+        if(LobbyButton("battle.chat.send",new Rect(rect.x+319,rect.y+7,111,41),"Отправить",true))SendBattleChat();
+        if(LobbyButton("battle.chat.close",new Rect(rect.x+435,rect.y+7,36,41),"×")){
+            GUI.FocusControl(null);showBattleChat=false;
+        }
     }
+
+    void ReceiveStickerRejection(JObject packet){
+        float retry=(float?)packet["retry_after"]??0;
+        nextBattleSticker=Time.unscaledTime+Mathf.Max(0,retry);
+        if(retry<=0)Notice((string)packet["message"]??"Стикер недоступен");
+    }
+
+    void DrawBattleStickerDrawer(){
+        LoadStickerCatalog();
+        if(Event.current.type==EventType.Repaint)
+            stickerDrawerProgress=Mathf.MoveTowards(stickerDrawerProgress,1,Time.unscaledDeltaTime*8);
+        Rect rect=BattleStickerArea();
+        rect.height*=Mathf.SmoothStep(0,1,stickerDrawerProgress);
+        if(rect.height<1)return;
+        LobbyPanel(rect);
+        GUI.BeginGroup(rect);
+        if(LobbyButton("sticker.prev",new Rect(8,7,40,36),"<"))
+            stickerPack=(stickerPack+stickerPacks.Count-1)%stickerPacks.Count;
+        var pack=stickerPacks[stickerPack];
+        if(LobbyButton("sticker.pack",new Rect(53,7,217,36),pack.name))
+            stickerPack=(stickerPack+1)%stickerPacks.Count;
+        if(LobbyButton("sticker.next",new Rect(275,7,40,36),">"))
+            stickerPack=(stickerPack+1)%stickerPacks.Count;
+        if(LobbyButton("sticker.close",new Rect(320,7,38,36),"×"))showStickerPicker=false;
+        pack=stickerPacks[stickerPack];
+        float remaining=nextBattleSticker-Time.unscaledTime;
+        for(int i=0;i<pack.items.Count;i++){
+            var item=pack.items[i];
+            var cell=new Rect(9+i%5*71,49+i/5*76,64,69);
+            bool owned=CanSendSticker(item.id);
+            bool enabled=GUI.enabled;
+            GUI.enabled=enabled&&remaining<=0;
+            bool clicked=LobbyButton("sticker."+i,cell,"");
+            GUI.enabled=enabled;
+            StickerImage(new Rect(cell.x+5,cell.y+3,54,53),item);
+            GUI.Label(new Rect(cell.x+3,cell.y+52,58,14),item.label,hudSmall);
+            if(!owned)Fill(new Rect(cell.x,cell.y,cell.width,cell.height),new Color(0,0,0,.38f));
+            if(!clicked)continue;
+            if(!owned){Notice("Рофлопак открывается в магазине за 300 жетонов");PreviewSticker(item);}
+            else if(NetworkCommand(new JObject{["type"]="emote",["id"]=item.id}))nextBattleSticker=Time.unscaledTime+1.5f;
+        }
+        string hint=remaining>0?"Следующий стикер через "+Mathf.CeilToInt(remaining)+" с":
+            pack.paid&&!CanSendSticker(pack.items[0].id)?"Рофлопак · 300 жетонов в магазине":"Нажмите стикер, чтобы отправить";
+        Text(10,51+76*Mathf.CeilToInt(pack.items.Count/5f),345,23,hint,small);
+        GUI.EndGroup();
+    }
+
     void DrawOnlineSticker(int side) {
         var bubble=onlineStickers[side];if(bubble==null)return;float age=Time.unscaledTime-bubble.started;if(age>=3.6f){onlineStickers[side]=null;return;}
         float x=side==0?834:1054;float alpha=Mathf.Clamp01((3.6f-age)/.35f),t=Mathf.Clamp01(age/.45f),back=1+2.70158f*Mathf.Pow(t-1,3)+1.70158f*Mathf.Pow(t-1,2),scale=Mathf.LerpUnclamped(.55f,1,back);
@@ -116,7 +242,23 @@ public sealed partial class PcGame {
         var oldMatrix=GUI.matrix;Vector2 centre=new Vector2(x+105,269);GUIUtility.RotateAroundPivot(angle,centre);float w=210*scale;StickerImage(new Rect(centre.x-w*.5f,centre.y-w*.5f,w,w),bubble.item);GUI.matrix=oldMatrix;
         if(!bubble.item.atlas){var caption=new GUIStyle(label){alignment=TextAnchor.MiddleCenter,normal={textColor=Color.white}};GUI.Label(new Rect(x,379,210,25),bubble.item.label,caption);}GUI.color=oldColor;
     }
-    void ReceiveEmote(JObject packet){var m=packet["message"] as JObject;if(m==null)return;int sender=(int?)m["slot"]??-1,serial=(int?)m["serial"]??-1;if(sender<0||sender>1||serial<=onlineStickerSerial)return;LoadStickerCatalog();string id=(string)m["id"]??"";var item=stickerPacks.SelectMany(p=>p.items).FirstOrDefault(x=>x.id==id);if(item==null)return;onlineStickerSerial=serial;onlineEmoteId=id;string name=(string)m["name"]??"Игрок";if(name.Length>24)name=name.Substring(0,24);onlineStickers[sender==networkSlot?0:1]=new OnlineSticker {item=item,name=name,started=Time.unscaledTime};PreviewSticker(item);}
+    void ReceiveEmote(JObject packet){
+        if(!(packet["message"] is JObject message))return;
+        int sender=(int?)message["slot"]??-1,serial=(int?)message["serial"]??-1;
+        if(sender<0||sender>1||serial>=0&&serial<=onlineStickerSerials[sender])return;
+        LoadStickerCatalog();
+        string id=(string)message["id"]??"";
+        var item=stickerPacks.SelectMany(p=>p.items).FirstOrDefault(x=>x.id==id);
+        if(item==null)return;
+        if(serial>=0)onlineStickerSerials[sender]=serial;
+        if(sender==networkSlot)
+            nextBattleSticker=Time.unscaledTime+Mathf.Max(0,(float?)packet["cooldown"]??1.5f);
+        onlineEmoteId=id;
+        string name=(string)message["name"]??"Игрок";
+        if(name.Length>24)name=name.Substring(0,24);
+        onlineStickers[sender==networkSlot?0:1]=new OnlineSticker{item=item,name=name,started=Time.unscaledTime};
+        PreviewSticker(item);
+    }
     Texture2D chatToolbarIcon,micToolbarIcon;
     Texture2D ToolbarGlyph(bool mic){
         var t=new Texture2D(64,64,TextureFormat.RGBA32,false);var pixels=new Color[4096];

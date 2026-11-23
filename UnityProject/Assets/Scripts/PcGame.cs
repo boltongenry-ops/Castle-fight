@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.45.0";
+    string Version=>MobileContent.Active?Application.version:"0.45.1";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -46,10 +46,10 @@ public sealed partial class PcGame : MonoBehaviour {
         yield return OpenDesktopMenuBuilders();
         terrain=new NativeMapTerrain(terrainBytes.bytes,JObject.Parse(terrainMetadata.text),(JObject)JObject.Parse(waterMetadata.text)["water"]);
         settingsPath=BattleLab.Arg("--pc-settings-file",Path.Combine(Application.persistentDataPath,"pc-settings.json"));
-        string testMode=BattleLab.Arg("--pc-test");testing=testMode=="battle-help"||testMode=="pepe"||testMode=="hud-themes"||testMode=="art040"||testMode=="models039"||testMode=="workshop038"||testMode=="spell-audit036"||testMode=="optimization035"||testMode=="challenge034"||testMode=="nerubian033"||testMode=="nerubian032"||testMode=="structure031"||testMode=="combat030"||testMode=="centaur028"||testMode=="bot027"||testMode=="units026"||testMode=="cards025"||testMode=="motion024"||testMode=="network023"||testMode=="polish022"||testMode=="recovery"||testMode=="social"||testMode=="guide"||testMode=="fog"||testMode=="frontend"||testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"||testMode=="elven"||testMode=="polish"||testMode=="night"||testMode=="elemental"||testMode=="corrupted"||testMode=="undead"||testMode=="mech"||testMode=="northern"||testMode=="1"||testMode=="naga"||testMode=="nature"||testMode=="classic"||testMode=="menu"||testMode=="chaos";
+        string testMode=BattleLab.Arg("--pc-test");testing=testMode=="battle-social"||testMode=="battle-help"||testMode=="pepe"||testMode=="hud-themes"||testMode=="art040"||testMode=="models039"||testMode=="workshop038"||testMode=="spell-audit036"||testMode=="optimization035"||testMode=="challenge034"||testMode=="nerubian033"||testMode=="nerubian032"||testMode=="structure031"||testMode=="combat030"||testMode=="centaur028"||testMode=="bot027"||testMode=="units026"||testMode=="cards025"||testMode=="motion024"||testMode=="network023"||testMode=="polish022"||testMode=="recovery"||testMode=="social"||testMode=="guide"||testMode=="fog"||testMode=="frontend"||testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"||testMode=="elven"||testMode=="polish"||testMode=="night"||testMode=="elemental"||testMode=="corrupted"||testMode=="undead"||testMode=="mech"||testMode=="northern"||testMode=="1"||testMode=="naga"||testMode=="nature"||testMode=="classic"||testMode=="menu"||testMode=="chaos";
         LoadSettings();if(MapArt.Preferred)yield return MapArt.Apply(controls);if(HdModels.Preferred)StartCoroutine(HdModels.OpenCached());LoadMatchRules();Apply(options,false);controls.HideToolbar=true;controls.TouchOverUi=TouchOverUi;controls.TouchPanAllowed=()=>chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder;
         controls.AllowGridToggle=false;controls.buildGrid.SetActive(false);
-        if(testing&&!MobileContent.Active&&testMode!="hud-themes"&&testMode!="workshop038"&&testMode!="models039"&&testMode!="art040"&&testMode!="pepe"&&testMode!="battle-help")PreserveAssetAuditForHistoricalTests();
+        if(testing&&!MobileContent.Active&&testMode!="hud-themes"&&testMode!="workshop038"&&testMode!="models039"&&testMode!="art040"&&testMode!="pepe"&&testMode!="battle-help"&&testMode!="battle-social")PreserveAssetAuditForHistoricalTests();
         yield return LoadClassicProjectiles();
         yield return LoadSpellArt036();
         if(MobileContent.Active){yield return LoadMobileFrontendArt();yield return MobileContent.Current.EnsureMedia("Frontend/startup_intro.mp4");}
@@ -64,7 +64,7 @@ public sealed partial class PcGame : MonoBehaviour {
         Debug.Log("CF_PC_READY page="+page+" build="+Version);
         StartCoroutine(CompleteStartupLoading());if(!MobileContent.Active)StartCoroutine(LoadMobileFrontendArt());
         if(!testing){StartCoroutine(CheckGameRelease(true));if(!string.IsNullOrEmpty(networkSessionToken))BeginDirectory();}
-        if(testing)StartCoroutine(testMode=="battle-help"?ExerciseBattleHelp():testMode=="pepe"?ExercisePepe():testMode=="hud-themes"?ExerciseHudThemes():testMode=="art040"?ExerciseReforgedArt040():testMode=="models039"?ExerciseModels039():testMode=="workshop038"?ExerciseWorkshop038():testMode=="spell-audit036"?ExerciseSpellAudit036():testMode=="optimization035"?ExerciseOptimization035():testMode=="challenge034"?ExerciseChallenge034():testMode=="nerubian033"?ExerciseNerubian033():testMode=="nerubian032"?ExerciseNerubian032():testMode=="structure031"?ExerciseStructure031():testMode=="combat030"?ExerciseCombat030():testMode=="centaur028"?ExerciseCentaur028():testMode=="bot027"?ExerciseBot027():testMode=="units026"?ExerciseUnits026():testMode=="cards025"?ExerciseCards025():testMode=="motion024"?ExerciseProjectileMotion024():testMode=="network023"?ExerciseNetwork023():testMode=="polish022"?ExerciseFrontend022():testMode=="recovery"?ExerciseRecovery():testMode=="social"?ExerciseSocial():testMode=="guide"?ExerciseGuide():testMode=="fog"?ExerciseFog():testMode=="frontend"?ExerciseFrontend():testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"?ExerciseFinalRaceOnly(testMode):testMode=="elven"?ExerciseElvenOnly():testMode=="polish"?ExercisePolishOnly():testMode=="night"?ExerciseNightOnly():testMode=="elemental"?ExerciseElementalOnly():testMode=="corrupted"?ExerciseCorruptedOnly():testMode=="undead"?ExerciseUndeadOnly():testMode=="mech"?ExerciseMechOnly():testMode=="northern"?ExerciseNorthernOnly():testMode=="chaos"?ExerciseChaosOnly():testMode=="classic"?ExerciseClassicOnly():testMode=="menu"?ExerciseMenu():testMode=="naga"?ExerciseNagaOnly():testMode=="nature"?ExerciseNatureOnly():Exercise());
+        if(testing)StartCoroutine(testMode=="battle-social"?ExerciseBattleSocial():testMode=="battle-help"?ExerciseBattleHelp():testMode=="pepe"?ExercisePepe():testMode=="hud-themes"?ExerciseHudThemes():testMode=="art040"?ExerciseReforgedArt040():testMode=="models039"?ExerciseModels039():testMode=="workshop038"?ExerciseWorkshop038():testMode=="spell-audit036"?ExerciseSpellAudit036():testMode=="optimization035"?ExerciseOptimization035():testMode=="challenge034"?ExerciseChallenge034():testMode=="nerubian033"?ExerciseNerubian033():testMode=="nerubian032"?ExerciseNerubian032():testMode=="structure031"?ExerciseStructure031():testMode=="combat030"?ExerciseCombat030():testMode=="centaur028"?ExerciseCentaur028():testMode=="bot027"?ExerciseBot027():testMode=="units026"?ExerciseUnits026():testMode=="cards025"?ExerciseCards025():testMode=="motion024"?ExerciseProjectileMotion024():testMode=="network023"?ExerciseNetwork023():testMode=="polish022"?ExerciseFrontend022():testMode=="recovery"?ExerciseRecovery():testMode=="social"?ExerciseSocial():testMode=="guide"?ExerciseGuide():testMode=="fog"?ExerciseFog():testMode=="frontend"?ExerciseFrontend():testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"?ExerciseFinalRaceOnly(testMode):testMode=="elven"?ExerciseElvenOnly():testMode=="polish"?ExercisePolishOnly():testMode=="night"?ExerciseNightOnly():testMode=="elemental"?ExerciseElementalOnly():testMode=="corrupted"?ExerciseCorruptedOnly():testMode=="undead"?ExerciseUndeadOnly():testMode=="mech"?ExerciseMechOnly():testMode=="northern"?ExerciseNorthernOnly():testMode=="chaos"?ExerciseChaosOnly():testMode=="classic"?ExerciseClassicOnly():testMode=="menu"?ExerciseMenu():testMode=="naga"?ExerciseNagaOnly():testMode=="nature"?ExerciseNatureOnly():Exercise());
 #if CF_ONLINE_QA
         if(BattleLab.Arg("--pc-online-qa")!="")StartCoroutine(ExerciseOnlineMatch());
 #endif
@@ -190,7 +190,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(helpMatch!=null&&!HelpOpen)CloseBattleHelp();
         controls.InputBlocked=HelpOpen||NetworkBlocked||aspectWaiting||(page!=Page.Match&&page!=Page.Viewer);
         controls.ReserveBuildKeys=page==Page.Match;
-        controls.EdgePan=!HelpOpen&&!NetworkBlocked&&!Application.isMobilePlatform&&!testing&&page==Page.Match&&!aspectWaiting&&!selectionPending&&!showBattleChat&&!showVoicePanel&&!showStickerPicker;
+        controls.EdgePan=!HelpOpen&&!NetworkBlocked&&!Application.isMobilePlatform&&!testing&&page==Page.Match&&!aspectWaiting&&!selectionPending&&!showVoicePanel;
         controls.buildGrid.SetActive(false);
         if(confirmDisplay&&Time.unscaledTime>=screenDeadline)RevertDisplay();
         if(Input.GetKeyDown(KeyCode.Escape)&&!NetworkBlocked) {
@@ -224,8 +224,11 @@ public sealed partial class PcGame : MonoBehaviour {
             if(Input.GetKeyDown(KeyCode.F10))page=page==Page.Pause?Page.Match:Page.Pause;
             if(Input.GetKeyDown(KeyCode.F9)&&page==Page.Match&&!showBattleChat&&!showStickerPicker&&!showVoicePanel){if(HelpOpen)CloseBattleHelp();else OpenBattleHelp();}
             if(Input.GetKeyDown(KeyCode.F11))page=page==Page.Teams?Page.Match:Page.Teams;
-            if(Input.GetKeyDown(KeyCode.F12)){if(onlineMatch){showBattleChat=!showBattleChat;showStickerPicker=showVoicePanel=false;}else Notice("Чат доступен в сетевой игре");}
-            if(onlineMatch&&Input.GetKeyDown(KeyCode.F8)){showStickerPicker=!showStickerPicker;showBattleChat=showVoicePanel=false;}
+            if(Input.GetKeyDown(KeyCode.F12)){if(onlineMatch)ToggleBattleChat();else Notice("Чат доступен в сетевой игре");}
+            if(onlineMatch&&page==Page.Match&&!HelpOpen&&!showVoicePanel&&(Input.GetKeyDown(KeyCode.Return)||Input.GetKeyDown(KeyCode.KeypadEnter))){
+                if(showBattleChat)SendBattleChat();else ToggleBattleChat();
+            }
+            if(onlineMatch&&Input.GetKeyDown(KeyCode.F8))ToggleBattleStickers();
             if(onlineMatch&&Input.GetKeyDown(KeyCode.F7)){showVoicePanel=!showVoicePanel;showBattleChat=showStickerPicker=false;}
         }
         if(aspectWaiting)AspectTick(Time.unscaledDeltaTime);
@@ -240,7 +243,7 @@ public sealed partial class PcGame : MonoBehaviour {
             }else if(page==Page.Match){
             if(Input.GetKeyDown(KeyCode.F1))FocusBuilder();
             if(Input.GetKeyDown(KeyCode.F2))SelectCastle();
-            if(!testing&&(!onlineMatch||onlineStarted)&&!showBattleChat&&!showVoicePanel&&!showStickerPicker)HandleCommandKeys();
+            if(!testing&&(!onlineMatch||onlineStarted)&&!showBattleChat&&!showVoicePanel)HandleCommandKeys();
             if(!testing&&(!onlineMatch||onlineStarted)){if(Application.isMobilePlatform)HandleTouchWorld();else HandleBuilderMouse();}
             if(!onlineMatch||onlineStarted)UpdatePlacement();
             }
@@ -346,7 +349,7 @@ public sealed partial class PcGame : MonoBehaviour {
         new Rect(546,0,144,66).Contains(p)||new Rect(948,31,327,scoreExpanded?112:29).Contains(p)||
         (aspectInfoOpen||!string.IsNullOrEmpty(spellDetailsId))&&PassiveAspectPanel.Contains(p);
     bool MouseOverHud() {
-        if(onlineMatch&&(showBattleChat||showVoicePanel||showStickerPicker||!onlineStarted))return true;
+        if(onlineMatch&&!onlineStarted)return true;
         return TouchOverUi(ActivePointer);
     }
     void HandleBuilderMouse() {
@@ -446,8 +449,7 @@ public sealed partial class PcGame : MonoBehaviour {
         Matrix4x4 previous=GUI.matrix;GUI.matrix=Matrix4x4.TRS(new Vector3(guiOrigin.x,guiOrigin.y,0),Quaternion.identity,Vector3.one*guiScale);
         if(showUpdatePanel){DrawGameUpdates();GUI.matrix=previous;return;}
         if(showVoicePanel){DrawVoicePanel();DrawNetworkRecovery();GUI.matrix=previous;return;}
-        if(showStickerPicker&&(page==Page.Network||page==Page.Match||page==Page.Progression)){DrawStickerPicker();DrawNetworkRecovery();GUI.matrix=previous;return;}
-        if(showBattleChat&&onlineMatch&&page==Page.Match){DrawBattleChatPanel();DrawNetworkRecovery();GUI.matrix=previous;return;}
+        if(showStickerPicker&&(page==Page.Network||page==Page.Progression)){DrawStickerPicker();DrawNetworkRecovery();GUI.matrix=previous;return;}
         bool updateModal=showUpdatePanel;if(updateModal)GUI.enabled=false;
         if(page==Page.Main)DrawMain();else if(page==Page.Setup)DrawSetup();else if(page==Page.Settings)DrawSettings();else if(page==Page.Network)DrawNetwork();
         else if(page==Page.Guide)DrawGuide();else if(page==Page.Progression)DrawProgression();else if(page==Page.Match){if(HelpOpen)DrawBattleHelp();else{DrawMatch();DrawChallengeHud();}}else if(page==Page.Viewer) {

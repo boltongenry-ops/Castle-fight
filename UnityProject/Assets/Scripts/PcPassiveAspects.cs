@@ -41,13 +41,14 @@ public sealed partial class PcGame {
     void DrawUnitSkillGrid(HumanMatch.Unit unit){
         if(skillCardUnit!=unit.id){skillCardUnit=unit.id;skillCardPage=0;aspectInfoOpen=false;}
         var ids=UnitCardAbilities(unit).Where(VisibleUnitAbility).ToArray();bool aspect=AspectPassiveChoice(unit.team)>=0;
-        int capacity=aspect?11:12,pageSize=ids.Length>capacity?capacity-1:capacity,pages=Mathf.Max(1,Mathf.CeilToInt(ids.Length/(float)pageSize));skillCardPage=Mathf.Clamp(skillCardPage,0,pages-1);
+        int capacity=aspect?7:8,pageSize=ids.Length>capacity?capacity-1:capacity,pages=Mathf.Max(1,Mathf.CeilToInt(ids.Length/(float)pageSize));skillCardPage=Mathf.Clamp(skillCardPage,0,pages-1);
         int slot=0;foreach(string id in ids.Skip(skillCardPage*pageSize).Take(pageSize)){
             var cfg=match.Abilities[id];var color=GUI.color;if(id=="A0F5"&&!ElementalLinkReady(unit))GUI.color=new Color(color.r*.45f,color.g*.45f,color.b*.45f,color.a);
             DrawSpellIcon("ability."+id,Slot(slot%4,slot/4),id,UnitSkillTip(unit,id,cfg),unit);GUI.color=color;slot++;
         }
         if(pages>1){var rect=Slot((capacity-1)%4,(capacity-1)/4);StoneFrame(rect);GUI.Label(rect,(skillCardPage+1)+"/"+pages+"  >",new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter});if(Button("ability.page",rect,"",false,iconStyle))skillCardPage=(skillCardPage+1)%pages;if(rect.Contains(HudPointer))hudTip="Другие способности · страница "+(skillCardPage+1)+" из "+pages;}
-        if(aspect)DrawPassiveAspect(unit.team,Slot(3,2));
+        if(aspect)DrawPassiveAspect(unit.team,Slot(3,1));
+        DrawUnitStatusCard(unit);
     }
 }
 }

@@ -8,7 +8,7 @@ public sealed partial class PcGame {
     readonly List<int> selectedGroup=new List<int>();
     readonly Dictionary<int,GameObject> groupRings=new Dictionary<int,GameObject>();
     bool selectionPending,selectionDragging;Vector2 selectionStart,selectionEnd;
-    bool CanMarquee=>page==Page.Match&&!aspectWaiting&&chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder&&!showBattleChat&&!showVoicePanel&&!showStickerPicker;
+    bool CanMarquee=>page==Page.Match&&!aspectWaiting&&chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder&&!showVoicePanel;
     static Rect SelectionRect(Vector2 a,Vector2 b)=>Rect.MinMaxRect(Mathf.Min(a.x,b.x),Mathf.Min(a.y,b.y),Mathf.Max(a.x,b.x),Mathf.Max(a.y,b.y));
     void ClearGroupSelection(){selectedGroup.Clear();selectionPending=selectionDragging=false;foreach(var ring in groupRings.Values)if(ring)Destroy(ring);groupRings.Clear();}
     Vector3 UnitSelectionPoint(HumanMatch.Unit unit)=>Camera.main.WorldToScreenPoint(World(unit.position)+Vector3.up*(match.Height(unit)+1.3f));

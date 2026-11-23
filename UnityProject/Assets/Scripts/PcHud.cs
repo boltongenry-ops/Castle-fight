@@ -91,7 +91,7 @@ public sealed partial class PcGame {
         if(Button("match.pause",new Rect(142,1,131,topHeight),Application.isMobilePlatform?"Меню":"Меню (F10)",false,topButton))page=Page.Pause;
         if(Button("match.teams",new Rect(278,1,131,topHeight),Application.isMobilePlatform?"Стороны":"Стороны (F11)",false,topButton))page=Page.Teams;
         bool inputEnabled=GUI.enabled;GUI.enabled=inputEnabled&&onlineMatch;
-        if(Button("match.chat",new Rect(414,1,131,topHeight),Application.isMobilePlatform?"Чат":"Чат (F12)",false,topButton))showBattleChat=!showBattleChat;GUI.enabled=inputEnabled;
+        if(Button("match.chat",new Rect(414,1,131,topHeight),Application.isMobilePlatform?"Чат":"Чат (F12)",false,topButton))ToggleBattleChat();GUI.enabled=inputEnabled;
         GUI.DrawTexture(new Rect(741,2,24,24),HdIcon(goldIcon));
         GUI.Label(new Rect(774,0,78,28),Mathf.FloorToInt(match.AvailableGold(0)).ToString(),new GUIStyle(hudText){alignment=TextAnchor.MiddleRight});
         GUI.DrawTexture(new Rect(878,2,24,24),HdIcon(woodIcon));
@@ -148,7 +148,7 @@ public sealed partial class PcGame {
         }
         if(noticeLeft>0){
             float alpha=Mathf.Min(1,noticeLeft);var message=new GUIStyle(hudText){fontSize=15,alignment=TextAnchor.LowerLeft,normal={textColor=new Color(0,0,0,alpha)}};
-            GUI.Label(new Rect(336,467,610,32),notice,message);message.normal.textColor=new Color(1,.83f,.32f,alpha);GUI.Label(new Rect(335,466,610,32),notice,message);
+            GUI.Label(new Rect(showBattleChat?506:336,467,showBattleChat?440:610,32),notice,message);message.normal.textColor=new Color(1,.83f,.32f,alpha);GUI.Label(new Rect(showBattleChat?505:335,466,showBattleChat?440:610,32),notice,message);
         }
         if(!string.IsNullOrEmpty(hudTip)){
             var tipStyle=new GUIStyle(hudTipTable?hudSmall:hudText){fontSize=hudTipTable?14:15,alignment=TextAnchor.UpperLeft,wordWrap=!hudTipTable,padding=new RectOffset(0,0,0,0)};

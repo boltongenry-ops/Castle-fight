@@ -1,5 +1,45 @@
 using System;using System.Collections;using System.IO;using System.Linq;using Newtonsoft.Json.Linq;using UnityEngine;
 namespace CastleFight {public sealed partial class PcGame {
+    IEnumerator ExerciseBattleSocial(){
+        string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"battle-social-validation"));
+        Directory.CreateDirectory(folder);
+        raceChoice=botRaceChoice=0;series=new PcSeries(1);StartRound();
+        onlineMatch=onlineStarted=true;networkSlot=0;
+        yield return Action("battle.chat.open");
+        Check(showBattleChat&&BattleSocialContains(BattleChatEntry.center)&&!BattleSocialContains(new Vector2(640,330)),
+            "Compact text input only captures clicks inside its rectangle");
+        AddBattleMessage(new JObject{["slot"]=1,["name"]="Соперник",["text"]="Удачи в бою!"});
+        yield return Shot(folder,"01-battle-chat");
+        yield return Action("battle.chat.close");
+        Check(!showBattleChat&&battleMessages.Count==1,"Messages stay over the battle after closing the input");
+        yield return Action("battle.sticker.open");
+        yield return new WaitForSecondsRealtime(.24f);
+        Check(showStickerPicker&&stickerDrawerProgress>.99f,"Sticker drawer finishes opening");
+        yield return Shot(folder,"02-battle-sticker-drawer");
+        ReceiveEmote(new JObject{["message"]=new JObject{["slot"]=0,["serial"]=1,["name"]="Вы",["id"]="knight"}});
+        var first=onlineStickers[0];
+        ReceiveEmote(new JObject{["message"]=new JObject{["slot"]=0,["serial"]=2,["name"]="Вы",["id"]="knight"}});
+        Check(first!=null&&onlineStickers[0]!=first&&onlineStickerSerials[0]==2,"Same sticker plays again with a new serial");
+        ReceiveEmote(new JObject{["message"]=new JObject{["slot"]=1,["serial"]=1,["name"]="Соперник",["id"]="goblin"}});
+        Check(onlineStickers[1]?.item.id=="goblin","The other side has its own watermark");
+        yield return Shot(folder,"03-battle-sticker-both-sides");
+        yield return Action("sticker.close");
+        builderSelected=false;
+        var unit=new HumanMatch.Unit{id=1001,kind=match.BaseKinds.First(),hp=100,maxHp=100,team=0,stun=2};
+        unit.effects.Add(new HumanMatch.Effect{id="BHIr",left=4,config=new JObject{["name"]="Стальная решимость"}});
+        unit.effects.Add(new HumanMatch.Effect{id="A02I",left=5,sourceTeam=1,config=new JObject{["name"]="Безумие",["kind"]="debuff"}});
+        match.Units.Add(unit);selectedUnit=unit.id;
+        yield return new WaitForEndOfFrame();
+        Check(unitBuffs.Any(b=>b.id=="effect.BHIr")&&unitDebuffs.Any(b=>b.id=="effect.A02I")&&unitDebuffs.Any(b=>b.id=="stun"),
+            "Selected unit renders friendly and hostile statuses in separate cells");
+        yield return Shot(folder,"04-battle-statuses");
+        ResetBattleSocial();
+        Check(onlineStickerSerials.All(serial=>serial==-1)&&onlineStickers.All(sticker=>sticker==null),
+            "A fresh battle accepts restarted sticker serials");
+        Debug.Log("CF_BATTLE_SOCIAL_RESULT failures="+testFailures);
+        Application.Quit(testFailures==0?0:1);
+    }
+
     IEnumerator RecoveryWait(Func<bool> condition,string name,float seconds=25){float until=Time.realtimeSinceStartup+seconds;while(!condition()&&Time.realtimeSinceStartup<until)yield return null;Check(condition(),name);}
     IEnumerator ExerciseRecovery(){
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"recovery-validation"));Directory.CreateDirectory(folder);MainMenu();yield return Action("main.network");yield return RecoveryWait(()=>directoryReady,"Directory ready");
@@ -28,7 +68,7 @@ namespace CastleFight {public sealed partial class PcGame {
         yield return Action("battle.voice.open");Check(showVoicePanel&&voice!=null&&voice.Connected&&voice.PeerConnected,"Square voice icon opens live audio in battle");yield return Shot(folder,"05a-battle-voice");yield return Action("voice.close");
         yield return Action("battle.chat.open");Check(showBattleChat&&!showStickerPicker,"Dedicated chat button opens separate panel");battleChat="Проверка удобного чата";yield return Action("battle.chat.send");yield return RecoveryWait(()=>roomMessages.Any(m=>(string)m["text"]=="Проверка удобного чата"),"Battle chat delivered");yield return Shot(folder,"05b-battle-chat");yield return new WaitForSecondsRealtime(.7f);string longChat=string.Join(" ",Enumerable.Repeat("Длинное сообщение в бою без обрезания текста.",5)).Substring(0,180);battleChat=longChat;yield return Action("battle.chat.send");yield return RecoveryWait(()=>roomMessages.Any(m=>(string)m["text"]==longChat),"Maximum length chat arrives and scrolls with measured row height");yield return Shot(folder,"05c-long-chat");yield return Action("battle.chat.close");yield return Action("battle.sticker.open");LoadStickerCatalog();stickerPack=1;string emote=stickerPacks[1].items[0].id;yield return Action("sticker.0");yield return RecoveryWait(()=>onlineEmoteId==emote,"Native battle sticker received from server");yield return Shot(folder,"06-battle-emote");
         foreach(string challenge in new[]{"five_pillars","no_legends","mixed_army"})progression.Complete(challenge,123);Check(progression.Buy(MemePackId,out _)||progression.Owned(MemePackId),"QA buys meme pack using isolated token wallet");
-        yield return new WaitForSecondsRealtime(5.1f);yield return Action("battle.sticker.open");stickerPack=stickerPacks.Count-1;yield return Action("sticker.0");yield return RecoveryWait(()=>onlineEmoteId=="local_meme_naga","Purchased meme broadcasts through actual battle server");yield return Shot(folder,"06b-battle-meme");
+        yield return new WaitForSecondsRealtime(5.1f);stickerPack=stickerPacks.Count-1;yield return Action("sticker.0");yield return RecoveryWait(()=>onlineEmoteId=="local_meme_naga","Purchased meme broadcasts through actual battle server");yield return Shot(folder,"06b-battle-meme");
         yield return new WaitForSecondsRealtime(.7f);SendNetwork(new JObject{["type"]="chat",["text"]="QA_FINISH_1"});yield return RecoveryWait(()=>page==Page.Result,"Real server castle destruction opens victory screen",25);Check(match.Winner==0&&series.Wins[0]==1&&!series.Finished&&onlineBattleStats.Count==2,"Authoritative round victory, score and statistics");yield return Shot(folder,"07-victory");yield return Action("result.stats");Check(resultDetails,"Detailed statistics toggle");yield return Shot(folder,"08-statistics");
         yield return Action("result.again");Check(onlineDecision,"Next-round choice waits for opponent");yield return Shot(folder,"09-wait-next-round");_=peer.SendAsync(new JObject{["type"]="next_round"});until=Time.realtimeSinceStartup+35;peerLoaded=false;while((page!=Page.Match||series.Round!=2||!onlineStarted)&&Time.realtimeSinceStartup<until){while(peer.TryRead(out var p))if((string)p["type"]=="load"){peerLoaded=true;_=peer.SendAsync(new JObject{["type"]="loaded"});}yield return null;}
         Check(peerLoaded&&series.Round==2&&series.Wins[0]==1&&page==Page.Match,"Both decisions advance original series without losing score");

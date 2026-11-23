@@ -40,9 +40,9 @@ public sealed partial class PcGame {
                     networkServerRaces=packet["races"] is JArray roster?roster.Select(row=>(string)row).Where(name=>!string.IsNullOrEmpty(name)).ToArray():null;
                     if(!HasNetworkProfile&&!profilePending&&!string.IsNullOrEmpty(networkSessionToken)&&NetworkAccountStore.SameService(networkSessionEndpoint,connectedEndpoint)&&(!networkGuest||showNetworkProfile)){profilePending=true;SendNetwork(new JObject{["type"]="profile_auth",["action"]="token",["token"]=networkSessionToken});}
                     directoryStatus=profilePending?"Проверяем сохранённый вход…":"Подключено · открытых игр: "+directoryRooms.Count;break;
-                case "joined":networkProductionSync=(int?)packet["production_sync"]==1;recoveryToken=(string)packet["resume_token"]??"";networkSlot=(int?)packet["slot"]??-1;directoryStatus="Вы в комнате";break;
+                case "joined":ResetBattleSocial();networkProductionSync=(int?)packet["production_sync"]==1;recoveryToken=(string)packet["resume_token"]??"";networkSlot=(int?)packet["slot"]??-1;directoryStatus="Вы в комнате";break;
                 case "lobby":networkRoom=packet;roomMessages=(JArray)(packet["messages"]?.DeepClone()??new JArray());break;
-                case "chat":if(packet["message"] is JObject message){roomMessages.Add(message.DeepClone());while(roomMessages.Count>40)roomMessages.RemoveAt(0);chatScroll.y=100000;}break;
+                case "chat":if(packet["message"] is JObject message){roomMessages.Add(message.DeepClone());while(roomMessages.Count>40)roomMessages.RemoveAt(0);chatScroll.y=100000;if(onlineMatch&&onlineStarted)AddBattleMessage(message);}break;
                 case "profile":
                     if((string)packet["request_type"]=="profile_social"){ReceiveSocial(packet);break;}
                     socialSupported=socialSupported||(int?)packet["social_supported"]==1;profilePending=false;profilePassword="";directoryStatus=(string)packet["message"]??((bool?)packet["ok"]==true?"Профиль обновлён":"Ошибка профиля");
@@ -67,8 +67,9 @@ public sealed partial class PcGame {
                 case "start":if(onlineMatch){onlineStarted=true;CloseVersus();Notice("Сетевой бой начался");}break;
                 case "voice_session":ReceiveVoiceSession(packet);break;
                 case "emote":if(onlineMatch)ReceiveEmote(packet);break;
+                case "emote_rejected":if(onlineMatch)ReceiveStickerRejection(packet);break;
                 case "post_match":if(onlineMatch){onlineChoices=packet["choices"] as JArray??new JArray();Notice("Ожидаем решение соперника");}break;
-                case "return_lobby":ResetRecovery(false);socialTab=0;onlineChoices=new JArray();onlineMatch=false;onlineStarted=false;onlineReplica=null;ClearMatch();ReleaseIdleRaceAssets(true);series=null;page=Page.Network;directoryStatus="Вернулись в комнату";break;
+                case "return_lobby":ResetBattleSocial();ResetRecovery(false);socialTab=0;onlineChoices=new JArray();onlineMatch=false;onlineStarted=false;onlineReplica=null;ClearMatch();ReleaseIdleRaceAssets(true);series=null;page=Page.Network;directoryStatus="Вернулись в комнату";break;
             }
         }
     }
@@ -76,7 +77,7 @@ public sealed partial class PcGame {
     void StopDirectory() {
         CloseVersus();showNetworkRacePicker=false;networkLoadError="";failedNetworkLoad=null;networkSight.Clear();networkUnitCards.Clear();networkBuildingCards.Clear();RestoreOfflineNetworkSetup();
         ResetRecovery();ResetSocial();var previous=network;network=null;connectedEndpoint="";directoryLoading=false;directoryReady=false;directoryCanCreate=false;networkSlot=-1;networkRoom=null;networkProfile=null;profilePending=false;showNetworkProfile=false;showStickerPicker=false;profilePassword="";directoryRooms=new JArray();roomMessages=new JArray();
-        onlineStickerSerial=-1;onlineStickers[0]=onlineStickers[1]=null;DisposeVoice();if(previous!=null)_=previous.LeaveAsync();
+        ResetBattleSocial();DisposeVoice();if(previous!=null)_=previous.LeaveAsync();
     }
     void BeginDirectory() {
         if(directoryLoading)return;

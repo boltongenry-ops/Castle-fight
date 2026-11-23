@@ -47,14 +47,23 @@ public sealed class PcServerReplica {
             if(row["abilities"] is JArray abilities)foreach(var ability in abilities)if(ability.Type==JTokenType.String)unit.abilities.Add((string)ability);
             if(row["auras"] is JArray auras)foreach(var aura in auras)if(aura.Type==JTokenType.String)unit.auraIds.Add((string)aura);
             if(row["state"] is JObject state){
-                unit.pandaSplit=(bool?)state["pandaren_split"]??false;unit.nightInvisible=(bool?)state["invisible"]??false;
+                unit.pandaSplit=(bool?)state["panda_split"]??(bool?)state["pandaren_split"]??false;unit.nightInvisible=(bool?)state["invisible"]??false;
+                unit.stasisLeft=Number(state["stasis"]);
+                float stagger=Number(state["stagger"]);
+                if(stagger>0)unit.pandaDebts.Add(new HumanMatch.PandaDebt{amount=stagger});
                 unit.spellResist=Number(state["spell_resist"]);unit.critChance=Number(state["crit_chance"]);unit.critMultiplier=Number(state["crit_multiplier"],1);unit.evasion=Number(state["evasion"]);
                 if(state["ability_levels"] is JObject levels)foreach(var level in levels.Properties())unit.abilityLevels[level.Name]=(int?)level.Value??1;
             }
             if(row["statuses"] is JArray statuses)foreach(var status in statuses.OfType<JObject>()){
                 var cfg=(JObject)status.DeepClone();string code=(string)cfg["code"]??(string)cfg["id"]??"";
-                if(world.Abilities[code] is JObject definition)foreach(var property in definition.Properties())if(cfg[property.Name]==null)cfg[property.Name]=property.Value.DeepClone();
-                unit.effects.Add(new HumanMatch.Effect{id=(string)status["id"]??code,group=(string)status["stack_group"]??code,left=Number(status["remaining"]),lifetime=Number(status["lifetime"]),sourceTeam=Team((int?)status["source_team"]??team),power=Number(status["power"]),armor=Number(status["armor"]),haste=Number(status["haste"]),speed=-Number(status["slow"]),root=(bool?)status["root"]??false,ground=(bool?)status["ground"]??false,config=cfg});
+                if(world.Abilities[code] is JObject definition)foreach(var property in definition.Properties())if(cfg[property.Name]==null||cfg[property.Name].Type==JTokenType.Null)cfg[property.Name]=property.Value.DeepClone();
+                var source=(int?)status["source_team"]??team;
+                unit.effects.Add(new HumanMatch.Effect{
+                    id=(string)status["id"]??code,group=(string)status["stack_group"]??code,left=Number(status["remaining"]),
+                    lifetime=Number(status["lifetime"]),sourceTeam=source<0?-1:Team(source),power=Number(status["power"]),
+                    armor=Number(status["armor"]),haste=Number(status["haste"]),speed=-Number(status["slow"]),
+                    incoming=Number(status["incoming"]),root=(bool?)status["root"]??false,ground=(bool?)status["ground"]??false,config=cfg
+                });
             }
             if(old!=null){
                 var line=world.Lines[kind];

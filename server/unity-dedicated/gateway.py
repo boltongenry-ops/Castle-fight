@@ -30,7 +30,13 @@ PROFILE_PORT = int(os.getenv("CF_PROFILE_PORT", "49173"))
 PROFILE_SECRET = os.getenv("CF_PROFILE_SECRET")
 VOICE_URL = os.getenv("CF_VOICE_URL")
 RESULT_DIR = Path(os.getenv("CF_RESULT_DIR", "pending-results"))
-EMOTES = {row["id"] for row in json.loads(Path(__file__).with_name("match_emotes.json").read_text(encoding="utf-8-sig"))}
+CLASSIC_EMOTES = {"orc", "knight", "undead", "naga", "elf", "goblin"}
+EMOTE_COOLDOWN = 1.5
+EMOTES = CLASSIC_EMOTES | {
+    item["id"]
+    for pack in json.loads(Path(__file__).with_name("match_emotes.json").read_text(encoding="utf-8-sig"))
+    for item in pack["items"]
+}
 
 
 def post(port, path, headers, data):
@@ -352,12 +358,19 @@ class Gateway:
             message=dict(name=player.public()["name"],text=body,slot=slot)
             room.messages=(room.messages+[message])[-40:]
             return await self.room_send(room,dict(type="chat",message=message))
-        if kind=="emote" and room.phase=="playing" and not any(p.absent_until for p in room.players):
+        if kind=="emote":
+            if room.phase!="playing" or any(p.absent_until for p in room.players if p):
+                return await self.send(peer, dict(type="emote_rejected", message="Ожидаем соединения с боем"))
             emote=p.get("id")
-            if not isinstance(emote,str) or emote not in EMOTES or time.monotonic()<player.next_emote:return
-            player.next_emote=time.monotonic()+1.5
+            if not isinstance(emote,str) or emote not in EMOTES:
+                return await self.send(peer, dict(type="emote_rejected", message="Стикер недоступен"))
+            now = time.monotonic()
+            if now < player.next_emote:
+                return await self.send(peer, dict(type="emote_rejected", retry_after=player.next_emote-now))
+            player.next_emote = now + EMOTE_COOLDOWN
             room.emote_serial+=1
-            return await self.room_send(room,dict(type="emote",message=dict(id=emote,slot=slot,name=player.public()["name"],serial=room.emote_serial)))
+            return await self.room_send(room,dict(type="emote",cooldown=EMOTE_COOLDOWN,
+                message=dict(id=emote,slot=slot,name=player.public()["name"],serial=room.emote_serial)))
         if room.phase=="waiting":
             if kind=="race" and p.get("race") in self.races:
                 player.race=p["race"];player.ready=False

@@ -7,12 +7,12 @@ public sealed partial class PcGame {
     void UpdateGuiMetrics(){Rect safe=Application.isMobilePlatform?Screen.safeArea:new Rect(0,0,Screen.width,Screen.height);if(safe.width<1||safe.height<1)safe=new Rect(0,0,Screen.width,Screen.height);guiScale=Mathf.Max(.01f,Mathf.Min(safe.width/1280f,safe.height/720f));guiOrigin=new Vector2(safe.x+(safe.width-1280*guiScale)*.5f,Screen.height-safe.yMax+(safe.height-720*guiScale)*.5f);}
     Vector2 GuiPoint(Vector2 screen)=>new Vector2((screen.x-guiOrigin.x)/guiScale,(Screen.height-screen.y-guiOrigin.y)/guiScale);
     bool TouchOverUi(Vector2 screen) {
-        if(versusActive||showVoicePanel||showNetworkProfile||showStickerPicker||showBattleChat||showUpdatePanel)return true;
+        if(versusActive||showVoicePanel||showNetworkProfile||showUpdatePanel||showStickerPicker&&page!=Page.Match)return true;
         var p=GuiPoint(screen);if(page==Page.Viewer)return p.y<80;
         if(page!=Page.Match)return true;
         if(Application.isMobilePlatform&&(p.y<42||new Rect(5,46,52,52).Contains(p)||new Rect(960,482,320,238).Contains(p)))return true;
         if(onlineMatch&&(new Rect(68,Application.isMobilePlatform?48:33,160,48).Contains(p)||(Application.isMobilePlatform&&MobileTalkRect.Contains(p))))return true;
-        return HudContains(p);
+        return BattleSocialContains(p)||HudContains(p);
     }
     void DismissBuildMenuOnEmptyClick() {
         if(versusActive||page!=Page.Match||!builderSelected||!buildMenu||showVoicePanel||showNetworkProfile||showStickerPicker||showBattleChat||!GUI.enabled)return;
