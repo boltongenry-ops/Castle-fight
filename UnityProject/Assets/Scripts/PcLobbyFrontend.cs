@@ -5,12 +5,12 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame {
-    string directoryEndpoint="wss://45-15-156-101.fatmetal.net/play",directoryStatus="Подключитесь, чтобы посмотреть комнаты";
+    string directoryEndpoint=NetworkAccountStore.UnityEndpoint,directoryStatus="Подключитесь, чтобы посмотреть комнаты";
     JArray directoryRooms=new JArray(),roomMessages=new JArray();JObject networkRoom;
     Vector2 directoryScroll,chatScroll;PcNetworkClient network;
     bool networkProductionSync;
     bool networkEntryAccount,networkGuest,networkEndpointOpen;
-    bool HasEndpointToken=>!string.IsNullOrEmpty(networkSessionToken)&&networkSessionEndpoint==directoryEndpoint.Trim();
+    bool HasEndpointToken=>!string.IsNullOrEmpty(networkSessionToken)&&NetworkAccountStore.SameService(networkSessionEndpoint,directoryEndpoint.Trim());
     bool WaitingForNetworkAccount=>networkEntryAccount&&!networkGuest&&!HasNetworkProfile;
     bool directoryLoading,directoryReady,directoryCanCreate,showNetworkProfile,profilePending;
     float directoryDeadline;
@@ -38,7 +38,7 @@ public sealed partial class PcGame {
                     networkProductionSync=(int?)packet["production_sync"]==1;
                     socialSupported=(int?)packet["social_supported"]==1;directoryRooms=packet["rooms"] as JArray??new JArray();directoryReady=true;directoryLoading=false;directoryCanCreate=(bool?)packet["can_create"]??false;
                     networkServerRaces=packet["races"] is JArray roster?roster.Select(row=>(string)row).Where(name=>!string.IsNullOrEmpty(name)).ToArray():null;
-                    if(!HasNetworkProfile&&!profilePending&&!string.IsNullOrEmpty(networkSessionToken)&&networkSessionEndpoint==connectedEndpoint&&(!networkGuest||showNetworkProfile)){profilePending=true;SendNetwork(new JObject{["type"]="profile_auth",["action"]="token",["token"]=networkSessionToken});}
+                    if(!HasNetworkProfile&&!profilePending&&!string.IsNullOrEmpty(networkSessionToken)&&NetworkAccountStore.SameService(networkSessionEndpoint,connectedEndpoint)&&(!networkGuest||showNetworkProfile)){profilePending=true;SendNetwork(new JObject{["type"]="profile_auth",["action"]="token",["token"]=networkSessionToken});}
                     directoryStatus=profilePending?"Проверяем сохранённый вход…":"Подключено · открытых игр: "+directoryRooms.Count;break;
                 case "joined":networkProductionSync=(int?)packet["production_sync"]==1;recoveryToken=(string)packet["resume_token"]??"";networkSlot=(int?)packet["slot"]??-1;directoryStatus="Вы в комнате";break;
                 case "lobby":networkRoom=packet;roomMessages=(JArray)(packet["messages"]?.DeepClone()??new JArray());break;

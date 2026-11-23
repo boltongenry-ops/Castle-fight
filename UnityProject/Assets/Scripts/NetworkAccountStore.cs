@@ -9,6 +9,12 @@ using System.Runtime.InteropServices;
 
 namespace CastleFight {
     internal static class NetworkAccountStore {
+        internal const string UnityEndpoint="wss://45-15-156-101.fatmetal.net/play-unity-preview";
+        internal const string LegacyEndpoint="wss://45-15-156-101.fatmetal.net/play";
+
+        internal static bool SameService(string first,string second) =>
+            first==second||(first==UnityEndpoint||first==LegacyEndpoint)&&(second==UnityEndpoint||second==LegacyEndpoint);
+
         const string Preference="cf-network-account-v1";
 
         public static JObject Read(){

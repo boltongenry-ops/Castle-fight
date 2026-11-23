@@ -24,8 +24,12 @@ public sealed partial class PcGame {
             string root=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"CastleFight","Launcher","Sessions")+Path.DirectorySeparatorChar;
             path=Path.GetFullPath(path);if(!path.StartsWith(root,StringComparison.OrdinalIgnoreCase)||!path.EndsWith(".json",StringComparison.OrdinalIgnoreCase)||!File.Exists(path))return;
             if(new FileInfo(path).Length>16384||DateTime.UtcNow-File.GetLastWriteTimeUtc(path)>TimeSpan.FromMinutes(5)){File.Delete(path);return;}
-            var data=JObject.Parse(File.ReadAllText(path));File.Delete(path);if((string)data["endpoint"]!="wss://45-15-156-101.fatmetal.net/play")return;
-            networkSessionToken=(string)data["token"]??"";networkSessionEndpoint=directoryEndpoint=(string)data["endpoint"];networkName=(string)data["nickname"]??networkName;
+            var data=JObject.Parse(File.ReadAllText(path));File.Delete(path);string issuer=(string)data["endpoint"];
+            if(issuer!=NetworkAccountStore.LegacyEndpoint&&issuer!=NetworkAccountStore.UnityEndpoint)return;
+            networkSessionToken=(string)data["token"]??"";
+            networkSessionEndpoint=issuer;
+            networkGuest=(bool?)data["guest"]==true;
+            networkName=(string)data["nickname"]??networkName;
         }catch(Exception){Debug.LogWarning("CF_LAUNCHER_SESSION_UNAVAILABLE");}
 #endif
     }
