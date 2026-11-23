@@ -48,19 +48,19 @@ public sealed partial class PcGame {
         foreach(int id in groupRings.Keys.Where(id=>!selectedGroup.Contains(id)).ToArray()){if(groupRings[id])Destroy(groupRings[id]);groupRings.Remove(id);}
     }
     void DrawSelectionMarquee(){if(!selectionDragging||!selectionPending)return;var rect=SelectionRect(GuiPoint(selectionStart),GuiPoint(selectionEnd));Fill(rect,new Color(.15f,.8f,.22f,.10f));Border(rect,new Color(.25f,1,.3f),1);}
-    Texture2D GroupIcon(HumanMatch.Unit unit){
-        string actor=match.Lines[unit.kind].unit;
+    Texture2D GroupIcon(HumanMatch.Unit unit)=>GroupIcon(unit.kind,unit.team==0?matchRace:matchBotRace);
+    Texture2D GroupIcon(int kind,int race){
+        string actor=match.Lines[kind].unit;
         var icon=HdModels.Icon(ReforgedModelPack.IconAddress("Unit-"+actor));
         if(icon)return icon;
         var portrait=HdActorIcon(actor);
         if(portrait)return portrait;
         var revised=ContentResources.Load<Texture2D>("NerubianUnitIcon/"+actor);
         if(revised)return revised;
-        int race=unit.team==0?matchRace:matchBotRace;
         if(race==15)return CentaurUnitIcon(actor);
         if(race==PepeContent.Race)return PepeContent.FighterIcon(actor);
         var pack=Pack(race);
-        string raw=match.Lines[unit.kind].building;
+        string raw=match.Lines[kind].building;
         if(!raceIndices[race].TryGetValue(raw,out int index))return CommandIcon(0);
         if(MobileContent.Active&&race==12)return UltimateIcon034(index);
         if(pack)return pack.buildingIcons[index];

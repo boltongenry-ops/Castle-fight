@@ -82,6 +82,7 @@ public sealed partial class HumanMatch {
             fullRadius=first?.full??0,halfRadius=first?.half??0,quarterRadius=first?.quarter??0,halfFactor=first?.halfFactor??.5f,quarterFactor=first?.quarterFactor??.2f};}).ToArray();
         BaseKinds=Enumerable.Range(0,Lines.Length).Where(i=>teamBaseBuildings[0].Contains(Lines[i].building)).OrderBy(i=>Lines[i].ultimateSlot<0?i:Lines[i].ultimateSlot).ToArray();
     }
+    public bool PlayerHasLine(int kind)=>teamBuildings[0].Contains(Lines[kind].building);
     public int Kind(string building)=>Array.FindIndex(Lines,l=>l.building==building);
     public bool NetworkReplica;public readonly int[] NetworkReservedGold=new int[2],NetworkReservedWood=new int[2],NetworkReservedSlots=new int[2];
     public int ReservedGold(int t)=>NetworkReplica?NetworkReservedGold[t]:Huts.Where(h=>h.team==t&&!h.paid).Sum(h=>Lines[h.kind].cost);

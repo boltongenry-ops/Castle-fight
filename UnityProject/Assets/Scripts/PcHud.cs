@@ -85,7 +85,7 @@ public sealed partial class PcGame {
         GUI.DrawTexture(new Rect(619,5,42,42),timeIndicator);
         }
         var topButton=theme?.Top(button)??new GUIStyle(button){fontSize=Application.isMobilePlatform?15:13,alignment=TextAnchor.MiddleCenter,padding=new RectOffset(3,3,0,0)};float topHeight=Application.isMobilePlatform?40:24;
-        if(Button("match.help",new Rect(5,1,132,topHeight),Application.isMobilePlatform?"Справка":"Справка (F9)",false,topButton))page=Page.Help;
+        if(Button("match.help",new Rect(5,1,132,topHeight),Application.isMobilePlatform?"Справка":"Справка (F9)",false,topButton))OpenBattleHelp();
         float builderTop=Application.isMobilePlatform?46:31;var builderFrame=new Rect(5,builderTop,52,52);StoneFrame(builderFrame);
         if(Icon("hud.builder",new Rect(9,builderTop+4,44,44),0,"F1","Строитель (F1)\nВыделить и перейти к строителю",builderSelected))FocusBuilder();
         if(Button("match.pause",new Rect(142,1,131,topHeight),Application.isMobilePlatform?"Меню":"Меню (F10)",false,topButton))page=Page.Pause;
@@ -165,6 +165,138 @@ public sealed partial class PcGame {
         GUI.Label(new Rect(1133,y,48,19),match.Income(team).ToString("F1"),hudSmall);
         GUI.Label(new Rect(1190,y,65,19),match.CastleHp[team].ToString("F0"),hudSmall);
     }
+    HumanMatch helpMatch;
+    bool HelpOpen => page==Page.Match && match!=null && helpMatch==match;
+    int[] helpKinds=Array.Empty<int>();
+    Texture2D[] helpIcons=Array.Empty<Texture2D>();
+    bool helpBuildings;
+    int helpSelected;
+    string helpBody;
+    Vector2 helpScroll;
+    const int HelpPageSize=15;
+    static readonly Rect HelpTextArea=new Rect(700,224,480,334);
+    void CloseBattleHelp(){
+        helpMatch=null;
+        helpKinds=Array.Empty<int>();
+        helpIcons=Array.Empty<Texture2D>();
+        helpBody=null;
+    }
+    void OpenBattleHelp(){
+        if(page!=Page.Match||match==null||aspectWaiting)return;
+        helpMatch=match;
+        selectionPending=selectionDragging=false;
+        SetHelpCategory(false);
+    }
+    void SetHelpCategory(bool buildings){
+        helpBuildings=buildings;
+        var seen=new System.Collections.Generic.HashSet<string>();
+        helpKinds=Enumerable.Range(0,match.Lines.Length).Where(k=>{
+            var line=match.Lines[k];
+            if(!match.PlayerHasLine(k)||line.category=="helper")return false;
+            return buildings ? !line.Producer && line.cost>0 : line.Producer && seen.Add(line.unit);
+        }).ToArray();
+        helpIcons=new Texture2D[helpKinds.Length];
+        for(int i=0;i<helpKinds.Length;i++){
+            int kind=helpKinds[i];
+            if(buildings){
+                string raw=match.Lines[kind].building;
+                if(raceIndices[matchRace].TryGetValue(raw,out int row))helpIcons[i]=HdIcon(CatalogBuildingIcon(matchRace,row,raw));
+            }else helpIcons[i]=GroupIcon(kind,matchRace);
+        }
+        SelectHelpEntry(0);
+    }
+    void SelectHelpEntry(int index){
+        helpSelected=index;
+        helpScroll=Vector2.zero;
+        if(helpKinds.Length==0){helpBody="Нет доступных записей.";return;}
+        int kind=helpKinds[index];
+        var line=match.Lines[kind];
+        var stats=helpBuildings?line.buildingStats:line.stats;
+        var body=new System.Text.StringBuilder();
+        body.Append("Здоровье  ").Append(SkillNumber(HumanMatch.F(stats,"hp")));
+        float mana=HumanMatch.F(stats,"max_mana");
+        if(mana>0)body.Append("     Мана  ").Append(SkillNumber(mana));
+        body.Append("\nБроня  ").Append(SkillNumber(HumanMatch.F(stats,"armor"))).Append(" · ").Append(ArmorLabel((string)stats["armor_type"]??(helpBuildings?"fortified":"normal")));
+        foreach(var w in helpBuildings?line.buildingWeapons:line.weapons)
+            body.Append("\n").Append(AttackLabel(w.attack)).Append(" атака  ").Append(SkillNumber(w.damage)).Append(" · каждые ").Append(SkillNumber(w.cooldown)).Append(" с · дальность ").Append(Mathf.RoundToInt(w.range*30));
+        if(helpBuildings)body.Append("\nСтоимость  ").Append(match.GoldPrice(0,kind)).Append(" золота · ").Append(line.woodCost).Append(" дерева");
+        else body.Append("\nСкорость  ").Append(Mathf.RoundToInt(line.speed*30));
+        var ids=helpBuildings?line.abilities:HumanMatch.Strings(stats["abilities"]);
+        if(helpBuildings&&line.building=="h061")ids=ids.Concat(new[]{"A0DC"}).ToArray();
+        if(helpBuildings&&line.building=="h09T")ids=ids.Concat(new[]{"A09S"}).ToArray();
+        string raw=helpBuildings?line.building:line.unit;
+        foreach(string id in ids.Distinct()){
+            var cfg=match.Abilities[id];
+            if(cfg==null||(bool?)cfg["hide_card"]==true||!ContextAbilityVisible(raw,id,cfg))continue;
+            if((string)cfg["kind"]=="marker"&&(bool?)cfg["card_description"]!=true&&id!="A09S")continue;
+            var ranks=cfg["ranks"] as Newtonsoft.Json.Linq.JArray;
+            int rank=(int?)stats["ability_ranks"]?[id]??1;
+            var shown=ranks!=null&&ranks.Count>0?ranks[Mathf.Clamp(rank-1,0,ranks.Count-1)]:cfg;
+            string tip=ContextSkillTip(raw,id,shown).Trim();
+            if(tip.Length>0)body.Append("\n\n").Append(tip);
+        }
+        if(helpBuildings){
+            string summary=BuildingSummary(raw);
+            if(summary!="Оборонительная башня")body.Append("\n\n").Append(summary);
+        }
+        helpBody=body.ToString();
+    }
+    void DrawBattleHelp(){
+        InitHud();
+        StoneFrame(new Rect(66,72,1148,562));
+        Text(102,88,845,50,"Справка · "+RaceName,heading);
+        if(Button("info.close",new Rect(1020,92,160,44),"Закрыть")){CloseBattleHelp();return;}
+        if(Button("help.units",new Rect(102,150,250,48),"Бойцы",!helpBuildings)&&helpBuildings)SetHelpCategory(false);
+        if(Button("help.buildings",new Rect(364,150,270,48),"Спецздания",helpBuildings)&&!helpBuildings)SetHelpCategory(true);
+        int first=helpSelected/HelpPageSize*HelpPageSize;
+        for(int i=first;i<Math.Min(first+HelpPageSize,helpKinds.Length);i++){
+            int n=i-first;
+            var rect=new Rect(102+(n%5)*108,217+(n/5)*110,101,104);
+            var line=match.Lines[helpKinds[i]];
+            if(Button("help.entry."+i,rect,"",i==helpSelected))SelectHelpEntry(i);
+            if(helpIcons[i])GUI.DrawTexture(new Rect(rect.x+23,rect.y+4,55,55),helpIcons[i],ScaleMode.ScaleToFit);
+            GUI.Label(new Rect(rect.x+2,rect.y+60,rect.width-4,42),helpBuildings?line.name:line.unitName,HelpCaption);
+            if(i==helpSelected)Border(rect,new Color(.94f,.74f,.32f),2);
+        }
+        if(helpKinds.Length>HelpPageSize){
+            if(first>0&&Button("help.prev",new Rect(102,558,120,44),"Назад"))SelectHelpEntry(first-HelpPageSize);
+            Text(258,559,100,40,(1+first/HelpPageSize)+" / "+Mathf.CeilToInt(helpKinds.Length/(float)HelpPageSize),label);
+            if(first+HelpPageSize<helpKinds.Length&&Button("help.next",new Rect(445,558,186,44),"Следующая"))SelectHelpEntry(first+HelpPageSize);
+        }
+        if(helpKinds.Length>0){
+            var selected=match.Lines[helpKinds[helpSelected]];
+            Text(700,146,478,74,helpBuildings?selected.name:selected.unitName,HelpTitle);
+        }
+        float width=HelpTextArea.width-26;
+        float height=Mathf.Max(HelpTextArea.height,HelpParagraph.CalcHeight(new GUIContent(helpBody),width)+8);
+        helpScroll=GUI.BeginScrollView(HelpTextArea,helpScroll,new Rect(0,0,width,height));
+        GUI.Label(new Rect(0,0,width,height),helpBody,HelpParagraph);
+        GUI.EndScrollView();
+    }
+    GUIStyle helpCaption,helpTitle,helpParagraph;
+    GUIStyle HelpCaption=>helpCaption??(helpCaption=new GUIStyle(hudSmall){fontSize=13,alignment=TextAnchor.MiddleCenter,wordWrap=true});
+    GUIStyle HelpTitle=>helpTitle??(helpTitle=new GUIStyle(hudTitle){fontSize=24,wordWrap=true});
+    GUIStyle HelpParagraph=>helpParagraph??(helpParagraph=new GUIStyle(label){fontSize=19,wordWrap=true,alignment=TextAnchor.UpperLeft});
+
+    System.Collections.IEnumerator ExerciseBattleHelp(){
+        MainMenu();raceChoice=0;botRaceChoice=1;aspectsOn=false;NewMatch();
+        yield return Action("match.help");
+        Check(HelpOpen&&page==Page.Match,"Help uses the live match");
+        Check(helpKinds.Length>1&&helpKinds.All(k=>match.PlayerHasLine(k)&&match.Lines[k].Producer),"Only player fighters");
+        Check(match.Lines.Any(l=>!match.PlayerHasLine(match.Kind(l.building))),"Opponent has distinct entries");
+        float before=match.Elapsed;
+        yield return Action("help.entry.1");
+        Check(helpSelected==1&&helpBody.Contains("Здоровье"),"Fighter details selectable");
+        yield return Action("help.buildings");
+        Check(helpBuildings&&helpKinds.Length>0&&helpKinds.All(k=>match.PlayerHasLine(k)&&!match.Lines[k].Producer),"Only player special buildings");
+        yield return new WaitForSecondsRealtime(.35f);
+        Check(match.Elapsed>before&&controls.InputBlocked,"Match advances and field input is blocked");
+        yield return Action("info.close");
+        Check(!HelpOpen&&page==Page.Match,"Close returns to same match");
+        Debug.Log("BATTLE_HELP_RESULT failures="+testFailures);
+        Application.Quit(testFailures==0?0:1);
+    }
+
     void DrawInfoPanel() {
         GUI.enabled=false;DrawMatch();GUI.enabled=true;
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.6f));StoneFrame(new Rect(340,155,600,390));
