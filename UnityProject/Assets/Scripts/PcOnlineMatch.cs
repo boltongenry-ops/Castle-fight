@@ -126,7 +126,7 @@ public sealed partial class PcGame {
 
     Rect BattleStickerArea(){
         int rows=stickerPacks==null?2:Mathf.CeilToInt(stickerPacks[stickerPack].items.Count/5f);
-        return new Rect(124,Application.isMobilePlatform?101:86,366,79+76*rows);
+        return new Rect(124,Application.isMobilePlatform?101:86,366,79+81*rows);
     }
 
     bool BattleSocialContains(Vector2 point)=>onlineMatch&&page==Page.Match&&
@@ -159,8 +159,8 @@ public sealed partial class PcGame {
             float alpha=Mathf.Clamp01((12-(Time.unscaledTime-line.time))/1.1f);
             if(alpha<=0)break;
             var content=new GUIContent(line.text);
-            float width=Mathf.Clamp(style.CalcSize(content).x+24,120,BattleChatEntry.width);
-            float height=Mathf.Max(30,style.CalcHeight(content,width-24)+12);
+            float width=BattleChatEntry.width;
+            float height=Mathf.Max(32,style.CalcHeight(content,width-24)+17);
             y-=height;
             if(y<112)break;
             var rect=new Rect(BattleChatEntry.x,y,width,height);
@@ -181,10 +181,19 @@ public sealed partial class PcGame {
         if(focusBattleChat&&Event.current.type==EventType.Repaint){GUI.FocusControl(BattleChatField);focusBattleChat=false;}
         if(battleChat.Length==0&&GUI.GetNameOfFocusedControl()!=BattleChatField)
             Text(field.x+12,field.y+9,field.width-24,25,"Сообщение в бой",small);
-        if(LobbyButton("battle.chat.send",new Rect(rect.x+319,rect.y+7,111,41),"Отправить",true))SendBattleChat();
-        if(LobbyButton("battle.chat.close",new Rect(rect.x+435,rect.y+7,36,41),"×")){
+        if(BattleCompactButton("battle.chat.send",new Rect(rect.x+319,rect.y+7,111,41),"Отправить",true))SendBattleChat();
+        if(BattleCompactButton("battle.chat.close",new Rect(rect.x+435,rect.y+7,36,41),"×")){
             GUI.FocusControl(null);showBattleChat=false;
         }
+    }
+
+    bool BattleCompactButton(string id,Rect rect,string caption,bool primary=false){
+        bool clicked=LobbyButton(id,rect,"",primary);
+        GUI.Label(rect,caption,new GUIStyle(label){
+            alignment=TextAnchor.MiddleCenter,wordWrap=false,padding=new RectOffset(),fontSize=16,
+            normal={textColor=primary?new Color(.96f,.84f,.57f):new Color(.90f,.89f,.83f)}
+        });
+        return clicked;
     }
 
     void ReceiveStickerRejection(JObject packet){
@@ -202,26 +211,27 @@ public sealed partial class PcGame {
         if(rect.height<1)return;
         LobbyPanel(rect);
         GUI.BeginGroup(rect);
-        if(LobbyButton("sticker.prev",new Rect(8,7,40,36),"<"))
+        if(BattleCompactButton("sticker.prev",new Rect(8,7,40,36),"<"))
             stickerPack=(stickerPack+stickerPacks.Count-1)%stickerPacks.Count;
         var pack=stickerPacks[stickerPack];
         if(LobbyButton("sticker.pack",new Rect(53,7,217,36),pack.name))
             stickerPack=(stickerPack+1)%stickerPacks.Count;
-        if(LobbyButton("sticker.next",new Rect(275,7,40,36),">"))
+        if(BattleCompactButton("sticker.next",new Rect(275,7,40,36),">"))
             stickerPack=(stickerPack+1)%stickerPacks.Count;
-        if(LobbyButton("sticker.close",new Rect(320,7,38,36),"×"))showStickerPicker=false;
+        if(BattleCompactButton("sticker.close",new Rect(320,7,38,36),"×"))showStickerPicker=false;
         pack=stickerPacks[stickerPack];
         float remaining=nextBattleSticker-Time.unscaledTime;
+        var captionStyle=new GUIStyle(hudSmall){fontSize=11,wordWrap=true,alignment=TextAnchor.UpperCenter};
         for(int i=0;i<pack.items.Count;i++){
             var item=pack.items[i];
-            var cell=new Rect(9+i%5*71,49+i/5*76,64,69);
+            var cell=new Rect(9+i%5*71,49+i/5*81,64,75);
             bool owned=CanSendSticker(item.id);
             bool enabled=GUI.enabled;
             GUI.enabled=enabled&&remaining<=0;
             bool clicked=LobbyButton("sticker."+i,cell,"");
             GUI.enabled=enabled;
-            StickerImage(new Rect(cell.x+5,cell.y+3,54,53),item);
-            GUI.Label(new Rect(cell.x+3,cell.y+52,58,14),item.label,hudSmall);
+            StickerImage(new Rect(cell.x+5,cell.y+3,54,48),item);
+            GUI.Label(new Rect(cell.x+2,cell.y+51,60,24),item.label,captionStyle);
             if(!owned)Fill(new Rect(cell.x,cell.y,cell.width,cell.height),new Color(0,0,0,.38f));
             if(!clicked)continue;
             if(!owned){Notice("Рофлопак открывается в магазине за 300 жетонов");PreviewSticker(item);}
@@ -229,7 +239,7 @@ public sealed partial class PcGame {
         }
         string hint=remaining>0?"Следующий стикер через "+Mathf.CeilToInt(remaining)+" с":
             pack.paid&&!CanSendSticker(pack.items[0].id)?"Рофлопак · 300 жетонов в магазине":"Нажмите стикер, чтобы отправить";
-        Text(10,51+76*Mathf.CeilToInt(pack.items.Count/5f),345,23,hint,small);
+        Text(10,51+81*Mathf.CeilToInt(pack.items.Count/5f),345,23,hint,small);
         GUI.EndGroup();
     }
 
