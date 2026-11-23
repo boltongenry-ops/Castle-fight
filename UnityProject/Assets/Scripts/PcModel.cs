@@ -5,7 +5,24 @@ namespace CastleFight {
 public sealed class PcModel : MonoBehaviour {
     public bool reforged,particleOnly;public string appearanceKey;public GameObject animatedRoot;public string raw,animationProperties;public AnimationClip[] clips;public float godotHeight,visualScale=1;
     Animation player;NativeAppearance appearance;string pose;int previousAttack=-1;
+    static float RosterScale(string id){
+        switch(id){
+            case "bU00": case "bU01": case "bU03": case "pU01": case "pU15": return 1.16f;
+            case "bU02": case "bU04": case "bU07": case "nP0E": case "nP0F": case "pU02": case "pU14": return 1.25f;
+            case "bU05": case "bU09": case "bU10": case "bU11": case "bU12": case "bU13": case "bU14": case "pU05": case "pU18": case "nP0G": return 1.4f;
+            case "bU06": case "bU08": case "pU03": return 1.22f;
+            case "pU04": case "pU17": return 1.8f;
+            case "pU06": return 1.35f;
+            case "nP07": case "nP08": case "nP0B": case "nP0C": case "cU06": case "cU16": return 1.12f;
+            case "cU05": case "cU15": return 1.08f;
+            case "o003": case "o00F": return 0.84f;
+            case "o009": return 0.76f;
+            default:return 1f;
+        }
+    }
     void Awake() {
+        float rosterScale=RosterScale(raw);
+        if(rosterScale!=1f){transform.localScale*=rosterScale;godotHeight*=rosterScale;}
         if(particleOnly||appearanceKey=="blackhand"&&clips.Length==0)return;
         foreach(var animator in GetComponentsInChildren<Animator>())animator.enabled=false;
         player=animatedRoot.GetComponent<Animation>();if(!player)player=animatedRoot.AddComponent<Animation>();

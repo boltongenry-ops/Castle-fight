@@ -53,9 +53,10 @@ public sealed partial class PcGame {
         if(page==Page.Guide)GuideChooseRace(race);
         MobileContent.Current.Ready();
     }
-    GameObject MenuBuilder(int race)=>OptionalModel(ClassicMenuBuilder(race),0);
+    GameObject MenuBuilder(int race)=>race==BlackHand.Race?ClassicMenuBuilder(race):OptionalModel(ClassicMenuBuilder(race),0);
     GameObject ClassicMenuBuilder(int race){
-        if(race==0||race==BlackHand.Race)return FirstModel(builderModels);
+        if(race==BlackHand.Race)return BlackHandArt.Builder(FirstModel(builderModels),0);
+        if(race==0)return FirstModel(builderModels);
         if(race==PepeContent.Race)return PepeContent.Load<GameObject>("Pepe/Builder")??PepeContent.Load<PcRacePack>(PepeContent.Pack)?.builders[0];
         if(MobileContent.Active)return ContentResources.Load<GameObject>("MobileBuilders/"+race);
         if(desktopMenuBuilders)return desktopMenuBuilders.LoadAsset<GameObject>("builders/"+race);

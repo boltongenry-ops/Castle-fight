@@ -53,6 +53,16 @@ public sealed partial class PcGame {
     Rect Slot(int column,int row)=>HudThemeIndex==0?CommandSlot(column,row,Application.isMobilePlatform):ThemedCommandSlot(column,row);
     static Rect InventorySlot(int cell)=>ConsoleCell(5+cell%2*84,290+cell/2*73,64,62);
     void DrawWarcraftHud() {
+        if(Event.current.type==EventType.Repaint){
+            float shade=0;
+            foreach(var pulse in match.Pulses){
+                if(pulse.fx!="blackhand:judgment" || pulse.age>=1.35f || !ShowPulse036(pulse))continue;
+                var point=Camera.main.WorldToViewportPoint(World(pulse.position));
+                if(point.z<=0 || point.x<0 || point.x>1 || point.y<0 || point.y>1)continue;
+                shade=Mathf.Max(shade,.17f*Mathf.SmoothStep(0,1,pulse.age/.14f)*Mathf.SmoothStep(0,1,(1.35f-pulse.age)/.85f));
+            }
+            if(shade>0)Fill(new Rect(-guiOrigin.x/guiScale,-guiOrigin.y/guiScale,Screen.width/guiScale,Screen.height/guiScale),new Color(.035f,.012f,.035f,shade));
+        }
         InitHud();hudTip=null;hudTipTable=false;
         var theme=BattleTheme;
         if(theme==null){DrawHudConsole(null);return;}
@@ -111,6 +121,20 @@ public sealed partial class PcGame {
             var p=Camera.main.WorldToScreenPoint(view.transform.position+Vector3.up*(view.godotHeight>0?view.godotHeight+.4f:(view.raw.StartsWith("cU",StringComparison.Ordinal)?view.ClassicHeight+.4f:FinalMarkerHeight(view.raw))));if(p.z<=0)continue;
             float x=(p.x-guiOrigin.x)/guiScale,y=(Screen.height-p.y-guiOrigin.y)/guiScale;
             if(y<42||y>516||x<0||x>1280)continue;
+            if(Event.current.type==EventType.Repaint && y>=80 && u.effects.Count>0){
+                var judgment=u.effects.Find(e=>e.id=="BHJu" && e.left>0);
+                if(judgment!=null){
+                    var sigil=BlackHandUi.JudgmentSigil();
+                    if(sigil){
+                        float entry=Mathf.Clamp01((6-judgment.left)/.28f);
+                        float size=Mathf.Lerp(35,27,entry);
+                        var tint=GUI.color;
+                        GUI.color=new Color(tint.r,tint.g,tint.b,tint.a*Mathf.Clamp01(judgment.left/.45f));
+                        GUI.DrawTexture(new Rect(x-size*.5f,y-size-7,size,size),sigil,ScaleMode.ScaleToFit,true);
+                        GUI.color=tint;
+                    }
+                }
+            }
             Fill(new Rect(x-17,y,34,4),new Color(.02f,.02f,.02f,.95f));Fill(new Rect(x-16,y+1,32*u.hp/u.maxHp,2),u.team==0?new Color(.2f,.85f,.25f):new Color(.95f,.2f,.14f));float debt=Mathf.Min(u.hp,match.PandaStagger(u));if(debt>0)Fill(new Rect(x-16+32*(u.hp-debt)/u.maxHp,y+1,32*debt/u.maxHp,2),new Color(1,.67f,.16f));DrawUnitDebuffs(u,x,y);
         }
         foreach(var h in match.Huts)if(h.paid&&CanInspectHut(h)&&huts.TryGetValue(h.id,out var buildingView)&&(HumanMatch.F(match.Lines[h.kind].buildingStats,"max_mana")>0||h.id==selectedHut)){

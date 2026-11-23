@@ -58,7 +58,7 @@ public sealed class NativeAppearance : MonoBehaviour {
         previous=Enumerable.Repeat(-1f,config.geosets.Length).ToArray();
         block=new MaterialPropertyBlock();Refresh();
     }
-    public void SetClip(string name){playing=player[name];config.clips.TryGetValue(name,out clipInterval);untilRefresh=0;}
+    public void SetClip(string name){playing=player[name];config.clips.TryGetValue(name,out clipInterval);Refresh();untilRefresh=.05f;}
     void LateUpdate(){untilRefresh-=Time.deltaTime;if(untilRefresh<=0){untilRefresh=.05f;Refresh();}}
     void Refresh() {
         if(config==null||playing==null)return;

@@ -7,11 +7,17 @@ internal static class BlackHandUi {
     static readonly Dictionary<string,Texture2D> textures=new Dictionary<string,Texture2D>();
     static Texture2D[] skills, fighters;
 
+    public static Texture2D JudgmentSigil()=>Texture("JudgmentSigil");
+    public static Texture2D BuilderIcon()=>Texture("BuilderIcon");
+    public static Texture2D BuilderSkin()=>Texture("BuilderSkin");
     public static Texture2D Emblem()=>Texture("Emblem");
     public static Texture2D Versus()=>Texture("Versus");
     public static Texture2D Aspect(int index)=>Texture(index==0?"AspectIron":"AspectSiege");
 
     public static Texture2D Ability(string id) {
+        if(id=="BHBz")return Texture("Berserk");
+        if(id=="BHBr")return Fighter("bU04");
+        if(id=="BHKn")return Ability("BH15");
         if(id=="BHIr")return Aspect(0);
         if(string.IsNullOrEmpty(id)||id.Length!=4||id[0]!='B'||id[1]!='H')return null;
         int index;

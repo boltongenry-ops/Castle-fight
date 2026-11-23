@@ -52,13 +52,41 @@ public static class BlackHandPrototypeCheck {
             string status=ammo=="bU12"?"BHPs":"BHCr";
             Check(wounded.effects.Any(e=>e.id==status),"No "+status);
         }
+        var cursed=Spawn("bU14",0);
+        var runner=Spawn("hfoo",1);
+        runner.position=new Vector2(55,12);runner.hp=runner.maxHp=3000;
+        shot.line=cursed.kind;shot.sourceId=cursed.id;shot.target=runner.id;shot.end=runner.position;
+        Call("BlackHandImpact",shot);
+        float expected=world.DamageUnit(runner,12,0,"chaos",true);
+        for(int tick=0;tick<4;tick++){
+            if(tick==1)runner.position+=Vector2.right*15;
+            float hp=runner.hp;Call("BlackHandZones",1f);
+            Check(Mathf.Abs(hp-runner.hp-(tick<3?expected:0))<.02f && expected>0,"Cursed moving target tick "+tick);
+        }
+        Debug.Log("CURSED_MOVING_TARGET_PASS ticks=3 damage="+expected);
         var castleGuard=Spawn("bU01",0);
         var melee=world.Lines[wounded.kind].weapons[0];
         float reduced=(float)Call("BlackHandMelee",wounded,castleGuard,100f,true);
         Check(Mathf.Abs(reduced-45)<.01f && (float)Call("BlackHandMelee",wounded,castleGuard,100f,true)==100,"Veteran block");
+        var soldier=Spawn("bU00",0);
+        int blocks=0;bool previous=false, consecutive=false;
+        for(int i=0;i<1000;i++){
+            soldier.hp=soldier.maxHp;
+            float hp=soldier.hp;
+            Call("ResolveAttack",wounded.id,1,soldier.id,30f,melee,0f,true,false);
+            bool blocked=soldier.hp==hp;
+            if(blocked)blocks++;
+            consecutive|=blocked && previous;
+            previous=blocked;
+        }
+        Check(blocks>90 && blocks<215 && consecutive && !soldier.spellTimers.ContainsKey("BHGuard"),"Independent soldier shield");
+        soldier.hp=soldier.maxHp;
+        Debug.Log("BLACK_HAND_SOLDIER_SHIELD_PASS blocks="+blocks+"/1000");
         var infirmary=new HumanMatch.Hut{team=0,kind=world.Kind("bH16"),position=castleGuard.position};
-        castleGuard.hp=1;Call("BlackHandBuilding",infirmary);
-        Check(castleGuard.hp==76,"Infirmary heal");
+        var medicA=Spawn("bU01",0);var medicB=Spawn("bU00",0);
+        castleGuard.hp=medicA.hp=medicB.hp=1;
+        Call("BlackHandBuilding",infirmary);
+        Check(castleGuard.hp==76 && medicA.hp==76 && medicB.hp==76,"Three infirmary heals");
         foe.position=wounded.position;
         var court=new HumanMatch.Hut{team=0,kind=world.Kind("bH17"),position=wounded.position};
         Call("BlackHandBuilding",court);
@@ -66,23 +94,64 @@ public static class BlackHandPrototypeCheck {
         before=wounded.hp;world.Heal(wounded,40);
         Check(Mathf.Abs(wounded.hp-before-20)<.01f,"Court healing reduction");
         var bell=new HumanMatch.Hut{team=0,kind=world.Kind("bH15"),position=wounded.position};
-        wounded.pendingSpell="A001";wounded.castLeft=1;
-        Call("BlackHandBuilding",bell);
-        Check(wounded.pendingSpell==null && bell.spellTimers.Count==1,"Cast interrupt");
+        before=wounded.hp;Call("BlackHandBuilding",bell);
+        Check(wounded.hp<before && wounded.effects.Any(e=>e.id=="BHKn" && e.power==-.30f) && bell.spellTimers["BH15"]==14,"Bell hits ordinary enemies");
         var warlock=Spawn("bU09",0);
         warlock.mana=80;
         Check((bool)Call("BlackHandCast",warlock)&&warlock.pendingSpell=="BH09"&&warlock.mana==80,
             "Tithe has an interruptible windup");
-        var enemyBell=new HumanMatch.Hut{team=1,kind=world.Kind("bH15"),position=warlock.position};
-        Call("BlackHandBuilding",enemyBell);
-        Check(warlock.pendingSpell==null&&warlock.mana==80&&warlock.spellTimers["BH09"]==12&&enemyBell.spellTimers["BH15"]==12,
-            "Bell interrupts Tithe during its cast");
-        warlock.spellTimers.Clear();warlock.castPause=0;
-        Check((bool)Call("BlackHandCast",warlock),"Tithe can be cast after recovery");
         world.TickUnit(warlock,.5f);
         Check(warlock.mana==45&&world.Units.Any(u=>u.team==1&&u.effects.Any(e=>e.id=="BHTx")),
             "Tithe applies its effect and spends mana on release");
-        Debug.Log("BLACK_HAND_WEAPONS_PASS");
+        var isolated=new Vector2(80,25);
+        HumanMatch.Unit Fighter(string raw,int side,float offset){
+            var actor=world.Spawn(side,Array.FindIndex(world.Lines,l=>l.unit==raw),isolated+Vector2.right*offset);
+            actor.position=isolated+Vector2.right*offset;
+            actor.hp=actor.maxHp=5000;
+            return actor;
+        }
+        var front=Fighter("hfoo",1,2);
+        var rear=Fighter("hfoo",1,5);
+        foreach(string raw in new[]{"bU03","bU04"}){
+            var bow=Fighter(raw,0,0);
+            bow.pendingWeapon=world.Lines[bow.kind].weapons.First(w=>w.ground);bow.attackTarget=front.id;bow.shotDamage=100;
+            int interval=raw=="bU03"?4:3;
+            for(int i=1;i<=interval;i++){
+                Call("Release",bow);
+                var bolt=world.Shots.Last(s=>s.sourceId==bow.id);
+                Check((bolt.chaosSpell=="hand-bolt")==(i==interval),"Piercing cadence "+raw);
+                if(i==interval){
+                    Call("HandBolt",bolt);
+                    Check(Mathf.Abs(bolt.damage-(raw=="bU04"?135:100))<.01f,"Heavy bonus against high HP");
+                    var fragment=world.Shots.Last();
+                    Check(fragment.target==rear.id && Mathf.Abs(fragment.damage-(raw=="bU03"?40:65))<.01f,"Piercing damage "+raw+" target="+fragment.target+"/"+rear.id+" dmg="+fragment.damage);
+                }
+            }
+        }
+        var marshal=Fighter("bU02",0,1);
+        var behind=Fighter("hfoo",1,-1);
+        float frontHp=front.hp,backHp=behind.hp;
+        Call("BlackHandHit",marshal,front);
+        Check(front.hp<frontHp && behind.hp==backHp && marshal.spellTimers["BH02"]==8,"Marshal frontal bash");
+        var elite=Fighter("bU08",0,1);
+        rear.hp=190;Call("BlackHandHit",elite,rear);
+        Check(rear.hp==0 && elite.spellTimers["BH08"]==8,"Elite execution");
+        var inquisitor=Fighter("bU10",0,0);
+        Check((bool)Call("ResolveBlackHandTithe",inquisitor,front,true),"Elite tithe cast");
+        for(int i=0;i<6;i++){
+            float hp=front.hp;Call("BlackHandRelease",front);
+            Check((front.hp<hp)==(i<5),"Elite tithe charges");
+        }
+        var raging=Fighter("bU02",0,0);raging.maxHp=1000;raging.hp=300;
+        float speed=world.AttackSpeed(raging);
+        world.DamageUnit(raging,5,1,"magic",true);
+        Debug.Log("BERSERK_THRESHOLD hp="+raging.hp+" raw="+world.Lines[raging.kind].unit+" resist="+raging.spellResist);
+        Check(raging.spellTimers.TryGetValue("BHBz",out float protection) && protection==5 && Mathf.Abs(world.AttackSpeed(raging)-speed-.4f)<.001f,"Berserk threshold");
+        Check(world.DamageUnit(raging,60,1,"pierce",false)==0 && world.DamageUnit(raging,20,1,"magic",true)>0,"Berserk physical only");
+        raging.hp=600;Check(world.AttackSpeed(raging)==speed,"Berserk healing");
+        raging.spellTimers["BHBz"]=0;raging.hp=301;
+        Check(world.DamageUnit(raging,50,1,"normal",false)>0 && raging.spellTimers["BHBz"]==0,"Berserk expires and cannot retrigger");
+        Debug.Log("MARSHAL_BERSERK_PASS");Debug.Log("BLACK_HAND_WEAPONS_PASS");
     }
     static void CheckAspects(JObject clan,JObject humans) {
         void Check(bool pass,string message){if(!pass)throw new Exception(message);}

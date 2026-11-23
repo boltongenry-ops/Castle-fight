@@ -7,7 +7,7 @@ public static class BlackHand {
     public static int Ammo(string id)=>id=="bU12"?1:id=="bU13"?2:id=="bU14"?3:0;
     public static UnityEngine.Color StoneColor(int ammo)=>ammo==1?UnityEngine.Color.green:ammo==2?new UnityEngine.Color(1,.42f,.08f):ammo==3?new UnityEngine.Color(.72f,.24f,.88f):UnityEngine.Color.gray;
     internal static bool IsStatus(string id)=>id=="BHW1"||id=="BHW2"||id=="BHPs"||id=="BHCr"||
-        id=="BHTx"||id=="BHJu"||id=="BHSl";
+        id=="BHTx"||id=="BHJu"||id=="BHSl"||id=="BHKn";
     public const int Race = 17;
     // The prototype shares the human bootstrap art on both platforms.
     static readonly int[] art = {0,11,14,1,12,0,11,4,15,5,5,2,2,13,13,6,4,10,8,9};
@@ -59,7 +59,7 @@ public static class BlackHand {
             }
             lines.Add(line);
         }
-        Troop("Караульный двор","Щитоносец",100,"Q","Щит караула","Блокирует 40% одного удара ближнего боя раз в 8 с.",1);
+        Troop("Караульный двор","Щитоносец",100,"Q","Щит караула","При каждом обычном ударе ближнего боя с вероятностью 15% полностью блокирует его урон.",1);
         Troop("Двор ветеранов","Ветеран",120,"","Щит ветерана","Блокирует 55% одного удара ближнего боя раз в 7 с.",2);
         Troop("Двор маршала","Чёрный маршал",220,"","Удар щитом","Сохраняет блок ветерана. Раз в 8 с бьёт до трёх бойцов перед собой на 65.");
         Troop("Арбалетная галерея","Стрелок",145,"W","Сквозной болт","Каждый четвёртый болт пробивает строй на 40% урона.",4);
@@ -73,10 +73,17 @@ public static class BlackHand {
         Troop("Осадный двор","Камнемёт",225,"S","Раздробление","55 ядром и три тика осколками по 10 осадного урона.",12,13,14);
         Troop("Ядовитая мастерская","Ядовитый камнемёт",155,"","Ядовитая шрапнель","12 колющего урона в секунду и яд на 3 с по 7.");
         Troop("Огненная мастерская","Огненный камнемёт",155,"","Огненная шрапнель","24 магического урона каждую секунду и ещё 18 на третьем тике.");
-        Troop("Проклятая мастерская","Проклятый камнемёт",155,"","Проклятая шрапнель","12 урона хаосом в секунду. Ослабляет обычные атаки на 20% на 3 с.");
+        Troop("Проклятая мастерская","Проклятый камнемёт",155,"","Проклятая шрапнель","Три секунды наносит по 12 урона хаосом в зоне попадания. При прямом попадании цель получает все три тика даже при выходе из зоны. Ослабляет обычные атаки на 20% на 3 с.");
         for(int i=0;i<lines.Count;i++){
             var s=lines[i]["stats"]; var w=s["weapons"][0];
-            if(i==3||i==4){w["weapon_type"]="missile";w["missile_speed"]=42;w["missile_homing"]=true;w["missile"]="Abilities\\Weapons\\Arrow\\ArrowMissile.mdl";}
+            if(i==3||i==4){
+                foreach(var bolt in s["weapons"]){bolt["weapon_type"]="missile";bolt["missile_speed"]=42;bolt["missile_homing"]=true;bolt["missile"]="Abilities\\Weapons\\Arrow\\ArrowMissile.mdl";}
+                if(i==4){
+                    var ground=s["weapons"][1];
+                    ground["can_ground"]=true;
+                    ground["targets"]="debris,ground,item,structure,ward";
+                }
+            }
             if(i==6)s["range"]=w["range"]=4.5;
             if(i==10){s["hp"]=430;s["damage"]=w["damage"]=42;s["armor"]=3;}
             if(i>=12)s["hp"]=390;
@@ -84,6 +91,10 @@ public static class BlackHand {
             if(i==9||i==10){s["max_mana"]=120;s["start_mana"]=80;s["mana_regen"]=2;}
             if(i>=11){var stone=templates[2]["stats"]["weapons"][0].DeepClone();stone["damage"]=55;stone["cooldown"]=3.5;stone["splash"]=new JObject();s["weapons"]=new JArray(stone);s["damage"]=55;s["cooldown"]=3.5;}
         }
+        data["abilities"]["BHBz"]=new JObject{["id"]="BHBz",["kind"]="passive",["name"]="Берсерк",["description"]="При здоровье ниже 30% скорость атаки повышена на 40%. При первом падении ниже порога маршал на 5 с получает защиту от физических атак."};
+        ((JArray)lines[2]["stats"]["abilities"]).Add("BHBz");
+        data["abilities"]["BHBr"]=new JObject{["id"]="BHBr",["kind"]="passive",["name"]="Бронебойный наконечник",["description"]="Болты наносят на 35% больше урона бойцам с максимальным здоровьем от 450 HP. Действует и на пробитие."};
+        ((JArray)lines[4]["stats"]["abilities"]).Add("BHBr");
         void Status(string id,string name,int dps,string type,string description) {
             data["abilities"][id]=new JObject {["id"]=id,["name"]=name,["kind"]="debuff",["dps"]=dps,["damage_type"]=type,["interval"]=1,["description"]=description};
         }
@@ -103,16 +114,17 @@ public static class BlackHand {
             line["stats"]=new JObject {["abilities"]=new JArray(),["weapons"]=new JArray()};
             string skill="BH"+row;
             data["abilities"][skill]=new JObject{["id"]=skill,["kind"]="passive",["name"]=name,["description"]=description};
-            if(row<18)data["abilities"][skill]["cd"]=row==15?12:row==16?5:30;
+            if(row<18)data["abilities"][skill]["cd"]=row==15?14:row==16?5:30;
             line["abilities"]=new JArray(skill);line["buildingStats"]["abilities"]=new JArray();
             if(category!="tower")line["buildingStats"]["weapons"]=new JArray();
             lines.Add(line);
         }
-        Structure("bH15","Колокол немоты","special",220,120,"D","Прерывает подготовку одного вражеского заклинания в радиусе 600 раз в 12 с.");
-        Structure("bH16","Лазарет ветеранов","special",200,100,"F","Раз в 5 с восстанавливает 75 HP самому тяжело раненному союзнику в радиусе 600.");
+        Structure("bH15","Чёрный набат","special",220,120,"D","Раз в 14 с поражает до пяти ближайших видимых врагов по всей карте: 45 магического урона и −30% урона оружия на 6 с.");
+        Structure("bH16","Лазарет ветеранов","special",200,100,"F","Раз в 5 с восстанавливает по 75 HP трём наиболее раненым союзникам в радиусе 1200.");
         Structure("bH17","Палата последнего суда","legendary",550,350,"Z","Раз в 30 с поражает до пяти бойцов в плотной группе на 100 магического урона. Получаемое лечение снижено вдвое на 6 с.");
         Structure("bH18","Вороновая вышка","tower",195,100,"X","Обстреливает землю и воздух. Каждый третий выстрел замедляет цель на 35% на 3 с.");
         data["abilities"]["BHIr"]=new JObject {["id"]="BHIr",["name"]="Железный устав",["kind"]="buff",["duration"]=5};
+        Status("BHKn","Чёрный набат",0,"magic","Урон оружия снижен на 30% на 6 с.");
         Status("BHJu","Последний суд",0,"magic","Получаемое лечение снижено на 50%.");
         Status("BHSl","Вороновы путы",0,"magic","Скорость передвижения снижена на 35%.");
         lines.Add(templates[9].DeepClone());

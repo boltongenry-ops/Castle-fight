@@ -81,6 +81,45 @@ public sealed partial class PepeSkillFx {
         }
     }
 
+    public void RavenSmoke(Vector3 feet,float remaining,int seed){
+        if(!mesh)return;
+        origin=transform.InverseTransformPoint(feet);radius=1;
+        Color soot=new Color(.035f,.03f,.045f);
+        float elapsed=3f-remaining;
+        for(int i=0;i<7;i++){
+            float t=Mathf.Repeat(elapsed*.86f+i/7f,1);
+            float angle=seed*.73f+i*2.4f+t*.8f;
+            var center=Rad(angle)*(.33f+t*.48f)+Vector3.up*(.12f+t*.55f);
+            float width=.38f+.36f*t;
+            opacity=.72f*Mathf.Sin(Mathf.PI*t)*Mathf.Clamp01(remaining*5);
+            int hub=Vertex(center,soot),last=-1;
+            for(int j=0;j<=10;j++){
+                float a=j*(2*Mathf.PI/10);
+                int rim=Vertex(center+Rad(a)*width+Vector3.up*(Mathf.Sin(a)*width*.46f),soot,0);
+                if(j>0)Tri(hub,rim,last);
+                last=rim;
+            }
+        }
+    }
+
+    public void Bleed(Vector3 feet,float height,bool deep,float time,int seed) {
+        if(!mesh)return;
+        origin=transform.InverseTransformPoint(feet+Vector3.up*height*.56f);
+        radius=Mathf.Clamp(height*.5f,1f,2f);
+        int drops=deep?8:5;
+        for(int i=0;i<drops;i++){
+            float clock=time*(deep?2.25f:1.8f)+seed*.13f+i*.092f;
+            float t=Mathf.Repeat(clock,1);
+            Vector3 ray=Rad(seed*1.71f+Mathf.Floor(clock)*2.4f+i*.27f);
+            Vector3 side=Vector3.Cross(ray,Vector3.up);
+            float reach=deep?1.55f:1.15f;
+            Vector3 tip=ray*(.28f+reach*t)+Vector3.up*(.62f*t-1.45f*t*t);
+            Vector3 tangent=(ray*reach+Vector3.up*(.62f-2.9f*t)).normalized;
+            opacity=Mathf.Clamp01((1-t)*4);
+            Petal(tip-tangent*(.36f-.19f*t),tip,side*(deep?.082f:.062f),new Color(.38f,.014f,.024f),Blood);
+        }
+    }
+
     public void BlackHandStatus(Vector3 feet,string id,float time,int seed) {
         if(!mesh)return;
         origin=transform.InverseTransformPoint(feet+Vector3.up*.12f);

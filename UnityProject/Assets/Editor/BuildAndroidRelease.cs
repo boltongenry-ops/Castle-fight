@@ -51,6 +51,7 @@ public static class BuildAndroidRelease {
         Debug.Log("CF_ANDROID_SUPPLEMENT_PASS version=0.33.0 sha256="+hash);
     }
     public static void Build()=>BuildSigned(null,0);
+    public static void BuildClan044()=>BuildSigned("0.44.0",39);
     public static void BuildBlackHandPreview()=>BuildSigned("0.43.0",38);
     static void BuildSigned(string version,int code){
         string key=Environment.GetEnvironmentVariable("CF_KEYSTORE_PATH");

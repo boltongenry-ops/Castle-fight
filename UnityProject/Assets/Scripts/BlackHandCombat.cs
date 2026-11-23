@@ -5,12 +5,20 @@ using UnityEngine;
 
 namespace CastleFight {
 public sealed partial class HumanMatch {
-    sealed class Shrapnel { public Vector2 center; public string ammo; public int team,ticks; public float age,radius; }
+    sealed class Shrapnel { public Vector2 center; public string ammo; public int team,ticks; public Unit cursedVictim; public float age,radius; }
     readonly List<Shrapnel> shrapnel = new List<Shrapnel>();
     static readonly Color iron = new Color(.56f,.48f,.62f);
     static Color StoneColor(string ammo) => ammo=="bU12"?Color.green:ammo=="bU13"?new Color(1,.42f,.08f):ammo=="bU14"?new Color(.72f,.24f,.88f):Color.gray;
     static bool HandFighter(Line line)=>line.unit!=null&&line.unit.StartsWith("bU",System.StringComparison.Ordinal);
 
+    static bool BerserkImmune(Unit unit,string attack) =>
+        attack!="magic" && attack!="spells" && unit.spellTimers.TryGetValue("BHBz",out float left) && left>0;
+    void TriggerBerserk(Unit unit,float before){
+        if(unit.hp<=0 || Lines[unit.kind].unit!="bU02" || before*10<unit.maxHp*3 ||
+           unit.hp*10>=unit.maxHp*3 || unit.spellTimers.ContainsKey("BHBz"))return;
+        unit.spellTimers["BHBz"]=5;
+        PulseAt(unit.position,2,Color.red,"Берсерк",.8f,"blackhand:guard",unit.id);
+    }
     void TriggerHandIron(Unit unit,float previousHp) {
         if(unit.handIronUsed||Aspects[unit.team]!=0||!HandFighter(Lines[unit.kind])||
            unit.hp<=0||previousHp<unit.maxHp*.5f||unit.hp>=unit.maxHp*.5f)return;
@@ -40,9 +48,12 @@ public sealed partial class HumanMatch {
             PulseAt(victim.position,1.35f,iron,"",.38f,"blackhand:pike",victim.id);
         }
         string guard=Lines[victim.kind].unit;
-        if((guard=="bU00"||guard=="bU01"||guard=="bU02")&&ReadyHand(victim,"BHGuard")){
-            victim.spellTimers["BHGuard"]=guard=="bU00"?8:7;
-            PulseAt(victim.position,1.55f,iron,"Блок",.48f,"blackhand:guard",victim.id);amount*=guard=="bU00"?.6f:.45f;
+        bool soldierBlock = guard=="bU00" && amount>0 && Roll()<.15f;
+        bool veteranBlock = (guard=="bU01"||guard=="bU02") && ReadyHand(victim,"BHGuard");
+        if(soldierBlock||veteranBlock){
+            if(veteranBlock)victim.spellTimers["BHGuard"]=7;
+            PulseAt(victim.position,1.55f,iron,"Блок",.48f,"blackhand:guard",victim.id);
+            amount=soldierBlock?0:amount*.45f;
         }
         return amount;
     }
@@ -105,7 +116,14 @@ public sealed partial class HumanMatch {
         return u.hp<=0;
     }
     void HandBolt(Shot shot) {
-        if(shot.chaosSpell!="hand-bolt")return;
+        if(shot.chaosSpell=="hand-bolt")PierceHandBolt(shot);
+        if(shot.kind!=3 || shot.spell || Lines[shot.line].unit!="bU04")return;
+        var target=FindUnit(shot.target);
+        if(target!=null && target.team!=shot.team && target.hp>0 && target.maxHp>=450)
+            shot.damage*=1.35f;
+    }
+
+    void PierceHandBolt(Shot shot) {
         Vector2 direction=(shot.end-shot.start).normalized;
         var second=PepeInRange(shot.end,8).Where(v=>v.id!=shot.target&&HandTarget(v,shot.team)&&(Flying(v)?shot.weapon.air:shot.weapon.ground))
             .Where(v=>{var delta=v.position-shot.end;float along=Vector2.Dot(delta,direction);return along>0&&(delta-direction*along).sqrMagnitude<=2.25f;})
@@ -133,17 +151,23 @@ public sealed partial class HumanMatch {
         if(hut.spellTimers.TryGetValue(skill,out float left)&&left>0)return;
         int team=hut.team;
         if(id=="bH16"){
-            var ally=PepeInRange(hut.position,20).Where(v=>v.team==team&&v.hp>0&&v.hp<v.maxHp).OrderBy(v=>v.hp/v.maxHp).FirstOrDefault();
-            if(ally==null)return;
-            Heal(ally,75,"blackhand:heal");hut.spellTimers[skill]=5;return;
+            var allies=PepeInRange(hut.position,40).Where(v=>v.team==team&&v.hp>0&&v.hp<v.maxHp)
+                .OrderBy(v=>v.hp/v.maxHp).ThenBy(v=>v.id).Take(3).ToArray();
+            foreach(var ally in allies)Heal(ally,75,"blackhand:heal");
+            hut.spellTimers[skill]=allies.Length>0?5:.5f;
+            return;
         }
         if(id=="bH15"){
-            var caster=PepeInRange(hut.position,20).FirstOrDefault(v=>HandTarget(v,team)&&v.pendingSpell!=null&&v.castLeft>0);
-            if(caster==null)return;
-            caster.spellTimers[caster.pendingSpell]=SpellCooldown(caster,caster.pendingSpell);
-            caster.pendingSpell=null;caster.castLeft=-1;caster.castPause=.5f;
-            PulseAt(caster.position,2,iron,"Чары прерваны",.68f,"blackhand:silence",caster.id);
-            PulseAt(hut.position,2.2f,iron,"",.60f,"blackhand:bell");hut.spellTimers[skill]=12;return;
+            var targets=Units.Where(v=>HandTarget(v,team)&&!v.effects.Any(e=>e.id=="BHKn"&&e.left>0))
+                .OrderBy(v=>(v.position-hut.position).sqrMagnitude).ThenBy(v=>v.id).Take(5).ToArray();
+            foreach(var enemy in targets){
+                DamageUnit(enemy,45,team);
+                if(enemy.hp>0)HandEffect(enemy,team,"BHKn",6,-.30f);
+                PulseAt(enemy.position,2,iron,"Набат",.65f,"blackhand:silence",enemy.id);
+            }
+            if(targets.Length>0)PulseAt(hut.position,3,iron,"",.7f,"blackhand:bell");
+            hut.spellTimers[skill]=targets.Length>0?14:1;
+            return;
         }
         var enemies=PepeInRange(hut.position,24).Where(v=>HandTarget(v,team)).ToArray();
         if(enemies.Length==0)return;
@@ -158,10 +182,14 @@ public sealed partial class HumanMatch {
     bool BlackHandImpact(Shot shot) {
         if(shot.kind!=2)return false;
         string ammo=Lines[shot.line].unit;if(!IsHandStone(ammo))return false;
-        if(TargetAlive(shot.target)&&(TargetPosition(shot.target,shot.team)-shot.end).sqrMagnitude<=4)
+        bool directHit=TargetAlive(shot.target)&&(TargetPosition(shot.target,shot.team)-shot.end).sqrMagnitude<=4;
+        if(directHit)
             ResolveAttack(shot.sourceId,shot.team,shot.target,shot.damage,shot.weapon,0,false,true);
         float radius=Aspects[shot.team]==1?7:6;
-        shrapnel.Add(new Shrapnel{team=shot.team,ammo=ammo,center=shot.end,radius=radius});
+        var struck=directHit && ammo=="bU14" ? FindUnit(shot.target) : null;
+        if(struck!=null && struck.hp>0 && struck.team!=shot.team && !Invulnerable(struck))
+            HandEffect(struck,shot.team,"BHCr",3,-.2f);
+        shrapnel.Add(new Shrapnel{team=shot.team,ammo=ammo,center=shot.end,radius=radius,cursedVictim=struck});
         PulseAt(shot.end,radius,StoneColor(ammo),"",.48f,AmmoFx(ammo));
         return true;
     }
@@ -172,11 +200,18 @@ public sealed partial class HumanMatch {
             while(zone.ticks<3&&zone.age>=zone.ticks+1){
                 zone.ticks++;
                 bool fire=zone.ammo=="bU13",poison=zone.ammo=="bU12",curse=zone.ammo=="bU14";
-                foreach(var v in PepeInRange(zone.center,zone.radius).Where(v=>v.team!=zone.team&&v.hp>0&&!Flying(v)&&!Invulnerable(v)).ToArray()){
+                var targets=PepeInRange(zone.center,zone.radius).Where(v=>v.team!=zone.team&&v.hp>0&&!Flying(v)&&!Invulnerable(v)).ToList();
+                var struck=zone.cursedVictim;
+                if(struck!=null && struck.team!=zone.team && struck.hp>0 && !Flying(struck) && !Invulnerable(struck) && !targets.Contains(struck))
+                    targets.Add(struck);
+                foreach(var v in targets){
                     DamageUnit(v,fire?(zone.ticks==3?42:24):poison||curse?12:10,zone.team,fire?"magic":poison?"pierce":curse?"chaos":"siege",true);
                     if(v.hp<=0)continue;
                     if(poison&&Organic(v))HandEffect(v,zone.team,"BHPs",3);
-                    if(curse)HandEffect(v,zone.team,"BHCr",3,-.2f);
+                    if(curse){
+                        if(v!=struck)HandEffect(v,zone.team,"BHCr",3,-.2f);
+                        PulseAt(v.position,1.4f,StoneColor(zone.ammo),"",.46f,"blackhand:curse",v.id);
+                    }
                 }
                 PulseAt(zone.center,zone.radius,StoneColor(zone.ammo),"",.52f,AmmoFx(zone.ammo));
             }

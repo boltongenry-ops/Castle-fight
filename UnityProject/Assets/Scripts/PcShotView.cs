@@ -3,6 +3,23 @@ using UnityEngine;
 using UnityEngine.Rendering;
 namespace CastleFight {
 public sealed class PcShotView : MonoBehaviour {
+    static Mesh ravenArrow;
+    static Mesh RavenArrow(){
+        if(ravenArrow)return ravenArrow;
+        var points=new System.Collections.Generic.List<Vector3>();
+        var faces=new System.Collections.Generic.List<int>();
+        float[] z={-.8f,-.52f,-.51f,.36f,.37f,.83f};
+        float[] width={.14f,.065f,.043f,.043f,.18f,.001f};
+        for(int ring=0;ring<z.Length;ring++)for(int i=0;i<4;i++){
+            float angle=i*Mathf.PI*.5f;
+            points.Add(new Vector3(Mathf.Cos(angle)*width[ring],Mathf.Sin(angle)*width[ring],z[ring]));
+            if(ring==0)continue;
+            int a=(ring-1)*4+i,b=(ring-1)*4+(i+1)%4;
+            faces.AddRange(new[]{a,b,a+4,b,b+4,a+4});
+        }
+        ravenArrow=new Mesh{name="Raven tower arrow"};ravenArrow.SetVertices(points);
+        ravenArrow.SetTriangles(faces,0);ravenArrow.RecalculateNormals();return ravenArrow;
+    }
     Transform body,flash;LineRenderer streak;MaterialPropertyBlock block;PcModel nativeModel;GameObject nativePrefab,nativeObject;
     HumanMatch.Shot observed;float observedAge,previousDuration,currentDuration,previousHeight,currentHeight,visualBlend=1;
     Vector2 previousEnd,currentEnd;bool hitObserved;
@@ -41,20 +58,31 @@ public sealed class PcShotView : MonoBehaviour {
         VisualHit=hit;
         if(hit)t=1;
         transform.position=DrawPosition(s,t,world);
-        if(s.chaosSpell=="hand-shard"||s.chaosSpell=="hand-stone"||s.chaosSpell=="hand-pierce"||s.chaosSpell=="hand-raven"){
+        bool raven=s.chaosSpell=="hand-raven" || s.chaosSpell=="hand-raven-arrow";
+        if(s.chaosSpell=="hand-shard"||s.chaosSpell=="hand-stone"||s.chaosSpell=="hand-pierce"||raven){
             bool shard=s.chaosSpell=="hand-shard";
-            bool bolt=s.chaosSpell=="hand-pierce"||s.chaosSpell=="hand-raven";
-            var color=bolt?(s.chaosSpell=="hand-raven"?new Color(.54f,.33f,.87f):new Color(.96f,.79f,.44f)):BlackHand.StoneColor(s.donorId);
+            bool bolt=s.chaosSpell=="hand-pierce"||raven;
+            var color=bolt?(raven?new Color(.025f,.023f,.03f):new Color(.96f,.79f,.44f)):BlackHand.StoneColor(s.donorId);
             if(nativeObject)nativeObject.SetActive(false);
-            body.gameObject.SetActive(!hit);
+            bool visible = !hit && (s.chaosSpell != "hand-stone" || t < .72f);
+            body.gameObject.SetActive(visible);
             body.position=transform.position;
-            body.localScale=bolt?new Vector3(.15f,.15f,.86f):shard?new Vector3(.18f,.18f,.55f):Vector3.one*.7f;
+            if(raven)body.GetComponent<MeshFilter>().sharedMesh=RavenArrow();
+            body.localScale=raven?Vector3.one:bolt?new Vector3(.15f,.15f,.86f):shard?new Vector3(.18f,.18f,.55f):Vector3.one*.7f;
             Vector3 path=DrawPosition(s,Mathf.Min(1,t+.02f),world)-transform.position;
             if(path.sqrMagnitude>.000001f)body.rotation=Quaternion.LookRotation(path);
             block.SetColor("_Color",color);body.GetComponent<Renderer>().SetPropertyBlock(block);
-            streak.gameObject.SetActive(!hit);streak.positionCount=2;streak.startWidth=.04f;streak.endWidth=shard?.12f:.24f;
+            streak.gameObject.SetActive(visible);streak.positionCount=2;streak.startWidth=.04f;streak.endWidth=shard?.12f:.24f;
             streak.SetPosition(0,DrawPosition(s,Mathf.Max(0,t-.18f),world));streak.SetPosition(1,transform.position);streak.SetPropertyBlock(block);
-            flash.gameObject.SetActive(false);
+            float impactAge = Mathf.Max(0, age-duration);
+            bool impact = hit && !bolt && impactAge < .32f;
+            flash.gameObject.SetActive(impact);
+            if(impact){
+                flash.position = world(s.end) + Vector3.up * .55f;
+                float size = (shard ? .9f : 2.2f) * (1-impactAge/.32f);
+                flash.localScale = Vector3.one * size;
+                flash.GetComponent<Renderer>().SetPropertyBlock(block);
+            }
             return;
         }
         if(drawHd?.Invoke(s,this)==true){

@@ -37,7 +37,7 @@ public sealed partial class HumanMatch {
         return value;
     }
     public float MoveSpeed(Unit u){var l=Lines[u.kind];if(u.elementalArmed)return Rooted(u)?0:15;float fixedMove=-1;foreach(var e in u.effects)if(e.left>0){float candidate=F(e.config,"move_override");if(candidate>0&&(fixedMove<0||candidate<fixedMove))fixedMove=candidate;}if(fixedMove>=0)return Rooted(u)?0:fixedMove;return l.speed<=0||Rooted(u)?0:Mathf.Clamp((l.speed+(TeamNaga[u.team]&&Aspects[u.team]==0?-20f/30:0))*(1+ItemPassive(u.team,"speed_bonus",u))*Mathf.Max(0,1+Stat(u,"speed")+(u.nightInvisible?u.nightSpeed:0)),UnitConfig035(u.kind).minSpeed,UnitConfig035(u.kind).maxSpeed);}
-    public float AttackSpeed(Unit u)=>Mathf.Clamp(1+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5);
+    public float AttackSpeed(Unit u)=>Mathf.Clamp(1+(Lines[u.kind].unit=="bU02" && u.hp*10<u.maxHp*3?.4f:0)+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5);
     public Weapon WeaponFor(Unit u,Unit target=null,bool structure=false){
         if(Ethereal(u)||Disarmed(u))return null;
         foreach(var w in u.elementalWeapons??Lines[u.kind].weapons)if((target==null||!Invulnerable(target)&&!CorruptedAirborne(target)&&!Hidden(target)&&NightCanDetect(u.team,target)&&Lines[target.kind].unit!="n02E")&&(target==null||Lines[target.kind].unit!="YTct"||w.targets.Contains("tree"))&&(target==null||!Ethereal(target)||w.attack=="magic"||w.attack=="spells")&&(structure?w.structure:target!=null&&Flying(target)?w.air:w.ground))return w;
@@ -175,6 +175,7 @@ public sealed partial class HumanMatch {
     float Splash(Weapon w,float distance)=>distance<=w.full?1:distance<=w.half?w.halfFactor:distance<=w.quarter?w.quarterFactor:0;
     public float DamageUnit(Unit victim,float amount,int team,string attack="magic",bool spell=true,bool execute=false,Unit killer=null,bool suppressUndead=false,bool ignoreArmor=false,float minimumHp=0,bool suppressElemental=false,string attackTable=null,bool bypassResistance=false,bool pandaDebt=false) {
         if(victim==null||victim.hp<=0||amount<=0||CorruptedAirborne(victim))return 0;InvalidateArmyCounts035();Ensure(victim);
+        if(!execute&&!spell&&!pandaDebt&&BerserkImmune(victim,attack))return 0;
         if(!execute&&(Invulnerable(victim)||Lines[victim.kind].unit=="n02E"))return 0;
         if(!execute&&!pandaDebt&&Ethereal(victim)){if(!spell&&attack!="magic"&&attack!="spells")return 0;if(spell&&attack=="magic")amount*=1.66f;}
         if(!execute&&!pandaDebt){if(!spell)foreach(var id in victim.abilities){var cfg=Abilities[id];if((string)cfg?["kind"]=="spiked")amount*=1-Mathf.Clamp01(F(cfg,"reduction"));}if(spell&&attack=="magic"&&(!bypassResistance||victim.spellResist>=1))amount*=1-Mathf.Clamp01(victim.spellResist);if(!spell&&attack=="pierce"&&victim.abilities.Contains("A03G"))amount*=F(Abilities["A03G"],"defend",.4f);amount*=Multiplier(attackTable??(spell&&attack=="magic"?"spells":attack),Lines[victim.kind].armorType);if(!ignoreArmor&&!(spell&&attack=="magic"))amount*=ArmorFactor(victim.armor+Stat(victim,"armor"));amount*=Mathf.Max(0,1+Stat(victim,"incoming"));}
@@ -188,7 +189,7 @@ public sealed partial class HumanMatch {
         if(!pandaDebt&&!suppressUndead&&killer!=null)UndeadAfterDamage(killer,victim,Mathf.Min(before,amount),before);
         if(victim.hp<=0)return before;
         if(!execute&&!pandaDebt)amount=PandaDefer(victim,amount,team,killer);
-        victim.hp=Mathf.Max(Mathf.Min(before,minimumHp),victim.hp-amount);if(!pandaDebt&&victim.hp>0){NatureOnDamage(victim);if(before>victim.hp){if(team!=victim.team)TriggerHandIron(victim,before);NorthernRage(victim);if(victim.nightStealth>0){NightReveal(victim);if(killer!=null&&killer.team!=victim.team)victim.combatTarget=killer.id;}}}
+        victim.hp=Mathf.Max(Mathf.Min(before,minimumHp),victim.hp-amount);if(!pandaDebt&&victim.hp>0){NatureOnDamage(victim);if(before>victim.hp){TriggerBerserk(victim,before);if(team!=victim.team)TriggerHandIron(victim,before);NorthernRage(victim);if(victim.nightStealth>0){NightReveal(victim);if(killer!=null&&killer.team!=victim.team)victim.combatTarget=killer.id;}}}
         if(!pandaDebt){ElementalAfterDamage(killer,victim,Mathf.Max(0,before-victim.hp),suppressElemental);NerubAfterDamage(victim,amount,spell);PandaAfterDamage(victim,amount);}
         if(victim.hp<=0&&!victim.deathProcessed){victim.deathProcessed=true;BattleAudio.For(this)?.Death(Lines[victim.kind].unit,victim.position);victim.pose="Death";victim.pendingSpell=null;victim.strikeLeft=-1;Kills++;if(team>=0&&team<2&&team!=victim.team){TeamKills[team]++;if(!victim.noBounty)Gold[team]+=Mathf.Max(1,(int)(victim.maxHp/50));}
             NerubDied(victim);ElvenDied(victim,team);NightKilled(killer,victim);NightDeathAspect(victim);ElementalDied(victim,killer,team);CorruptedDied(victim);UndeadDied(victim,killer);MechDied(victim);OrcKilled(killer,victim);NagaOnDeath(victim);ChaosDeath(victim);
@@ -203,7 +204,7 @@ public sealed partial class HumanMatch {
     void ResolveAttack(int ownerId,int team,int target,float amount,Weapon w,float stun,bool passives=true,bool handProjectile=false) {
         var victim=FindUnit(target);var owner=FindUnit(ownerId);
         if(victim!=null) {
-            if(victim.team==team||CorruptedAirborne(victim))return;Ensure(victim);float evasion=Mathf.Max(NightEvasion(victim),PepeEvasion(victim));if(evasion>0&&Roll()<evasion){if(PepeEvasion(victim)>0)PulseAt(victim.position,1.6f,Color.white,"Уклонение",.55f,"pepe:PEva",victim.id);else PulseAt(victim.position,1,Color.white,"Уклонение");return;}
+            if(victim.team==team||CorruptedAirborne(victim)||BerserkImmune(victim,w.attack))return;Ensure(victim);float evasion=Mathf.Max(NightEvasion(victim),PepeEvasion(victim));if(evasion>0&&Roll()<evasion){if(PepeEvasion(victim)>0)PulseAt(victim.position,1.6f,Color.white,"Уклонение",.55f,"pepe:PEva",victim.id);else PulseAt(victim.position,1,Color.white,"Уклонение");return;}
             if(w.type=="normal")BattleAudio.For(this)?.Contact(owner!=null?Lines[owner.kind].unit:null,Lines[victim.kind].unit,false,victim.position);
             bool pepeHit=passives&&owner!=null&&owner.team==team&&Lines[owner.kind].unit?.StartsWith("pU",StringComparison.Ordinal)==true&&!Invulnerable(victim)&&(!Ethereal(victim)||w.attack=="magic"||w.attack=="spells");
             if(pepeHit)amount+=PepeWeaponBonus(owner,victim,w);

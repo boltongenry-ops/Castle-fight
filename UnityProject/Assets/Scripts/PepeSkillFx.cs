@@ -180,7 +180,22 @@ public sealed partial class PcGame {
         foreach(var fighter in match.Units){
             if(fighter.hp<=0||fighter.effects.Count==0||
                !units.TryGetValue(fighter.id,out var view)||!ShowUnitArt036(fighter,view))continue;
-            var status=fighter.effects.Find(e=>e.left>0&&BlackHand.IsStatus(e.id));
+            HumanMatch.Effect status=null, wound=null;
+            foreach(var effect in fighter.effects){
+                if(effect.left<=0)continue;
+                if(effect.id=="BHSl"){
+                    if(!batch)batch=visuals.AddComponent<PepeSkillFx>();
+                    batch.RavenSmoke(view.transform.position,effect.left,fighter.id);
+                    continue;
+                }
+                if(effect.id=="BHW2" || effect.id=="BHW1" && wound==null)wound=effect;
+                else if(status==null && effect.id!="BHW1" && BlackHand.IsStatus(effect.id))status=effect;
+            }
+            if(wound!=null){
+                if(!batch)batch=visuals.AddComponent<PepeSkillFx>();
+                float bodyHeight=view.godotHeight>0?view.godotHeight:Mathf.Clamp(1.8f+Mathf.Sqrt(fighter.maxHp)*.025f,2.1f,3.7f);
+                batch.Bleed(view.transform.position,bodyHeight,wound.id=="BHW2",Time.time,fighter.id);
+            }
             if(status!=null){
                 if(!batch)batch=visuals.AddComponent<PepeSkillFx>();
                 batch.BlackHandStatus(view.transform.position,status.id,Time.time,fighter.id);

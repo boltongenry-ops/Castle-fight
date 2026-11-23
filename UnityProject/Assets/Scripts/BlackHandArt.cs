@@ -30,6 +30,34 @@ internal static class BlackHandArt {
         yield return BlackHandBuildings.Open(library.transform);
         Ready=true;
     }
+    static GameObject builderLibrary;
+    static readonly GameObject[] builders=new GameObject[2];
+    internal static GameObject Builder(GameObject human,int team) {
+        if(builders[team])return builders[team];
+        var texture=BlackHandUi.BuilderSkin();
+        if(!human||!texture)return human;
+        if(!builderLibrary){
+            builderLibrary=new GameObject("Black Hand builder templates");
+            builderLibrary.SetActive(false);
+            UnityEngine.Object.DontDestroyOnLoad(builderLibrary);
+        }
+        var builder=UnityEngine.Object.Instantiate(human,builderLibrary.transform,false);
+        builder.name="Black Hand Builder "+team;
+        foreach(var skin in builder.GetComponentsInChildren<SkinnedMeshRenderer>(true)){
+            var materials=skin.sharedMaterials;
+            for(int i=0;i<materials.Length;i++){
+                var material=new Material(materials[i]);
+                material.mainTexture=texture;
+                if(material.HasProperty("_TeamColor"))material.SetColor("_TeamColor",new Color(.065f,.06f,.055f));
+                if(material.HasProperty("_HDPresent"))material.SetFloat("_HDPresent",0);
+                materials[i]=material;
+            }
+            skin.sharedMaterials=materials;
+        }
+        builders[team]=builder;
+        return builder;
+    }
+
     internal static byte[] ReadAsset(string key) {
         var asset=Resources.Load<TextAsset>("BlackHand/"+key);
         if(asset) {
@@ -49,6 +77,57 @@ internal static class BlackHandArt {
         return Shader.Find("Standard")??Shader.Find("Unlit/Texture");
     }
 
+    static readonly Material[] ammoMaterials=new Material[2];
+
+    static Material AmmoMaterial(bool bubble) {
+        int slot=bubble?1:0;
+        if(ammoMaterials[slot])return ammoMaterials[slot];
+        const int size=32;
+        var texture=new Texture2D(size,size,TextureFormat.RGBA32,true){wrapMode=TextureWrapMode.Clamp};
+        for(int y=0;y<size;y++)for(int x=0;x<size;x++){
+            float radius=new Vector2((x+.5f)/16-1,(y+.5f)/16-1).magnitude;
+            float alpha=bubble?Mathf.Clamp01(1-Mathf.Abs(radius-.72f)*6)+.22f*Mathf.Clamp01(1-radius):
+                Mathf.Pow(Mathf.Clamp01(1-radius),1.3f);
+            texture.SetPixel(x,y,new Color(1,1,1,Mathf.Clamp01(alpha)));
+        }
+        texture.Apply(true,true);
+        return ammoMaterials[slot]=new Material(Shader.Find("Sprites/Default")){mainTexture=texture};
+    }
+
+    static void MountAmmoFx(Transform model,int role) {
+        // Object01 is the socket at the end of Arm1/Arm2/Arm3 on the siege rig.
+        var socket=model.GetComponentsInChildren<Transform>(true).First(t=>t.name=="Object01");
+        bool venom=role==12, fire=role==13;
+        for(int layer=0;layer<2;layer++){
+            bool accent=layer==1;
+            var obj=new GameObject(accent?"Ammunition motes":"Ammunition plume");
+            obj.transform.SetParent(socket,false);
+            var ps=obj.AddComponent<ParticleSystem>();
+            ps.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main=ps.main;
+            main.loop=true;main.prewarm=true;main.maxParticles=accent?8:18;
+            main.simulationSpace=ParticleSystemSimulationSpace.Local;
+            main.scalingMode=ParticleSystemScalingMode.Hierarchy;
+            main.startLifetime=accent?.75f:1.05f;main.startSpeed=0;
+            main.startSize=accent?(fire?.04f:.09f):(fire?.26f:.32f);
+            var shape=ps.shape;shape.shapeType=ParticleSystemShapeType.Sphere;shape.radius=.075f;
+            var emit=ps.emission;emit.rateOverTime=accent?7:16;
+            var drift=ps.velocityOverLifetime;drift.enabled=true;drift.space=ParticleSystemSimulationSpace.World;
+            drift.x=new ParticleSystem.MinMaxCurve(-.12f,.12f);
+            drift.y=new ParticleSystem.MinMaxCurve(accent?.55f:.38f,fire?1.3f:.78f);
+            drift.z=new ParticleSystem.MinMaxCurve(-.12f,.12f);
+            var tint=ps.colorOverLifetime;tint.enabled=true;
+            var gradient=new Gradient();
+            Color start=venom?new Color(.72f,1,.12f):fire?new Color(1,.94f,.28f):new Color(.67f,.26f,1);
+            Color end=venom?new Color(.16f,.52f,.03f):fire?new Color(1,.19f,.015f):new Color(.075f,.025f,.11f);
+            gradient.SetKeys(new[]{new GradientColorKey(start,0),new GradientColorKey(end,.72f)},
+                new[]{new GradientAlphaKey(.88f,0),new GradientAlphaKey(.8f,.42f),new GradientAlphaKey(0,1)});
+            tint.color=gradient;
+            var renderer=obj.GetComponent<ParticleSystemRenderer>();renderer.sharedMaterial=AmmoMaterial(venom&&accent);
+            renderer.shadowCastingMode=UnityEngine.Rendering.ShadowCastingMode.Off;renderer.receiveShadows=false;
+        }
+    }
+
     static async Task Import(int row,byte[] data) {
         var importer=new GltfImport();
         if(!await importer.LoadGltfBinary(data,importSettings:new ImportSettings{AnimationMethod=AnimationMethod.Legacy})){
@@ -66,7 +145,8 @@ internal static class BlackHandArt {
             model.transform.SetParent(root.transform,false);
             // The GLB's Facing node already aligns the rig with PcModel.Face.
             if(!await importer.InstantiateMainSceneAsync(model.transform))throw new InvalidDataException("mesh");
-            if(role==8)model.transform.localScale=Vector3.one*1.12f;
+            float scale = role >= 11 ? 3.0f : role == 6 ? 4.2f : role == 5 ? 3.7f : role == 8 ? 1.12f : 1f;
+            model.transform.localScale = Vector3.one * scale;
             var view=root.AddComponent<PcModel>();
             view.raw="bU"+role.ToString("00");view.appearanceKey="blackhand";
             view.animatedRoot=model;view.clips=importer.GetAnimationClips();
@@ -86,6 +166,7 @@ internal static class BlackHandArt {
             }
             if(primitiveIndex!=slots.Length)throw new InvalidDataException("Submesh count mismatch");
             if(!view.clips.Any(c=>c.name=="Death")||!model.GetComponentInChildren<SkinnedMeshRenderer>(true))throw new InvalidDataException("rig or death animation");
+            if(role>=12 && role<=14)MountAmmoFx(model.transform,role);
             fighters[role,team]=root;
         }
     }
