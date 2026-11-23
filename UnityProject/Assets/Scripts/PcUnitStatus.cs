@@ -53,30 +53,33 @@ public sealed partial class PcGame {
         float stagger=match.PandaStagger(unit);
         if(stagger>0)unitDebuffs.Add(new StatusBadge("stagger","Выдержка",
             "Выдержка\nОтложенный урон: "+stagger.ToString("F0"),AbilityArt("APSt")??Extra("debuff")));
-        DrawStatusCells(0,"Баффы",unitBuffs,new Color(.43f,.77f,.47f));
-        DrawStatusCells(2,"Дебаффы",unitDebuffs,new Color(.92f,.49f,.33f));
+        DrawStatusCells(0,"Баффы",unitBuffs,new Color(.25f,.87f,.38f));
+        DrawStatusCells(2,"Дебаффы",unitDebuffs,new Color(.96f,.27f,.20f));
     }
 
     void DrawStatusCells(int column,string title,List<StatusBadge> badges,Color accent){
-        var first=Slot(column,2);var last=Slot(column+1,2);
-        var band=Rect.MinMaxRect(first.x,first.y,last.xMax,first.yMax);
-        Fill(band,new Color(.024f,.032f,.032f,.96f));Border(band,accent*.69f);
-        GUI.Label(new Rect(band.x+5,band.y+2,band.width-10,14),title,new GUIStyle(hudSmall){normal={textColor=accent}});
-        float size=Mathf.Min(Application.isMobilePlatform?33:24,band.height-19);
-        int capacity=Mathf.Max(1,Mathf.FloorToInt((band.width-8)/(size+3)));
-        int visible=badges.Count>capacity?capacity-1:badges.Count;
-        if(badges.Count==0)GUI.Label(new Rect(band.x+5,band.y+17,band.width-10,size),"—",hudSmall);
-        for(int i=0;i<visible;i++){
-            var badge=badges[i];var cell=new Rect(band.x+4+i*(size+3),band.y+17,size,size);
-            if(badge.art)GUI.DrawTexture(cell,badge.art,ScaleMode.ScaleToFit);
-            Border(cell,accent);
-            StatusTip(cell,badge.id,badge.tip);
-        }
-        if(visible<badges.Count){
-            var cell=new Rect(band.x+4+visible*(size+3),band.y+17,size,size);
-            Border(cell,accent);
-            GUI.Label(cell,"+"+(badges.Count-visible),new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter});
-            StatusTip(cell,"more."+column,title+"\n"+string.Join("\n",badges.Skip(visible).Select(b=>b.name)));
+        for(int i=0;i<2;i++){
+            var cell=Slot(column+i,2);
+            Fill(cell,new Color(.02f,.025f,.027f,.98f));
+            if(i>=badges.Count){
+                var edge=accent;edge.a=.48f;Border(cell,edge);
+                if(i==0)GUI.Label(cell,title,new GUIStyle(hudSmall){
+                    alignment=TextAnchor.MiddleCenter,normal={textColor=edge}
+                });
+                continue;
+            }
+            var badge=badges[i];
+            if(badge.art)GUI.DrawTexture(new Rect(cell.x+2,cell.y+2,cell.width-4,cell.height-4),badge.art,ScaleMode.StretchToFill);
+            Border(cell,accent,2);
+            string tip=badge.tip;
+            int remaining=i==1?badges.Count-2:0;
+            if(remaining>0){
+                var count=new Rect(cell.xMax-25,cell.yMax-19,23,17);
+                Fill(count,new Color(0,0,0,.85f));
+                GUI.Label(count,"+"+remaining,new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter});
+                tip+="\n\n"+title+" · ещё "+remaining+"\n"+string.Join("\n",badges.Skip(2).Select(b=>b.tip));
+            }
+            StatusTip(cell,badge.id,tip);
         }
     }
 
