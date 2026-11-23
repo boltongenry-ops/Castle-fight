@@ -2,8 +2,9 @@ using System;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-using System.Security.Cryptography;
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 #endif
 
 namespace CastleFight {
@@ -42,8 +43,8 @@ namespace CastleFight {
         }
 
         static byte[] Encrypt(byte[] clear){
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            return ProtectedData.Protect(clear,null,DataProtectionScope.CurrentUser);
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
+            return TransformWindows(clear,true);
 #elif UNITY_ANDROID && !UNITY_EDITOR
             using(var key=AndroidKey(true))
             using(var cipher=AndroidCipher()){
@@ -63,8 +64,8 @@ namespace CastleFight {
         }
 
         static byte[] Decrypt(byte[] encrypted){
-#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
-            return ProtectedData.Unprotect(encrypted,null,DataProtectionScope.CurrentUser);
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
+            return TransformWindows(encrypted,false);
 #elif UNITY_ANDROID && !UNITY_EDITOR
             if(encrypted.Length<=28)return null;
             var iv=new sbyte[12];
@@ -82,6 +83,44 @@ namespace CastleFight {
             return null;
 #endif
         }
+
+#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
+        [StructLayout(LayoutKind.Sequential)]
+        struct Blob {
+            public int Length;
+            public IntPtr Data;
+        }
+
+        [DllImport("crypt32.dll", SetLastError=true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool CryptProtectData(ref Blob input,IntPtr description,IntPtr entropy,IntPtr reserved,IntPtr prompt,int flags,out Blob output);
+
+        [DllImport("crypt32.dll", SetLastError=true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool CryptUnprotectData(ref Blob input,IntPtr description,IntPtr entropy,IntPtr reserved,IntPtr prompt,int flags,out Blob output);
+
+        [DllImport("kernel32.dll")]
+        static extern IntPtr LocalFree(IntPtr block);
+
+        static byte[] TransformWindows(byte[] data,bool protect) {
+            const int suppressPrompt=1;
+            var input=new Blob{Length=data.Length,Data=Marshal.AllocHGlobal(data.Length)};
+            var output=default(Blob);
+            try {
+                Marshal.Copy(data,0,input.Data,input.Length);
+                bool ok=protect
+                    ?CryptProtectData(ref input,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,suppressPrompt,out output)
+                    :CryptUnprotectData(ref input,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,IntPtr.Zero,suppressPrompt,out output);
+                if(!ok)throw new Win32Exception(Marshal.GetLastWin32Error());
+                byte[] result=new byte[output.Length];
+                Marshal.Copy(output.Data,result,0,result.Length);
+                return result;
+            }finally{
+                Marshal.FreeHGlobal(input.Data);
+                if(output.Data!=IntPtr.Zero)LocalFree(output.Data);
+            }
+        }
+#endif
 
 #if UNITY_ANDROID && !UNITY_EDITOR
         const string Alias="CastleFightNetworkAccountV1";
