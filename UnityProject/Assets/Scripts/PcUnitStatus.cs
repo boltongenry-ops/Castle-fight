@@ -53,8 +53,28 @@ public sealed partial class PcGame {
         float stagger=match.PandaStagger(unit);
         if(stagger>0)unitDebuffs.Add(new StatusBadge("stagger","Выдержка",
             "Выдержка\nОтложенный урон: "+stagger.ToString("F0"),AbilityArt("APSt")??Extra("debuff")));
-        DrawStatusCells(0,"Баффы",unitBuffs,new Color(.25f,.87f,.38f));
-        DrawStatusCells(2,"Дебаффы",unitDebuffs,new Color(.96f,.27f,.20f));
+        var green=new Color(.25f,.87f,.38f);
+        var red=new Color(.96f,.27f,.20f);
+        DrawStatusCells(0,"Баффы",unitBuffs,green);
+        DrawStatusCells(2,"Дебаффы",unitDebuffs,red);
+        DrawStatusSummary(green,red);
+    }
+
+    void DrawStatusSummary(Color green,Color red){
+        int shown=0;
+        foreach(var badges in new[]{unitDebuffs,unitBuffs}){
+            foreach(var badge in badges){
+                if(shown==3)return;
+                var cell=new Rect(715+shown++*26,664,24,24);
+                DrawStatusArt(cell,badge.art,ReferenceEquals(badges,unitDebuffs)?red:green);
+                StatusTip(cell,badge.id,badge.tip,"summary.");
+            }
+        }
+    }
+
+    void DrawStatusArt(Rect cell,Texture2D art,Color accent){
+        if(art)GUI.DrawTexture(new Rect(cell.x+2,cell.y+2,cell.width-4,cell.height-4),art,ScaleMode.StretchToFill);
+        Border(cell,accent,2);
     }
 
     void DrawStatusCells(int column,string title,List<StatusBadge> badges,Color accent){
@@ -69,8 +89,7 @@ public sealed partial class PcGame {
                 continue;
             }
             var badge=badges[i];
-            if(badge.art)GUI.DrawTexture(new Rect(cell.x+2,cell.y+2,cell.width-4,cell.height-4),badge.art,ScaleMode.StretchToFill);
-            Border(cell,accent,2);
+            DrawStatusArt(cell,badge.art,accent);
             string tip=badge.tip;
             int remaining=i==1?badges.Count-2:0;
             if(remaining>0){
@@ -83,8 +102,8 @@ public sealed partial class PcGame {
         }
     }
 
-    void StatusTip(Rect cell,string id,string detail){
-        if(Button("status."+id,cell,"",false,iconStyle))inspectedStatus=inspectedStatus==id?null:id;
+    void StatusTip(Rect cell,string id,string detail,string location=""){
+        if(Button("status."+location+id,cell,"",false,iconStyle))inspectedStatus=inspectedStatus==id?null:id;
         if(GUI.enabled&&(cell.Contains(HudPointer)||inspectedStatus==id))hudTip=detail;
     }
 }
