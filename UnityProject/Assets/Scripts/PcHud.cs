@@ -344,7 +344,7 @@ public sealed partial class PcGame {
         }
     }
     void DrawMinimap() {
-        var rect=HudMap;Fill(rect,new Color(.025f,.035f,.025f));if(minimapTerrain)Source(minimapTexture,new Rect(0,52,256,153),rect);
+        var rect=HudMap;Fill(rect,new Color(.025f,.035f,.025f));if(minimapTerrain)Source(winterMinimap?winterMinimap:minimapTexture,new Rect(0,52,256,153),rect);
         DrawMinimapFog(rect);
         Func<Vector2,Vector2> point=p=>new Vector2(rect.x+(p.x+204.8f)/409.6f*rect.width,rect.y+(p.y+3584f/30)/(7168f/30)*rect.height);
         foreach(var hut in match.Huts.Where(h=>!FogActive||h.team==0||fogKnownHuts.Contains(h.id))){var p=point(hut.position);Fill(new Rect(p.x-2,p.y-2,4,4),hut.team==0?new Color(.25f,.55f,1):Color.red);}

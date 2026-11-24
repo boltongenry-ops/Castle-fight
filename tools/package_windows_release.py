@@ -1,7 +1,7 @@
-"""Package a Windows player with the previously verified portable bootstrap.
+"""Package a Windows player with the verified or freshly compiled bootstrap.
 
 The reference EXE must match its published release.json. Never accepts an
-unverified bootstrap or includes signing material and build/debug directories.
+ununchecked reference EXE or includes signing material and build/debug directories.
 """
 import argparse
 import copy
@@ -24,7 +24,12 @@ def main():
     parser.add_argument('--reference', type=Path, required=True)
     parser.add_argument('--reference-index', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--bootstrap', type=Path, help='Use a freshly compiled standalone portable stub')
+    parser.add_argument('--large-local', action='store_true',
+                        help='Allow a local-only EXE over 2 GiB with the streaming bootstrap')
     args = parser.parse_args()
+    if args.large_local and not args.bootstrap:
+        parser.error('--large-local requires the streaming --bootstrap')
     expected = json.loads(args.reference_index.read_text())['windows']
     assert args.reference.stat().st_size == expected['size']
     assert sha(args.reference) == expected['sha256'], 'Reference EXE checksum mismatch'
@@ -38,6 +43,9 @@ def main():
         assert source.read(2) == b'MZ'
         source.seek(0)
         prefix = source.read(prefix_size)
+    if args.bootstrap:
+        prefix = args.bootstrap.read_bytes()
+        assert prefix.startswith(b'MZ'), 'Invalid portable bootstrap'
     assert (args.build / 'CastleFightMap.exe').is_file()
     assert (args.build / 'UnityPlayer.dll').is_file()
     assert (args.build / 'CastleFightMap_Data').is_dir()
@@ -89,11 +97,12 @@ def main():
             print('PACKED', name, row.file_size, flush=True)
     payload_size = payload.stat().st_size
     payload_hash = bytes.fromhex(sha(payload))
-    assert prefix_size + payload_size + 64 < 2**31, 'Portable exceeds the existing bootstrap size limit'
+    if not args.large_local:
+        assert len(prefix) + payload_size + 64 < 2**31, 'Portable exceeds the release size limit'
     with args.output.open('wb') as destination, payload.open('rb') as source:
         destination.write(prefix)
         shutil.copyfileobj(source, destination, 1024 * 1024)
-        destination.write(struct.pack('<qq', prefix_size, payload_size) + payload_hash + b'CFPORTABLE-V1!!!')
+        destination.write(struct.pack('<qq', len(prefix), payload_size) + payload_hash + b'CFPORTABLE-V1!!!')
     payload.unlink()
     with zipfile.ZipFile(args.output) as archive, args.output.open('rb') as stream:
         for row in rows:

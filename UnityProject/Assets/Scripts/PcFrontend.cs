@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.IO;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -44,13 +45,35 @@ public sealed partial class PcGame {
     // Only the current pair is decoded; fifteen source paintings stay on disk.
     static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
     static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};
-    Texture2D versusLeft,versusRight;int versusA,versusB,versusSerial;float versusAt;bool versusActive,versusPrepared,versusNetwork;string versusNameA,versusNameB;
-    void DisposeVersusArt(){if(versusLeft&&versusA!=PepeContent.Race&&versusA!=BlackHand.Race)Destroy(versusLeft);if(versusRight&&versusB!=PepeContent.Race&&versusB!=BlackHand.Race)Destroy(versusRight);versusLeft=versusRight=null;}
-    void CloseVersus(){versusSerial++;versusActive=false;versusPrepared=false;mobileRoundPrepared=false;DisposeVersusArt();}
-    void BeginVersus(int a,int b,bool online){
-        DisposeVersusArt();versusSerial++;versusA=Mathf.Clamp(a,0,VersusKeys.Length-1);versusB=Mathf.Clamp(b,0,VersusKeys.Length-1);versusActive=true;versusPrepared=false;versusNetwork=online;versusAt=Time.realtimeSinceStartup;
-        versusNameA=online?ResultPlayerName(networkSlot):"Вы";versusNameB=online?ResultPlayerName(1-networkSlot):"Компьютер";
+    const float VersusReadyDuration=1.5f;
+    float versusReadyVisible;
+    int versusReadyDrawFrame;
+    Texture2D versusLeft,versusRight,versusLeftFallback,versusRightFallback;int versusA,versusB,versusSerial;float versusAt;bool versusActive,versusPrepared,versusNetwork;string versusNameA,versusNameB;
+    void DisposeVersusArt(){if(versusLeft&&versusA!=PepeContent.Race&&versusA!=BlackHand.Race)Destroy(versusLeft);if(versusRight&&versusB!=PepeContent.Race&&versusB!=BlackHand.Race)Destroy(versusRight);versusLeft=versusRight=versusLeftFallback=versusRightFallback=null;}
+    void CloseVersus(){
+        versusSerial++;versusActive=false;versusPrepared=false;mobileRoundPrepared=false;
+        if(MobileContent.Active)MobileContent.Current.VersusLoading=false;
+        DisposeVersusArt();
     }
+    void BeginVersus(int a,int b,bool online){
+        DisposeVersusArt();versusSerial++;versusA=Mathf.Clamp(a,0,VersusKeys.Length-1);versusB=Mathf.Clamp(b,0,VersusKeys.Length-1);versusActive=true;versusPrepared=false;versusNetwork=online;versusAt=Time.realtimeSinceStartup;versusReadyVisible=0;versusReadyDrawFrame=-1;
+        versusNameA=online?ResultPlayerName(networkSlot):"Вы";versusNameB=online?ResultPlayerName(1-networkSlot):"Компьютер";
+        if(MobileContent.Active){
+            MobileContent.Current.VersusLoading=true;
+            PrepareVersusFallbacks();
+        }
+    }
+    void PrepareVersusFallbacks(){
+        versusLeftFallback=MobileVersusPicture(versusA);
+        versusRightFallback=versusB==versusA?versusLeftFallback:MobileVersusPicture(versusB);
+    }
+
+    static Texture2D MobileVersusPicture(int race){
+        if(race==BlackHand.Race)return BlackHandUi.Versus();
+        if(race==PepeContent.Race)return PepeContent.Load<Texture2D>("Pepe/Versus-pepe");
+        return Resources.Load<Texture2D>("MobileVersus/"+VersusKeys[race]);
+    }
+
     IEnumerator LoadVersusArt(int generation){
         for(int side=0;side<2;side++){
             int race=side==0?versusA:versusB;
@@ -60,7 +83,14 @@ public sealed partial class PcGame {
                 continue;
             }
             string path=MobileContent.MediaRoot+"/Frontend/Versus/"+VersusKeys[race]+".png";
-            if(MobileContent.Active){yield return MobileContent.Current.EnsureMedia("Frontend/Versus/"+VersusKeys[side==0?versusA:versusB]+".png");path=new Uri(path).AbsoluteUri;}
+            if(MobileContent.Active){
+                var fallback=side==0?versusLeftFallback:versusRightFallback;
+                if(!File.Exists(path)){
+                    if(fallback)continue;
+                    yield return MobileContent.Current.EnsureMedia("Frontend/Versus/"+VersusKeys[race]+".png");
+                }
+                path=new Uri(path).AbsoluteUri;
+            }
             byte[] data=null;
             if(Application.isMobilePlatform){using(var req=UnityEngine.Networking.UnityWebRequest.Get(path)){yield return req.SendWebRequest();if(req.result==UnityEngine.Networking.UnityWebRequest.Result.Success)data=req.downloadHandler.data;}}
             else if(System.IO.File.Exists(path))data=System.IO.File.ReadAllBytes(path);
@@ -69,7 +99,7 @@ public sealed partial class PcGame {
             yield return null;
         }
     }
-    void BeginOfflineVersus(bool next=false){if(versusActive)return;if(testing){if(next)StartRound();else NewMatch();return;}StartCoroutine(OfflineVersus(next));}
+    void BeginOfflineVersus(bool next=false){if(versusActive)return;if(testing&&(string)activeChallenge?["id"]!=HumanMatch.WinterTrial){if(next)StartRound();else NewMatch();return;}StartCoroutine(OfflineVersus(next));}
     IEnumerator OfflineVersus(bool next){
         if(matchMode==1){raceChoice=RandomStagedRace(-1);botRaceChoice=RandomStagedRace(raceChoice);mobileRoundPrepared=true;}
         BeginVersus(raceChoice,matchMode==2?raceChoice:botRaceChoice<0?raceChoice:botRaceChoice,false);int generation=versusSerial;
@@ -78,11 +108,25 @@ public sealed partial class PcGame {
         else yield return PrepareDesktopMatch(versusA,versusB,generation);
         if(generation!=versusSerial){mobileRoundPrepared=false;yield break;}
         if(next)StartRound();else NewMatch();
-        if(matchRace!=versusA||matchBotRace!=versusB){DisposeVersusArt();versusA=matchRace;versusB=matchBotRace;yield return LoadVersusArt(generation);}
-        RenderMatch();versusPrepared=true;yield return new WaitForEndOfFrame();
-        while(generation==versusSerial&&Time.realtimeSinceStartup-versusAt<1.5f)yield return null;
-        if(generation==versusSerial)CloseVersus();
+        if(matchRace!=versusA||matchBotRace!=versusB){DisposeVersusArt();versusA=matchRace;versusB=matchBotRace;if(MobileContent.Active)PrepareVersusFallbacks();yield return LoadVersusArt(generation);}
+        if(match.EternalWinter){
+            yield return PrepareWinterPresentation(generation);
+            if(generation!=versusSerial)yield break;
+        }
+        RenderMatch();versusPrepared=true;
+        yield return HoldReadyVersus(generation);
+        if(generation==versusSerial){
+            if(winterIntro)FrameWinterOpening();
+            CloseVersus();
+            if(winterIntro)StartWinterBossMusic();
+        }
     }
+
+    IEnumerator HoldReadyVersus(int generation){
+        while(versusActive&&generation==versusSerial&&versusReadyVisible<VersusReadyDuration)
+            yield return null;
+    }
+
     IEnumerator NetworkVersus(JObject packet){
         var races=packet["races"] as Newtonsoft.Json.Linq.JArray;
         int a=races?.Count==2&&networkSlot>=0?Array.IndexOf(networkRaceNames,(string)races[networkSlot]):-1;
@@ -96,9 +140,14 @@ public sealed partial class PcGame {
         NetworkLoadCore(packet);if(!onlineMatch){CloseVersus();yield break;}RenderMatch();versusPrepared=true;
     }
     void DrawVersus(){
+        if(versusPrepared&&Event.current.type==EventType.Repaint&&versusReadyDrawFrame!=Time.frameCount){
+            if(versusReadyDrawFrame>=0)versusReadyVisible+=Mathf.Min(Time.unscaledDeltaTime,.1f);
+            versusReadyDrawFrame=Time.frameCount;
+        }
         Fill(new Rect(0,0,1280,720),new Color(.012f,.018f,.024f));
         float entrance=Mathf.SmoothStep(0,1,(Time.realtimeSinceStartup-versusAt)/.55f);
-        VersusPainting(new Rect(-24*(1-entrance),0,608,720),versusLeft,false);VersusPainting(new Rect(672+24*(1-entrance),0,608,720),versusRight,true);
+        VersusPainting(new Rect(-24*(1-entrance),0,608,720),versusLeft?versusLeft:versusLeftFallback,false);
+        VersusPainting(new Rect(672+24*(1-entrance),0,608,720),versusRight?versusRight:versusRightFallback,true);
         var gold=new Color(.85f,.70f,.40f);for(int i=0;i<16;i++){float alpha=(1-i/16f)*.85f;Fill(new Rect(592-i*3,0,3,720),new Color(.012f,.018f,.024f,alpha));Fill(new Rect(685+i*3,0,3,720),new Color(.012f,.018f,.024f,alpha));}
         Fill(new Rect(0,0,1280,58),new Color(.008f,.014f,.022f,.68f));
         Text(240,12,800,36,"ПРОТИВОСТОЯНИЕ",new GUIStyle(heading){fontSize=27,alignment=TextAnchor.MiddleCenter,normal={textColor=gold}});
@@ -114,11 +163,32 @@ public sealed partial class PcGame {
             Text(x,580,500,33,side==0?versusNameA:versusNameB,new GUIStyle(label){fontSize=22,alignment=TextAnchor.MiddleCenter});
         }
         Fill(new Rect(0,637,1280,83),new Color(.008f,.014f,.021f,.97f));
-        bool ready=versusPrepared;string phase=!ready?"Подготовка ресурсов":versusNetwork&&!onlineStarted?"Ресурсы готовы · ждём соперника":"Поле боя готово";
-        Text(275,648,730,31,phase+new string('.',(int)(Time.realtimeSinceStartup*2)%4),new GUIStyle(label){alignment=TextAnchor.MiddleCenter});
+        DrawVersusLoading(gold);
+    }
+    void DrawVersusLoading(Color gold){
+        var mobile=MobileContent.Current;
+        bool loading=mobile&&mobile.Busy;
+        string error=loading?mobile.LoadingError:"";
+        bool retry=!string.IsNullOrEmpty(error);
+        bool ready=versusPrepared;
+        string phase=ready?(versusNetwork&&!onlineStarted?"Ресурсы готовы · ждём соперника":"Поле боя готово"):
+            loading?mobile.LoadingStatus.Replace("\n"," · "):winterIntro&&!versusNetwork?"Готовим снег и метель":"Подготовка ресурсов";
+        Text(275,646,730,38,retry?error:phase,new GUIStyle(retry?small:label){
+            alignment=TextAnchor.MiddleCenter,wordWrap=true
+        });
         Fill(new Rect(320,693,640,4),new Color(.12f,.16f,.18f));
-        if(ready)Fill(new Rect(320,693,640,4),gold);else {float x=320+Mathf.PingPong(Time.realtimeSinceStartup*.65f,1)*480;Fill(new Rect(x,693,160,4),gold);}
-        if(versusNetwork&&Time.realtimeSinceStartup-versusAt>12&&LobbyButton("versus.leave",new Rect(1020,655,220,48),"Выйти в меню")){CloseVersus();NetworkReturnToMenu();}
+        float progress=ready?1:loading?Mathf.Clamp01(mobile.LoadingProgress):0;
+        if(progress>0)Fill(new Rect(320,693,640*progress,4),gold);
+        else if(!retry){
+            float x=320+Mathf.PingPong(Time.realtimeSinceStartup*.65f,1)*480;
+            Fill(new Rect(x,693,160,4),gold);
+        }
+        if(retry&&LobbyButton("versus.retry",new Rect(1020,639,220,33),"Повторить"))mobile.RetryLoading();
+        if(versusNetwork&&Time.realtimeSinceStartup-versusAt>12&&
+            LobbyButton("versus.leave",new Rect(1020,retry?677:655,220,retry?34:48),"Выйти в меню")){
+            CloseVersus();
+            NetworkReturnToMenu();
+        }
     }
     void VersusPainting(Rect rect,Texture2D texture,bool mirror){if(!texture)return;float visible=Mathf.Min(1,rect.height/(rect.width*texture.height/texture.width));var uv=mirror?new Rect(1,1-visible,-1,visible):new Rect(0,1-visible,1,visible);GUI.DrawTextureWithTexCoords(rect,texture,uv,false);}
 

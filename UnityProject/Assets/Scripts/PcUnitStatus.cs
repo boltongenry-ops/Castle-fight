@@ -28,13 +28,17 @@ public sealed partial class PcGame {
     void DrawUnitStatusCard(HumanMatch.Unit unit){
         unitBuffs.Clear();unitDebuffs.Clear();
         if(inspectedStatusUnit!=unit.id){inspectedStatusUnit=unit.id;inspectedStatus=null;}
+        if(match.WinterAffects(unit))unitDebuffs.Add(new StatusBadge("winter.weather","Вечная зима",
+            "Вечная зима\nСкорость движения −50%\nСкорость атаки −30%\nДо конца боя",
+            AbilityArt("A04I")??Extra("debuff")));
         foreach(var effect in unit.effects){
             if(effect.left<=0||string.IsNullOrEmpty(effect.id))continue;
             bool harmful=effect.id!="BHIr"&&(Debuff(effect)||effect.sourceTeam==1-unit.team);
             string name=Clean((string)effect.config?["name"]??effect.id);
             string detail=(string)effect.config?["description"];
             string duration=float.IsPositiveInfinity(effect.left)?"Постоянно":"Осталось: "+Mathf.CeilToInt(effect.left)+" с";
-            var art=harmful?DebuffArt(effect):AbilityArt(effect.id)??Extra("heal")??Extra("debuff");
+            var art=effect.id==HumanMatch.WinterChain?AbilityArt("A04H")??DebuffArt(effect):
+                harmful?DebuffArt(effect):AbilityArt(effect.id)??Extra("heal")??Extra("debuff");
             (harmful?unitDebuffs:unitBuffs).Add(new StatusBadge("effect."+effect.id,name,
                 name+(string.IsNullOrEmpty(detail)?"":"\n"+Clean(detail))+"\n"+duration,art));
         }

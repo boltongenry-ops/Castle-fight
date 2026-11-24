@@ -16,7 +16,8 @@ public sealed class PcProgressionStore {
     public int MasteryLevel=>ChallengeCatalog034.Level(Experience);
     public int NextLevelExperience=>ChallengeCatalog034.Threshold(MasteryLevel+1);
     public string MasteryTitle=>ChallengeCatalog034.Title(MasteryLevel);
-    public JObject Challenge(string id)=>((JArray)Catalog["challenges"]).OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id);
+    public JObject Challenge(string id)=>((JArray)Catalog["challenges"]).OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id)
+        ??(Catalog["mythic"] as JArray)?.OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id);
     public JObject Item(string id)=>((JArray)Catalog["items"]).OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id);
     public bool Completed(string id)=>((JArray)state["completed"]).Any(v=>(string)v==id);
     public bool Owned(string id)=>((JArray)state["unlocked"]).Any(v=>(string)v==id);

@@ -58,7 +58,11 @@ public sealed partial class PcGame {
         onlineTeamOverview=null;onlineIncomeIn=null;
         Notice("Подключение к бою: ожидаем второго игрока");StartCoroutine(NetworkLoaded());
     }
-    IEnumerator NetworkLoaded(){int generation=versusSerial;yield return new WaitForEndOfFrame();while(versusActive&&generation==versusSerial&&Time.realtimeSinceStartup-versusAt<1.5f)yield return null;if(generation==versusSerial&&onlineMatch&&network!=null)SendNetwork(new JObject { ["type"]="loaded" });}
+    IEnumerator NetworkLoaded(){
+        int generation=versusSerial;
+        yield return HoldReadyVersus(generation);
+        if(generation==versusSerial&&onlineMatch&&network!=null)SendNetwork(new JObject { ["type"]="loaded" });
+    }
     void NetworkSnapshot(JObject packet) {
         if(!onlineMatch||onlineReplica==null||match==null)return;
         try {

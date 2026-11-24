@@ -117,7 +117,8 @@ public sealed partial class HumanMatch {
         return result;
     }
     bool ElvenWeaponPattern(Shot shot){
-        if(shot.weapon?.pattern==null||!new[]{"h00U","e005"}.Contains(Lines[shot.line].unit))return false;
+        string raw=Lines[shot.line].unit;
+        if(shot.weapon?.pattern==null||(raw!="h00U"&&raw!="e005"&&raw!="z000"))return false;
         var pattern=shot.weapon.pattern;bool line=(string)pattern["type"]=="line";
         if(line){
             var direction=(shot.end-shot.start).normalized;

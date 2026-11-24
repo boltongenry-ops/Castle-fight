@@ -12,6 +12,7 @@ public sealed partial class PcGame {
         if(page!=Page.Match)return true;
         if(Application.isMobilePlatform&&(p.y<42||new Rect(5,46,52,52).Contains(p)||new Rect(960,482,320,238).Contains(p)))return true;
         if(onlineMatch&&(new Rect(68,Application.isMobilePlatform?48:33,160,48).Contains(p)||(Application.isMobilePlatform&&MobileTalkRect.Contains(p))))return true;
+        if(match!=null&&match.EternalWinter&&WinterHud.Contains(p))return true;
         return BattleSocialContains(p)||HudContains(p);
     }
     void DismissBuildMenuOnEmptyClick() {

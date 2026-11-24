@@ -74,7 +74,9 @@ public sealed partial class HumanMatch {
         InitInventory(catalog);damageTable=(JObject)catalog["damageTable"];Abilities=(JObject)catalog["abilities"]??new JObject();
         CastleRegen=F(catalog["castleStats"],"hp_regen",.5f);CastleArmor=F(catalog["castleStats"],"armor",5);CastleCollision=F(catalog["castleStats"],"collision",172f/30);CastleArmorType=(string)catalog["castleStats"]?["armor_type"]??"fortified";
         BuilderSpeed=Mathf.Clamp(F(catalog["builderStats"],"speed",18.333333f),F(catalog["builderStats"],"min_speed",5),F(catalog["builderStats"],"max_speed",13.333333f));BuilderWalkRate=BuilderSpeed*30/Mathf.Max(1,F(catalog["builderStats"],"walk_animation_speed",300));
-        Lines=((JArray)catalog["lines"]).Select(v=>{var s=(JObject)v["stats"];var b=(JObject)v["buildingStats"]??s;var w=((JArray)s["weapons"]??new JArray()).Select(Weapon.Read).ToArray();var first=w.FirstOrDefault();return new Line {
+        Lines=((JArray)catalog["lines"]).Select(v=>{var s=(JObject)v["stats"];var b=(JObject)v["buildingStats"]??s;var w=((JArray)s["weapons"]??new JArray()).Select(Weapon.Read).ToArray();var first=w.FirstOrDefault();
+            if((string)v["unit"]=="z000")RestoreZerglingWeapon(first);
+            return new Line {
             ultimateSlot=(int?)v["ultimateSlot"]??-1,building=(string)v["building"],unit=(string)v["unit"],name=(string)v["name"],unitName=(string)v["unitName"]=="z000"?"Зерглинг":(string)v["unitName"],hotkey=(string)v["hotkey"],category=(string)v["category"],basic=(bool?)v["base"]??true,
             cost=(int)v["cost"],woodCost=(int?)v["woodCost"]??0,woodReward=(int?)v["woodReward"]??0,slots=(int?)v["slots"]??0,upgrades=Strings(v["upgrades"]),abilities=Strings(v["abilities"]),production=Strings(v["production"]),stats=s,buildingStats=b,weapons=w,buildingWeapons=((JArray)b["weapons"]??new JArray()).Select(Weapon.Read).ToArray(),
             interval=F(v,"seconds"),buildSeconds=F(v,"buildSeconds",1.5f),incomeRate=F(v,"incomeRate"),hp=F(s,"hp"),damage=F(s,"damage"),range=F(s,"range"),cooldown=F(s,"cooldown",1),speed=F(s,"speed"),armor=F(s,"armor"),attack=(string)s["attack_type"],armorType=(string)s["armor_type"]??"normal",regen=F(s,"hp_regen"),flyHeight=F(s,"fly_height"),
@@ -222,7 +224,7 @@ public sealed partial class HumanMatch {
     }
     void Bot(){if(!PlayerVersusPlayer)ThinkBot();}
     public void Step(float dt) {
-        if(Finished||dt<=0)return;SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
+        if(Finished||dt<=0)return;AdvanceWinterPhase();SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
         while(incomeAge>=10){incomeAge-=10;for(int t=0;t<2;t++){incomeFraction[t]+=Income(t);int payment=(int)(incomeFraction[t]+.00001f);incomeFraction[t]-=payment;Gold[t]+=payment;}}
         float recovery=NaturalCastleRecovery*dt;
         for(int t=0;t<2;t++)RestoreCastleHealth(t,recovery);
@@ -239,6 +241,7 @@ public sealed partial class HumanMatch {
         Units.RemoveAll(u=>u.hp<=0&&u.deadAge>3);Shots.RemoveAll(s=>s.age>s.duration+(s.kind==2||s.kind==3?.35f:0));
         if(CastleHp[0]<=0||CastleHp[1]<=0)Winner=CastleHp[0]<=0&&CastleHp[1]<=0?-1:CastleHp[0]<=0?1:0;
         ResolveChallengeClock();
+        FlushWinterDefections();
     }
     public void Surrender(int team){if(!Finished&&team>=0&&team<2)Winner=1-team;}
     public float Roll(){randomState^=randomState<<13;randomState^=randomState>>17;randomState^=randomState<<5;return (randomState&0xFFFFFF)/16777216f;}

@@ -36,8 +36,9 @@ public sealed partial class HumanMatch {
         foreach(var id in AbilityView035.Get(u,Abilities).passives){var c=Ranked(u,id);if((string)c?["kind"]=="self_passive"&&name!="armor")value+=F(c,name);}
         return value;
     }
-    public float MoveSpeed(Unit u){var l=Lines[u.kind];if(u.elementalArmed)return Rooted(u)?0:15;float fixedMove=-1;foreach(var e in u.effects)if(e.left>0){float candidate=F(e.config,"move_override");if(candidate>0&&(fixedMove<0||candidate<fixedMove))fixedMove=candidate;}if(fixedMove>=0)return Rooted(u)?0:fixedMove;return l.speed<=0||Rooted(u)?0:Mathf.Clamp((l.speed+(TeamNaga[u.team]&&Aspects[u.team]==0?-20f/30:0))*(1+ItemPassive(u.team,"speed_bonus",u))*Mathf.Max(0,1+Stat(u,"speed")+(u.nightInvisible?u.nightSpeed:0)),UnitConfig035(u.kind).minSpeed,UnitConfig035(u.kind).maxSpeed);}
-    public float AttackSpeed(Unit u)=>Mathf.Clamp(1+(Lines[u.kind].unit=="bU02" && u.hp*10<u.maxHp*3?.4f:0)+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5);
+    public float MoveSpeed(Unit u)=>BaseMoveSpeed(u)*WinterMoveFactor(u);
+    float BaseMoveSpeed(Unit u){var l=Lines[u.kind];if(u.elementalArmed)return Rooted(u)?0:15;float fixedMove=-1;foreach(var e in u.effects)if(e.left>0){float candidate=F(e.config,"move_override");if(candidate>0&&(fixedMove<0||candidate<fixedMove))fixedMove=candidate;}if(fixedMove>=0)return Rooted(u)?0:fixedMove;return l.speed<=0||Rooted(u)?0:Mathf.Clamp((l.speed+(TeamNaga[u.team]&&Aspects[u.team]==0?-20f/30:0))*(1+ItemPassive(u.team,"speed_bonus",u))*Mathf.Max(0,1+Stat(u,"speed")+(u.nightInvisible?u.nightSpeed:0)),UnitConfig035(u.kind).minSpeed,UnitConfig035(u.kind).maxSpeed);}
+    public float AttackSpeed(Unit u)=>Mathf.Clamp(1+(Lines[u.kind].unit=="bU02" && u.hp*10<u.maxHp*3?.4f:0)+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5)*WinterAttackFactor(u);
     public Weapon WeaponFor(Unit u,Unit target=null,bool structure=false){
         if(Ethereal(u)||Disarmed(u))return null;
         foreach(var w in u.elementalWeapons??Lines[u.kind].weapons)if((target==null||!Invulnerable(target)&&!CorruptedAirborne(target)&&!Hidden(target)&&NightCanDetect(u.team,target)&&Lines[target.kind].unit!="n02E")&&(target==null||Lines[target.kind].unit!="YTct"||w.targets.Contains("tree"))&&(target==null||!Ethereal(target)||w.attack=="magic"||w.attack=="spells")&&(structure?w.structure:target!=null&&Flying(target)?w.air:w.ground))return w;
@@ -191,16 +192,17 @@ public sealed partial class HumanMatch {
         if(!execute&&!pandaDebt)amount=PandaDefer(victim,amount,team,killer);
         victim.hp=Mathf.Max(Mathf.Min(before,minimumHp),victim.hp-amount);if(!pandaDebt&&victim.hp>0){NatureOnDamage(victim);if(before>victim.hp){TriggerBerserk(victim,before);if(team!=victim.team)TriggerHandIron(victim,before);NorthernRage(victim);if(victim.nightStealth>0){NightReveal(victim);if(killer!=null&&killer.team!=victim.team)victim.combatTarget=killer.id;}}}
         if(!pandaDebt){ElementalAfterDamage(killer,victim,Mathf.Max(0,before-victim.hp),suppressElemental);NerubAfterDamage(victim,amount,spell);PandaAfterDamage(victim,amount);}
-        if(victim.hp<=0&&!victim.deathProcessed){victim.deathProcessed=true;BattleAudio.For(this)?.Death(Lines[victim.kind].unit,victim.position);victim.pose="Death";victim.pendingSpell=null;victim.strikeLeft=-1;Kills++;if(team>=0&&team<2&&team!=victim.team){TeamKills[team]++;if(!victim.noBounty)Gold[team]+=Mathf.Max(1,(int)(victim.maxHp/50));}
+        if(victim.hp<=0&&!victim.deathProcessed){victim.deathProcessed=true;bool winterDefection=QueueWinterDefection(victim);BattleAudio.For(this)?.Death(Lines[victim.kind].unit,victim.position);victim.pose="Death";victim.pendingSpell=null;victim.strikeLeft=-1;Kills++;if(team>=0&&team<2&&team!=victim.team){TeamKills[team]++;if(!victim.noBounty)Gold[team]+=Mathf.Max(1,(int)(victim.maxHp/50));}
             NerubDied(victim);ElvenDied(victim,team);NightKilled(killer,victim);NightDeathAspect(victim);ElementalDied(victim,killer,team);CorruptedDied(victim);UndeadDied(victim,killer);MechDied(victim);OrcKilled(killer,victim);NagaOnDeath(victim);ChaosDeath(victim);
-            if(!victim.noCorpse&&!ElementalIllusion(victim)&&((int?)Lines[victim.kind].stats["death_type"]??0)%2==1&&Organic(victim))Corpses.Add(new Corpse {unit=victim,left=F(Lines[victim.kind].stats,"corpse_duration",90)});
+            if(winterDefection)victim.deadAge=4;
+            else if(!victim.noCorpse&&!ElementalIllusion(victim)&&((int?)Lines[victim.kind].stats["death_type"]??0)%2==1&&Organic(victim))Corpses.Add(new Corpse {unit=victim,left=F(Lines[victim.kind].stats,"corpse_duration",90)});
         }
         return before-victim.hp;
     }
     public float Multiplier(string attack,string armorType)=>(float?)damageTable[attack]?[armorType]??1;
     public static float ArmorFactor(float armor)=>armor>=0?1/(1+.06f*armor):2-Mathf.Pow(.94f,-armor);
     void DamageHut(Hut h,float amount,string attack,int team,bool spell=false,bool ignoreArmor=false){if(h==null||h.hp<=0)return;var l=Lines[h.kind];amount*=Multiplier(spell&&attack=="magic"?"spells":attack,(string)l.buildingStats["armor_type"]??"fortified");if(!ignoreArmor&&!(spell&&attack=="magic"))amount*=ArmorFactor(BuildingArmor(h));h.hp-=amount;if(h.hp<=0){BattleAudio.For(this)?.Death(l.building,h.position,true);RemoveHut(h);PulseAt(h.position,4,new Color(1,.4f,.1f),"Здание разрушено");}}
-    void DamageCastle(int team,float amount,string attack,bool spell=false){amount*=Multiplier(spell&&attack=="magic"?"spells":attack,CastleArmorType);if(!(spell&&attack=="magic"))amount*=ArmorFactor(CastleArmorFor(team));CastleHp[team]=Mathf.Max(0,CastleHp[team]-amount);}
+    void DamageCastle(int team,float amount,string attack,bool spell=false){amount*=Multiplier(spell&&attack=="magic"?"spells":attack,CastleArmorType);if(!(spell&&attack=="magic"))amount*=ArmorFactor(CastleArmorFor(team));CastleHp[team]=Mathf.Max(0,CastleHp[team]-amount);if(team==WinterBossTeam)AdvanceWinterPhase();}
     void ResolveAttack(int ownerId,int team,int target,float amount,Weapon w,float stun,bool passives=true,bool handProjectile=false) {
         var victim=FindUnit(target);var owner=FindUnit(ownerId);
         if(victim!=null) {

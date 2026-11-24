@@ -10,7 +10,7 @@ public sealed partial class PcGame {
     readonly Vector3[] fogProjectionNodes=new Vector3[FogMeshWidth*FogMeshHeight];
     Vector3 fogCameraPosition;Quaternion fogCameraRotation;Matrix4x4 fogProjection;Rect fogViewport;int fogWidth,fogHeight;bool fogSoft;double fogProjectionMs,fogMaskMs;
     readonly HashSet<int> fogKnownHuts=new HashSet<int>();
-    bool FogActive=>match!=null&&(onlineMatch?onlineFog:(activeChallenge!=null||options.fogOfWar));
+    bool FogActive=>match!=null&&!winterIntro&&(onlineMatch?onlineFog:(activeChallenge!=null||options.fogOfWar));
     bool FogVisible(Vector2 point)=>!FogActive||fog!=null&&fog.Visible(point);
     bool CanSeeUnit(HumanMatch.Unit unit)=>unit!=null&&match.NightCanDetect(0,unit)&&(unit.team==0||FogVisible(unit.position));
     bool CanInspectHut(HumanMatch.Hut hut)=>hut!=null&&(hut.team==0||FogVisible(hut.position));

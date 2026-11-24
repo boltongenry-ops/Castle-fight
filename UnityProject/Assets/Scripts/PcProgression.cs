@@ -15,6 +15,7 @@ public sealed partial class PcGame {
         var data=JObject.Parse(asset.text);
         ChallengeCatalog034.Extend(data);
         ChallengeCampaign038.Extend(data);
+        data["mythic"]=new JArray(WinterTrialDefinition());
         var items=(JArray)data["items"];
         items.Add(new JObject{["id"]=MemePackId,["kind"]="stickers",["title"]="Рофлопак · местные легенды",["description"]="4 стикера: наги, гриб, вышки и Терминатор. Для личного чата и сетевого боя.",["cost"]=300});
         WorkshopCatalog038.Extend(items);
@@ -22,12 +23,14 @@ public sealed partial class PcGame {
     }
     void OpenProgression(bool shop){
         progressShop=shop;progressionScroll=Vector2.zero;purchaseConfirm=null;page=Page.Progression;
+        mythicTab=false;mythicSelection=null;
         Workshop.dragFinger=-1;Workshop.dragged=false;
         if(shop)OpenWorkshop();
     }
-    void BeginChallenge(JObject row){
+    void BeginChallenge(JObject row,int chosenRace=-1){
         if(row==null)return;EndChallenge();
-        int player=Array.IndexOf(ProgressRaces,(string)row["race"]),enemy=Array.IndexOf(ProgressRaces,(string)row["opponent"]);
+        int player=chosenRace>=0?chosenRace:Array.IndexOf(ProgressRaces,(string)row["race"]);
+        int enemy=Array.IndexOf(ProgressRaces,(string)row["opponent"]);
         if(!RaceStaged(player)||!RaceStaged(enemy)){Notice("Раса пока недоступна");return;}
         savedChallengeSetup=new[]{raceChoice,botRaceChoice,matchMode,roundsChoice,startGold,difficulty,aspectsOn?1:0};
         activeChallenge=(JObject)row.DeepClone();raceChoice=player;botRaceChoice=enemy;matchMode=0;roundsChoice=1;startGold=(int?)row["start_gold"]??500;difficulty=Mathf.Clamp((int?)row["difficulty"]??1,0,2);aspectsOn=false;
@@ -36,8 +39,9 @@ public sealed partial class PcGame {
     void EndChallenge(){if(savedChallengeSetup!=null){raceChoice=savedChallengeSetup[0];botRaceChoice=savedChallengeSetup[1];matchMode=savedChallengeSetup[2];roundsChoice=savedChallengeSetup[3];startGold=savedChallengeSetup[4];difficulty=savedChallengeSetup[5];aspectsOn=savedChallengeSetup[6]==1;savedChallengeSetup=null;}activeChallenge=null;challengeSettled=false;challengeReward=0;}
     void SettleChallenge(){
         if(activeChallenge==null||challengeSettled||onlineMatch)return;
+        StopWinterBossMusic();
         if(match.ChallengeVictoryEligible)try{challengeReward=progression.Complete((string)activeChallenge["id"],match.Elapsed);}catch(IOException error){Notice("Не удалось сохранить награду: "+error.Message);return;}
-        challengeSettled=true;Debug.Log("CF_PC_CHALLENGE_RESULT id="+activeChallenge["id"]+" eligible="+match.ChallengeVictoryEligible+" reward="+challengeReward);
+        challengeSettled=true;CaptureMythicScore();Debug.Log("CF_PC_CHALLENGE_RESULT id="+activeChallenge["id"]+" eligible="+match.ChallengeVictoryEligible+" reward="+challengeReward);
     }
     Color CosmeticColor(JObject row){return row!=null&&ColorUtility.TryParseHtmlString("#"+(string)row["color"],out var color)?color:new Color(.38f,.45f,.43f);}
     Texture2D ProfileAvatar(){var row=progression.Item(progression.Equipped("avatar"));return row!=null?ContentResources.Load<Texture2D>("RaceIcon-"+(string)row["asset"]):unitIcons.FirstOrDefault();}
@@ -49,11 +53,22 @@ public sealed partial class PcGame {
         Fill(new Rect(20,18,1240,684),new Color(.025f,.04f,.045f,.96f));Border(new Rect(20,18,1240,684),new Color(.36f,.31f,.22f));
         DrawProfileBadge(new Rect(42,34,64,64));Text(126,32,740,44,"Испытания и награды",heading);
         Text(128,77,895,27,"Ур. "+progression.MasteryLevel+" · "+progression.MasteryTitle+"  |  "+progression.Experience+" / "+progression.NextLevelExperience+" опыта  |  "+progression.CompletedCount+" / "+all.Count+" пройдено  |  "+progression.Coins+" жетонов",small);
-        if(Button("progress.back",new Rect(1074,38,164,42),"← В меню"))MainMenu();
-        if(Button("progress.challenges",new Rect(42,116,208,42),"Все испытания",!state.siegeOnly)){state.siegeOnly=false;progressionScroll=Vector2.zero;}
-        if(Button("progress.siege",new Rect(260,116,200,42),"Осадные",state.siegeOnly)){state.siegeOnly=true;progressionScroll=Vector2.zero;}
-        if(Button("progress.shop",new Rect(470,116,200,42),"Магазин"))OpenProgression(true);
-        Text(697,124,523,29,"Награды за первое прохождение",small);
+        if(Button("progress.back",new Rect(1074,38,164,42),MythicRacePicker?"← Назад":"← В меню")){
+            if(MythicRacePicker)mythicSelection=null;else MainMenu();
+        }
+        if(Button("progress.challenges",new Rect(42,116,208,42),"Все испытания",!state.siegeOnly&&!mythicTab)){
+            state.siegeOnly=mythicTab=false;mythicSelection=null;progressionScroll=Vector2.zero;
+        }
+        if(Button("progress.siege",new Rect(260,116,180,42),"Осадные",state.siegeOnly&&!mythicTab)){
+            state.siegeOnly=true;mythicTab=false;mythicSelection=null;progressionScroll=Vector2.zero;
+        }
+        if(Button("progress.mythic",new Rect(450,116,205,42),"Эпохальные",mythicTab)){
+            mythicTab=true;mythicSelection=null;progressionScroll=Vector2.zero;mythicBoardPage=0;
+            StartCoroutine(LoadMythicLeaderboard());
+        }
+        if(Button("progress.shop",new Rect(665,116,180,42),"Магазин")){OpenProgression(true);return;}
+        if(MythicRacePicker){DrawMythicRacePicker();return;}
+        if(mythicTab){DrawMythicChallenges();return;}
         var rows=all.OfType<JObject>().Where(row=>!state.siegeOnly||ChallengeCampaign038.IsSiege(row)).ToArray();
         const int cardHeight=174;
         state.maxChallengeScroll=Mathf.Max(0,rows.Length*(cardHeight+10)-502);
@@ -64,16 +79,24 @@ public sealed partial class PcGame {
             Fill(new Rect(0,y,1170,cardHeight),new Color(.055f,.08f,.085f));
             Border(new Rect(0,y,1170,cardHeight),new Color(.26f,.30f,.28f));
             int a=Array.IndexOf(ProgressRaces,(string)row["race"]),b=Array.IndexOf(ProgressRaces,(string)row["opponent"]);var first=RaceEmblem(a);var second=RaceEmblem(b);
-            if(first)GUI.DrawTexture(new Rect(16,y+18,52,52),first,ScaleMode.ScaleToFit);if(second)GUI.DrawTexture(new Rect(58,y+61,52,52),second,ScaleMode.ScaleToFit);
+            if(first)GUI.DrawTexture(new Rect(16,y+18,52,52),first,ScaleMode.ScaleToFit);
+            if(second)GUI.DrawTexture(new Rect(58,y+61,52,52),second,ScaleMode.ScaleToFit);
             Text(128,y+12,790,34,(string)row["title"],raceTitleStyle);Text(128,y+50,816,76,(string)row["description"],new GUIStyle(label){fontSize=18,wordWrap=true});
-            bool done=progression.Completed(id);string reward=done?"Пройдено · лучший результат "+TimeSpan.FromSeconds(progression.Best(id)).ToString(@"mm\:ss"):"Награда: "+row["reward"]+" жетонов · "+ChallengeCatalog034.Experience(row)+" опыта · "+((int?)row["difficulty"]==2?"сложный":"обычный")+" бот";
-            Text(128,y+139,800,25,reward,small);if(Button("challenge."+id,new Rect(978,y+48,172,48),done?"Повторить":"Начать",!done)){BeginChallenge(row);break;}
+            bool done=progression.Completed(id);
+            string summary=done?"Пройдено · лучший результат "+TimeSpan.FromSeconds(progression.Best(id)).ToString(@"mm\:ss"):
+                "Награда: "+row["reward"]+" жетонов · "+ChallengeCatalog034.Experience(row)+" опыта · "+((int?)row["difficulty"]==2?"сложный":"обычный")+" бот";
+            Text(128,y+139,800,25,summary,small);
+            if(Button("challenge."+id,new Rect(978,y+48,172,48),done?"Повторить":"Начать",!done)){
+                BeginChallenge(row);
+                break;
+            }
         }
         GUI.EndScrollView();
         GUI.enabled=enabled;
     }
     void DrawChallengeHud(){
         if(activeChallenge==null)return;
+        if(match.EternalWinter){DrawWinterHud();return;}
         var strip=new Rect(210,36,661,55);
         Fill(strip,new Color(.015f,.025f,.03f,.89f));
         string titleText=(string)activeChallenge["title"];
@@ -95,7 +118,12 @@ public sealed partial class PcGame {
         Text(221,39,630,27,titleText,small);
         if(details.Count>0)Text(221,62,630,26,string.Join(" · ",details),small);
     }
-    void DrawChallengeResult(){if(activeChallenge==null)return;string result=!match.ChallengeVictoryEligible?"Условия испытания не выполнены":challengeReward>0?"+"+challengeReward+" жетонов · +"+ChallengeCatalog034.Experience(activeChallenge)+" опыта · ур. "+progression.MasteryLevel:"Испытание пройдено · награда уже получена";if(!challengeSettled&&match.ChallengeVictoryEligible){result="Награда ещё не сохранена";if(Button("challenge.retry-save",new Rect(450,345,380,32),"Повторить сохранение"))SettleChallenge();}else Text(450,345,380,35,result,small);}
+    void DrawChallengeResult(){if(activeChallenge==null)return;string result=!match.ChallengeVictoryEligible?"Условия испытания не выполнены":match.EternalWinter?"Испытание пройдено":challengeReward>0?"+"+challengeReward+" жетонов · +"+ChallengeCatalog034.Experience(activeChallenge)+" опыта · ур. "+progression.MasteryLevel:"Испытание пройдено · награда уже получена";if(!challengeSettled&&match.ChallengeVictoryEligible){if(Button("challenge.retry-save",new Rect(450,345,380,32),"Повторить сохранение"))SettleChallenge();}else Text(450,345,380,35,result,small);
+        if(match.EternalWinter&&match.ChallengeVictoryEligible){
+            if(mythicPlace>0)Text(450,512,380,30,"Ваше место · "+mythicPlace,small);
+            else if(pendingMythicScore!=null&&LobbyButton("mythic.score.open",new Rect(450,509,380,39),mythicScoreSending?"Сохраняем…":"Записать в таблицу"))SubmitPendingMythicScore();
+        }
+    }
     void RenderBuilderCosmetic(){
         string id=progression?.Equipped("aura")??"";
         if(onlineMatch||match==null||!builders[0]){

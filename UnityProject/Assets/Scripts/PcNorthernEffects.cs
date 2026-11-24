@@ -23,8 +23,10 @@ public sealed partial class PcGame {
     }
     void RenderNorthernEffects(float alpha) {
         var wanted=new HashSet<string>();
+        if(winterIntro&&winterCast&&winterQueen&&winterIntroAge<4.8f)
+            PlaceNorthernFx(wanted,"winter-cast","fx_b6599866d740",winterQueen.transform.position+Vector3.up*3.6f);
         foreach(var unit in match.Units)if(unit.hp>0&&units.TryGetValue(unit.id,out var view)&&ShowUnitArt036(unit,view)) {
-            if(unit.effects.Any(e=>e.left>0&&e.group=="northern_ice_chains"))PlaceNorthernFx(wanted,"ice-unit-"+unit.id,"fx_759aa9a57831",view.transform.position);
+            if(unit.effects.Any(e=>e.left>0&&(e.group=="northern_ice_chains"||e.group==HumanMatch.WinterChain)))PlaceNorthernFx(wanted,"ice-unit-"+unit.id,"fx_759aa9a57831",view.transform.position);
             if(unit.effects.Any(e=>e.left>0&&(bool?)e.config?["frost_armor"]==true))PlaceNorthernFx(wanted,"armor-"+unit.id,"fx_96b9f2d40527",view.transform.position+Vector3.up*Mathf.Max(.7f,view.ClassicHeight*.55f));
         }
         foreach(var hut in match.Huts)if(CanInspectHut(hut)&&match.FrostDisabled(hut)>0)PlaceNorthernFx(wanted,"ice-hut-"+hut.id,"fx_759aa9a57831",World(hut.position));
@@ -44,11 +46,13 @@ public sealed partial class PcGame {
         RenderNorthernSnow();
     }
     void RenderNorthernSnow() {
-        if(match.NorthernWeather>0&&!northernSnow) {
+        bool falling=match.NorthernWeather>0||match.EternalWinter&&(!winterIntro||winterIntroAge>=2.5f);
+        if(falling&&!northernSnow) {
             var obj=new GameObject("Native northern heavy snow");obj.transform.SetParent(visuals.transform);northernSnow=obj.AddComponent<ParticleSystem>();
             var cfg=JObject.Parse(ContentResources.Load<TextAsset>("northern-weather").text)["native"];float speed=Mathf.Abs(HumanMatch.F(cfg,"veloc"))/30,lifetime=HumanMatch.F(cfg,"lifespan",2.5f);
-            var main=northernSnow.main;main.playOnAwake=false;main.simulationSpace=ParticleSystemSimulationSpace.World;main.startLifetime=lifetime;main.startSpeed=0;main.startSize=HumanMatch.F(cfg,"scaleStart")/30;main.maxParticles=400;main.gravityModifier=0;
-            var emission=northernSnow.emission;emission.rateOverTime=400/lifetime;
+            int budget=match.EternalWinter&&Application.isMobilePlatform?240:400;
+            var main=northernSnow.main;main.playOnAwake=false;main.simulationSpace=ParticleSystemSimulationSpace.World;main.startLifetime=lifetime;main.startSpeed=0;main.startSize=HumanMatch.F(cfg,"scaleStart")/30;main.maxParticles=budget;main.gravityModifier=0;
+            var emission=northernSnow.emission;emission.rateOverTime=budget/lifetime;
             var shape=northernSnow.shape;shape.shapeType=ParticleSystemShapeType.Box;shape.scale=new Vector3(150,0,90);
             var velocity=northernSnow.velocityOverLifetime;velocity.enabled=true;velocity.space=ParticleSystemSimulationSpace.World;velocity.x=.3f*speed;velocity.y=-speed;velocity.z=.3f*speed;
             northernSnow.GetComponent<ParticleSystemRenderer>().sharedMaterial=ContentResources.Load<Material>("NorthernSnow");northernSnow.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -56,7 +60,8 @@ public sealed partial class PcGame {
         if(!northernSnow)return;
         var ray=Camera.main.ViewportPointToRay(new Vector3(.5f,.5f));var plane=new Plane(Vector3.up,new Vector3(0,World(Vector2.zero).y,0));Vector3 center=plane.Raycast(ray,out float distance)?ray.GetPoint(distance):Camera.main.transform.position;
         northernSnow.transform.position=center+Vector3.up*(768f/30);
-        if(match.NorthernWeather>0&&!northernSnow.isPlaying)northernSnow.Play();else if(match.NorthernWeather<=0&&northernSnow.isEmitting)northernSnow.Stop(true,ParticleSystemStopBehavior.StopEmitting);
+        RenderWinterWind(center,falling);
+        if(falling&&!northernSnow.isPlaying)northernSnow.Play();else if(!falling&&northernSnow.isEmitting)northernSnow.Stop(true,ParticleSystemStopBehavior.StopEmitting);
     }
     void ClearNorthernViews(){northernAttachments.Clear();northernOrbViews.Clear();northernSnow=null;if(northernOrbMaterial)Destroy(northernOrbMaterial);northernOrbMaterial=null;}
 }

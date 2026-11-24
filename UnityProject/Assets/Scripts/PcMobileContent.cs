@@ -37,7 +37,7 @@ public sealed partial class PcGame {
     }
     IEnumerator PrepareMobileMatch(int a,int b){
         if(!MobileContent.Active)yield break;
-        MobileContent.Current.Begin();
+        MobileContent.Current.Begin("Подготовка карты и моделей");
         ClearMatch();
         var ultimateState=MobileUltimate034.For(this);if(ultimateState.shell){Destroy(ultimateState.shell);ultimateState.shell=null;ultimatePack=null;}ultimateState.draw=null;
         yield return null;

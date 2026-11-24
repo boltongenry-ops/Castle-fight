@@ -1,0 +1,19 @@
+[Unit]
+Description=Castle Fight mythic challenge leaderboard
+After=network.target castle-fight-profiles.service
+
+[Service]
+Type=simple
+User=castlefight
+Group=castlefight
+EnvironmentFile=/etc/castle-fight.env
+StateDirectory=castle-fight-mythic
+ExecStart=/usr/bin/python3 /opt/castle-fight/mythic/mythic_leaderboard.py
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+
+[Install]
+WantedBy=multi-user.target

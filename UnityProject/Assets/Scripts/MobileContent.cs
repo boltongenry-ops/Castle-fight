@@ -18,6 +18,11 @@ public sealed class MobileContent : MonoBehaviour {
     public static MobileContent Current {get;private set;}
     public static bool Active=>Current!=null;
     public bool Busy {get;private set;}=true;
+    public bool VersusLoading {get;set;}
+    public string LoadingStatus=>status;
+    public string LoadingError=>error;
+    public float LoadingProgress=>progress;
+    public void RetryLoading()=>retry=true;
     readonly Dictionary<string,AssetBundle> loaded=new Dictionary<string,AssetBundle>();
     readonly Dictionary<string,JObject> files=new Dictionary<string,JObject>();
     readonly Dictionary<string,List<JObject>> resources=new Dictionary<string,List<JObject>>(StringComparer.OrdinalIgnoreCase);
@@ -42,7 +47,7 @@ public sealed class MobileContent : MonoBehaviour {
         // PcGame releases the loading overlay after its actual menu is ready.
     }
     public void Ready(){Busy=false;Debug.Log("CF_ANDROID_CONTENT_MENU_VISIBLE");}
-    public void Begin(){Busy=true;}
+    public void Begin(string message=null){if(message!=null){status=message;progress=0;}Busy=true;}
     public void ReleaseRaceBundles(){
         // Keep the live scene and every dependency of the resident interface and shared content.
         var keep=new HashSet<string>();
@@ -148,7 +153,7 @@ public sealed class MobileContent : MonoBehaviour {
         if(!File.Exists(destination)||new FileInfo(destination).Length!=(long)row["size"])File.Copy(CacheFile(row),destination,true);if(foreground)Busy=wasBusy;
     }
     public void DeferDownloadAll(){if(bulkActive){cancelBulk=true;retry=true;}}
-    void OnGUI(){if(!Busy)return;GUI.depth=-10000;int action=ContentLoadingScreen.Draw(background,hammer,font,status,progress,error,bulkActive);if((action&1)!=0)retry=true;if((action&2)!=0)DeferDownloadAll();}
+    void OnGUI(){if(!Busy||VersusLoading)return;GUI.depth=-10000;int action=ContentLoadingScreen.Draw(background,hammer,font,status,progress,error,bulkActive);if((action&1)!=0)retry=true;if((action&2)!=0)DeferDownloadAll();}
 
 }
 public static class ContentResources {
