@@ -16,6 +16,23 @@ public sealed partial class PcGame {
         Check(!CanSeeUnit(enemy)&&!units[enemy.id].gameObject.activeSelf,"Unseen enemy model hidden");selectedUnit=enemy.id;Check(SelectedUnit==null,"Hidden enemy cannot remain selected in unit card");
         SetSelectedGroup(new[]{enemy.id});Check(selectedGroup.Count==0,"Drag selection excludes unseen enemies");
         var scout=match.Spawn(0,kind,new Vector2(-12,0));UpdateFog(true);RenderMatch();Check(fog.Visible(enemy.position)&&CanSeeUnit(enemy)&&units[enemy.id].gameObject.activeSelf,"Allied living unit reveals enemy and enables selection");
+        enemy.pose="Walk";
+        RenderMatch();
+        var animation=units[enemy.id].animatedRoot.GetComponent<Animation>();
+        var walk=animation.Cast<AnimationState>().First(state=>state.name.StartsWith("Walk",StringComparison.OrdinalIgnoreCase)&&
+            animation.IsPlaying(state.name));
+        scout.hp=0;
+        UpdateFog(true);
+        RenderMatch();
+        animation.Stop();
+        Check(!animation.isPlaying&&!units[enemy.id].gameObject.activeSelf,"Fog suspends the enemy's current animation");
+        scout.hp=scout.maxHp;
+        UpdateFog(true);
+        RenderMatch();
+        Check(animation.IsPlaying(walk.name),"Enemy resumes walking in the first visible render with the same pose");
+        walk.time=.2f;
+        RenderMatch();
+        Check(Mathf.Approximately(walk.time,.2f),"Subsequent visible frames preserve the walk phase");
         controls.FocusWorld(World(scout.position),45);yield return Shot(folder,"02-visible-scout");
         scout.hp=0;UpdateFog(true);RenderMatch();Check(!fog.Visible(Vector2.zero)&&fog.Known(Vector2.zero)&&fog.Display(Vector2.zero)==85&&!CanSeeUnit(enemy),"After scout loss, explored terrain stays dim and enemies disappear");yield return Shot(folder,"03-explored-shadow");
         match.Gold[1]=100000;match.Wood[1]=100000;Check(match.TryBuild(1,kind,6,15,out _),"Enemy building fixture placed on legal base cell");var hut=match.Huts.Last();UpdateFog(true);RenderMatch();

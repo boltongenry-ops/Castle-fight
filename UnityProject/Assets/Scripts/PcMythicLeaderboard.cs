@@ -146,15 +146,7 @@ public sealed partial class PcGame {
 
     void DrawMythicChallenges(){
         var row=progression.Challenge(HumanMatch.WinterTrial);
-        LobbyPanel(new Rect(42,176,603,500));
-        var enemy=RaceEmblem(NorthernOpponent);
-        if(enemy)GUI.DrawTexture(new Rect(64,205,81,81),enemy,ScaleMode.ScaleToFit);
-        Text(162,202,450,42,(string)row["title"],raceTitleStyle);
-        Text(162,250,450,28,"Северные королевства",small);
-        Text(64,316,537,132,(string)row["description"],new GUIStyle(label){wordWrap=true});
-        if(progression.Completed(HumanMatch.WinterTrial))
-            Text(64,470,537,40,"Личное время · "+MythicTime(Mathf.RoundToInt(progression.Best(HumanMatch.WinterTrial)*1000)),small);
-        if(Button("challenge."+HumanMatch.WinterTrial,new Rect(64,589,552,58),"Выбрать расу",true))ChooseMythicRace(row);
+        DrawWinterTrialTile(row);
         DrawMythicLeaderboard();
     }
 

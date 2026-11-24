@@ -9,7 +9,8 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame {
     const int NorthernOpponent=5;
-    const float WinterIntroDuration=7.5f, WinterOpeningDistance=35;
+    const float WinterIntroDuration=11.4f, WinterOpeningDistance=35, WinterStormCue=2.5f;
+    const float WinterCastleScale=1.11f;
     static readonly Color WinterBlue=new Color(.61f,.84f,.97f);
     bool mythicTab,winterIntro,winterSkip,winterCast;
     JObject mythicSelection;
@@ -18,6 +19,11 @@ public sealed partial class PcGame {
     float winterIntroAge;
     PcModel winterQueen;
     ParticleSystem winterGusts;
+    ParticleSystem winterCastleAura;
+    Transform winterCastleBody;
+    Vector3 winterCastleBaseScale;
+    readonly List<(Renderer renderer,MaterialPropertyBlock original)> winterCastleTint=
+        new List<(Renderer,MaterialPropertyBlock)>();
     bool winterStrongGusts;
     Material winterGustMaterial;
     Texture2D winterGustTexture,winterMinimap;
@@ -39,30 +45,34 @@ public sealed partial class PcGame {
     }
 
     void DrawMythicRacePicker(){
-        LobbyPanel(new Rect(42,180,1196,486));
-        Text(66,197,700,46,(string)mythicSelection["title"],raceTitleStyle);
-        Text(69,254,705,31,"Выберите свою обычную расу",label);
+        var card=new Rect(42,176,1196,500);
+        DrawWinterPainting(card,true);
+        Fill(new Rect(42,176,641,500),new Color(.025f,.047f,.065f,.99f));
+        WinterGradient(new Rect(683,176,282,500),true,new Color(.025f,.047f,.065f,.98f));
+        WinterGradient(new Rect(682,337,556,339),false,new Color(.019f,.035f,.052f,.99f));
+        Border(card,WinterLine,1);
+        Text(66,194,700,49,(string)mythicSelection["title"],raceTitleStyle);
+        Text(69,249,705,31,"Выберите свою обычную расу",label);
         for(int i=0;i<AllRaceUnity.Length;i++){
             int race=AllRaceUnity[i];
-            var cell=new Rect(70+i%3*231,297+i/3*54,221,47);
+            var cell=new Rect(70+i%3*207,294+i/3*54,197,47);
             bool enabled=GUI.enabled;GUI.enabled=enabled&&RaceStaged(race);
             if(LobbyButton("mythic.race."+race,cell,"",race==mythicRace))mythicRace=race;
             var emblem=RaceEmblem(race);
             if(emblem)GUI.DrawTexture(new Rect(cell.x+5,cell.y+5,36,36),emblem,ScaleMode.ScaleToFit);
-            Text(cell.x+49,cell.y+2,167,43,AllRaceNames[i],
+            Text(cell.x+43,cell.y+2,150,43,AllRaceNames[i],
                 new GUIStyle(small){fontSize=13,wordWrap=true,alignment=TextAnchor.MiddleLeft,padding=new RectOffset(),
                     normal={textColor=race==mythicRace?WinterBlue:Color.white}});
             GUI.enabled=enabled;
         }
-        const float x=800,width=405;
-        Text(x,248,width,24,"Эпохальный противник",small);
-        Text(x,277,width,37,"Северные королевства",heading);
-        Text(x,321,width,40,"Скорость движения −50%",label);
-        Text(x,370,width,40,"Скорость атаки −30%",label);
-        Text(x,419,width,40,"Оковы одного бойца каждые 10 с",label);
-        Text(x,463,width,33,"Стадия II при "+HumanMatch.WinterPhaseTwoHp+" HP замка босса",small);
-        Text(x,496,width,54,"Павшие в оковах переходят к боссу.\nСеверяне невосприимчивы к метели и оковам.",small);
-        if(LobbyButton("mythic.begin",new Rect(x,560,width,49),"Начать испытание",true)){
+        const float x=718,width=493;
+        Fill(new Rect(x-12,389,width+22,217),new Color(.023f,.042f,.061f,.91f));
+        Text(x,389,width,41,"Ледяная королева",heading);
+        Text(x,431,width,32,"Движение −50%  •  Скорость атаки −30%",label);
+        Text(x,468,width,28,"Оковы одного бойца каждые 10 с",label);
+        Text(x,501,width,28,"Стадия II · "+HumanMatch.WinterPhaseTwoHp+" HP замка босса",label);
+        Text(x,534,width,57,"Павшие в оковах переходят к боссу.\nСеверяне невосприимчивы к метели и оковам.",small);
+        if(LobbyButton("mythic.begin",new Rect(x,609,285,49),"Начать испытание",true)){
             var trial=mythicSelection;
             mythicSelection=null;
             BeginChallenge(trial,mythicRace);
@@ -106,6 +116,7 @@ public sealed partial class PcGame {
         }
         if(generation!=versusSerial)yield break;
         PrepareWinterGusts();
+        PrepareWinterCastleAura();
         yield return null;
         if(generation!=versusSerial)yield break;
         PrepareWinterAudio();
@@ -120,21 +131,43 @@ public sealed partial class PcGame {
 
     Vector3 WinterOpeningTarget()=>Vector3.Lerp(WinterQueenFocus(),
         World(HumanMatch.CastlePosition(1))+Vector3.up*7,.32f);
+    Vector3 WinterCastleFocus()=>World(HumanMatch.CastlePosition(1))+Vector3.up*7;
 
     void FrameWinterOpening(){
         controls.InputBlocked=true;
         controls.GameplayViewport(false);
-        FrameWinterCamera(WinterOpeningTarget(),WinterOpeningDistance,0);
+        FrameWinterShot();
     }
 
-    void FrameWinterCamera(Vector3 target,float distance,float approach){
+    void FrameWinterCamera(Vector3 target,float distance,float yaw,float pitch){
         controls.FocusWorld(target,distance);
         var camera=Camera.main;
         if(!camera)return;
-        float angle=Mathf.Lerp(-15,15,approach);
-        var offset=Quaternion.Euler(0,angle,0)*new Vector3(0,distance*.65f,-distance*.76f);
+        float radians=pitch*Mathf.Deg2Rad;
+        var offset=Quaternion.Euler(0,yaw,0)*new Vector3(0,distance*Mathf.Sin(radians),-distance*Mathf.Cos(radians));
         camera.transform.position=target+offset;
         camera.transform.LookAt(target);
+    }
+
+    float WinterShotProgress(float start,float end)=>Mathf.SmoothStep(0,1,Mathf.InverseLerp(start,end,winterIntroAge));
+
+    void FrameWinterShot(){
+        if(winterIntroAge<3.25f){
+            float t=WinterShotProgress(0,3.25f);
+            FrameWinterCamera(Vector3.Lerp(WinterOpeningTarget(),WinterQueenFocus(),t),
+                Mathf.Lerp(WinterOpeningDistance,23,t),Mathf.Lerp(-19,-8,t),36);
+        }else if(winterIntroAge<5.3f){
+            float t=WinterShotProgress(3.25f,5.3f);
+            FrameWinterCamera(WinterCastleFocus(),Mathf.Lerp(35,30,t),Mathf.Lerp(-76,-86,t),42);
+        }else if(winterIntroAge<7.35f){
+            float t=WinterShotProgress(5.3f,7.35f);
+            FrameWinterCamera(WinterCastleFocus(),Mathf.Lerp(46,53,t),Mathf.Lerp(22,28,t),67);
+        }else{
+            float t=WinterShotProgress(7.35f,WinterIntroDuration);
+            float rise=Mathf.Sin(t*Mathf.PI)*15;
+            FrameWinterCamera(Vector3.Lerp(WinterCastleFocus(),World(match.Builders[0].position),t)+Vector3.up*rise,
+                Mathf.Lerp(53,40,t)+rise,Mathf.Lerp(28,0,t),Mathf.Lerp(67,56,t));
+        }
     }
 
     void UpdateWinterIntro(){
@@ -147,11 +180,7 @@ public sealed partial class PcGame {
         }
         int snowTarget=Mathf.CeilToInt(winterGround.Length*Mathf.InverseLerp(2.7f,4.6f,winterIntroAge));
         if(snowTarget>winterGroundIndex)AdvanceWinterGround(Mathf.Min(4,snowTarget-winterGroundIndex));
-        float travel=Mathf.SmoothStep(0,1,Mathf.InverseLerp(4.9f,WinterIntroDuration,winterIntroAge));
-        float approach=Mathf.SmoothStep(0,1,winterIntroAge/3.9f);
-        var focus=Vector3.Lerp(WinterOpeningTarget(),WinterQueenFocus(),approach);
-        var look=Vector3.Lerp(focus,World(match.Builders[0].position),travel);
-        FrameWinterCamera(look,Mathf.Lerp(Mathf.Lerp(WinterOpeningDistance,24,approach),40,travel),approach);
+        FrameWinterShot();
         RenderMatch();
         if(winterIntroAge<WinterIntroDuration||winterGroundIndex<winterGround.Length)return;
         winterIntro=false;accumulator=0;
@@ -181,6 +210,10 @@ public sealed partial class PcGame {
     void RenderWinterWind(Vector3 center,bool falling){
         if(!match.EternalWinter||!falling)return;
         float surge=Mathf.Pow(.5f+.5f*Mathf.Sin(Time.unscaledTime*1.1f),4);
+        if(winterIntro){
+            float howl=Mathf.InverseLerp(WinterStormCue,3.08f,winterIntroAge)*(1-WinterShotProgress(3.08f,5.3f));
+            surge=Mathf.Max(surge,howl);
+        }
         UpdateWinterAudio(surge);
         if(!winterGusts)return;
         if(match.WinterPhaseTwo&&!winterStrongGusts){
@@ -224,6 +257,81 @@ public sealed partial class PcGame {
         renderer.sharedMaterial=winterGustMaterial;renderer.renderMode=ParticleSystemRenderMode.Stretch;
         renderer.lengthScale=6;renderer.velocityScale=.25f;
         winterGusts.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
+    }
+
+    void PrepareWinterCastleAura(){
+        if(!winterGustMaterial)return;
+        var obj=new GameObject("Snow around the Northern castle");
+        obj.transform.SetParent(visuals.transform);
+        obj.transform.position=WinterCastleFocus()-Vector3.up*2;
+        winterCastleAura=obj.AddComponent<ParticleSystem>();
+        var main=winterCastleAura.main;
+        main.playOnAwake=false;
+        main.maxParticles=Application.isMobilePlatform?20:34;
+        main.startLifetime=new ParticleSystem.MinMaxCurve(1.2f,2.4f);
+        main.startSpeed=0;
+        main.startSize=new ParticleSystem.MinMaxCurve(3.4f,7);
+        main.startColor=new Color(.86f,.96f,1,.88f);
+        var shape=winterCastleAura.shape;
+        shape.shapeType=ParticleSystemShapeType.Sphere;
+        shape.radius=6.6f;
+        shape.scale=new Vector3(1,.55f,1);
+        var wind=winterCastleAura.velocityOverLifetime;
+        wind.enabled=true;
+        wind.y=2.7f;
+        wind.orbitalY=.7f;
+        var shade=winterCastleAura.colorOverLifetime;
+        shade.enabled=true;
+        var gradient=new Gradient();
+        gradient.SetKeys(new[]{new GradientColorKey(Color.white,0),new GradientColorKey(WinterBlue,1)},
+            new[]{new GradientAlphaKey(0,0),new GradientAlphaKey(1,.28f),new GradientAlphaKey(0,1)});
+        shade.color=gradient;
+        var draw=winterCastleAura.GetComponent<ParticleSystemRenderer>();
+        draw.sharedMaterial=winterGustMaterial;
+        draw.renderMode=ParticleSystemRenderMode.Billboard;
+        winterCastleAura.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
+    }
+
+    void RenderWinterCastle(){
+        if(!match.EternalWinter||winterIntro&&winterIntroAge<WinterStormCue)return;
+        var castle=castleViews[1]?castleViews[1].transform:castleObjects[1].transform;
+        if(winterCastleBody!=castle){
+            RestoreWinterCastle();
+            winterCastleBody=castle;
+            winterCastleBaseScale=castle.localScale;
+            foreach(var renderer in castle.GetComponentsInChildren<Renderer>(true)){
+                var material=renderer.sharedMaterial;
+                if(!material||material.shader.name!="CastleFight/NativeMapProp")continue;
+                var original=new MaterialPropertyBlock();
+                renderer.GetPropertyBlock(original);
+                winterCastleTint.Add((renderer,original));
+                var frost=new MaterialPropertyBlock();
+                renderer.GetPropertyBlock(frost);
+                frost.SetColor("_Color",new Color(1.16f,1.28f,1.34f,1));
+                frost.SetColor("_TeamColor",new Color(.55f,.67f,.83f,1));
+                renderer.SetPropertyBlock(frost);
+            }
+        }
+        float power=winterIntro?WinterShotProgress(WinterStormCue,4.3f):1;
+        castle.localScale=winterCastleBaseScale*Mathf.Lerp(1,WinterCastleScale,power);
+        if(!winterCastleAura)return;
+        var camera=Camera.main;
+        bool nearby=camera&&(camera.transform.position-winterCastleAura.transform.position).sqrMagnitude<10000;
+        if(!castle.gameObject.activeInHierarchy||!nearby||page==Page.Result){
+            if(winterCastleAura.isPlaying)winterCastleAura.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
+            return;
+        }
+        var emission=winterCastleAura.emission;
+        emission.rateOverTime=Mathf.Lerp(6,14,power);
+        if(!winterCastleAura.isPlaying)winterCastleAura.Play();
+    }
+
+    void RestoreWinterCastle(){
+        if(winterCastleBody)winterCastleBody.localScale=winterCastleBaseScale;
+        foreach(var entry in winterCastleTint)
+            if(entry.renderer)entry.renderer.SetPropertyBlock(entry.original.isEmpty?null:entry.original);
+        winterCastleTint.Clear();
+        winterCastleBody=null;
     }
 
     static Texture2D GustTexture(){
@@ -277,6 +385,8 @@ public sealed partial class PcGame {
 
     void ClearWinterTrial(){
         ClearWinterAudio();
+        RestoreWinterCastle();
+        winterCastleAura=null;
         winterIntro=winterSkip=winterCast=winterStrongGusts=false;winterIntroAge=0;winterQueen=null;
         foreach(var layer in winterOverrides)
             if(layer.renderer)layer.renderer.SetPropertyBlock(layer.original.isEmpty?null:layer.original);
@@ -293,6 +403,8 @@ public sealed partial class PcGame {
         Directory.CreateDirectory(folder);
         OpenProgression(false);
         yield return Action("progress.mythic");
+        var sharedArt=WinterArtwork();
+        Check(sharedArt&&sharedArt.width>800,"Epochal tile loads the embedded or local boss painting");
         yield return Shot(folder,"00-epochal-list");
         yield return Action("challenge."+HumanMatch.WinterTrial);
         Check(MythicRacePicker&&match==null,"The epochal list opens a race picker before starting the fight");
@@ -300,6 +412,8 @@ public sealed partial class PcGame {
         yield return Shot(folder,"01-winter-race-selection");
         testHoldAuthority=true;
         yield return Action("mythic.begin");
+        Check(versusWinter&&WinterArtwork()==sharedArt&&winterVersusReveal<.8f,
+            "Boss VS starts its reveal with the same painting as the trial detail");
         yield return RecoveryWait(()=>versusActive&&winterAtlases.Count>0,"Versus prepares snow before revealing the introduction",12);
         Check(versusActive&&winterIntroAge==0&&winterOverrides.Count==0&&match.Elapsed==0&&
             !winterCast&&!northernSnow,"Loading creates textures while the map and snowfall remain untouched");
@@ -330,6 +444,8 @@ public sealed partial class PcGame {
         Check(winterIntro&&winterCast&&northernSnow&&winterGusts&&match.Elapsed==0,"The Queen casts and starts a blizzard with wind gusts before the battle");
         Check(winterWindAudio && winterWindAudio.isPlaying && winterWindAudio.loop && winterWindAudio.volume > 0,
             "The blizzard starts looping wind audio during the cast");
+        Check(winterCastleAura&&winterCastleAura.isPlaying&&winterCastleBody.localScale.x>winterCastleBaseScale.x,
+            "The wind cue awakens a visible aura and enlarges the boss castle");
         yield return Shot(folder,"02-queen-casts");
         Check(soundtrack&&soundtrack.isPlaying&&soundtrack.volume==1,"The soundtrack stays at full source volume during the cast");
         var musicSamples=new float[256];
@@ -465,7 +581,18 @@ public sealed partial class PcGame {
             "Leaving restores the map and releases its snow textures");
         BeginChallenge(progression.Challenge(HumanMatch.WinterTrial),0);
         yield return RecoveryWait(()=>!versusActive&&winterIntro,"A replay prepares its own winter assets",15);
-        yield return RecoveryWait(()=>!winterIntro,"The complete introduction returns control automatically",12);
+        yield return RecoveryWait(()=>winterIntroAge>=3.6f,"The camera cuts from the Queen to the castle",6);
+        var castleAngle=Camera.main.transform.rotation;
+        yield return Shot(folder,"07-castle-low-angle");
+        yield return RecoveryWait(()=>winterIntroAge>=5.65f,"The camera cuts to a higher angle from the other side",4);
+        Check(Quaternion.Angle(castleAngle,Camera.main.transform.rotation)>65,"Castle shots use visibly different angles");
+        Check(Mathf.Abs(winterCastleBody.localScale.x/winterCastleBaseScale.x-WinterCastleScale)<.002f,
+            "The castle reaches its final visual scale during the storm");
+        yield return Shot(folder,"08-castle-high-angle");
+        yield return RecoveryWait(()=>!winterIntro,"The complete introduction returns control automatically",9);
+        var builderOnScreen=Camera.main.WorldToViewportPoint(World(match.Builders[0].position));
+        Check(builderOnScreen.z>0&&Mathf.Abs(builderOnScreen.x-.5f)<.06f,
+            "The last shot hands the camera over to the player builder");
         Check(match.Elapsed==0&&!match.WinterPhaseTwo&&winterOverrides.Count==winterGround.Length&&winterGusts,
             "The full introduction ends with the same snow, wind and initial clock");
         var replaySoundtrack=winterBossMusic;

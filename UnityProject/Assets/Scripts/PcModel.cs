@@ -5,6 +5,7 @@ namespace CastleFight {
 public sealed class PcModel : MonoBehaviour {
     public bool reforged,particleOnly;public string appearanceKey;public GameObject animatedRoot;public string raw,animationProperties;public AnimationClip[] clips;public float godotHeight,visualScale=1;
     Animation player;NativeAppearance appearance;string pose;int previousAttack=-1;
+    bool restorePose;
     static float RosterScale(string id){
         switch(id){
             case "bU00": case "bU01": case "bU03": case "pU01": case "pU15": return 1.16f;
@@ -33,15 +34,21 @@ public sealed class PcModel : MonoBehaviour {
         if(!reforged&&ClassicWispBody040.IsWisp(raw))gameObject.AddComponent<ClassicWispBody040>();
         Play("Stand");
     }
+    void OnDisable()=>restorePose=true;
     public void Play(string requested,float speed=1,int attackSerial=0) {
-        if(particleOnly||!player)return;var clip=Choose(requested);
+        if(particleOnly||!player||!player.isActiveAndEnabled)return;var clip=Choose(requested);
         if(!clip)return;
         player[clip.name].speed=speed;
         bool once=requested.StartsWith("Attack")||requested.StartsWith("Spell")||requested.StartsWith("Birth"),terminal=requested.StartsWith("Death");
-        if(pose==requested&&(!once||attackSerial==previousAttack))return;
+        if(!restorePose&&pose==requested&&(!once||attackSerial==previousAttack))return;
         previousAttack=attackSerial;pose=requested;player[clip.name].wrapMode=terminal||once?WrapMode.ClampForever:WrapMode.Loop;
         if(once)player[clip.name].time=0;
-        if(player.isPlaying)player.CrossFade(clip.name,.12f);else player.Play(clip.name);if(appearance)appearance.SetClip(clip.name);
+        if(restorePose){
+            restorePose=false;
+            player.Play(clip.name);
+            player.Sample();
+        }else if(player.isPlaying)player.CrossFade(clip.name,.12f);else player.Play(clip.name);
+        if(appearance)appearance.SetClip(clip.name);
         if(!reforged&&ClassicWispBody040.IsWisp(raw)&&TryGetComponent<ClassicWispBody040>(out var wisp))
             wisp.SetClip(clip.name,!terminal&&!once);
     }

@@ -46,7 +46,7 @@ public sealed partial class PcGame {
         RenderNorthernSnow();
     }
     void RenderNorthernSnow() {
-        bool falling=match.NorthernWeather>0||match.EternalWinter&&(!winterIntro||winterIntroAge>=2.5f);
+        bool falling=match.NorthernWeather>0||match.EternalWinter&&(!winterIntro||winterIntroAge>=WinterStormCue);
         if(falling&&!northernSnow) {
             var obj=new GameObject("Native northern heavy snow");obj.transform.SetParent(visuals.transform);northernSnow=obj.AddComponent<ParticleSystem>();
             var cfg=JObject.Parse(ContentResources.Load<TextAsset>("northern-weather").text)["native"];float speed=Mathf.Abs(HumanMatch.F(cfg,"veloc"))/30,lifetime=HumanMatch.F(cfg,"lifespan",2.5f);

@@ -41,7 +41,7 @@ public sealed partial class PcGame {
     void DrawMenuBackground() {
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.18f));
     }
-    void DisposeFrontend(){StopDirectory();DisposeStickers();if(menuAudio)Destroy(menuAudio);}
+    void DisposeFrontend(){StopDirectory();DisposeStickers();if(menuAudio)Destroy(menuAudio);DisposeWinterArtwork();}
     // Only the current pair is decoded; fifteen source paintings stay on disk.
     static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
     static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};
@@ -60,10 +60,14 @@ public sealed partial class PcGame {
         versusSerial++;versusActive=false;versusPrepared=false;mobileRoundPrepared=false;
         if(MobileContent.Active)MobileContent.Current.VersusLoading=false;
         DisposeVersusArt();
+        versusWinter=false;
     }
     void BeginVersus(int a,int b,bool online){
         DisposeVersusArt();versusSerial++;versusA=Mathf.Clamp(a,0,VersusKeys.Length-1);versusB=Mathf.Clamp(b,0,VersusKeys.Length-1);versusActive=true;versusPrepared=false;versusNetwork=online;versusAt=Time.realtimeSinceStartup;versusReadyVisible=0;versusReadyDrawFrame=-1;
         versusNameA=online?ResultPlayerName(networkSlot):"Вы";versusNameB=online?ResultPlayerName(1-networkSlot):"Компьютер";
+        versusWinter=!online&&(string)activeChallenge?["id"]==HumanMatch.WinterTrial;
+        winterVersusFrame=-1;winterVersusReveal=0;
+        if(versusWinter)WinterArtwork();
         if(MobileContent.Active){
             MobileContent.Current.VersusLoading=true;
             PrepareVersusFallbacks();
@@ -71,7 +75,7 @@ public sealed partial class PcGame {
     }
     void PrepareVersusFallbacks(){
         versusLeftFallback=MobileVersusPicture(versusA);
-        versusRightFallback=versusB==versusA?versusLeftFallback:MobileVersusPicture(versusB);
+        versusRightFallback=versusWinter?null:versusB==versusA?versusLeftFallback:MobileVersusPicture(versusB);
     }
 
     static Texture2D MobileVersusPicture(int race){
@@ -85,7 +89,7 @@ public sealed partial class PcGame {
     }
 
     IEnumerator LoadVersusArt(int generation){
-        for(int side=0;side<2;side++){
+        for(int side=0;side<(versusWinter?1:2);side++){
             int race=side==0?versusA:versusB;
             if(race==PepeContent.Race||race==BlackHand.Race){
                 var painting=race==BlackHand.Race?BlackHandUi.Versus():PepeContent.Load<Texture2D>("Pepe/Versus-pepe");
@@ -128,6 +132,7 @@ public sealed partial class PcGame {
         if(generation==versusSerial){
             if(winterIntro)FrameWinterOpening();
             CloseVersus();
+            ReleaseWinterArtwork();
             if(winterIntro)StartWinterBossMusic();
         }
     }
@@ -154,6 +159,7 @@ public sealed partial class PcGame {
             if(versusReadyDrawFrame>=0)versusReadyVisible+=Mathf.Min(Time.unscaledDeltaTime,.1f);
             versusReadyDrawFrame=Time.frameCount;
         }
+        if(versusWinter){DrawWinterVersus();return;}
         Fill(new Rect(0,0,1280,720),new Color(.012f,.018f,.024f));
         float entrance=Mathf.SmoothStep(0,1,(Time.realtimeSinceStartup-versusAt)/.55f);
         VersusPainting(new Rect(-24*(1-entrance),0,608,720),versusLeft?versusLeft:versusLeftFallback,false);

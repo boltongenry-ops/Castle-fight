@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.46.0";
+    string Version=>MobileContent.Active?Application.version:"0.46.1";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -346,6 +346,7 @@ public sealed partial class PcGame : MonoBehaviour {
         RenderClassicSpells036();
         RenderNativeFlame();RenderOrcArmorAuras();
         RenderReforgedEffects();RenderNorthernEffects(alpha);RenderMechEffects();RenderUndeadEffects();RenderCorruptedEffects();RenderElementalEffects(alpha);RenderNightEffects();RenderElvenEffects();RenderFinalEffects();RenderPepeSkills();RenderHumanEffects();RenderBuilderCosmetic();ApplyFogViews();DrawOptionalVortices();
+        RenderWinterCastle();
         SweepHdEffects040();
         foreach(int id in projectiles.Keys.Where(id=>!match.Shots.Any(s=>s.id==id)).ToArray()){projectiles[id].Finish();Destroy(projectiles[id].gameObject);projectiles.Remove(id);}
     }
@@ -455,7 +456,8 @@ public sealed partial class PcGame : MonoBehaviour {
         if(polishLoadingPreview){ContentLoadingScreen.Draw(loadingBackground,loadingHammer,warcraftFont,"Все ресурсы · скачивание\n284 / 3012 МБ",.37f,"",true);return;}
         if(MobileContent.Active&&MobileContent.Current.Busy&&!versusActive)return;
         if(terrain==null){DrawLoadingScreen();return;}InitGui();UpdateGuiMetrics();if(introPlaying){DrawIntroScreen();return;}
-        if(WorkshopVisible)DrawWorkshopBleed();
+        if(versusActive&&versusWinter)Fill(new Rect(0,0,Screen.width,Screen.height),Color.black);
+        else if(WorkshopVisible)DrawWorkshopBleed();
         else if(page==Page.Main||page==Page.Setup||page==Page.Progression||page==Page.Network||(page==Page.Settings&&settingsReturn==Page.Main))DrawFrontendBleed();
         if(!versusActive&&match!=null&&page!=Page.Viewer)DrawWorldFog();
         Matrix4x4 previous=GUI.matrix;GUI.matrix=Matrix4x4.TRS(new Vector3(guiOrigin.x,guiOrigin.y,0),Quaternion.identity,Vector3.one*guiScale);
