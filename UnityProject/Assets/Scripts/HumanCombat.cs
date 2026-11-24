@@ -15,6 +15,7 @@ public sealed partial class HumanMatch {
     public void Ensure(Unit u) {
         if(u.maxHp>0)return;var l=Lines[u.kind];u.maxHp=l.hp;u.hp=Mathf.Min(u.hp,u.maxHp);u.maxMana=F(l.stats,"max_mana");u.mana=F(l.stats,"start_mana");u.manaRegen=F(l.stats,"mana_regen");u.armor=l.armor;
         foreach(var id in Strings(l.stats["abilities"]))Grant(u,id);
+        if(l.stats["ability_ranks"] is JObject ranks)foreach(var pair in ranks.Properties())u.abilityLevels[pair.Name]=(int?)pair.Value??1;
         if(l.unit=="cU16")u.abilityLevels["CT05"]=2;ApplyNatureResilience(u);
     }
     public void Grant(Unit u,string id) {
@@ -36,7 +37,7 @@ public sealed partial class HumanMatch {
         foreach(var id in AbilityView035.Get(u,Abilities).passives){var c=Ranked(u,id);if((string)c?["kind"]=="self_passive"&&name!="armor")value+=F(c,name);}
         return value;
     }
-    public float MoveSpeed(Unit u)=>BaseMoveSpeed(u)*WinterMoveFactor(u);
+    public float MoveSpeed(Unit u)=>BaseMoveSpeed(u)*WinterMoveFactor(u)*(FuneralChoir?1-.65f*Burial(u):1);
     float BaseMoveSpeed(Unit u){var l=Lines[u.kind];if(u.elementalArmed)return Rooted(u)?0:15;float fixedMove=-1;foreach(var e in u.effects)if(e.left>0){float candidate=F(e.config,"move_override");if(candidate>0&&(fixedMove<0||candidate<fixedMove))fixedMove=candidate;}if(fixedMove>=0)return Rooted(u)?0:fixedMove;return l.speed<=0||Rooted(u)?0:Mathf.Clamp((l.speed+(TeamNaga[u.team]&&Aspects[u.team]==0?-20f/30:0))*(1+ItemPassive(u.team,"speed_bonus",u))*Mathf.Max(0,1+Stat(u,"speed")+(u.nightInvisible?u.nightSpeed:0)),UnitConfig035(u.kind).minSpeed,UnitConfig035(u.kind).maxSpeed);}
     public float AttackSpeed(Unit u)=>Mathf.Clamp(1+(Lines[u.kind].unit=="bU02" && u.hp*10<u.maxHp*3?.4f:0)+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5)*WinterAttackFactor(u);
     public Weapon WeaponFor(Unit u,Unit target=null,bool structure=false){
@@ -124,8 +125,8 @@ public sealed partial class HumanMatch {
     }
     void Release(Unit u) {
         if(!TargetAlive(u.attackTarget))return;var w=u.pendingWeapon;if(w==null)return;CorruptedEnhance(u,ref w);
-        if(ChaosFighter(u))u.chaosAttackingUntil=Elapsed+1;Vector2 end=TargetPosition(u.attackTarget,u.team);bool storm=ElementalStormReleased(u,u.attackTarget);bool heat=MechHeatReleased(u,u.attackTarget);float miss=CentaurMissChance(u,w);if(miss>0&&Roll()<miss){if(storm){if(w.type=="normal"||w.type=="instant")ElementalStormBurst(u.team,end,u.attackTarget,u);else{var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="elemental_miss";failed.elementalStorm=true;failed.elementalStormSource=u;}}if(heat){if(w.type=="normal"||w.type=="instant")MechHeatBurst(u.team,end,u.attackTarget);else {var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="mech_miss";failed.mechHeat=true;}}ChaosMisses++;PulseAt(u.position,1,Color.white,"Промах");return;}
         if(BlackHandRelease(u))return;
+        if(ChaosFighter(u))u.chaosAttackingUntil=Elapsed+1;Vector2 end=TargetPosition(u.attackTarget,u.team);bool storm=ElementalStormReleased(u,u.attackTarget);bool heat=MechHeatReleased(u,u.attackTarget);float miss=CentaurMissChance(u,w);if(miss>0&&Roll()<miss){if(storm){if(w.type=="normal"||w.type=="instant")ElementalStormBurst(u.team,end,u.attackTarget,u);else{var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="elemental_miss";failed.elementalStorm=true;failed.elementalStormSource=u;}}if(heat){if(w.type=="normal"||w.type=="instant")MechHeatBurst(u.team,end,u.attackTarget);else {var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="mech_miss";failed.mechHeat=true;}}ChaosMisses++;PulseAt(u.position,1,Color.white,"Промах");return;}
         if(w.type=="normal")BattleAudio.For(this)?.Swing(Lines[u.kind].unit,u.position);
         if(w.type=="normal"||w.type=="instant") {
             if(Vector2.Distance(u.position,end)<=w.range+(u.attackTarget==-1?CastleCollision:u.attackTarget< -1?2:1))ResolveAttack(u.id,u.team,u.attackTarget,u.shotDamage,w,u.shotStun);
@@ -143,8 +144,8 @@ public sealed partial class HumanMatch {
             if(shot.chaosSpell=="north_spell:A082"||shot.chaosSpell=="north_spell:A083")shot.duration=.05f;
             if(shot.hit||shot.age<shot.duration)continue;shot.hit=true;BattleAudio.For(this)?.LocalMissile(shot,true);if(shot.kind==2)ShellImpacts++;
             Weapon w=shot.weapon??Lines[shot.line==0?2:shot.line].weapons.FirstOrDefault();if(w==null)continue;
-            bool artillery=w.type.StartsWith("artillery");var victim=FindUnit(shot.target);if(ImpactFinalShot(shot)||ImpactElvenShot(shot)||ImpactElementalShot(shot)||ImpactMechShot(shot)||ImpactNorthernShot(shot))continue;if(shot.elementalStorm)ElementalStormBurst(shot.team,shot.end,shot.target,shot.elementalStormSource);if(shot.chaosSpell=="elemental_miss")continue;if(shot.mechHeat)MechHeatBurst(shot.team,shot.end,shot.target);if(shot.chaosSpell=="twins_blast"){ImpactChaosBlast(shot);continue;}if(shot.chaosSpell=="hell_fist"){ImpactChaosFist(shot);continue;}
             if(BlackHandImpact(shot))continue;
+            bool artillery=w.type.StartsWith("artillery");var victim=FindUnit(shot.target);if(ImpactFinalShot(shot)||ImpactElvenShot(shot)||ImpactElementalShot(shot)||ImpactMechShot(shot)||ImpactNorthernShot(shot))continue;if(shot.elementalStorm)ElementalStormBurst(shot.team,shot.end,shot.target,shot.elementalStormSource);if(shot.chaosSpell=="elemental_miss")continue;if(shot.mechHeat)MechHeatBurst(shot.team,shot.end,shot.target);if(shot.chaosSpell=="twins_blast"){ImpactChaosBlast(shot);continue;}if(shot.chaosSpell=="hell_fist"){ImpactChaosFist(shot);continue;}
             if(shot.stolenEffect!=null){ImpactOrcSteal(shot,victim);continue;}
             if(shot.kind==7){ImpactOrcAcid(shot);continue;}
             if(!string.IsNullOrEmpty(shot.effectId)){if(victim!=null&&((shot.effectId=="A0AR"||shot.effectId=="A0AS")?NatureDebuffTarget(shot.team,victim,shot.effectId,Abilities[shot.effectId]):OrcNetTarget(shot.team,victim))){ApplyEffect(victim,shot.effectId,shot.team);OrcNetHits++;PulseAt(victim.position,1.5f,Color.cyan,"Сеть");}continue;}
@@ -167,7 +168,7 @@ public sealed partial class HumanMatch {
             if(!ElvenWeaponPattern(shot))NightBounce(shot);if(w.full>0||w.half>0||w.quarter>0) {
                 using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_2)if(u.team!=shot.team&&u.hp>0&&(artillery||u.id!=shot.target)&&(Flying(u)?w.air:w.ground)){float f=Splash(w,Vector2.Distance(u.position,shot.end));if(f>0)ResolveAttack(shot.sourceId,shot.team,u.id,shot.damage*f,w,shot.stun,false);}
                 using(var snapshot035_3=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_3)if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&h.team!=shot.team&&h.hp>0&&h.paid&&w.structure&&(artillery||HutTarget(h)!=shot.target)){float f=Splash(w,Vector2.Distance(h.position,shot.end));if(f>0){DamageHut(h,shot.damage*f,w.attack,shot.team);var owner=FindUnit(shot.sourceId);if(h.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")h.dragonArmorRank=Mathf.Min(3,h.dragonArmorRank+1);}}
-                int enemy=1-shot.team;float factor=Splash(w,Vector2.Distance(CastlePosition(enemy),shot.end));if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&w.structure&&factor>0&&(artillery||shot.target!=-1))DamageCastle(enemy,shot.damage*factor,w.attack);
+                int enemy=1-shot.team;float factor=Splash(w,Vector2.Distance(CastlePosition(enemy),shot.end));if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&w.structure&&factor>0&&(artillery||shot.target!=-1)&&!ChoirCastleEvades(enemy))DamageCastle(enemy,shot.damage*factor,w.attack);
             }
             if(artillery&&Lines[shot.line].unit?.StartsWith("pU",StringComparison.Ordinal)==true)PepeArtilleryImpact(shot);
             if(artillery&&shot.incendiary)AddFire(shot.team,shot.end,Lines[shot.line].unit=="o001"?"A02J":"A02K");
@@ -185,8 +186,8 @@ public sealed partial class HumanMatch {
         if(!spell&&!execute&&!pandaDebt)foreach(var id in victim.abilities){var c=Abilities[id];var p=c?["profile"];if((string)c?["kind"]=="hardened"&&Roll()<F(p,"chance"))amount=Mathf.Min(amount,Mathf.Max(F(p,"minimum",1),amount-F(p,"block")));}
         if(!execute&&!pandaDebt&&TeamMech[victim.team]&&Aspects[victim.team]==0&&MechFighter(victim))amount=Mathf.Min(amount,Mathf.Min(unblockedAmount,Mathf.Max(5,unblockedAmount-12)));
         if(!execute&&!pandaDebt)amount=PepeMitigate(victim,amount,spell,team);
-        float before=victim.hp;
         if(!spell&&!execute&&!pandaDebt&&team!=victim.team)amount=HandIronDamage(victim,amount);
+        float before=victim.hp;
         if(!pandaDebt&&!suppressUndead&&killer!=null)UndeadAfterDamage(killer,victim,Mathf.Min(before,amount),before);
         if(victim.hp<=0)return before;
         if(!execute&&!pandaDebt)amount=PandaDefer(victim,amount,team,killer);
@@ -209,20 +210,22 @@ public sealed partial class HumanMatch {
             if(victim.team==team||CorruptedAirborne(victim)||BerserkImmune(victim,w.attack))return;Ensure(victim);float evasion=Mathf.Max(NightEvasion(victim),PepeEvasion(victim));if(evasion>0&&Roll()<evasion){if(PepeEvasion(victim)>0)PulseAt(victim.position,1.6f,Color.white,"Уклонение",.55f,"pepe:PEva",victim.id);else PulseAt(victim.position,1,Color.white,"Уклонение");return;}
             if(w.type=="normal")BattleAudio.For(this)?.Contact(owner!=null?Lines[owner.kind].unit:null,Lines[victim.kind].unit,false,victim.position);
             bool pepeHit=passives&&owner!=null&&owner.team==team&&Lines[owner.kind].unit?.StartsWith("pU",StringComparison.Ordinal)==true&&!Invulnerable(victim)&&(!Ethereal(victim)||w.attack=="magic"||w.attack=="spells");
-            if(pepeHit)amount+=PepeWeaponBonus(owner,victim,w);
             if(w.type=="normal")amount=BlackHandMelee(owner,victim,amount,passives);
+            if(pepeHit)amount+=PepeWeaponBonus(owner,victim,w);
             float bonus=passives&&owner!=null&&owner.hp>0?CorruptedIncinerate(owner,victim):0;float before=victim.hp;DamageUnit(victim,amount*NerubHuntMultiplier(owner,victim),team,w.attack,false,false,owner);if(bonus>0&&victim.hp>0)DamageUnit(victim,bonus,team,"magic",true,false,owner);float dealt=before-victim.hp;ElvenBlood(owner,victim,dealt,w.attack);if(dealt>0&&victim.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")NatureDragonArmor(victim);if(owner==null&&victim.hp>0&&Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0) is Hut feedbackTower)foreach(string id in Lines[feedbackTower.kind].abilities){var cfg=Abilities[id];if((string)cfg?["kind"]=="feedback"){float drained=Mathf.Min(victim.mana,F(cfg,"power"));victim.mana-=drained;DamageUnit(victim,drained*F(cfg,"ratio",1),team);}}if(victim.hp>0&&stun>0){victim.stun=Mathf.Max(victim.stun,stun);PulseAt(victim.position,1,Color.yellow,"Оглушение");}
-            if(pepeHit&&owner.hp>0)PepeWeaponHit(owner,victim,w);
             if(passives&&owner!=null&&dealt>0&&victim.hp>0)BlackHandHit(owner,victim);
+            if(pepeHit&&owner.hp>0)PepeWeaponHit(owner,victim,w);
             if(passives){CentaurAfterWeapon(owner,victim,dealt);var nativeTower=owner==null?Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0):null;NerubAfterWeapon(owner,nativeTower,victim,dealt);PandaAfterWeapon(owner,nativeTower,victim);ElementalAfterWeapon(owner,dealt);}ElementalTowerHit(ownerId,team,victim,dealt);UndeadWeaponHit(owner,victim,dealt,w);MechTowerHit(ownerId,team,victim,dealt);NorthernAfterWeapon(ownerId,victim,w);if(owner!=null&&owner.hp>0&&passives){OnHit(owner,victim,dealt,w);if(w.type=="normal"&&victim.auraThorns>0)DamageUnit(owner,dealt*victim.auraThorns,victim.team,"magic",true,false,victim);if(w.type=="normal")foreach(var id in victim.abilities){var cfg=Abilities[id];if((string)cfg?["kind"]=="spiked"&&F(cfg,"reflect")>0){DamageUnit(owner,dealt*F(cfg,"reflect")+F(cfg,"bonus"),victim.team,"magic",true,false,victim);SpikedHits++;}}}else if(victim.hp>0&&Huts.FirstOrDefault(h=>h.id==ownerId&&h.hp>0&&h.paid) is Hut tower&&Lines[tower.kind].abilities.Contains("A020")&&Valid(victim,team,Abilities["A020"],false))ApplyEffect(victim,"A020",team);
         } else {
-            Vector2 center=TargetPosition(target,team);if(w.type=="normal")BattleAudio.For(this)?.Contact(owner!=null?Lines[owner.kind].unit:null,null,true,center);float elementalBefore=target==-1?CastleHp[1-team]:FindHut(target)?.hp??0;
+            if(target==-1&&ChoirCastleEvades(1-team))return;
             if(Aspects[team]==1&&(handProjectile||owner!=null&&owner.team==team&&HandFighter(Lines[owner.kind])))amount*=1.15f;
+            Vector2 center=TargetPosition(target,team);if(w.type=="normal")BattleAudio.For(this)?.Contact(owner!=null?Lines[owner.kind].unit:null,null,true,center);float elementalBefore=target==-1?CastleHp[1-team]:FindHut(target)?.hp??0;
             if(owner!=null)foreach(var id in owner.abilities)if((string)Abilities[id]?["kind"]=="demolish")amount*=F(Abilities[id],"multiplier",1);if(target==-1){if(owner!=null&&passives)UndeadStructureHit(owner,target);DamageCastle(1-team,amount,w.attack);}else {var hut=FindHut(target);if(hut!=null&&owner!=null&&passives)UndeadStructureHit(owner,target);DamageHut(hut,amount,w.attack,team);if(hut!=null&&hut.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")hut.dragonArmorRank=Mathf.Min(3,hut.dragonArmorRank+1);}
             if(owner!=null&&owner.hp>0&&passives){ElementalStructureHit(owner,target,elementalBefore-(target==-1?CastleHp[1-team]:FindHut(target)?.hp??0));CorruptedStructureHit(owner,target);NorthernStructureHit(owner,target);Pulverize(owner,center,w);if(Lines[owner.kind].unit=="n02B")owner.abilities.Remove("A0C8");}
         }
     }
     void OnHit(Unit owner,Unit target,float dealt,Weapon w) {
+        if(FuneralChoir&&dealt>0)ChoirOnHit(owner,target);
         Pulverize(owner,target.position,w);NatureOnHit(owner,target);
         using(var snapshot035_4=SimulationBuffers035.Take(owner.abilities))foreach(var id in snapshot035_4) {
             var cfg=Abilities[id];string kind=(string)cfg?["kind"];

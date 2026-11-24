@@ -80,7 +80,8 @@ def ranking(connection, challenge=CHALLENGE):
 def store(payload):
     race = payload.get("race")
     elapsed = payload.get("time_ms")
-    if payload.get("challenge") != CHALLENGE:
+    challenge = payload.get("challenge")
+    if challenge not in (CHALLENGE, "mythic_funeral_choir"):
         raise RequestError(400, "unknown_challenge")
     if type(race) is not int or not 0 <= race < 18 or type(elapsed) is not int or not 1000 <= elapsed <= 86400000:
         raise RequestError(400, "invalid_result")
@@ -105,15 +106,15 @@ def store(payload):
                VALUES(?,?,?,?,?,strftime('%Y-%m-%dT%H:%M:%fZ','now'))
                ON CONFLICT(challenge,player,race) DO UPDATE SET nickname=excluded.nickname,
                  achieved_at=CASE WHEN excluded.time_ms<times.time_ms THEN excluded.achieved_at ELSE times.achieved_at END,
-                 time_ms=MIN(times.time_ms,excluded.time_ms)""", (CHALLENGE, player, race, name, elapsed)
+                 time_ms=MIN(times.time_ms,excluded.time_ms)""", (challenge, player, race, name, elapsed)
         )
         position = connection.execute(
             """WITH ranked AS (
                    SELECT player,race,ROW_NUMBER() OVER (ORDER BY time_ms,achieved_at,player,race) AS place
                    FROM times WHERE challenge=?
-               ) SELECT place FROM ranked WHERE player=? AND race=?""", (CHALLENGE, player, race)
+               ) SELECT place FROM ranked WHERE player=? AND race=?""", (challenge, player, race)
         ).fetchone()[0]
-        return {"ok": True, "entries": ranking(connection), "place": position}
+        return {"ok": True, "challenge": challenge, "entries": ranking(connection, challenge), "place": position}
 
 
 class Handler(BaseHTTPRequestHandler):

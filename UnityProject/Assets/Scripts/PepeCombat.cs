@@ -77,7 +77,7 @@ public sealed partial class HumanMatch {
     }
 
     float PepeEvasion(Unit unit) => unit.abilities.Contains("PEva") && Flying(unit)
-        ? F(Abilities["PEva"], "chance") : 0;
+        ? F(Ranked(unit, "PEva"), "chance") : 0;
 
     float PepeWeaponBonus(Unit owner, Unit target, Weapon weapon) {
         string id = null;
@@ -88,7 +88,7 @@ public sealed partial class HumanMatch {
         else if (owner.abilities.Contains("PDiv") && PepeGround(target, owner.team) && PepeHasMark(target, owner.team))
             id = "PDiv";
         if (id == null || !PepeReady(owner.spellTimers, id)) return 0;
-        var cfg = Abilities[id];
+        var cfg = Ranked(owner, id);
         owner.spellTimers[id] = F(cfg, "cd");
         PulseAt(target.position, 1.45f, ReedGreen, "", .55f, "pepe:"+id,target.id);
         return F(cfg, "power");
@@ -168,7 +168,7 @@ public sealed partial class HumanMatch {
         var cfg = Abilities[id];
         float mana = F(cfg, "mana");
         if (building.mana < mana) return;
-        var nearby = PepeInRange(building.position, F(cfg, "area"));
+        IEnumerable<Unit> nearby = (bool?)cfg["global"] == true ? Units : PepeInRange(building.position, F(cfg, "area"));
         int count = (int)F(cfg, "count");
         string name = (string)cfg["name"];
         Vector2 center = building.position;

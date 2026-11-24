@@ -15,7 +15,7 @@ public sealed partial class PcGame {
         var data=JObject.Parse(asset.text);
         ChallengeCatalog034.Extend(data);
         ChallengeCampaign038.Extend(data);
-        data["mythic"]=new JArray(WinterTrialDefinition());
+        data["mythic"]=new JArray(WinterTrialDefinition(),ChoirDefinition());
         var items=(JArray)data["items"];
         items.Add(new JObject{["id"]=MemePackId,["kind"]="stickers",["title"]="Рофлопак · местные легенды",["description"]="4 стикера: наги, гриб, вышки и Терминатор. Для личного чата и сетевого боя.",["cost"]=300});
         WorkshopCatalog038.Extend(items);
@@ -96,6 +96,7 @@ public sealed partial class PcGame {
     }
     void DrawChallengeHud(){
         if(activeChallenge==null)return;
+        if(match.FuneralChoir){DrawChoirHud();return;}
         if(match.EternalWinter){DrawWinterHud();return;}
         var strip=new Rect(210,36,661,55);
         Fill(strip,new Color(.015f,.025f,.03f,.89f));

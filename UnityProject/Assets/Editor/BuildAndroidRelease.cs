@@ -54,6 +54,7 @@ public static class BuildAndroidRelease {
     public static void BuildUnity045()=>BuildSigned("0.45.0",42);
     public static void BuildBattleSocial0451()=>BuildSigned("0.45.1",43);
     public static void BuildMythic046()=>BuildSigned("0.46.0",44);
+    public static void BuildFuneralChoir047()=>BuildSigned("0.47.0",47);
     public static void BuildWinterFront0462()=>BuildSigned("0.46.2",46);
     public static void BuildWinterBoss0461()=>BuildSigned("0.46.1",45);
     public static void BuildSquad0442()=>BuildSigned("0.44.2",41);

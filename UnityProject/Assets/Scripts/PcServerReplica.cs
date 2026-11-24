@@ -77,7 +77,7 @@ public sealed class PcServerReplica {
             int team=(int?)row["team"]??-1;if(team<0||team>1)continue;int local=Team(team);int kind=world.Kind((string)row["line_raw"]??"");
             if(kind<0){unknownBuildings++;continue;}int id=(int?)row["id"]??0;if(id<=0)continue;
             Vector2 p=Point(row["p"]);int x=Mathf.RoundToInt((p.x*30-(local==0?-6080:2112))/128);float wy=p.y*30;int y=wy<=-448?Mathf.RoundToInt((wy+1920)/128):12+Mathf.RoundToInt((wy-512)/128);
-            nextHuts.Add(new HumanMatch.Hut { id=id,team=local,kind=kind,x=x,y=y,position=p,paid=(bool?)row["paid"]??true,started=(bool?)row["started"]??true,buildLeft=Number(row["build_left"]),spent=(int?)row["spent"]??0,baseCost=(int?)row["cost"]??0,hp=Part(row,"hp",0),maxHp=Part(row,"hp",1,1),mana=Part(row,"m",0),income=Number(row["income"]),spawnLeft=Number(row["timer"]),paused=(bool?)row["paused"]??false,attackSerial=Serial(row) });
+            nextHuts.Add(new HumanMatch.Hut { id=id,team=local,kind=kind,x=x,y=y,position=p,paid=(bool?)row["paid"]??true,started=(bool?)row["started"]??true,buildLeft=Number(row["build_left"]),spent=(int?)row["spent"]??0,baseCost=(int?)row["cost"]??0,hp=Part(row,"hp",0),maxHp=Part(row,"hp",1,1),mana=Part(row,"m",0),income=Number(row["income"]),spawnLeft=Number(row["timer"]),paused=(bool?)row["paused"]??false,attackPoseLeft=Pose(row)=="Attack"?1f:0f,attackSerial=Serial(row) });
         }
         world.Units.Clear();world.Units.AddRange(nextUnits);world.Huts.Clear();world.Huts.AddRange(nextHuts);
         for(int serverTeam=0;serverTeam<2;serverTeam++) {

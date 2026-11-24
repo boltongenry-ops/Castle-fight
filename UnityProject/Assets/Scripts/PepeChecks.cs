@@ -75,6 +75,12 @@ public sealed partial class HumanMatch {
         check(game.PepeMark(victim,0)&&game.PepeEvasion(rider)>.07f,"Flying rider has its own evasion");
         Hit(rider,victim);
         check(rider.spellTimers.ContainsKey("PDiv")&&game.PepeHasMark(victim,0),"Rider attack preserves the mark");
+        var eliteRider=Add("pB17",0,-7);
+        check(eliteRider.abilityLevels["PDiv"]==2&&eliteRider.abilityLevels["PEva"]==2,
+            "Elite dragonfly guard uses rank two PDiv and PEva");
+        check(game.PepeEvasion(eliteRider)>.11f,"Elite dragonfly guard evasion is twelve percent");
+        float eliteBonus=game.PepeWeaponBonus(eliteRider,victim,game.Lines[eliteRider.kind].weapons[0]);
+        check(Mathf.Abs(eliteBonus-27)<.01f,"Elite dragonfly guard low pass adds twenty-seven");
 
         var tadpole = Add("pB06",0,-1);
         Hit(tadpole,victim);
@@ -102,8 +108,20 @@ public sealed partial class HumanMatch {
             game.TickBuilding(hut,.05f);
             check(hut.mana<48 && hut.spellTimers.Count==1,"Building casts automatically "+id);
         }
-        var tower=game.Lines[game.Kind("pB10")].buildingWeapons.Single();
-        check(tower.air&&!tower.ground&&!tower.structure,"Reed tower targets air only");
+        var farBell=new HumanMatch(pepe,250,1,0,-1,humans);
+        var farAllyA=farBell.Spawn(0,farBell.Kind("pB31"),new Vector2(100,0));
+        var farAllyB=farBell.Spawn(0,farBell.Kind("pB31"),new Vector2(100,2));
+        var farEnemy=farBell.Spawn(1,farBell.Kind("h000"),new Vector2(120,0));
+        farAllyA.combatTarget=farAllyB.combatTarget=farEnemy.id;
+        var farBellHut=new Hut{team=0,kind=farBell.Kind("pB09"),position=new Vector2(-160,0),mana=48,paid=true,hp=1000,maxHp=1000};
+        farBell.Huts.Add(farBellHut);farBell.TickBuilding(farBellHut,.05f);
+        check(farAllyA.effects.Any(e=>e.id=="PShd"&&e.power>0)&&
+            farAllyB.effects.Any(e=>e.id=="PShd"&&e.power>0)&&farBellHut.mana==24,
+            "Bell shields fighting allies anywhere on the map");
+        var tower=game.Lines[game.Kind("pB10")].buildingWeapons;
+        check(tower.Length==2&&tower[0].air&&!tower[0].ground&&tower[1].ground&&!tower[1].air&&
+            tower.All(w=>!w.structure),"Reed tower has separate air and ground weapons");
+        check(tower[0].damage>tower[1].damage,"Air projectile keeps its damage advantage");
         var mirrored=new HumanMatch(pepe);
         mirrored.Wood[0]=2000;mirrored.Gold[0]=2000;
         check(mirrored.TryBuild(0,mirrored.Kind("pB09"),15,15,out _) &&

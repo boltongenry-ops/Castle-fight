@@ -52,7 +52,8 @@ public sealed partial class PcGame {
 
     void DrawMythicRacePicker(){
         var card=new Rect(42,176,1196,500);
-        DrawWinterPainting(card,true);
+        bool choir=(string)mythicSelection["id"]==HumanMatch.ChoirTrial;
+        if(choir)DrawChoirPainting(card);else DrawWinterPainting(card,true);
         Fill(new Rect(42,176,641,500),new Color(.025f,.047f,.065f,.99f));
         WinterGradient(new Rect(683,176,282,500),true,new Color(.025f,.047f,.065f,.98f));
         WinterGradient(new Rect(682,337,556,339),false,new Color(.019f,.035f,.052f,.99f));
@@ -73,11 +74,16 @@ public sealed partial class PcGame {
         }
         const float x=718,width=493;
         Fill(new Rect(x-12,389,width+22,217),new Color(.023f,.042f,.061f,.91f));
+        if(choir){
+            Text(x,389,width,41,"Верховный некромант",heading);
+            FitBossText(new Rect(x,436,width,155),(string)mythicSelection["description"],new GUIStyle(small),18,true);
+        }else{
         Text(x,389,width,41,"Ледяная королева",heading);
         Text(x,431,width,32,"Движение −50%  •  Скорость атаки −30%",label);
         Text(x,468,width,28,"Оковы одного бойца каждые 10 с",label);
         Text(x,501,width,28,"Стадия II · "+HumanMatch.WinterPhaseTwoHp+" HP замка босса",label);
         Text(x,534,width,57,"Павшие в оковах переходят к боссу.\nСеверяне невосприимчивы к метели и оковам.",small);
+        }
         if(LobbyButton("mythic.begin",new Rect(x,609,285,49),"Начать испытание",true)){
             var trial=mythicSelection;
             mythicSelection=null;
@@ -97,13 +103,18 @@ public sealed partial class PcGame {
             }
         }
         FrameWinterOpening();
+        GatherRitualGround(WinterQueenFocus());
+        Debug.Log("CF_WINTER_INTRO queen="+(winterQueen!=null)+" ground="+winterGround.Length);
+    }
+
+    void GatherRitualGround(Vector3 origin){
         var terrainRoot=controls.sceneryRoot.transform.parent;
         winterGround=terrainRoot.Cast<Transform>().Where(t=>t.name.StartsWith("Terrain",StringComparison.Ordinal))
             .SelectMany(t=>t.GetComponentsInChildren<MeshRenderer>())
             .Where(r=>r.name.StartsWith("Ground ",StringComparison.Ordinal)&&r.sharedMaterial?.mainTexture!=null)
             .OrderByDescending(r=>r.bounds.center.x).ToArray();
         winterGroundMaterials=new Material[winterGround.Length];
-        winterOrigin=WinterQueenFocus();
+        winterOrigin=origin;
         winterRadius=0;
         for(int i=0;i<winterGround.Length;i++){
             var renderer=winterGround[i];
@@ -114,11 +125,16 @@ public sealed partial class PcGame {
             winterRadius=Mathf.Max(winterRadius,Mathf.Sqrt(dx*dx+dz*dz)+5);
         }
         winterGroundIndex=0;
-        Debug.Log("CF_WINTER_INTRO queen="+(winterQueen!=null)+" ground="+winterGround.Length);
+
     }
 
     IEnumerator PrepareWinterPresentation(int generation){
-        // The versus screen keeps the camera and the match clock paused.
+        yield return PrepareRitualGround(generation,false);
+        if(generation!=versusSerial)yield break;
+        yield return PrepareWinterStorm(generation);
+    }
+
+    IEnumerator PrepareRitualGround(int generation,bool blight){
         AssetBundle winterShaderBundle=null;
         var shader=Resources.Load<Shader>("WinterBattle/WinterFront");
         if(!shader&&!Application.isMobilePlatform){
@@ -131,7 +147,7 @@ public sealed partial class PcGame {
             var source=renderer.sharedMaterial.mainTexture;
             if(!source)continue;
             if(!winterAtlases.ContainsKey(source)){
-                winterAtlases.Add(source,FrostAtlas(source));
+                winterAtlases.Add(source,FrostAtlas(source,blight));
                 yield return null;
                 if(generation!=versusSerial)yield break;
             }
@@ -144,6 +160,9 @@ public sealed partial class PcGame {
             }
         }
         if(generation!=versusSerial)yield break;
+    }
+
+    IEnumerator PrepareWinterStorm(int generation){
         if(minimapTexture){
             winterMinimap=FrostAtlas(minimapTexture);
             yield return null;
@@ -213,6 +232,19 @@ public sealed partial class PcGame {
             if(winterQueen)winterQueen.Play("Spell",1,1);
         }
         float spread=Mathf.InverseLerp(WinterStormCue,WinterStormCue+3.2f,winterIntroAge);
+        SpreadRitualGround(spread);
+        FrameWinterShot();
+        RenderMatch();
+        if(winterIntroAge<WinterIntroDuration||winterGroundIndex<winterGround.Length)return;
+        winterIntro=false;accumulator=0;
+        if(winterQueen){winterQueen.gameObject.SetActive(false);Destroy(winterQueen.gameObject);}
+        winterQueen=null;
+        controls.FocusWorld(World(match.Builders[0].position),40);
+        UpdateFog(true);
+        Debug.Log("CF_WINTER_BATTLE elapsed="+match.Elapsed+" snow="+winterOverrides.Count);
+    }
+
+    void SpreadRitualGround(float spread){
         if(spread>0&&winterGroundIndex<winterGround.Length){
             if(spread>=1){
                 AdvanceWinterGround(winterGround.Length);
@@ -228,15 +260,6 @@ public sealed partial class PcGame {
                     Mathf.Lerp(-5,winterRadius,spread*spread),2.4f));
             }
         }
-        FrameWinterShot();
-        RenderMatch();
-        if(winterIntroAge<WinterIntroDuration||winterGroundIndex<winterGround.Length)return;
-        winterIntro=false;accumulator=0;
-        if(winterQueen){winterQueen.gameObject.SetActive(false);Destroy(winterQueen.gameObject);}
-        winterQueen=null;
-        controls.FocusWorld(World(match.Builders[0].position),40);
-        UpdateFog(true);
-        Debug.Log("CF_WINTER_BATTLE elapsed="+match.Elapsed+" snow="+winterOverrides.Count);
     }
 
     void DrawWinterIntro(){
@@ -248,11 +271,10 @@ public sealed partial class PcGame {
     }
 
     void DrawWinterHud(){
-        StoneFrame(WinterHud);
-        Text(WinterHud.x+11,WinterHud.y+5,302,20,match.WinterPhaseTwo?"Вечная зима · Стадия II":"Вечная зима",hudText);
-        string status=match.TeamNorthern[0]?"Северяне · иммунитет":
-            "Ледяные оковы через "+Mathf.CeilToInt(match.WinterChainIn)+" с";
-        Text(WinterHud.x+11,WinterHud.y+26,302,20,status,new GUIStyle(hudSmall){normal={textColor=WinterBlue}});
+        bool immune=match.TeamNorthern[0];
+        DrawBossMeter(true,match.WinterPhaseTwo?"Вечная зима · II":"Вечная зима",
+            immune?"Северяне · иммунитет":"До ледяных оков",match.WinterChainIn,immune?0:10);
+
     }
 
     void RenderWinterWind(Vector3 center,bool falling){
@@ -419,7 +441,7 @@ public sealed partial class PcGame {
         }
     }
 
-    static Texture2D FrostAtlas(Texture source){
+    static Texture2D FrostAtlas(Texture source,bool blight=false){
         float scale=Mathf.Min(1,512f/Mathf.Max(source.width,source.height));
         int w=Mathf.Max(1,Mathf.RoundToInt(source.width*scale)),h=Mathf.Max(1,Mathf.RoundToInt(source.height*scale));
         var rt=RenderTexture.GetTemporary(w,h,0,RenderTextureFormat.ARGB32,RenderTextureReadWrite.sRGB);
@@ -433,6 +455,12 @@ public sealed partial class PcGame {
         for(int i=0;i<pixels.Length;i++){
             var pixel=pixels[i];
             float detail=(pixel.r*.213f+pixel.g*.715f+pixel.b*.072f)/255f;
+            if(blight){
+                float grass=Mathf.Clamp01((pixel.g-Mathf.Max(pixel.r,pixel.b)+8)/48f);
+                var ash=new Color(detail*.88f+.045f,detail*.50f+.023f,detail*.28f+.013f,pixel.a/255f);
+                pixels[i]=Color.Lerp((Color)pixel,ash,.23f+.77f*grass);
+                continue;
+            }
             float snow=Mathf.Lerp(.34f,.79f,Mathf.Pow(detail,.75f));
             pixels[i]=new Color(snow*.91f,snow*.97f,snow*1.045f,pixel.a/255f);
         }

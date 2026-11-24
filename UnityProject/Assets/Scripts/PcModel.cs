@@ -21,6 +21,20 @@ public sealed class PcModel : MonoBehaviour {
             default:return 1f;
         }
     }
+    Material soulHalo;
+    void PrepareSoulTower(){
+        // The classic ziggurat carries its radial glow on Plane03/Plane05 (surface 3).
+        var skin=animatedRoot.GetComponentInChildren<SkinnedMeshRenderer>();
+        if(!skin)return;
+        var materials=skin.sharedMaterials;
+        if(materials.Length<=3||!materials[3]||!materials[3].HasProperty("_DstBlend"))return;
+        soulHalo=new Material(materials[3]);
+        soulHalo.SetInt("_DstBlend",(int)UnityEngine.Rendering.BlendMode.One);
+        soulHalo.SetInt("_ZWrite",0);
+        materials[3]=soulHalo;
+        skin.sharedMaterials=materials;
+    }
+    void OnDestroy(){if(soulHalo)Destroy(soulHalo);}
     void Awake() {
         float rosterScale=RosterScale(raw);
         if(rosterScale!=1f){transform.localScale*=rosterScale;godotHeight*=rosterScale;}
@@ -32,6 +46,7 @@ public sealed class PcModel : MonoBehaviour {
         if(reforged)foreach(var skin in GetComponentsInChildren<SkinnedMeshRenderer>())skin.updateWhenOffscreen=false;
         if(appearanceKey!="pepe"&&appearanceKey!="blackhand"){appearance=animatedRoot.AddComponent<NativeAppearance>();appearance.Configure(string.IsNullOrEmpty(appearanceKey)?raw:appearanceKey,player);}
         if(!reforged&&ClassicWispBody040.IsWisp(raw))gameObject.AddComponent<ClassicWispBody040>();
+        if(raw=="h01O"&&!reforged)PrepareSoulTower();
         Play("Stand");
     }
     void OnDisable()=>restorePose=true;

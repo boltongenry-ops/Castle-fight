@@ -32,6 +32,7 @@ public sealed partial class PcGame {
     }
 
     void DisposeWinterArtwork(){
+        if(choirPainting)Destroy(choirPainting);if(iceSeal)Destroy(iceSeal);if(choirBell)Destroy(choirBell);
         ReleaseWinterArtwork();
         if(winterShadeX)Destroy(winterShadeX);
         if(winterShadeY)Destroy(winterShadeY);
@@ -70,11 +71,11 @@ public sealed partial class PcGame {
     void DrawMythicTrialRow(JObject row,Rect tile){
         string id=(string)row["id"];
         if(id==HumanMatch.WinterTrial)DrawWinterPainting(tile,true);
-        else Fill(tile,WinterInk);
+        else if(id==HumanMatch.ChoirTrial)DrawChoirPainting(tile);else Fill(tile,WinterInk);
         WinterGradient(tile,true,new Color(.01f,.02f,.03f,.99f));
         Border(tile,id==selectedMythicId?WinterBlue:WinterLine,id==selectedMythicId?2:1);
         Text(tile.x+14,tile.y+3,tile.width-125,32,(string)row["title"],raceTitleStyle);
-        Text(tile.x+15,tile.y+36,tile.width-125,28,(string)(row["summary"]??row["description"]),small);
+        FitBossText(new Rect(tile.x+15,tile.y+36,tile.width-125,24),(string)(row["summary"]??row["description"]),new GUIStyle(small),16);
         var play=new Rect(tile.xMax-103,tile.y+12,92,tile.height-24);
         if(Button("challenge."+id,new Rect(tile.x,tile.y,play.x-tile.x,tile.height),"",false,GUIStyle.none))
             SelectMythicTrial(id);
@@ -89,7 +90,7 @@ public sealed partial class PcGame {
             if(winterVersusFrame>=0)winterVersusReveal+=Mathf.Min(.07f,Time.unscaledDeltaTime);
             winterVersusFrame=Time.frameCount;
         }
-        DrawWinterPainting(new Rect(0,0,1280,720),true);
+        if(choirVersus)DrawChoirPainting(new Rect(0,0,1280,720));else DrawWinterPainting(new Rect(0,0,1280,720),true);
         WinterGradient(new Rect(0,0,565,637),true,new Color(.014f,.025f,.041f,.93f));
         WinterGradient(new Rect(0,464,1280,175),false,new Color(.012f,.022f,.039f,.98f));
         var portrait=new Rect(52,177,233,302);
@@ -100,8 +101,8 @@ public sealed partial class PcGame {
         Border(portrait,WinterLine,1);
         Text(45,495,350,44,VersusNames[versusA],new GUIStyle(label){wordWrap=true,fontSize=23});
         Text(294,278,134,89,"VS",new GUIStyle(title){fontSize=62,alignment=TextAnchor.MiddleCenter,normal={textColor=WinterBlue}});
-        Text(588,495,570,65,"Вечная зима",new GUIStyle(raceTitleStyle){fontSize=48,normal={textColor=Color.white}});
-        Text(594,570,605,44,"Ледяная королева · Северные королевства",label);
+        Text(588,495,570,65,choirVersus?"Погребальный хор":"Вечная зима",new GUIStyle(raceTitleStyle){fontSize=48,normal={textColor=Color.white}});
+        Text(594,570,605,44,choirVersus?"Верховный некромант · Нежить":"Ледяная королева · Северные королевства",label);
         Fill(new Rect(0,637,1280,83),new Color(.009f,.017f,.029f,.98f));
         DrawVersusLoading(WinterBlue);
         float fade=1-Mathf.SmoothStep(0,1,Mathf.Clamp01(winterVersusReveal/.8f));

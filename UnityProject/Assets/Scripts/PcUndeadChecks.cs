@@ -11,7 +11,25 @@ public sealed partial class PcGame {
     HumanMatch.Unit UndeadDummy(int team,Vector2 at,string raw="h000"){var u=MechDummy(team,at,raw);u.stun=0;return u;}
     void UndeadBody(string raw,Vector2 at,int team=1){var u=UndeadUnit(team,raw,at);u.hp=0;u.deathProcessed=true;match.Corpses.Add(new HumanMatch.Corpse{unit=u,left=90});}
     IEnumerator ExerciseUndeadOnly() {
-        string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"undead-validation"));Directory.CreateDirectory(folder);aspectsOn=false;MainMenu();botRaceChoice=0;yield return Action("main.play");yield return Action("setup.undead");
+        string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"undead-validation"));Directory.CreateDirectory(folder);
+        if(BattleLab.Arg("--choir")=="1"){yield return ExerciseChoir(folder);yield break;}
+        if(BattleLab.Arg("--soul-tower")=="1"){
+            raceChoice=7;botRaceChoice=0;aspectsOn=false;testHoldAuthority=true;
+            BeginOfflineVersus();
+            yield return RecoveryWait(()=>match!=null&&!versusActive,"Undead tower battle ready",40);
+            var hut=ChaosHut(0,"h01O",new Vector2(-148,32));
+            UndeadDummy(1,hut.position+Vector2.right*7);
+            Tick(.05f);RenderMatch();
+            var model=huts[hut.id];
+            var animation=model.animatedRoot.GetComponent<Animation>();
+            var material=model.GetComponentInChildren<SkinnedMeshRenderer>().sharedMaterials[3];
+            Check(material.GetInt("_DstBlend")==1&&material.GetInt("_ZWrite")==0,"Soul tower halo adds light without an opaque rectangle");
+            Check(hut.attackSerial>0&&animation.IsPlaying("Attack Upgrade First")&&animation["Attack Upgrade First"].speed>1,"Soul tower plays the native gem attack on a real shot");
+            controls.FocusWorld(World(hut.position),20);
+            yield return Shot(folder,"soul-tower-attack");
+            Debug.Log("CF_SOUL_TOWER failures="+testFailures);Application.Quit(testFailures==0?0:1);yield break;
+        }
+        aspectsOn=false;MainMenu();botRaceChoice=0;yield return Action("main.play");yield return Action("setup.undead");
         Check(raceChoice==7&&undeadPack&&AllRaceIds[RaceOfUnity(7)]=="undead","Undead has its own source menu card");yield return Shot(folder,"01-undead-selection");startGold=1000;yield return Action("setup.start");testHoldAuthority=true;
         Check(match.TeamUndead[0]&&match.TeamHuman[1]&&!match.TeamHuman[0]&&builders[0].raw=="h018","Undead worker and mixed offline race identities");Check(match.BaseKinds.Length==11&&undeadPack.buildingIcons.Length==26&&AspectCount(7)==2,"Seventeen native rows plus nine permanent replacement actors");Check(ContentResources.LoadAll<GameObject>("UndeadFx").Length==64&&ContentResources.LoadAll<GameObject>("UndeadFx").Any(v=>v.GetComponentsInChildren<ParticleSystem>().Length>0),"Thirty-two classic effect prefabs per side include the source particle layers");Check(CommandIcon(0)==undeadPack.builderIcon&&CommandIcon(6)==undeadPack.buildIcon,"Undead builder and build icons resolve");
         Check(new[]{"A01Y","A05L","A085","A01Q","A05U","A033","A08X","A086","A01O","A05R"}.All(id=>AbilityArt(id)),"Undead active skills and passives use source icons on either side");

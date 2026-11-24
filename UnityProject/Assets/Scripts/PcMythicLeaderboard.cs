@@ -10,7 +10,7 @@ namespace CastleFight {
 public sealed partial class PcGame {
     sealed class MythicScore {
         public int race, timeMs;
-        public string token;
+        public string token,challenge;
     }
 
     const string MythicLeaderboardPath="/mythic-leaderboard";
@@ -32,10 +32,10 @@ public sealed partial class PcGame {
     }
 
     void CaptureMythicScore(){
-        if(!match.EternalWinter||!match.ChallengeVictoryEligible||MythicLeaderboardUrl().Length==0)return;
+        if(!(match.EternalWinter||match.FuneralChoir)||!match.ChallengeVictoryEligible||MythicLeaderboardUrl().Length==0)return;
         string token=!networkGuest&&NetworkAccountStore.SameService(networkSessionEndpoint,NetworkAccountStore.UnityEndpoint)?
             networkSessionToken:"";
-        pendingMythicScore=new MythicScore{race=matchRace,timeMs=Mathf.Max(1000,Mathf.RoundToInt(match.Elapsed*1000)),token=token};
+        pendingMythicScore=new MythicScore{challenge=(string)activeChallenge["id"],race=matchRace,timeMs=Mathf.Max(1000,Mathf.RoundToInt(match.Elapsed*1000)),token=token};
         mythicPlace=0;mythicScoreError="";
         mythicNickname=testing?"":PlayerPrefs.GetString(MythicGuestName,"");
         if(string.IsNullOrEmpty(token))mythicGuestPrompt=true;
@@ -71,7 +71,7 @@ public sealed partial class PcGame {
             yield return request.SendWebRequest();
             if(generation!=mythicRequestGeneration)yield break;
             var reply=MythicReply(request);
-            if(request.result==UnityWebRequest.Result.Success&&reply?["entries"] is JArray entries)
+            if(request.result==UnityWebRequest.Result.Success&&(string)reply?["challenge"]==selectedMythicId&&reply?["entries"] is JArray entries)
                 mythicLeaderboard=entries;
             else mythicBoardError="Таблица временно недоступна";
         }
@@ -83,7 +83,7 @@ public sealed partial class PcGame {
         string url=MythicLeaderboardUrl();
         if(string.IsNullOrEmpty(url))yield break;
         mythicScoreError="";
-        JObject payload=new JObject{["challenge"]=HumanMatch.WinterTrial,["race"]=score.race,["time_ms"]=score.timeMs};
+        JObject payload=new JObject{["challenge"]=score.challenge,["race"]=score.race,["time_ms"]=score.timeMs};
         if(!string.IsNullOrEmpty(score.token))payload["token"]=score.token;
         else{
             string name=string.Join(" ",mythicNickname.Trim().Split((char[])null,StringSplitOptions.RemoveEmptyEntries));
@@ -110,10 +110,10 @@ public sealed partial class PcGame {
             request.timeout=10;
             yield return request.SendWebRequest();
             var reply=MythicReply(request);
-            if(request.result==UnityWebRequest.Result.Success&&(bool?)reply?["ok"]==true&&reply["entries"] is JArray entries){
-                if(selectedMythicId==HumanMatch.WinterTrial){mythicLeaderboard=entries;mythicBoardError="";}
+            if(request.result==UnityWebRequest.Result.Success&&(bool?)reply?["ok"]==true&&(string)reply["challenge"]==score.challenge&&reply["entries"] is JArray entries){
+                if(selectedMythicId==score.challenge){mythicLeaderboard=entries;mythicBoardError="";}
                 if(pendingMythicScore==score){
-                    mythicPlace=selectedMythicId==HumanMatch.WinterTrial?((int?)reply["place"]??0):0;
+                    mythicPlace=selectedMythicId==score.challenge?((int?)reply["place"]??0):0;
                     pendingMythicScore=null;
                     mythicGuestPrompt=false;
                 }
@@ -207,7 +207,7 @@ public sealed partial class PcGame {
             Text(822,610,182,30,(mythicBoardPage+1)+" / "+pages,small);
             if(mythicBoardPage+1<pages&&LobbyButton("mythic.board.next",new Rect(1098,610,118,30),"Вперёд"))mythicBoardPage++;
         }
-        if(selectedMythicId==HumanMatch.WinterTrial&&pendingMythicScore!=null&&LobbyButton("mythic.board.submit",new Rect(689,642,526,33),
+        if(pendingMythicScore!=null&&selectedMythicId==pendingMythicScore.challenge&&LobbyButton("mythic.board.submit",new Rect(689,642,526,33),
             mythicScoreSending?"Сохраняем…":"Записать своё время"))SubmitPendingMythicScore();
         else if(mythicPlace>0)Text(689,641,526,34,"Ваше место · "+mythicPlace,small);
         else if(mythicBoardError!=""&&mythicLeaderboard.Count>0)Text(689,641,526,34,mythicBoardError,small);

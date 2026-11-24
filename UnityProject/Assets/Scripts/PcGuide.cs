@@ -78,6 +78,11 @@ public sealed partial class PcGame {
         guideDescription=GuideEntryText();
     }
     int GuideInvestment(int kind,HashSet<int> seen=null){seen=seen??new HashSet<int>();if(!seen.Add(kind))return 0;var line=guideAuthority.Lines[kind];int parent=Array.FindIndex(guideAuthority.Lines,l=>l.upgrades.Contains(line.building));return line.cost+(parent>=0?GuideInvestment(parent,seen):0);}
+    JToken GuideSkillConfig(int kind,string id,JToken cfg){
+        var ranks=cfg?["ranks"] as JArray;if(ranks==null||ranks.Count==0)return cfg;
+        int level=(int?)guideAuthority.Lines[kind].stats["ability_ranks"]?[id]??1;
+        return ranks[Mathf.Clamp(level-1,0,ranks.Count-1)];
+    }
     string GuideEntryText(){
         var line=guideAuthority.Lines[guideEntry];var actor=guideAuthority.Lines[GuideActorKind];var stats=guideUnit?actor.stats:line.buildingStats;var text=new StringBuilder();
         text.Append(guideUnit?actor.unitName:line.name).Append("\n\n");
@@ -89,7 +94,7 @@ public sealed partial class PcGame {
         if(line.slots>0)text.Append("\nЗанимает легендарное место");if(line.woodReward>0)text.Append("\nПри покупке: +").Append(line.woodReward).Append(" дерева");
         if(GuideUnitKinds(guideEntry).Length>0){var hut=new HumanMatch.Hut{kind=guideEntry,team=0,spent=GuideInvestment(guideEntry)};text.Append("\nВыпускает: ").Append(string.Join(" / ",GuideUnitKinds(guideEntry).Select(k=>guideAuthority.Lines[k].unitName))).Append("\nЦикл при полном вложении: ").Append(guideAuthority.Interval(hut).ToString("F1")).Append(" с");}
         var abilities=guideUnit?HumanMatch.Strings(stats["abilities"]):line.abilities;
-        foreach(string id in abilities.Distinct()){var cfg=guideAuthority.Abilities[id];if(cfg==null||(bool?)cfg["hide_card"]==true||!ContextAbilityVisible(guideUnit?actor.unit:line.building,id,cfg)||(string)cfg["kind"]=="marker"&&(bool?)cfg["card_description"]!=true)continue;string desc=ContextSkillTip(guideUnit?actor.unit:line.building,id,cfg).Trim();if(desc.Length>0)text.Append("\n\n").Append(desc);}
+        foreach(string id in abilities.Distinct()){var cfg=guideAuthority.Abilities[id];if(cfg==null||(bool?)cfg["hide_card"]==true||!ContextAbilityVisible(guideUnit?actor.unit:line.building,id,cfg)||(string)cfg["kind"]=="marker"&&(bool?)cfg["card_description"]!=true)continue;var shown=guideUnit?GuideSkillConfig(GuideActorKind,id,cfg):cfg;string desc=ContextSkillTip(guideUnit?actor.unit:line.building,id,shown).Trim();if(desc.Length>0)text.Append("\n\n").Append(desc);}
         return text.ToString();
     }
     void DrawGuide(){
