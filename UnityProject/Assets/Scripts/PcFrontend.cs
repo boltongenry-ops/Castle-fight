@@ -49,7 +49,13 @@ public sealed partial class PcGame {
     float versusReadyVisible;
     int versusReadyDrawFrame;
     Texture2D versusLeft,versusRight,versusLeftFallback,versusRightFallback;int versusA,versusB,versusSerial;float versusAt;bool versusActive,versusPrepared,versusNetwork;string versusNameA,versusNameB;
-    void DisposeVersusArt(){if(versusLeft&&versusA!=PepeContent.Race&&versusA!=BlackHand.Race)Destroy(versusLeft);if(versusRight&&versusB!=PepeContent.Race&&versusB!=BlackHand.Race)Destroy(versusRight);versusLeft=versusRight=versusLeftFallback=versusRightFallback=null;}
+    void DisposeVersusArt(){
+        if(versusLeft&&versusA!=PepeContent.Race&&versusA!=BlackHand.Race)Destroy(versusLeft);
+        if(versusRight&&versusB!=PepeContent.Race&&versusB!=BlackHand.Race)Destroy(versusRight);
+        if(versusRightFallback&&versusRightFallback!=versusLeftFallback)Destroy(versusRightFallback);
+        if(versusLeftFallback)Destroy(versusLeftFallback);
+        versusLeft=versusRight=versusLeftFallback=versusRightFallback=null;
+    }
     void CloseVersus(){
         versusSerial++;versusActive=false;versusPrepared=false;mobileRoundPrepared=false;
         if(MobileContent.Active)MobileContent.Current.VersusLoading=false;
@@ -69,9 +75,13 @@ public sealed partial class PcGame {
     }
 
     static Texture2D MobileVersusPicture(int race){
-        if(race==BlackHand.Race)return BlackHandUi.Versus();
-        if(race==PepeContent.Race)return PepeContent.Load<Texture2D>("Pepe/Versus-pepe");
-        return Resources.Load<Texture2D>("MobileVersus/"+VersusKeys[race]);
+        if(race==BlackHand.Race||race==PepeContent.Race)return null;
+        var preview=Resources.Load<TextAsset>("MobileVersus/"+VersusKeys[race]);
+        if(!preview)return null;
+        var portrait=new Texture2D(2,2,TextureFormat.RGB24,false);
+        if(portrait.LoadImage(preview.bytes,true))return portrait;
+        Destroy(portrait);
+        return null;
     }
 
     IEnumerator LoadVersusArt(int generation){
