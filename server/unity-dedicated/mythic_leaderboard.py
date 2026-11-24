@@ -69,10 +69,10 @@ def nickname(value):
     return value
 
 
-def ranking(connection):
+def ranking(connection, challenge=CHALLENGE):
     rows = connection.execute(
         """SELECT nickname, race, time_ms FROM times WHERE challenge=?
-           ORDER BY time_ms, achieved_at, player, race LIMIT 30""", (CHALLENGE,)
+           ORDER BY time_ms, achieved_at, player, race LIMIT 30""", (challenge,)
     )
     return [{**dict(row), "place": i} for i, row in enumerate(rows, 1)]
 
@@ -133,8 +133,10 @@ class Handler(BaseHTTPRequestHandler):
         if parse.urlsplit(self.path).path != ROUTE:
             self.reply(404, {"ok": False, "error": "not_found"})
             return
+        query = parse.parse_qs(parse.urlsplit(self.path).query)
+        challenge = query.get("challenge", [CHALLENGE])[0]
         with closing(connect()) as connection:
-            self.reply(200, {"ok": True, "entries": ranking(connection)})
+            self.reply(200, {"ok": True, "challenge": challenge, "entries": ranking(connection, challenge)})
 
     def do_POST(self):
         if parse.urlsplit(self.path).path != ROUTE:

@@ -32,9 +32,15 @@ public sealed partial class PcGame {
         new List<(MeshRenderer,MaterialPropertyBlock)>();
     MeshRenderer[] winterGround;
     int winterGroundIndex;
+    readonly Dictionary<Material,Material> winterFrontMaterials=new Dictionary<Material,Material>();
+    Material[] winterGroundMaterials;
+    Vector3 winterOrigin;
+    float winterRadius;
+    static readonly int WinterFrontId=Shader.PropertyToID("_CFWinterFront");
 
     static JObject WinterTrialDefinition()=>new JObject{
         ["id"]=HumanMatch.WinterTrial,["title"]="Вечная зима",["opponent"]="Northern Realms",
+        ["summary"]="Метель замедляет армию. Лёд сковывает бойцов.",
         ["description"]="Ледяная королева накрывает поле боя метелью. Ваши бойцы замедлены, а каждые 10 секунд одного сковывает лёд. При 2500 HP замка босса павшие в оковах переходят к Северянам.",
         ["start_gold"]=500,["difficulty"]=2,["reward"]=0,["xp"]=0
     };
@@ -96,18 +102,46 @@ public sealed partial class PcGame {
             .SelectMany(t=>t.GetComponentsInChildren<MeshRenderer>())
             .Where(r=>r.name.StartsWith("Ground ",StringComparison.Ordinal)&&r.sharedMaterial?.mainTexture!=null)
             .OrderByDescending(r=>r.bounds.center.x).ToArray();
+        winterGroundMaterials=new Material[winterGround.Length];
+        winterOrigin=WinterQueenFocus();
+        winterRadius=0;
+        for(int i=0;i<winterGround.Length;i++){
+            var renderer=winterGround[i];
+            winterGroundMaterials[i]=renderer.sharedMaterial;
+            var bounds=renderer.bounds;
+            float dx=Mathf.Abs(bounds.center.x-winterOrigin.x)+bounds.extents.x;
+            float dz=Mathf.Abs(bounds.center.z-winterOrigin.z)+bounds.extents.z;
+            winterRadius=Mathf.Max(winterRadius,Mathf.Sqrt(dx*dx+dz*dz)+5);
+        }
         winterGroundIndex=0;
         Debug.Log("CF_WINTER_INTRO queen="+(winterQueen!=null)+" ground="+winterGround.Length);
     }
 
     IEnumerator PrepareWinterPresentation(int generation){
         // The versus screen keeps the camera and the match clock paused.
+        AssetBundle winterShaderBundle=null;
+        var shader=Resources.Load<Shader>("WinterBattle/WinterFront");
+        if(!shader&&!Application.isMobilePlatform){
+            winterShaderBundle=AssetBundle.LoadFromMemory(File.ReadAllBytes(MobileContent.Media("Frontend/winter-front.windows")));
+            if(winterShaderBundle)shader=winterShaderBundle.LoadAsset<Shader>("WinterFront");
+        }
+        if(winterShaderBundle)winterShaderBundle.Unload(false);
         foreach(var renderer in winterGround){
             if(generation!=versusSerial)yield break;
             var source=renderer.sharedMaterial.mainTexture;
-            if(!source||winterAtlases.ContainsKey(source))continue;
-            winterAtlases.Add(source,FrostAtlas(source));
-            yield return null;
+            if(!source)continue;
+            if(!winterAtlases.ContainsKey(source)){
+                winterAtlases.Add(source,FrostAtlas(source));
+                yield return null;
+                if(generation!=versusSerial)yield break;
+            }
+            var original=renderer.sharedMaterial;
+            if(shader&&!winterFrontMaterials.ContainsKey(original)){
+                var sweep=new Material(original){shader=shader,renderQueue=original.renderQueue};
+                sweep.SetTexture("_WinterTex",winterAtlases[source]);
+                sweep.EnableKeyword("CF_WINTER_FRONT");
+                winterFrontMaterials.Add(original,sweep);
+            }
         }
         if(generation!=versusSerial)yield break;
         if(minimapTexture){
@@ -178,8 +212,22 @@ public sealed partial class PcGame {
             winterCast=true;
             if(winterQueen)winterQueen.Play("Spell",1,1);
         }
-        int snowTarget=Mathf.CeilToInt(winterGround.Length*Mathf.InverseLerp(2.7f,4.6f,winterIntroAge));
-        if(snowTarget>winterGroundIndex)AdvanceWinterGround(Mathf.Min(4,snowTarget-winterGroundIndex));
+        float spread=Mathf.InverseLerp(WinterStormCue,WinterStormCue+3.2f,winterIntroAge);
+        if(spread>0&&winterGroundIndex<winterGround.Length){
+            if(spread>=1){
+                AdvanceWinterGround(winterGround.Length);
+                ReleaseWinterFront();
+            }else{
+                if(!winterFrontVisible){
+                    for(int i=0;i<winterGround.Length;i++)
+                        if(winterFrontMaterials.TryGetValue(winterGroundMaterials[i],out var sweep))
+                            winterGround[i].sharedMaterial=sweep;
+                    winterFrontVisible=true;
+                }
+                Shader.SetGlobalVector(WinterFrontId,new Vector4(winterOrigin.x,winterOrigin.z,
+                    Mathf.Lerp(-5,winterRadius,spread*spread),2.4f));
+            }
+        }
         FrameWinterShot();
         RenderMatch();
         if(winterIntroAge<WinterIntroDuration||winterGroundIndex<winterGround.Length)return;
@@ -348,6 +396,17 @@ public sealed partial class PcGame {
         return texture;
     }
 
+    bool winterFrontVisible;
+    void ReleaseWinterFront(){
+        if(winterFrontVisible)
+            for(int i=0;i<winterGround.Length;i++)
+                if(winterGround[i])winterGround[i].sharedMaterial=winterGroundMaterials[i];
+        winterFrontVisible=false;
+        foreach(var material in winterFrontMaterials.Values)Destroy(material);
+        winterFrontMaterials.Clear();
+        winterGroundMaterials=null;
+    }
+
     void AdvanceWinterGround(int budget){
         for(int i=0;i<budget&&winterGroundIndex<winterGround.Length;i++){
             var renderer=winterGround[winterGroundIndex++];
@@ -384,6 +443,7 @@ public sealed partial class PcGame {
     }
 
     void ClearWinterTrial(){
+        ReleaseWinterFront();
         ClearWinterAudio();
         RestoreWinterCastle();
         winterCastleAura=null;
@@ -407,6 +467,8 @@ public sealed partial class PcGame {
         Check(sharedArt&&sharedArt.width>800,"Epochal tile loads the embedded or local boss painting");
         yield return Shot(folder,"00-epochal-list");
         yield return Action("challenge."+HumanMatch.WinterTrial);
+        Check(!MythicRacePicker&&selectedMythicId==HumanMatch.WinterTrial,"Selecting a row stays on its leaderboard");
+        yield return Action("mythic.play."+HumanMatch.WinterTrial);
         Check(MythicRacePicker&&match==null,"The epochal list opens a race picker before starting the fight");
         yield return Action("mythic.race.0");
         yield return Shot(folder,"01-winter-race-selection");
@@ -441,6 +503,7 @@ public sealed partial class PcGame {
             "All terrain, minimap, gust and audio assets are prepared before the cast");
         Check(winterIntro&&match.EternalWinter&&winterQueen&&match.Elapsed==0,"Winter opens with the real Ice Queen and stops the match clock");
         yield return new WaitForSecondsRealtime(3.1f);
+        Check(winterFrontVisible&&winterFrontMaterials.Count>0&&winterGround.All(r=>r.sharedMaterial.shader.name=="CastleFight/WinterFront"),"Snow front uses the shipped shader across all ground layers");
         Check(winterIntro&&winterCast&&northernSnow&&winterGusts&&match.Elapsed==0,"The Queen casts and starts a blizzard with wind gusts before the battle");
         Check(winterWindAudio && winterWindAudio.isPlaying && winterWindAudio.loop && winterWindAudio.volume > 0,
             "The blizzard starts looping wind audio during the cast");
@@ -481,6 +544,13 @@ public sealed partial class PcGame {
         var enemy=match.Spawn(1,northKind,at+Vector2.right*50);
         enemy.stun=1000;
         var normal=new HumanMatch(JObject.Parse(RaceCatalog(0)),500,2);
+        normal.BeginChallengeRules(WinterTrialDefinition());
+        normal.Wood[0]=1000;
+        int special=normal.BaseKinds.First(k=>!normal.Lines[k].Producer&&normal.Lines[k].category!="tower"&&normal.Lines[k].slots==0&&normal.Lines[k].cost<=500&&normal.Lines[k].woodCost<=1000);
+        Check(normal.Huts.Count==0&&normal.TryBuild(0,special,14,24,out _),"A special can open on the grassy verge with no producer");
+        Check(HumanMatch.BuildRow(384,true)==25&&HumanMatch.BuildRow(0,true)<0&&!HumanMatch.LegalCell(0,5,24),"The lane stays clear and the grass by its edge is buildable");
+        normal.Huts.Clear();normal.Builders[0].jobs.Clear();
+        normal=new HumanMatch(JObject.Parse(RaceCatalog(0)),500,2);
         var normalFighter=normal.Spawn(0,normal.Kind("h000"),at);
         Check(Mathf.Abs(match.MoveSpeed(player)-normal.MoveSpeed(normalFighter)*.5f)<.001f&&
             Mathf.Abs(match.AttackSpeed(player)-.7f)<.001f,"Winter halves movement speed and reduces attack speed by thirty percent");

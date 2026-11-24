@@ -40,7 +40,7 @@ public sealed partial class PcGame {
     }
     void HandleWorldTap() {
         if(!PointerOnTerrain(out Vector3 hit))return;Vector2 point=new Vector2(hit.x,-hit.z);
-        if(chosen>=0){float wx=hit.x*30,wy=-hit.z*30;int x=Mathf.RoundToInt((wx+6080)/128),y=wy<=-448?Mathf.RoundToInt((wy+1920)/128):wy>=448?12+Mathf.RoundToInt((wy-512)/128):-1;Place(x,y);return;}
+        if(chosen>=0){float wx=hit.x*30,wy=-hit.z*30;int x=Mathf.FloorToInt((wx+6144)/128),y=HumanMatch.BuildRow(wy,!onlineMatch);Place(x,y);return;}
         if(selectedItem>=0){ExecuteItem(point);return;}if(!string.IsNullOrEmpty(targetedSpell)){ExecuteBuilderSpell(point);return;}if(moveOrder){OrderBuilder(point);moveOrder=false;return;}
         bool hadBuilder=builderSelected;SelectAtCursor();
         if(hadBuilder&&!builderSelected&&!selectedCastle&&selectedHut<0&&selectedUnit<0){builderSelected=true;OrderBuilder(point);}

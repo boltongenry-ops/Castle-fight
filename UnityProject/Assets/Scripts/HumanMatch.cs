@@ -99,8 +99,23 @@ public sealed partial class HumanMatch {
     public int ArmyCount(int t)=>ArmyCount035(t);
     public float Interval(Hut h)=>15+h.spent/20f;
     public static Vector2 CastlePosition(int t)=>new Vector2(t==0?-5120f/30:5120f/30,64f/30);
-    public static Vector2 Plot(int team,int x,int y)=>new Vector2(((team==0?-6144:2048)+64+x*128)/30f,(y<12?-1984+64+y*128:448+64+(y-12)*128)/30f);
-    public static bool LegalCell(int team,int x,int y){if(team<0||team>1||x<0||x>=32||y<0||y>=24)return false;float wx=(team==0?-6144:2048)+64+x*128;return Mathf.Abs(Mathf.Abs(wx)-3520)>=128;}
+    public static Vector2 Plot(int team,int x,int y)=>new Vector2(((team==0?-6144:2048)+64+x*128)/30f,(y==24?-384:y==25?384:y<12?-1920+y*128:512+(y-12)*128)/30f);
+    // CF240_BASE_NERUB.w3x, war3map.wpm: sixteen 32-unit pathing samples per 128-unit plot.
+    // Columns run west to east. The two verge rows are appended to preserve existing plot IDs.
+    static readonly uint[] BuildablePlots={
+            0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFC7FFFFu,0xFFC7FFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0xFFEFFFFFu,0x7FCFF000u,0x7FCFF000u,
+            0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFE3FFu,0xFFFFE3FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0xFFFFF7FFu,0x000FF3FEu,0x000FF3FEu
+    };
+    public static bool LegalCell(int team,int x,int y){
+        return team>=0&&team<2&&x>=0&&x<32&&y>=0&&y<26&&(BuildablePlots[team*26+y]&(1u<<x))!=0;
+    }
+    public static int BuildRow(float wy,bool expanded){
+        if(wy>=-1984&&wy< -448)return Mathf.FloorToInt((wy+1984)/128);
+        if(wy>=448&&wy<1984)return 12+Mathf.FloorToInt((wy-448)/128);
+        if(expanded&&wy>=-448&&wy< -320)return 24;
+        if(expanded&&wy>=320&&wy<448)return 25;
+        return -1;
+    }
     public string PurchaseError(int team,int kind,int replacing=-1) {
         if(Finished)return "Матч завершён";if(team<0||team>1||kind<0||kind>=Lines.Length)return "Неизвестная постройка";
         string challengeError=ChallengePurchaseError(team,kind,replacing);if(challengeError!="")return challengeError;

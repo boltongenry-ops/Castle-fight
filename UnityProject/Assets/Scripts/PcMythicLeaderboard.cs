@@ -47,14 +47,29 @@ public sealed partial class PcGame {
         catch(Newtonsoft.Json.JsonException){return null;}
     }
 
+    string selectedMythicId=HumanMatch.WinterTrial;
+    int mythicRequestGeneration;
+    void SelectMythicTrial(string id){
+        if(selectedMythicId==id)return;
+        selectedMythicId=id;
+        mythicRequestGeneration++;
+        mythicBoardLoading=false;
+        mythicLeaderboard=new JArray();
+        mythicBoardError="";
+        mythicBoardPage=mythicPlace=0;
+        StartCoroutine(LoadMythicLeaderboard());
+    }
+
     IEnumerator LoadMythicLeaderboard(){
         if(mythicBoardLoading)yield break;
         string url=MythicLeaderboardUrl();
         if(string.IsNullOrEmpty(url))yield break;
         mythicBoardLoading=true;mythicBoardError="";
-        using(var request=UnityWebRequest.Get(url)){
+        int generation=mythicRequestGeneration;
+        using(var request=UnityWebRequest.Get(url+"?challenge="+Uri.EscapeDataString(selectedMythicId))){
             request.timeout=10;
             yield return request.SendWebRequest();
+            if(generation!=mythicRequestGeneration)yield break;
             var reply=MythicReply(request);
             if(request.result==UnityWebRequest.Result.Success&&reply?["entries"] is JArray entries)
                 mythicLeaderboard=entries;
@@ -96,9 +111,9 @@ public sealed partial class PcGame {
             yield return request.SendWebRequest();
             var reply=MythicReply(request);
             if(request.result==UnityWebRequest.Result.Success&&(bool?)reply?["ok"]==true&&reply["entries"] is JArray entries){
-                mythicLeaderboard=entries;mythicBoardError="";
+                if(selectedMythicId==HumanMatch.WinterTrial){mythicLeaderboard=entries;mythicBoardError="";}
                 if(pendingMythicScore==score){
-                    mythicPlace=(int?)reply["place"]??0;
+                    mythicPlace=selectedMythicId==HumanMatch.WinterTrial?((int?)reply["place"]??0):0;
                     pendingMythicScore=null;
                     mythicGuestPrompt=false;
                 }
@@ -145,8 +160,19 @@ public sealed partial class PcGame {
     }
 
     void DrawMythicChallenges(){
-        var row=progression.Challenge(HumanMatch.WinterTrial);
-        DrawWinterTrialTile(row);
+        var trials=(JArray)progression.Catalog["mythic"];
+        const int stride=85;
+        Workshop.maxChallengeScroll=Mathf.Max(0,trials.Count*stride-500);
+        bool scrolling=Workshop.maxChallengeScroll>0;
+        var area=new Rect(42,176,593,500);
+        float width=area.width-(scrolling?20:0);
+        if(scrolling)progressionScroll=GUI.BeginScrollView(area,progressionScroll,new Rect(0,0,width,trials.Count*stride));
+        bool enabled=GUI.enabled;
+        GUI.enabled=enabled&&!Workshop.dragged;
+        for(int i=0;i<trials.Count;i++)
+            DrawMythicTrialRow((JObject)trials[i],new Rect(scrolling?0:area.x,(scrolling?0:area.y)+i*stride,width,69));
+        GUI.enabled=enabled;
+        if(scrolling)GUI.EndScrollView();
         DrawMythicLeaderboard();
     }
 
@@ -159,15 +185,16 @@ public sealed partial class PcGame {
         }
         Text(689,186,393,48,"Таблица лидеров",mythicBoardHeading);
         if(LobbyButton("mythic.board.refresh",new Rect(1090,188,126,38),"Обновить"))StartCoroutine(LoadMythicLeaderboard());
+        Text(689,226,520,25,(string)progression.Challenge(selectedMythicId)?["title"],small);
         if(mythicLeaderboard.Count==0)
-            Text(689,241,524,55,mythicBoardLoading?"Загружаем результаты…":mythicBoardError!=""?mythicBoardError:"Результатов пока нет",label);
+            Text(689,256,524,55,mythicBoardLoading?"Загружаем результаты…":mythicBoardError!=""?mythicBoardError:"Результатов пока нет",label);
         int pages=Mathf.Max(1,Mathf.CeilToInt(mythicLeaderboard.Count/(float)MythicRowsPerPage));
         mythicBoardPage=Mathf.Clamp(mythicBoardPage,0,pages-1);
         for(int i=0;i<MythicRowsPerPage;i++){
             int position=mythicBoardPage*MythicRowsPerPage+i;
             if(position>=mythicLeaderboard.Count)break;
             var row=mythicLeaderboard[position];
-            float y=238+i*46;
+            float y=252+i*44;
             Fill(new Rect(688,y,528,44),new Color(.06f,.095f,.11f,i%2==0?.72f:.38f));
             Text(695,y+3,43,31,row["place"]?.ToString()??(position+1).ToString(),small);
             Text(742,y+1,304,26,(string)row["nickname"]??"",mythicNicknameStyle);
@@ -180,7 +207,7 @@ public sealed partial class PcGame {
             Text(822,610,182,30,(mythicBoardPage+1)+" / "+pages,small);
             if(mythicBoardPage+1<pages&&LobbyButton("mythic.board.next",new Rect(1098,610,118,30),"Вперёд"))mythicBoardPage++;
         }
-        if(pendingMythicScore!=null&&LobbyButton("mythic.board.submit",new Rect(689,642,526,33),
+        if(selectedMythicId==HumanMatch.WinterTrial&&pendingMythicScore!=null&&LobbyButton("mythic.board.submit",new Rect(689,642,526,33),
             mythicScoreSending?"Сохраняем…":"Записать своё время"))SubmitPendingMythicScore();
         else if(mythicPlace>0)Text(689,641,526,34,"Ваше место · "+mythicPlace,small);
         else if(mythicBoardError!=""&&mythicLeaderboard.Count>0)Text(689,641,526,34,mythicBoardError,small);

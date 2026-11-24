@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.46.1";
+    string Version=>MobileContent.Active?Application.version:"0.46.2";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -164,12 +164,12 @@ public sealed partial class PcGame : MonoBehaviour {
     }
     void MainMenu(){bool hadContent=match!=null||page==Page.Guide;noticeLeft=0;CloseVersus();CloseGuide();EndChallenge();if(onlineMatch){onlineMatch=false;onlineStarted=false;onlineReplica=null;StopDirectory();}ClearMatch();ReleaseIdleRaceAssets(hadContent);series=null;page=Page.Main;controls.Focus("castle");}
     Vector3 World(Vector2 point)=>terrain.Position(point.x*30,point.y*30,true);
-    void Select(int line){if(!builderSelected)return;selectedItem=-1;buildMenu=true;chosen=line;moveOrder=false;Notice("Приказ рабочему: "+match.Lines[line].name+(Application.isMobilePlatform?". Коснитесь места постройки.":". ЛКМ — место · ПКМ — отмена."));}
+    void Select(int line){if(!builderSelected)return;selectedItem=-1;buildMenu=true;chosen=line;moveOrder=false;var reason=match.PurchaseError(0,line);Notice(reason.Length>0?reason:"Приказ рабочему: "+match.Lines[line].name+(Application.isMobilePlatform?". Коснитесь места постройки.":". ЛКМ — место · ПКМ — отмена."));}
     bool Place(int x,int y){
         if(chosen<0)return false;
         var line=match.Lines[chosen];
         if(onlineMatch){
-            if(!HumanMatch.LegalCell(0,x,y)){Notice("Выберите клетку своей базы");return false;}
+            if(!LocalBuildCell(x,y)){Notice("Выберите клетку своей базы");return false;}
             if(match.Huts.Any(h=>h.team==0&&h.x==x&&h.y==y)){Notice("Клетка занята");return false;}
             if(!NetworkCommand(PcServerReplica.Build(line.building,HumanMatch.Plot(0,x,y))))return false;
             Notice("Приказ на строительство отправлен");
@@ -258,6 +258,11 @@ public sealed partial class PcGame : MonoBehaviour {
         } else {if(preview)preview.SetActive(false);if(localGrid)localGrid.SetActive(false);}
         if(match!=null)RenderMatch();
     }
+    bool LocalBuildCell(int x,int y){
+        if(!onlineMatch)return HumanMatch.LegalCell(0,x,y);
+        // The current dedicated server uses the original 24-row layout.
+        return x>=0&&x<32&&y>=0&&y<24&&Mathf.Abs(Mathf.Abs(-6080+128*x)-3520)>=128;
+    }
     void UpdatePlacement() {
         hoverValid=false;if(chosen<0){if(preview)preview.SetActive(false);if(localGrid)localGrid.SetActive(false);return;}
         if(!preview) {
@@ -270,17 +275,14 @@ public sealed partial class PcGame : MonoBehaviour {
         preview.SetActive(!ui);if(localGrid)localGrid.SetActive(!ui);if(ui)return;
         if(!PointerOnTerrain(out Vector3 hit))return;
         float wx=hit.x*30,wy=-hit.z*30;
-        int x=Mathf.RoundToInt((wx+6080)/128),y;
-        if(wy<=-448)y=Mathf.RoundToInt((wy+1920)/128);
-        else if(wy>=448)y=12+Mathf.RoundToInt((wy-512)/128);
-        else y=-1;
+        int x=Mathf.FloorToInt((wx+6144)/128),y=HumanMatch.BuildRow(wy,!onlineMatch);
         PreviewPlot(x,y,hit);
         if(!testing&&!Application.isMobilePlatform&&Input.GetMouseButtonDown(0))Place(x,y);
     }
     void PreviewPlot(int x,int y,Vector3 hit) {
         preview.SetActive(true);hover=new Vector2Int(x,y);
-        hoverValid=HumanMatch.LegalCell(0,x,y)&&!match.Huts.Any(h=>h.team==0&&h.x==x&&h.y==y)&&match.PurchaseError(0,chosen)=="";
-        Vector2 point=HumanMatch.LegalCell(0,x,y)?HumanMatch.Plot(0,x,y):new Vector2(hit.x,-hit.z);
+        hoverValid=LocalBuildCell(x,y)&&!match.Huts.Any(h=>h.team==0&&h.x==x&&h.y==y)&&match.PurchaseError(0,chosen)=="";
+        Vector2 point=LocalBuildCell(x,y)?HumanMatch.Plot(0,x,y):new Vector2(hit.x,-hit.z);
         preview.transform.position=World(point)+Vector3.up*.4f;previewMaterial.color=hoverValid?new Color(.3f,1,.55f,.6f):new Color(1,.2f,.12f,.6f);
         LocalGrid(x,y);
     }
@@ -387,14 +389,14 @@ public sealed partial class PcGame : MonoBehaviour {
     void OrderBuilder(Vector2 point){if(onlineMatch){try{NetworkCommand(PcServerReplica.Move(point));}catch(ArgumentOutOfRangeException){Notice("Точка вне карты");return;}}if(onlineMatch||match.MoveBuilder(0,point)){selectedItem=-1;moveOrder=false;Notice("Рабочий: идти к указанному месту");if(!moveMarker)moveMarker=Ring("Move order",visuals.transform);moveMarker.SetActive(true);moveMarker.transform.position=World(point)+Vector3.up*.12f;}}
     void StopBuilder(){selectedItem=-1;chosen=-1;moveOrder=false;if(onlineMatch)NetworkCommand(PcServerReplica.Command("stop"));else match.MoveBuilder(0,match.Builders[0].position);if(moveMarker)moveMarker.SetActive(false);targetedSpell=null;Notice("Рабочий остановлен");}
     void LocalGrid(int x,int y) {
-        if(!HumanMatch.LegalCell(0,x,y)){if(localGrid)localGrid.SetActive(false);return;}
+        if(!LocalBuildCell(x,y)){if(localGrid)localGrid.SetActive(false);return;}
         if(!localGrid) {
             localGrid=new GameObject("Nearby friendly build cells");localGrid.transform.SetParent(visuals.transform);gridMesh=new Mesh();gridMaterial=new Material(overlayMaterial);gridMaterial.color=new Color(.4f,.65f,.4f,.45f);
             localGrid.AddComponent<MeshFilter>().sharedMesh=gridMesh;localGrid.AddComponent<MeshRenderer>().sharedMaterial=gridMaterial;
         }
         localGrid.SetActive(true);if(gridCenter==new Vector2Int(x,y))return;gridCenter=new Vector2Int(x,y);
         var points=new List<Vector3>();
-        for(int a=x-3;a<=x+3;a++)for(int b=y-3;b<=y+3;b++)if(HumanMatch.LegalCell(0,a,b)) {
+        for(int a=x-3;a<=x+3;a++)for(int b=0;b<(onlineMatch?24:26);b++)if(LocalBuildCell(a,b)&&Mathf.Abs(HumanMatch.Plot(0,a,b).y-HumanMatch.Plot(0,x,y).y)<HumanMatch.Cell*3.1f) {
             var p=HumanMatch.Plot(0,a,b);float h=HumanMatch.Cell/2;
             var corners=new[]{p+new Vector2(-h,-h),p+new Vector2(h,-h),p+new Vector2(h,h),p+new Vector2(-h,h)};
             for(int i=0;i<4;i++){points.Add(World(corners[i])+Vector3.up*.1f);points.Add(World(corners[(i+1)%4])+Vector3.up*.1f);}

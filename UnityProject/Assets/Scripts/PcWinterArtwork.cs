@@ -67,17 +67,21 @@ public sealed partial class PcGame {
         return shade;
     }
 
-    void DrawWinterTrialTile(JObject row){
-        var tile=new Rect(65,220,455,326);
-        DrawWinterPainting(tile,true);
-        WinterGradient(new Rect(tile.x,tile.yMax-155,tile.width,155),false,new Color(.018f,.035f,.055f,.99f));
-        bool hovered=tile.Contains(Event.current.mousePosition);
-        Border(tile,hovered?WinterBlue:WinterLine,hovered?2:1);
-        Text(84,433,390,46,(string)row["title"],raceTitleStyle);
-        Text(85,492,382,32,"Ледяная королева  •  Открыть бой  ›",label);
-        if(Button("challenge."+HumanMatch.WinterTrial,tile,"",false,GUIStyle.none))ChooseMythicRace(row);
-        if(progression.Completed(HumanMatch.WinterTrial))
-            Text(67,564,460,29,"Личное время · "+MythicTime(Mathf.RoundToInt(progression.Best(HumanMatch.WinterTrial)*1000)),small);
+    void DrawMythicTrialRow(JObject row,Rect tile){
+        string id=(string)row["id"];
+        if(id==HumanMatch.WinterTrial)DrawWinterPainting(tile,true);
+        else Fill(tile,WinterInk);
+        WinterGradient(tile,true,new Color(.01f,.02f,.03f,.99f));
+        Border(tile,id==selectedMythicId?WinterBlue:WinterLine,id==selectedMythicId?2:1);
+        Text(tile.x+14,tile.y+3,tile.width-125,32,(string)row["title"],raceTitleStyle);
+        Text(tile.x+15,tile.y+36,tile.width-125,28,(string)(row["summary"]??row["description"]),small);
+        var play=new Rect(tile.xMax-103,tile.y+12,92,tile.height-24);
+        if(Button("challenge."+id,new Rect(tile.x,tile.y,play.x-tile.x,tile.height),"",false,GUIStyle.none))
+            SelectMythicTrial(id);
+        if(LobbyButton("mythic.play."+id,play,"Играть")){
+            SelectMythicTrial(id);
+            ChooseMythicRace(row);
+        }
     }
 
     void DrawWinterVersus(){
