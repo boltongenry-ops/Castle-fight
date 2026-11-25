@@ -51,6 +51,21 @@ public sealed partial class HumanMatch {
     Vector2 TargetPosition(int target,int sourceTeam)=>FindUnit(target)?.position??FindHut(target)?.position??CastlePosition(1-sourceTeam);
     bool TargetAlive(int target)=>target==-1||FindUnit(target)!=null||FindHut(target)!=null;
     bool AirTarget(int target)=>FindUnit(target) is Unit u&&Flying(u);
+    static Vector2 ArmyWaypoint(Unit unit,Vector2 goal,bool marching){
+        var from=unit.position;
+        if(marching&&unit.leaveCastleLane){
+            if((from-unit.exitWaypoint).sqrMagnitude>.16f)return unit.exitWaypoint;
+            unit.leaveCastleLane=false;
+        }
+        float direction=Mathf.Sign(goal.x-from.x);
+        foreach(float wall in direction>0?EastboundWalls:WestboundWalls){
+            if((wall-from.x)*direction<=0||(goal.x-wall)*direction<=0)continue;
+            return new Vector2(wall+direction*.10f,0);
+        }
+        return goal;
+    }
+    static readonly float[] EastboundWalls={-3520f/30,-2016f/30,2016f/30,3520f/30};
+    static readonly float[] WestboundWalls={3520f/30,2016f/30,-2016f/30,-3520f/30};
     public void TickUnit(Unit u,float dt) {var before=u.position;TickUnitCore(u,dt);ObserveCentaurStride(u,before,dt);}
     void TickUnitCore(Unit u,float dt) {
         var l=Lines[u.kind];
@@ -64,42 +79,52 @@ public sealed partial class HumanMatch {
         if(u.strikeLeft>=0){u.strikeLeft-=dt;if(u.strikeLeft<=0){Release(u);u.strikeLeft=-1;}u.pose=u.attackPoseLeft>0?"Attack":"Stand";return;}
         if(BlackHandCast(u)||PepeTryHeal(u)||TryAutocast(u))return;if(TickNightHunt(u,dt))return;
         if(Ethereal(u)||Disarmed(u)){u.strikeLeft=-1;var etherealGoal=BuilderWaypoint(u.position,CastlePosition(1-u.team));u.direction=(etherealGoal-u.position).normalized;u.position=Vector2.MoveTowards(u.position,etherealGoal,MoveSpeed(u)*dt);u.pose="Walk";return;}
-        if(!u.onRoad&&!Flying(u)) {if(Rooted(u)){u.pose="Stand";return;}var goal=u.leaveCastleLane?u.exitWaypoint:new Vector2(u.position.x,0);var travel=goal-u.position;if(travel.sqrMagnitude>.0001f)u.direction=travel.normalized;u.position=Vector2.MoveTowards(u.position,goal,MoveSpeed(u)*dt);u.pose="Walk";if((goal-u.position).sqrMagnitude<.0025f){if(u.leaveCastleLane)u.leaveCastleLane=false;else u.onRoad=true;}return;}
-        u.onRoad=true;
+        u.onRoad=true; // Eligible for attack-move acquisition from the first combat step.
         var target=FindUnit(u.combatTarget);
         if(target!=null) {
-            float keepMax=Mathf.Max(29f,l.range+2f);
+            float keepMax=l.acquisitionRange+2.333333f;
             if(target.team==u.team||(target.position-u.position).sqrMagnitude>keepMax*keepMax||WeaponFor(u,target)==null)target=null;
         }
         if(target==null) {
-            float searchMax=Mathf.Max(26.667f,l.range+1f);float searchMaxSqr=searchMax*searchMax;
+            float searchMax=l.acquisitionRange;float searchMaxSqr=searchMax*searchMax;
             Unit best=null;bool indexed=false;
-            if(TryFindBestUnit033(u.position,searchMaxSqr,u.team,v=>WeaponFor(u,v)!=null,out best))indexed=true;
+            if(TryFindBestAny033(u.position,searchMaxSqr,u.team,false,v=>WeaponFor(u,v)!=null,out best))indexed=true;
             if(!indexed) {
                 float bestSqr=float.MaxValue;
-                for(int i=0;i<Units.Count;i++) {var v=Units[i];if(v.team==u.team||v.hp<=0||!v.onRoad)continue;var d=v.position-u.position;float s=d.sqrMagnitude;if(s>searchMaxSqr||s>=bestSqr)continue;if(WeaponFor(u,v)==null)continue;best=v;bestSqr=s;}
+                for(int i=0;i<Units.Count;i++) {var v=Units[i];if(v.team==u.team||v.hp<=0)continue;var d=v.position-u.position;float s=d.sqrMagnitude;if(s>searchMaxSqr||s>=bestSqr)continue;if(WeaponFor(u,v)==null)continue;best=v;bestSqr=s;}
             }
             target=best;
         }
         target=NerubHuntTarget(u,target);if(target!=null)u.skirmish=true;
-        u.combatTarget=target?.id??-1;int targetId=target?.id??-1;Weapon weapon=WeaponFor(u,target,target==null);
-        if(weapon==null){u.pose="Stand";return;}
-        if(target==null&&u.skirmish&&(u.position-CastlePosition(1-u.team)).sqrMagnitude>(weapon.range+CastleCollision)*(weapon.range+CastleCollision)) {
-            float hutMax=weapon.range+2f;float hutMaxSqr=hutMax*hutMax;
-            Hut bestHut=null;float bestHutSqr=float.MaxValue;
-            for(int i=0;i<Huts.Count;i++) {var h=Huts[i];if(h.team==u.team||h.hp<=0||!h.paid)continue;var d=h.position-u.position;float s=d.sqrMagnitude;if(s>hutMaxSqr||s>=bestHutSqr)continue;bestHut=h;bestHutSqr=s;}
-            if(bestHut!=null)targetId=HutTarget(bestHut);else u.skirmish=false;
+        int targetId=target?.id??-1;
+        Weapon weapon=WeaponFor(u,target,target==null);
+        float acquire=l.acquisitionRange;
+        if((u.team==0?u.position.x:-u.position.x)+acquire>=2048f/30){
+            var siegeWeapon=target==null?weapon:WeaponFor(u,null,true);
+            if(siegeWeapon!=null){
+                float best=target==null?acquire*acquire:Mathf.Min(acquire*acquire,(target.position-u.position).sqrMagnitude);
+                foreach(var hut in Huts){
+                    if(hut.team==u.team||hut.hp<=0||!hut.paid)continue;
+                    if(target!=null&&(Lines[hut.kind].buildingWeapons?.Length??0)==0)continue;
+                    float distanceSqr=(hut.position-u.position).sqrMagnitude;
+                    if(distanceSqr>=best)continue;
+                    if(VisionTest!=null&&!VisionTest(u.team,hut.position))continue;
+                    targetId=HutTarget(hut);weapon=siegeWeapon;best=distanceSqr;
+                }
+            }
         }
+        u.combatTarget=targetId;
+        bool canStrike=weapon!=null;
         Vector2 destination=TargetPosition(targetId,u.team),delta=destination-u.position;
-        float reach=weapon.range+(targetId==-1?CastleCollision:targetId< -1?2:1);
+        float reach=(weapon?.range??0)+(targetId==-1?CastleCollision:targetId< -1?2:1);
         float distance=delta.magnitude;
         bool ground=!Flying(u);
         if(delta.sqrMagnitude>.001f)u.direction=delta.normalized;
-        if(distance<=reach+(targetId!=-1&&u.pose=="Attack"?1:0)) {if(u.cooldown<=0)BeginAttack(u,weapon,targetId);u.pose=u.attackPoseLeft>0?"Attack":"Stand";}
+        if(distance<=reach+(targetId!=-1&&u.pose=="Attack"?1:0)) {if(canStrike&&u.cooldown<=0)BeginAttack(u,weapon,targetId);u.pose=u.attackPoseLeft>0?"Attack":"Stand";}
         else {
             if(Rooted(u)){u.pose="Stand";return;}
             u.pose="Walk";
-            Vector2 waypoint=ground?BuilderWaypoint(u.position,destination):destination;
+            Vector2 waypoint=ground?ArmyWaypoint(u,destination,targetId==-1):destination;
             bool approachingCastle=ground&&targetId==-1&&waypoint==destination&&distance<=Mathf.Min(24,reach+12)
                 &&delta.x*(u.team==0?1:-1)>0;
             if(approachingCastle){
@@ -113,7 +138,7 @@ public sealed partial class HumanMatch {
             Vector2 direction=ground?GroundSeparation(u,advance.normalized):advance.normalized;
             Vector2 start=u.position;
             var next=Vector2.MoveTowards(start,start+direction*Mathf.Min(advance.magnitude,Mathf.Max(0,distance-reach+.1f)),MoveSpeed(u)*dt);
-            if(ground&&Mathf.Abs(u.previous.y)<=2.201f&&targetId>=-1)next.y=Mathf.Clamp(next.y,-2.2f,2.2f);
+            
             u.position=next;
             if((next-start).sqrMagnitude>.000001f)u.direction=(next-start).normalized;
         }

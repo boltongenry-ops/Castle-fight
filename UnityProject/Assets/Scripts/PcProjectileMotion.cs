@@ -7,7 +7,10 @@ public sealed partial class PcGame {
     readonly Dictionary<int,ProjectileTrack> projectileTracks=new Dictionary<int,ProjectileTrack>();
     readonly List<int> retiredProjectiles=new List<int>();
     float projectileLatest,projectileRender,projectileSince;bool projectileClock;
-    Vector3 NetworkProjectilePoint(JArray p)=>new Vector3((networkSlot==1?-1:1)*(float)p[0],(float)p[1],-(float)p[2]);
+    Vector3 NetworkProjectilePoint(JArray p,bool relativeHeight=false){
+        float x=(networkSlot==1?-1:1)*(float)p[0],y=(float)p[2];
+        return new Vector3(x,(float)p[1]+(relativeHeight?terrain.Height(x*30,y*30,true):0),-y);
+    }
     void ClearOnlineProjectiles(){foreach(var obj in onlineProjectiles.Values)if(obj)Destroy(obj);onlineProjectiles.Clear();projectileTracks.Clear();HdModels.ShotPaths.Clear();projectileClock=false;}
     void ProjectileStamp(float stamp){
         if(!projectileClock||stamp<projectileLatest-.001f){ClearOnlineProjectiles();projectileRender=stamp-ProjectileMotion.Delay;projectileClock=true;}

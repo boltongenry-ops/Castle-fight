@@ -221,10 +221,10 @@ public sealed partial class HumanMatch {
         Unit target=null;bool towerIndexed=false;
         if(UnitIndexReady033()) {
             float brMax=0;for(int wi=0;wi<l.buildingWeapons.Length;wi++)brMax=Mathf.Max(brMax,l.buildingWeapons[wi].range);
-            float brSqr=brMax*brMax;
+            float acquisition=Mathf.Min(brMax,l.buildingAcquisitionRange);float brSqr=acquisition*acquisition;
             if(TryFindBestAny033(h.position,brSqr,h.team,false,v=>!CorruptedAirborne(v)&&!Invulnerable(v)&&!Hidden(v)&&NightCanDetect(h.team,v)&&l.buildingWeapons.Any(w=>(Flying(v)?w.air:w.ground)&&(v.position-h.position).sqrMagnitude<=w.range*w.range),out target))towerIndexed=true;
         }
-        if(!towerIndexed)target=Units.Where(u=>u.team!=h.team&&u.hp>0&&!CorruptedAirborne(u)&&!Invulnerable(u)&&!Hidden(u)&&NightCanDetect(h.team,u)&&l.buildingWeapons.Any(w=>(Flying(u)?w.air:w.ground)&&Vector2.Distance(u.position,h.position)<=w.range)).OrderBy(u=>(u.position-h.position).sqrMagnitude).FirstOrDefault();
+        if(!towerIndexed)target=Units.Where(u=>u.team!=h.team&&u.hp>0&&!CorruptedAirborne(u)&&!Invulnerable(u)&&!Hidden(u)&&NightCanDetect(h.team,u)&&l.buildingWeapons.Any(w=>(Flying(u)?w.air:w.ground)&&(u.position-h.position).sqrMagnitude<=Mathf.Min(w.range,l.buildingAcquisitionRange)*Mathf.Min(w.range,l.buildingAcquisitionRange))).OrderBy(u=>(u.position-h.position).sqrMagnitude).FirstOrDefault();
         if(target==null)return;h.pendingWeapon=l.buildingWeapons.First(w=>(Flying(target)?w.air:w.ground)&&Vector2.Distance(target.position,h.position)<=w.range);h.cooldown=h.pendingWeapon.cooldown;h.strikeLeft=h.pendingWeapon.point;h.attackTarget=target.id;h.attackSerial++;h.attackPoseLeft=h.pendingWeapon.point+h.pendingWeapon.backswing+.2f;
     }
     void AddFire(int team,Vector2 center,string id="A02K"){var c=Abilities[id];Fires.Add(new Fire {id=nextId++,team=team,ability=id,center=center,nextFull=F(c,"interval",.25f),nextTail=F(c?["fields"],"ahdu",1.01f)+F(c?["fields"],"Hfs4",1)});ArtilleryFires++;PulseAt(center,F(c,"area",5),new Color(1,.3f,.02f),"Горючая смесь",F(c?["fields"],"adur",1.01f));}

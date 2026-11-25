@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.47.0";
+    string Version=>MobileContent.Active?Application.version:"0.47.1";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -261,11 +261,7 @@ public sealed partial class PcGame : MonoBehaviour {
         } else {if(preview)preview.SetActive(false);if(localGrid)localGrid.SetActive(false);}
         if(match!=null)RenderMatch();
     }
-    bool LocalBuildCell(int x,int y){
-        if(!onlineMatch)return HumanMatch.LegalCell(0,x,y);
-        // The current dedicated server uses the original 24-row layout.
-        return x>=0&&x<32&&y>=0&&y<24&&Mathf.Abs(Mathf.Abs(-6080+128*x)-3520)>=128;
-    }
+    bool LocalBuildCell(int x,int y)=>HumanMatch.LegalCell(onlineMatch?networkSlot:0,onlineMatch&&networkSlot==1?31-x:x,y);
     void UpdatePlacement() {
         hoverValid=false;if(chosen<0){if(preview)preview.SetActive(false);if(localGrid)localGrid.SetActive(false);return;}
         if(!preview) {
@@ -278,7 +274,7 @@ public sealed partial class PcGame : MonoBehaviour {
         preview.SetActive(!ui);if(localGrid)localGrid.SetActive(!ui);if(ui)return;
         if(!PointerOnTerrain(out Vector3 hit))return;
         float wx=hit.x*30,wy=-hit.z*30;
-        int x=Mathf.FloorToInt((wx+6144)/128),y=HumanMatch.BuildRow(wy,!onlineMatch);
+        int x=Mathf.FloorToInt((wx+6144)/128),y=HumanMatch.BuildRow(wy,true);
         PreviewPlot(x,y,hit);
         if(!testing&&!Application.isMobilePlatform&&Input.GetMouseButtonDown(0))Place(x,y);
     }
@@ -416,7 +412,7 @@ public sealed partial class PcGame : MonoBehaviour {
         }
         localGrid.SetActive(true);if(gridCenter==new Vector2Int(x,y))return;gridCenter=new Vector2Int(x,y);
         var points=new List<Vector3>();
-        for(int a=x-3;a<=x+3;a++)for(int b=0;b<(onlineMatch?24:26);b++)if(LocalBuildCell(a,b)&&Mathf.Abs(HumanMatch.Plot(0,a,b).y-HumanMatch.Plot(0,x,y).y)<HumanMatch.Cell*3.1f) {
+        for(int a=x-3;a<=x+3;a++)for(int b=0;b<26;b++)if(LocalBuildCell(a,b)&&Mathf.Abs(HumanMatch.Plot(0,a,b).y-HumanMatch.Plot(0,x,y).y)<HumanMatch.Cell*3.1f) {
             var p=HumanMatch.Plot(0,a,b);float h=HumanMatch.Cell/2;
             var corners=new[]{p+new Vector2(-h,-h),p+new Vector2(h,-h),p+new Vector2(h,h),p+new Vector2(-h,h)};
             for(int i=0;i<4;i++){points.Add(World(corners[i])+Vector3.up*.1f);points.Add(World(corners[(i+1)%4])+Vector3.up*.1f);}

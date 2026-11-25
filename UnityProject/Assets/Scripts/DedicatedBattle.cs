@@ -83,7 +83,7 @@ namespace CastleFight {
                 case "build":
                     if(!TryPoint(team,command["point"],out var plot))break;
                     int x=Mathf.RoundToInt((plot.x*30-(team==0?-6080:2112))/128);
-                    int y=plot.y<0?Mathf.RoundToInt((plot.y*30+1920)/128):12+Mathf.RoundToInt((plot.y*30-512)/128);
+                    int y=HumanMatch.BuildRow(plot.y*30,true);
                     int building=match.Kind((string)command["raw"]);
                     if(building<0||(HumanMatch.Plot(team,x,y)-plot).sqrMagnitude>.25f)break;
                     return Result(match.TryBuild(team,building,x,y,out var constructionError),constructionError);
@@ -174,7 +174,7 @@ namespace CastleFight {
                 ["aspects"]=new JObject{["enabled"]=aspects,["choices"]=new JArray(match.Aspects),["remaining"]=aspectTime},
                 ["north_sight"]=new JArray(match.NorthernOrbs.Where(o=>o.team==viewer).Select(o=>new JObject{["team"]=viewer,["p"]=Point(o.position)})),
                 ["night_sight"]=new JArray(match.NightZones.Where(z=>z.team==viewer&&z.age<8).Select(z=>new JObject{["team"]=viewer,["p"]=Point(z.point)})),
-                ["projectiles"]=new JArray(match.Shots.Where(s=>!s.hit).Select(Projectile).Where(p=>p!=null&&Visible(viewer,new Vector2((float)p["p"][0],(float)p["p"][2]))))
+                ["projectiles"]=new JArray(match.Shots.Where(s=>!s.hit||s.age-s.duration<=.26f).Select(s=>Projectile(s,viewer)).Where(p=>p!=null&&Visible(viewer,new Vector2((float)p["p"][0],(float)p["p"][2]))))
             };
         }
 
@@ -186,13 +186,13 @@ namespace CastleFight {
                 ["stock"]=JObject.FromObject(bag.stocks),["item_cooldowns"]=JObject.FromObject(bag.cooldowns)};
         }
 
-        JObject Projectile(HumanMatch.Shot shot){
+        JObject Projectile(HumanMatch.Shot shot,int viewer){
             if(shot.duration<=0||shot.weapon==null||shot.kind==1)return null;
             float t=Mathf.Clamp01(shot.age/shot.duration);
             Vector2 p=Vector2.Lerp(shot.start,shot.end,t);
             float height=Mathf.Lerp(shot.startHeight,shot.endHeight,t)+4*shot.arc*t*(1-t);
             return new JObject{["id"]=shot.id,["path"]=shot.weapon.missile,
-                ["p"]=Point(p,height),["yaw"]=Yaw(shot.end-shot.start),["born"]=match.Elapsed-shot.age};
+                ["p"]=Point(p,height),["origin"]=Visible(viewer,shot.start)?Point(shot.start,shot.startHeight):null,["relative_height"]=true,["t"]=shot.team,["impact_age"]=shot.hit?(float?)shot.duration:null,["yaw"]=Yaw(shot.end-shot.start),["born"]=match.Elapsed-shot.age};
         }
     }
 }

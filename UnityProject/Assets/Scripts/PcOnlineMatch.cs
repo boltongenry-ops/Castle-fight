@@ -75,17 +75,28 @@ public sealed partial class PcGame {
     void DrawOnlineProjectiles(JArray rows,float stamp=float.NaN,JArray effects=null) {
         if(float.IsNaN(stamp))stamp=Time.unscaledTime;ProjectileStamp(stamp);
         var live=new HashSet<int>();if(rows!=null)foreach(var row in rows.OfType<JObject>()) {
+            bool relativeHeight=(bool?)row["relative_height"]??false;
             int id=(int?)row["id"]??0;var p=row["p"] as JArray;if(id<=0||p==null||p.Count<3)continue;live.Add(id);
             HdModels.ShotPaths[id]=(string)row["path"];
             if(!onlineProjectiles.TryGetValue(id,out var obj)||!obj){var prefab=ClassicOnlineMissile(row);if(prefab){obj=Instantiate(prefab,visuals.transform);}else{obj=GameObject.CreatePrimitive(PrimitiveType.Sphere);Destroy(obj.GetComponent<Collider>());obj.GetComponent<Renderer>().sharedMaterial=shellMaterial;obj.transform.localScale=Vector3.one*.35f;obj.transform.SetParent(visuals.transform);}obj.name="Сетевой снаряд "+id;onlineProjectiles[id]=obj;}
             float yaw=(float?)row["yaw"]??0,pitch=(float?)row["pitch"]??0;var forward=new Vector3((networkSlot==1?-1:1)*Mathf.Sin(yaw)*Mathf.Cos(pitch),-Mathf.Sin(pitch),-Mathf.Cos(yaw)*Mathf.Cos(pitch));var rotation=Quaternion.LookRotation(forward);
             if(!projectileTracks.TryGetValue(id,out var track)){
                 track=new ProjectileTrack();projectileTracks[id]=track;
-                var originPoint=row["origin"] as JArray??p;var soundPoint=NetworkProjectilePoint(originPoint);
+                var originPoint=row["origin"] as JArray??p;var soundPoint=NetworkProjectilePoint(originPoint,relativeHeight);
                 BattleAudio.For(match)?.Missile((string)row["path"],3,false,new Vector2(soundPoint.x,-soundPoint.z));
-                if(row["origin"] is JArray origin&&origin.Count==3){track.born=Mathf.Min(stamp,(float?)row["born"]??stamp);track.motion.Push(NetworkProjectilePoint(origin),rotation,track.born);}
+                if(row["origin"] is JArray origin&&origin.Count==3){track.born=Mathf.Min(stamp,(float?)row["born"]??stamp);track.motion.Push(NetworkProjectilePoint(origin,relativeHeight),rotation,track.born);}
             }
-            track.retire=float.PositiveInfinity;track.motion.Push(NetworkProjectilePoint(p),rotation,stamp);
+            track.retire=float.PositiveInfinity;float sampleTime=stamp;
+            if(row["impact_age"] is JValue impactAge && (impactAge.Type==JTokenType.Float || impactAge.Type==JTokenType.Integer)){
+                sampleTime=(float)row["born"]+(float)row["impact_age"];
+                // A short flight may be first observed after impact. Present it once at snapshot time.
+                if(track.motion.Count==1&&projectileRender>=sampleTime&&row["origin"] is JArray flightOrigin){
+                    track.born=projectileRender;
+                    track.motion.Push(NetworkProjectilePoint(flightOrigin,relativeHeight),rotation,track.born);
+                    sampleTime=track.born+Mathf.Max(.06f,(float)row["impact_age"]);
+                }else sampleTime=Mathf.Max(sampleTime,track.motion.LastTime);
+            }
+            track.motion.Push(NetworkProjectilePoint(p,relativeHeight),rotation,sampleTime);
             var pose=track.motion.Sample(projectileRender);obj.transform.SetPositionAndRotation(pose.position,pose.rotation);obj.SetActive(projectileRender>=track.born);
             if(row["s"] is JArray scale&&scale.Count==3)obj.transform.localScale=new Vector3((float)scale[0],(float)scale[1],(float)scale[2]);
         }

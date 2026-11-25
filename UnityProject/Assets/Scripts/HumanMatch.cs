@@ -21,6 +21,7 @@ public sealed partial class HumanMatch {
         public string building,unit,name,unitName,hotkey,attack,armorType,weapon,category;public string[] upgrades,abilities,production;
         public int ultimateSlot=-1;public int cost,woodCost,woodReward,slots;public bool basic;public JObject stats,buildingStats;public Weapon[] weapons,buildingWeapons;
         public float interval,buildSeconds,incomeRate,hp,damage,range,cooldown,speed,armor,damagePoint,regen,backswing,walkRate,missileSpeed,arc,fullRadius,halfRadius,quarterRadius,halfFactor,quarterFactor,flyHeight;
+        public float acquisitionRange,buildingAcquisitionRange;
         public bool Producer=>!string.IsNullOrEmpty(unit);
     }
     public sealed class Hut {
@@ -79,6 +80,7 @@ public sealed partial class HumanMatch {
             return new Line {
             ultimateSlot=(int?)v["ultimateSlot"]??-1,building=(string)v["building"],unit=(string)v["unit"],name=(string)v["name"],unitName=(string)v["unitName"]=="z000"?"Зерглинг":(string)v["unitName"],hotkey=(string)v["hotkey"],category=(string)v["category"],basic=(bool?)v["base"]??true,
             cost=(int)v["cost"],woodCost=(int?)v["woodCost"]??0,woodReward=(int?)v["woodReward"]??0,slots=(int?)v["slots"]??0,upgrades=Strings(v["upgrades"]),abilities=Strings(v["abilities"]),production=Strings(v["production"]),stats=s,buildingStats=b,weapons=w,buildingWeapons=((JArray)b["weapons"]??new JArray()).Select(Weapon.Read).ToArray(),
+            acquisitionRange=AcquisitionRange((string)v["unit"],s,Mathf.Max(800f/30,F(s,"range")+1)),buildingAcquisitionRange=AcquisitionRange((string)v["building"],b,float.PositiveInfinity),
             interval=F(v,"seconds"),buildSeconds=F(v,"buildSeconds",1.5f),incomeRate=F(v,"incomeRate"),hp=F(s,"hp"),damage=F(s,"damage"),range=F(s,"range"),cooldown=F(s,"cooldown",1),speed=F(s,"speed"),armor=F(s,"armor"),attack=(string)s["attack_type"],armorType=(string)s["armor_type"]??"normal",regen=F(s,"hp_regen"),flyHeight=F(s,"fly_height"),
             damagePoint=first?.point??.3f,backswing=first?.backswing??.4f,walkRate=F(s,"speed")*30/Mathf.Max(1,F(s,"walk_animation_speed",270))/Mathf.Max(.01f,F(s,"model_scale",1)),weapon=first?.type??"normal",missileSpeed=first?.speed??30,arc=first?.arc??0,
             fullRadius=first?.full??0,halfRadius=first?.half??0,quarterRadius=first?.quarter??0,halfFactor=first?.halfFactor??.5f,quarterFactor=first?.quarterFactor??.2f};}).ToArray();

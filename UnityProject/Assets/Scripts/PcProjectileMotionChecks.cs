@@ -17,6 +17,56 @@ public sealed partial class PcGame {
         for(int i=2;i<25;i++)history.Push(Vector3.right*i,Quaternion.identity,i*.1f);Check(history.Count==8,"Each projectile retains at most eight samples");
         history.Push(Vector3.zero,Quaternion.identity,0);Check(history.Count==1,"A new round resets backwards server time");
         aspectsOn=false;raceChoice=botRaceChoice=0;matchMode=0;NewMatch();testHoldAuthority=true;options.hdTextures=false;networkSlot=0;RenderMatch();controls.FocusWorld(World(new Vector2(-148,29)),35);
+#if CF_AUTHORITY_QA
+        var catalog=JObject.Parse(RaceCatalog(0));
+        Check(Mathf.Approximately(HumanMatch.AcquisitionRange("hrif",null,0),800f/30),"Rifleman reads original acquisition independently of its 500 attack range");
+        Check(Mathf.Approximately(HumanMatch.AcquisitionRange("h006",null,0),1000f/30),"Guard Tower reads original acquisition independently of its 950 attack range");
+        Check(HumanMatch.AcquisitionRange("unknown",null,23)==23 &&
+            HumanMatch.AcquisitionRange("hrif",new JObject{["acquisition_range"]=0},23)==0,"Custom fallback and explicit zero acquisition");
+        var acquired=new HumanMatch(catalog);
+        int rifle=System.Array.FindIndex(acquired.Lines,x=>x.unit=="hrif"),infantry=acquired.Kind("h000");
+        var shooter=acquired.Spawn(0,rifle,new Vector2(4,0));
+        var outer=acquired.Spawn(1,infantry,new Vector2(4,801f/30));
+        acquired.TickUnit(shooter,0);
+        Check(shooter.combatTarget!=outer.id,"Combat skips target just outside native acquisition");
+        outer.position=new Vector2(4,799f/30);
+        acquired.TickUnit(shooter,0);
+        Check(shooter.combatTarget==outer.id&&shooter.attackSerial==0,"Attack-move acquires inside native radius before being in fire range");
+        for(int side=0;side<2;side++){
+            var authority=new DedicatedBattle(catalog,catalog,5000,false,false);
+            var field=typeof(DedicatedBattle).GetField("match",System.Reflection.BindingFlags.Instance|System.Reflection.BindingFlags.NonPublic);
+            var server=(HumanMatch)field.GetValue(authority);
+            int kind=server.Kind("h000");
+            for(int y=24;y<=25;y++){
+                int column=System.Linq.Enumerable.Range(0,32).First(col=>HumanMatch.LegalCell(side,col,y));
+                int localColumn=side==1?31-column:column;
+                var point=HumanMatch.Plot(0,localColumn,y);
+                var build=(JObject)PcServerReplica.Build(server.Lines[kind].building,point)["command"];
+                Check((bool)authority.Command(side,build)["ok"],"Authority accepts the local verge plot / seat "+side+" row "+y);
+                build["point"]=new JArray(point.x,0,0);
+                Check(!(bool)authority.Command(side,build)["ok"],"Authority rejects the road / seat "+side);
+            }
+            foreach(var sim in new[]{server,new HumanMatch(catalog,5000,botCatalog:catalog)}){
+                sim.Huts.Clear();var spot=new Vector2(side==0?130:-130,16);
+                var fighter=sim.Spawn(side,kind,spot);
+                var foe=sim.Spawn(1-side,kind,spot+Vector2.up);
+                sim.TickUnit(fighter,.05f);
+                Check(fighter.attackTarget==foe.id,"Fresh fighters engage before reaching lane");
+                sim.Units.Remove(foe);fighter.strikeLeft=-1;fighter.cooldown=0;fighter.combatTarget=-1;
+                int tower=System.Array.FindIndex(sim.Lines,l=>l.buildingWeapons!=null&&l.buildingWeapons.Length>0);
+                var hut=new HumanMatch.Hut{id=10321,kind=tower,team=1-side,paid=true,hp=10000,position=spot+Vector2.up*12};
+                sim.Huts.Add(hut);fighter.previous=fighter.position;
+                sim.Spawn(1-side,kind,spot+Vector2.up*24);
+                for(int n=0;n<200&&fighter.attackTarget!=-hut.id-2;n++){fighter.previous=fighter.position;sim.TickUnit(fighter,.05f);}
+                Check(fighter.attackTarget==-hut.id-2&&fighter.position.y>spot.y,"Marching soldier pursues and attacks a flank tower");
+            }
+            var pointShot=new Vector2(side==0?-145:145,25);var shortFlight=new HumanMatch.Shot{id=80011,team=side,line=kind,weapon=new HumanMatch.Weapon{missile="native:"+((JObject)classicProjectileIndex["weapons"]).Properties().First().Value.ToString()},start=pointShot,end=pointShot+Vector2.right*5,startHeight=3,endHeight=4,duration=.08f,age=.14f,kind=3,hit=true};
+            server.Elapsed=.2f;server.Shots.Add(shortFlight);
+            var packet=authority.Snapshot(side);var rows=(JArray)packet["projectiles"];networkSlot=side;ClearOnlineProjectiles();DrawOnlineProjectiles(rows,.2f);UpdateOnlineProjectiles(.1f);
+            var model=onlineProjectiles[80011];Check(model.activeSelf&&model.transform.position.y>World(new Vector2(model.transform.position.x,-model.transform.position.z)).y+2,"Short network projectile above ground from authority snapshot for seat "+side);
+        }
+        ClearOnlineProjectiles();networkSlot=0;
+#endif
         Check(classicProjectileIndex!=null,"Actual portable loads the native classic projectile bundle");
         string[] keys=((JObject)classicProjectileIndex["weapons"]).Properties().Select(p=>(string)p.Value).Distinct().Take(6).ToArray();string path="native:"+keys[0];
         for(int i=0;i<keys.Length;i++){
