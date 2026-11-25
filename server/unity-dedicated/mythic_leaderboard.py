@@ -9,6 +9,8 @@ from pathlib import Path
 from urllib import error, parse, request
 
 CHALLENGE = "mythic_eternal_winter"
+NORTHERN_RACE = 5
+WINTER_RULES_REVISION = 2
 ROUTE = "/mythic-leaderboard"
 PORT = int(os.getenv("CF_MYTHIC_PORT", "49292"))
 PROFILE_PORT = int(os.getenv("CF_PROFILE_PORT", "49173"))
@@ -35,6 +37,21 @@ def connect():
     connection = sqlite3.connect(DB, timeout=5)
     connection.row_factory = sqlite3.Row
     return connection
+
+
+def initialize():
+    DB.parent.mkdir(parents=True, exist_ok=True)
+    with closing(connect()) as connection, connection:
+        connection.execute("PRAGMA journal_mode=WAL")
+        connection.executescript(SCHEMA)
+        connection.execute("BEGIN IMMEDIATE")
+        fields = {column["name"] for column in connection.execute("PRAGMA table_info(times)")}
+        if "rules_revision" not in fields:
+            connection.execute("ALTER TABLE times ADD COLUMN rules_revision INTEGER NOT NULL DEFAULT 1")
+        return connection.execute(
+            "DELETE FROM times WHERE challenge=? AND race=? AND rules_revision<?",
+            (CHALLENGE, NORTHERN_RACE, WINTER_RULES_REVISION),
+        ).rowcount
 
 
 def public_profile(token):
@@ -86,6 +103,12 @@ def store(payload):
     if type(race) is not int or not 0 <= race < 18 or type(elapsed) is not int or not 1000 <= elapsed <= 86400000:
         raise RequestError(400, "invalid_result")
 
+    revision = 1
+    if challenge == CHALLENGE and race == NORTHERN_RACE:
+        revision = payload.get("rules_revision")
+        if type(revision) is not int or revision != WINTER_RULES_REVISION:
+            raise RequestError(409, "outdated_winter_rules")
+
     token = payload.get("token") or ""
     if not isinstance(token, str) or len(token) > 256:
         raise RequestError(400, "invalid_token")
@@ -102,11 +125,11 @@ def store(payload):
 
     with closing(connect()) as connection, connection:
         connection.execute(
-            """INSERT INTO times(challenge,player,race,nickname,time_ms,achieved_at)
-               VALUES(?,?,?,?,?,strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+            """INSERT INTO times(challenge,player,race,nickname,time_ms,achieved_at,rules_revision)
+               VALUES(?,?,?,?,?,strftime('%Y-%m-%dT%H:%M:%fZ','now'),?)
                ON CONFLICT(challenge,player,race) DO UPDATE SET nickname=excluded.nickname,
                  achieved_at=CASE WHEN excluded.time_ms<times.time_ms THEN excluded.achieved_at ELSE times.achieved_at END,
-                 time_ms=MIN(times.time_ms,excluded.time_ms)""", (challenge, player, race, name, elapsed)
+                 time_ms=MIN(times.time_ms,excluded.time_ms)""", (challenge, player, race, name, elapsed, revision)
         )
         position = connection.execute(
             """WITH ranked AS (
@@ -161,8 +184,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    DB.parent.mkdir(parents=True, exist_ok=True)
-    with closing(connect()) as connection, connection:
-        connection.execute("PRAGMA journal_mode=WAL")
-        connection.executescript(SCHEMA)
+    removed = initialize()
+    print(f"Removed {removed} legacy Northern winter results", flush=True)
     ThreadingHTTPServer(("127.0.0.1", PORT), Handler).serve_forever()

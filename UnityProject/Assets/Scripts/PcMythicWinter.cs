@@ -82,7 +82,7 @@ public sealed partial class PcGame {
         Text(x,431,width,32,"Движение −50%  •  Скорость атаки −30%",label);
         Text(x,468,width,28,"Оковы одного бойца каждые 10 с",label);
         Text(x,501,width,28,"Стадия II · "+HumanMatch.WinterPhaseTwoHp+" HP замка босса",label);
-        Text(x,534,width,57,"Павшие в оковах переходят к боссу.\nСеверяне невосприимчивы к метели и оковам.",small);
+        Text(x,534,width,57,"Павшие в оковах переходят к боссу.\nМетель и оковы действуют на вашу расу.",small);
         }
         if(LobbyButton("mythic.begin",new Rect(x,609,285,49),"Начать испытание",true)){
             var trial=mythicSelection;
@@ -271,9 +271,8 @@ public sealed partial class PcGame {
     }
 
     void DrawWinterHud(){
-        bool immune=match.TeamNorthern[0];
         DrawBossMeter(true,match.WinterPhaseTwo?"Вечная зима · II":"Вечная зима",
-            immune?"Северяне · иммунитет":"До ледяных оков",match.WinterChainIn,immune?0:10);
+            "До ледяных оков",match.WinterChainIn,10);
 
     }
 
@@ -650,11 +649,22 @@ public sealed partial class PcGame {
             "Normal deaths and ordinary chill do not change sides");
         yield return Shot(folder,"05-winter-stage-two");
 
-        var mirror=new HumanMatch(JObject.Parse(RaceCatalog(NorthernOpponent)),500,2);
+        var mirror=new HumanMatch(JObject.Parse(RaceCatalog(NorthernOpponent)),500,2){PlayerVersusPlayer=true};
         mirror.BeginChallengeRules(WinterTrialDefinition());
         var northAlly=mirror.Spawn(0,mirror.Kind(match.Lines[northKind].building),Vector2.zero);
-        Check(!mirror.WinterAffects(northAlly)&&Mathf.Abs(mirror.AttackSpeed(northAlly)-1)<.001f,
-            "A player who selects Northern also receives immunity");
+        var northBoss=mirror.Spawn(1,northAlly.kind,Vector2.right*90);
+        Check(mirror.WinterAffects(northAlly)&&Mathf.Approximately(mirror.AttackSpeed(northAlly),.7f)&&
+            Mathf.Approximately(mirror.MoveSpeed(northAlly),mirror.MoveSpeed(northBoss)*.5f),
+            "The player Northern army takes both blizzard penalties against the same race");
+        mirror.CastleHp[1]=HumanMatch.WinterPhaseTwoHp;
+        mirror.Elapsed=10;
+        mirror.Step(.05f);
+        Check(northAlly.effects.Any(e=>e.group==HumanMatch.WinterChain&&e.left>0)&&
+            !northBoss.effects.Any(e=>e.group==HumanMatch.WinterChain),"Mythic ice chains target player Northern only");
+        mirror.DamageUnit(northAlly,10000,1,execute:true);
+        mirror.Step(.05f);
+        Check(mirror.Units.Count(u=>u.team==1&&u.kind==northAlly.kind&&u.hp>0)==2&&
+            !mirror.Corpses.Any(c=>c.unit==northAlly),"A Northern fighter killed in ice joins the boss once");
         int coins=progression.Coins,xp=progression.Experience;
         match.Surrender(1);SettleChallenge();
         Check(soundtrack&&!soundtrack.isPlaying,"Ending combat stops the boss soundtrack");

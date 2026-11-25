@@ -84,6 +84,7 @@ public sealed partial class PcGame {
         if(string.IsNullOrEmpty(url))yield break;
         mythicScoreError="";
         JObject payload=new JObject{["challenge"]=score.challenge,["race"]=score.race,["time_ms"]=score.timeMs};
+        if(score.challenge==HumanMatch.WinterTrial)payload["rules_revision"]=HumanMatch.WinterRulesRevision;
         if(!string.IsNullOrEmpty(score.token))payload["token"]=score.token;
         else{
             string name=string.Join(" ",mythicNickname.Trim().Split((char[])null,StringSplitOptions.RemoveEmptyEntries));
@@ -123,6 +124,8 @@ public sealed partial class PcGame {
                     score.token="";
                     mythicScoreError="Сессия истекла. Для этой записи можно ввести гостевой ник.";
                     mythicGuestPrompt=page==Page.Result;
+                }else if(error=="outdated_winter_rules"){
+                    mythicScoreError="Обновите игру и пройдите испытание заново, чтобы записать результат.";
                 }else{
                     mythicScoreError=error=="invalid_nickname"?"Проверьте ник и повторите запись.":"Сервер не ответил. Повторите запись.";
                 }

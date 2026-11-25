@@ -6,6 +6,7 @@ namespace CastleFight {
 public sealed partial class HumanMatch {
     public const string WinterTrial="mythic_eternal_winter", WinterChain="mythic_winter_chains";
     public const int WinterPhaseTwoHp=2500;
+    public const int WinterRulesRevision=2;
     const int WinterBossTeam=1;
     const float WinterInterval=10, WinterChainDuration=3, PhaseTwoIceDamage=15;
     readonly List<Unit> winterFallen=new List<Unit>();
@@ -25,7 +26,7 @@ public sealed partial class HumanMatch {
         nextWinterChain=WinterInterval;
     }
 
-    public bool WinterAffects(Unit unit)=>EternalWinter&&unit.team==0&&!TeamNorthern[unit.team];
+    public bool WinterAffects(Unit unit)=>EternalWinter&&unit.team!=WinterBossTeam;
     float WinterMoveFactor(Unit unit)=>WinterAffects(unit)?.5f:1;
     float WinterAttackFactor(Unit unit)=>WinterAffects(unit)?.7f:1;
 
