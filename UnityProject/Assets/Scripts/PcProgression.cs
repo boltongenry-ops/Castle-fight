@@ -15,7 +15,7 @@ public sealed partial class PcGame {
         var data=JObject.Parse(asset.text);
         ChallengeCatalog034.Extend(data);
         ChallengeCampaign038.Extend(data);
-        data["mythic"]=new JArray(WinterTrialDefinition(),ChoirDefinition());
+        data["mythic"]=new JArray(WinterTrialDefinition(),ChoirDefinition(),HordeDefinition());
         var items=(JArray)data["items"];
         items.Add(new JObject{["id"]=MemePackId,["kind"]="stickers",["title"]="Рофлопак · местные легенды",["description"]="4 стикера: наги, гриб, вышки и Терминатор. Для личного чата и сетевого боя.",["cost"]=300});
         WorkshopCatalog038.Extend(items);
@@ -39,7 +39,7 @@ public sealed partial class PcGame {
     void EndChallenge(){if(savedChallengeSetup!=null){raceChoice=savedChallengeSetup[0];botRaceChoice=savedChallengeSetup[1];matchMode=savedChallengeSetup[2];roundsChoice=savedChallengeSetup[3];startGold=savedChallengeSetup[4];difficulty=savedChallengeSetup[5];aspectsOn=savedChallengeSetup[6]==1;savedChallengeSetup=null;}activeChallenge=null;challengeSettled=false;challengeReward=0;}
     void SettleChallenge(){
         if(activeChallenge==null||challengeSettled||onlineMatch)return;
-        StopWinterBossMusic();
+        StopBossSoundtrack();
         if(match.ChallengeVictoryEligible)try{challengeReward=progression.Complete((string)activeChallenge["id"],match.Elapsed);}catch(IOException error){Notice("Не удалось сохранить награду: "+error.Message);return;}
         challengeSettled=true;CaptureMythicScore();Debug.Log("CF_PC_CHALLENGE_RESULT id="+activeChallenge["id"]+" eligible="+match.ChallengeVictoryEligible+" reward="+challengeReward);
     }
@@ -96,6 +96,7 @@ public sealed partial class PcGame {
     }
     void DrawChallengeHud(){
         if(activeChallenge==null)return;
+        if(match.CursedHorde){DrawHordeHud();return;}
         if(match.FuneralChoir){DrawChoirHud();return;}
         if(match.EternalWinter){DrawWinterHud();return;}
         var strip=new Rect(210,36,661,55);
@@ -119,8 +120,8 @@ public sealed partial class PcGame {
         Text(221,39,630,27,titleText,small);
         if(details.Count>0)Text(221,62,630,26,string.Join(" · ",details),small);
     }
-    void DrawChallengeResult(){if(activeChallenge==null)return;string result=!match.ChallengeVictoryEligible?"Условия испытания не выполнены":match.EternalWinter?"Испытание пройдено":challengeReward>0?"+"+challengeReward+" жетонов · +"+ChallengeCatalog034.Experience(activeChallenge)+" опыта · ур. "+progression.MasteryLevel:"Испытание пройдено · награда уже получена";if(!challengeSettled&&match.ChallengeVictoryEligible){if(Button("challenge.retry-save",new Rect(450,345,380,32),"Повторить сохранение"))SettleChallenge();}else Text(450,345,380,35,result,small);
-        if(match.EternalWinter&&match.ChallengeVictoryEligible){
+    void DrawChallengeResult(){if(activeChallenge==null)return;string result=!match.ChallengeVictoryEligible?"Условия испытания не выполнены":(match.EternalWinter||match.FuneralChoir||match.CursedHorde)?"Испытание пройдено":challengeReward>0?"+"+challengeReward+" жетонов · +"+ChallengeCatalog034.Experience(activeChallenge)+" опыта · ур. "+progression.MasteryLevel:"Испытание пройдено · награда уже получена";if(!challengeSettled&&match.ChallengeVictoryEligible){if(Button("challenge.retry-save",new Rect(450,345,380,32),"Повторить сохранение"))SettleChallenge();}else Text(450,345,380,35,result,small);
+        if((match.EternalWinter||match.FuneralChoir||match.CursedHorde)&&match.ChallengeVictoryEligible){
             if(mythicPlace>0)Text(450,512,380,30,"Ваше место · "+mythicPlace,small);
             else if(pendingMythicScore!=null&&LobbyButton("mythic.score.open",new Rect(450,509,380,39),mythicScoreSending?"Сохраняем…":"Записать в таблицу"))SubmitPendingMythicScore();
         }

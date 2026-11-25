@@ -53,7 +53,8 @@ public sealed partial class PcGame {
     void DrawMythicRacePicker(){
         var card=new Rect(42,176,1196,500);
         bool choir=(string)mythicSelection["id"]==HumanMatch.ChoirTrial;
-        if(choir)DrawChoirPainting(card);else DrawWinterPainting(card,true);
+        bool horde=(string)mythicSelection["id"]==HumanMatch.HordeTrial;
+        if(horde)DrawHordePainting(card);else if(choir)DrawChoirPainting(card);else DrawWinterPainting(card,true);
         Fill(new Rect(42,176,641,500),new Color(.025f,.047f,.065f,.99f));
         WinterGradient(new Rect(683,176,282,500),true,new Color(.025f,.047f,.065f,.98f));
         WinterGradient(new Rect(682,337,556,339),false,new Color(.019f,.035f,.052f,.99f));
@@ -74,7 +75,10 @@ public sealed partial class PcGame {
         }
         const float x=718,width=493;
         Fill(new Rect(x-12,389,width+22,217),new Color(.023f,.042f,.061f,.91f));
-        if(choir){
+        if(horde){
+            Text(x,389,width,41,"Алый вождь",heading);
+            FitBossText(new Rect(x,436,width,155),(string)mythicSelection["description"],new GUIStyle(small),18,true);
+        }else if(choir){
             Text(x,389,width,41,"Верховный некромант",heading);
             FitBossText(new Rect(x,436,width,155),(string)mythicSelection["description"],new GUIStyle(small),18,true);
         }else{
@@ -173,7 +177,7 @@ public sealed partial class PcGame {
         yield return null;
         if(generation!=versusSerial)yield break;
         PrepareWinterAudio();
-        yield return PrepareWinterBossMusic(generation);
+        yield return PrepareBossSoundtrack(generation);
         if(generation!=versusSerial)yield break;
         Debug.Log("CF_WINTER_PREPARED atlases="+winterAtlases.Count+" minimap="+(winterMinimap!=null));
     }
@@ -521,8 +525,8 @@ public sealed partial class PcGame {
         var preparedMinimap=winterMinimap;
         var preparedGusts=winterGusts;
         var preparedWind=winterWindClip;
-        var soundtrack=winterBossMusic;
-        Check(soundtrack&&soundtrack.clip&&soundtrack.clip.name==WinterBossTrack&&soundtrack.clip.length>170&&
+        var soundtrack=bossSoundtrack;
+        Check(soundtrack&&soundtrack.clip&&soundtrack.clip.name==EpochalBossTrack&&soundtrack.clip.length>170&&
             soundtrack.isPlaying&&soundtrack.loop&&soundtrack.volume==1,
             "Frozen Final Stand starts at full source volume when the introduction opens");
         Check(winterGround.Length>0&&winterGround.All(r=>winterAtlases.ContainsKey(r.sharedMaterial.mainTexture))&&
@@ -552,7 +556,7 @@ public sealed partial class PcGame {
         Check(winterOverrides.Count==winterGround.Length&&winterGround.Length>0&&match.Elapsed==0,"Skip covers every terrain layer before starting the clock");
         Check(atlasReferences.SequenceEqual(winterAtlases.Values)&&winterMinimap==preparedMinimap&&
             winterGusts==preparedGusts&&winterWindClip==preparedWind,"The cast and skip reuse the prepared assets");
-        Check(soundtrack&&winterBossMusic==soundtrack&&soundtrack.isPlaying&&soundtrack.time>=musicBeforeSkip,
+        Check(soundtrack&&bossSoundtrack==soundtrack&&soundtrack.isPlaying&&soundtrack.time>=musicBeforeSkip,
             "Taking control keeps the same soundtrack and playback position");
         yield return new WaitForSecondsRealtime(.34f);
         Check(soundtrack&&soundtrack.volume<1&&soundtrack.volume>WinterBattleMusicVolume,
@@ -703,11 +707,11 @@ public sealed partial class PcGame {
             "The last shot hands the camera over to the player builder");
         Check(match.Elapsed==0&&!match.WinterPhaseTwo&&winterOverrides.Count==winterGround.Length&&winterGusts,
             "The full introduction ends with the same snow, wind and initial clock");
-        var replaySoundtrack=winterBossMusic;
+        var replaySoundtrack=bossSoundtrack;
         Check(replaySoundtrack&&replaySoundtrack.isPlaying&&replaySoundtrack.time>=6,
             "A full introduction carries the entire opening of the song into combat");
         MainMenu();
-        Check(replaySoundtrack&&!replaySoundtrack.isPlaying&&!winterBossMusic,
+        Check(replaySoundtrack&&!replaySoundtrack.isPlaying&&!bossSoundtrack,
             "Leaving the battle releases its soundtrack");
         BeginChallenge(WinterTrialDefinition(),0);
         yield return RecoveryWait(()=>versusActive&&winterAtlases.Count>0,"A new preparation can be interrupted",12);

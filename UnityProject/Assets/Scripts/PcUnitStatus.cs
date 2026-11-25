@@ -37,8 +37,8 @@ public sealed partial class PcGame {
             string name=Clean((string)effect.config?["name"]??effect.id);
             string detail=(string)effect.config?["description"];
             string duration=float.IsPositiveInfinity(effect.left)?"Постоянно":"Осталось: "+Mathf.CeilToInt(effect.left)+" с";
-            var art=effect.id==HumanMatch.WinterChain?AbilityArt("A04H")??DebuffArt(effect):
-                harmful?DebuffArt(effect):AbilityArt(effect.id)??Extra("heal")??Extra("debuff");
+            var art=HordeStatusArt(effect.id)??(effect.id==HumanMatch.WinterChain?AbilityArt("A04H")??DebuffArt(effect):
+                harmful?DebuffArt(effect):AbilityArt(effect.id)??Extra("heal")??Extra("debuff"));
             (harmful?unitDebuffs:unitBuffs).Add(new StatusBadge("effect."+effect.id,name,
                 name+(string.IsNullOrEmpty(detail)?"":"\n"+Clean(detail))+"\n"+duration,art));
         }

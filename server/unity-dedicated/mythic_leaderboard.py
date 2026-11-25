@@ -9,6 +9,7 @@ from pathlib import Path
 from urllib import error, parse, request
 
 CHALLENGE = "mythic_eternal_winter"
+CHALLENGES = (CHALLENGE, "mythic_funeral_choir", "mythic_cursed_horde")
 NORTHERN_RACE = 5
 WINTER_RULES_REVISION = 2
 ROUTE = "/mythic-leaderboard"
@@ -98,7 +99,7 @@ def store(payload):
     race = payload.get("race")
     elapsed = payload.get("time_ms")
     challenge = payload.get("challenge")
-    if challenge not in (CHALLENGE, "mythic_funeral_choir"):
+    if challenge not in CHALLENGES:
         raise RequestError(400, "unknown_challenge")
     if type(race) is not int or not 0 <= race < 18 or type(elapsed) is not int or not 1000 <= elapsed <= 86400000:
         raise RequestError(400, "invalid_result")

@@ -5,6 +5,11 @@ namespace CastleFight {
 public sealed class PcModel : MonoBehaviour {
     public bool reforged,particleOnly;public string appearanceKey;public GameObject animatedRoot;public string raw,animationProperties;public AnimationClip[] clips;public float godotHeight,visualScale=1;
     Animation player;NativeAppearance appearance;string pose;int previousAttack=-1;
+    public bool SetEffectTint(Color? tint){
+        if(!appearance)return false;
+        appearance.SetEffectTint(tint);
+        return true;
+    }
     bool restorePose;
     static float RosterScale(string id){
         switch(id){

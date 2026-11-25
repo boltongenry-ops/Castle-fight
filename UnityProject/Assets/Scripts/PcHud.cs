@@ -136,7 +136,7 @@ public sealed partial class PcGame {
                     }
                 }
             }
-            Fill(new Rect(x-17,y,34,4),new Color(.02f,.02f,.02f,.95f));Fill(new Rect(x-16,y+1,32*u.hp/u.maxHp,2),u.team==0?new Color(.2f,.85f,.25f):new Color(.95f,.2f,.14f));float debt=Mathf.Min(u.hp,match.PandaStagger(u));if(debt>0)Fill(new Rect(x-16+32*(u.hp-debt)/u.maxHp,y+1,32*debt/u.maxHp,2),new Color(1,.67f,.16f));DrawUnitDebuffs(u,x,y);
+            Fill(new Rect(x-17,y,34,4),new Color(.02f,.02f,.02f,.95f));Fill(new Rect(x-16,y+1,32*u.hp/u.maxHp,2),u.team==0?new Color(.2f,.85f,.25f):new Color(.95f,.2f,.14f));float debt=Mathf.Min(u.hp,match.PandaStagger(u));if(debt>0)Fill(new Rect(x-16+32*(u.hp-debt)/u.maxHp,y+1,32*debt/u.maxHp,2),new Color(1,.67f,.16f));DrawUnitDebuffs(u,x,y);if(match.CursedHorde)DrawHordeUnitBadge(u,x,y);
         }
         foreach(var h in match.Huts)if(h.paid&&CanInspectHut(h)&&huts.TryGetValue(h.id,out var buildingView)&&(HumanMatch.F(match.Lines[h.kind].buildingStats,"max_mana")>0||h.id==selectedHut)){
             var point=Camera.main.WorldToScreenPoint(buildingView.transform.position+Vector3.up*Mathf.Max(3,buildingView.ClassicHeight+.4f));if(point.z<=0)continue;float x=(point.x-guiOrigin.x)/guiScale,y=(Screen.height-point.y-guiOrigin.y)/guiScale;if(y<42||y>510||x<0||x>1280)continue;
@@ -344,7 +344,7 @@ public sealed partial class PcGame {
         }
     }
     void DrawMinimap() {
-        var rect=HudMap;Fill(rect,new Color(.025f,.035f,.025f));if(minimapTerrain)Source(winterMinimap?winterMinimap:minimapTexture,new Rect(0,52,256,153),rect);
+        var rect=HudMap;Fill(rect,new Color(.025f,.035f,.025f));if(minimapTerrain)Source(hordeMinimap?hordeMinimap:winterMinimap?winterMinimap:minimapTexture,new Rect(0,52,256,153),rect);
         DrawMinimapFog(rect);
         Func<Vector2,Vector2> point=p=>new Vector2(rect.x+(p.x+204.8f)/409.6f*rect.width,rect.y+(p.y+3584f/30)/(7168f/30)*rect.height);
         foreach(var hut in match.Huts.Where(h=>!FogActive||h.team==0||fogKnownHuts.Contains(h.id))){var p=point(hut.position);Fill(new Rect(p.x-2,p.y-2,4,4),hut.team==0?new Color(.25f,.55f,1):Color.red);}

@@ -20,7 +20,9 @@ public sealed partial class HumanMatch {
         if(u==null)return;var c=Abilities[id];if(c!=null){var data=(JObject)c;if(NerubVenom(c)){data=(JObject)data.DeepClone();data["nerub_source"]=sourceId;}ApplyEffectData(u,data,sourceTeam<0?u.team:sourceTeam);}
     }
     void ApplyEffectData(Unit u,JObject c,int sourceTeam) {
-        if(u==null||u.hp<=0)return;c=NerubStatus(u,c,sourceTeam);if(ApplyNerubVenom(u,c,sourceTeam))return;string id=(string)c["id"],group=(string)c["stack_group"]??id;float strength=F(c,"stack_strength",F(c,"dps"));
+        if(u==null||u.hp<=0)return;
+        if(IsHordeWarchief(u)&&sourceTeam>=0&&sourceTeam!=u.team&&(bool?)c["physical_control"]!=true)return;
+        c=NerubStatus(u,c,sourceTeam);if(ApplyNerubVenom(u,c,sourceTeam))return;string id=(string)c["id"],group=(string)c["stack_group"]??id;float strength=F(c,"stack_strength",F(c,"dps"));
         if(u.effects.Any(e=>e.group==group&&e.strength>strength))return;
         // Refreshing the same poison extends its duration without postponing its next damage tick.
         var previous=(string)c["kind"]=="poison"&&F(c,"dps")>0?u.effects.FirstOrDefault(e=>e.id==id&&e.sourceTeam==sourceTeam&&e.left>0):null;
@@ -222,10 +224,10 @@ public sealed partial class HumanMatch {
         if(UnitIndexReady033()) {
             float brMax=0;for(int wi=0;wi<l.buildingWeapons.Length;wi++)brMax=Mathf.Max(brMax,l.buildingWeapons[wi].range);
             float acquisition=Mathf.Min(brMax,l.buildingAcquisitionRange);float brSqr=acquisition*acquisition;
-            if(TryFindBestAny033(h.position,brSqr,h.team,false,v=>!CorruptedAirborne(v)&&!Invulnerable(v)&&!Hidden(v)&&NightCanDetect(h.team,v)&&l.buildingWeapons.Any(w=>(Flying(v)?w.air:w.ground)&&(v.position-h.position).sqrMagnitude<=w.range*w.range),out target))towerIndexed=true;
+            if(TryFindBestAny033(h.position,brSqr,h.team,false,v=>!CorruptedAirborne(v)&&!Invulnerable(v)&&!Hidden(v)&&NightCanDetect(h.team,v)&&l.buildingWeapons.Any(w=>!HordeImmuneToWeapon(v,w)&&(Flying(v)?w.air:w.ground)&&(v.position-h.position).sqrMagnitude<=w.range*w.range),out target))towerIndexed=true;
         }
-        if(!towerIndexed)target=Units.Where(u=>u.team!=h.team&&u.hp>0&&!CorruptedAirborne(u)&&!Invulnerable(u)&&!Hidden(u)&&NightCanDetect(h.team,u)&&l.buildingWeapons.Any(w=>(Flying(u)?w.air:w.ground)&&(u.position-h.position).sqrMagnitude<=Mathf.Min(w.range,l.buildingAcquisitionRange)*Mathf.Min(w.range,l.buildingAcquisitionRange))).OrderBy(u=>(u.position-h.position).sqrMagnitude).FirstOrDefault();
-        if(target==null)return;h.pendingWeapon=l.buildingWeapons.First(w=>(Flying(target)?w.air:w.ground)&&Vector2.Distance(target.position,h.position)<=w.range);h.cooldown=h.pendingWeapon.cooldown;h.strikeLeft=h.pendingWeapon.point;h.attackTarget=target.id;h.attackSerial++;h.attackPoseLeft=h.pendingWeapon.point+h.pendingWeapon.backswing+.2f;
+        if(!towerIndexed)target=Units.Where(u=>u.team!=h.team&&u.hp>0&&!CorruptedAirborne(u)&&!Invulnerable(u)&&!Hidden(u)&&NightCanDetect(h.team,u)&&l.buildingWeapons.Any(w=>!HordeImmuneToWeapon(u,w)&&(Flying(u)?w.air:w.ground)&&(u.position-h.position).sqrMagnitude<=Mathf.Min(w.range,l.buildingAcquisitionRange)*Mathf.Min(w.range,l.buildingAcquisitionRange))).OrderBy(u=>(u.position-h.position).sqrMagnitude).FirstOrDefault();
+        if(target==null)return;h.pendingWeapon=l.buildingWeapons.First(w=>!HordeImmuneToWeapon(target,w)&&(Flying(target)?w.air:w.ground)&&Vector2.Distance(target.position,h.position)<=w.range);h.cooldown=h.pendingWeapon.cooldown;h.strikeLeft=h.pendingWeapon.point;h.attackTarget=target.id;h.attackSerial++;h.attackPoseLeft=h.pendingWeapon.point+h.pendingWeapon.backswing+.2f;
     }
     void AddFire(int team,Vector2 center,string id="A02K"){var c=Abilities[id];Fires.Add(new Fire {id=nextId++,team=team,ability=id,center=center,nextFull=F(c,"interval",.25f),nextTail=F(c?["fields"],"ahdu",1.01f)+F(c?["fields"],"Hfs4",1)});ArtilleryFires++;PulseAt(center,F(c,"area",5),new Color(1,.3f,.02f),"Горючая смесь",F(c?["fields"],"adur",1.01f));}
     void FirePulse(Fire fire,float amount) {

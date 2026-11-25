@@ -37,12 +37,12 @@ public sealed partial class HumanMatch {
         foreach(var id in AbilityView035.Get(u,Abilities).passives){var c=Ranked(u,id);if((string)c?["kind"]=="self_passive"&&name!="armor")value+=F(c,name);}
         return value;
     }
-    public float MoveSpeed(Unit u)=>BaseMoveSpeed(u)*WinterMoveFactor(u)*(FuneralChoir?1-.65f*Burial(u):1);
+    public float MoveSpeed(Unit u)=>BaseMoveSpeed(u)*WinterMoveFactor(u)*(HordeRaging(u)?1.25f:1)*(FuneralChoir?1-.65f*Burial(u):1);
     float BaseMoveSpeed(Unit u){var l=Lines[u.kind];if(u.elementalArmed)return Rooted(u)?0:15;float fixedMove=-1;foreach(var e in u.effects)if(e.left>0){float candidate=F(e.config,"move_override");if(candidate>0&&(fixedMove<0||candidate<fixedMove))fixedMove=candidate;}if(fixedMove>=0)return Rooted(u)?0:fixedMove;return l.speed<=0||Rooted(u)?0:Mathf.Clamp((l.speed+(TeamNaga[u.team]&&Aspects[u.team]==0?-20f/30:0))*(1+ItemPassive(u.team,"speed_bonus",u))*Mathf.Max(0,1+Stat(u,"speed")+(u.nightInvisible?u.nightSpeed:0)),UnitConfig035(u.kind).minSpeed,UnitConfig035(u.kind).maxSpeed);}
     public float AttackSpeed(Unit u)=>Mathf.Clamp(1+(Lines[u.kind].unit=="bU02" && u.hp*10<u.maxHp*3?.4f:0)+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5)*WinterAttackFactor(u);
     public Weapon WeaponFor(Unit u,Unit target=null,bool structure=false){
         if(Ethereal(u)||Disarmed(u))return null;
-        foreach(var w in u.elementalWeapons??Lines[u.kind].weapons)if((target==null||!Invulnerable(target)&&!CorruptedAirborne(target)&&!Hidden(target)&&NightCanDetect(u.team,target)&&Lines[target.kind].unit!="n02E")&&(target==null||Lines[target.kind].unit!="YTct"||w.targets.Contains("tree"))&&(target==null||!Ethereal(target)||w.attack=="magic"||w.attack=="spells")&&(structure?w.structure:target!=null&&Flying(target)?w.air:w.ground))return w;
+        foreach(var w in u.elementalWeapons??Lines[u.kind].weapons)if((target==null||!HordeImmuneToWeapon(target,w)&&!Invulnerable(target)&&!CorruptedAirborne(target)&&!Hidden(target)&&NightCanDetect(u.team,target)&&Lines[target.kind].unit!="n02E")&&(target==null||Lines[target.kind].unit!="YTct"||w.targets.Contains("tree"))&&(target==null||!Ethereal(target)||w.attack=="magic"||w.attack=="spells")&&(structure?w.structure:target!=null&&Flying(target)?w.air:w.ground))return w;
         return null;
     }
     int HutTarget(Hut h)=>-h.id-2;
@@ -72,6 +72,7 @@ public sealed partial class HumanMatch {
         if(u.pandaSplit||Hidden(u)||Lines[u.kind].category=="visual")return;
         if(TickNatureBear(u,dt)||TickWarlock(u,dt))return;
         if(u.stun>0||Disabled(u)){u.strikeLeft=-1;u.pendingSpell=null;u.castLeft=-1;u.pose="Stand";return;}
+        if(TickHordeActor(u,dt))return;
         if(TickElementalWind(u,dt))return;TickMechPassiveFire(u);TickElvenPassive(u);if(TickMechUnit(u,dt))return;
         if(u.castLeft>=0){u.castLeft-=dt;u.pose=u.finalCastPose??"Spell";if(u.castLeft<=0){var id=u.pendingSpell;u.pendingSpell=null;u.castLeft=-1;bool ok=Cast(u,id,u.spellTarget);u.spellTimers[id]=ok?SpellCooldown(u,id):.25f;}return;}
         if(u.castPause>0){u.pose=u.finalCastPose??"Spell";return;}u.finalCastPose=null;
@@ -202,6 +203,7 @@ public sealed partial class HumanMatch {
     float Splash(Weapon w,float distance)=>distance<=w.full?1:distance<=w.half?w.halfFactor:distance<=w.quarter?w.quarterFactor:0;
     public float DamageUnit(Unit victim,float amount,int team,string attack="magic",bool spell=true,bool execute=false,Unit killer=null,bool suppressUndead=false,bool ignoreArmor=false,float minimumHp=0,bool suppressElemental=false,string attackTable=null,bool bypassResistance=false,bool pandaDebt=false) {
         if(victim==null||victim.hp<=0||amount<=0||CorruptedAirborne(victim))return 0;InvalidateArmyCounts035();Ensure(victim);
+        if(!execute&&IsHordeWarchief(victim)&&(spell||attack=="magic"||attack=="spells"))return 0;
         if(!execute&&!spell&&!pandaDebt&&BerserkImmune(victim,attack))return 0;
         if(!execute&&(Invulnerable(victim)||Lines[victim.kind].unit=="n02E"))return 0;
         if(!execute&&!pandaDebt&&Ethereal(victim)){if(!spell&&attack!="magic"&&attack!="spells")return 0;if(spell&&attack=="magic")amount*=1.66f;}

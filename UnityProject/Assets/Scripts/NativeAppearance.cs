@@ -31,6 +31,7 @@ public sealed class NativeAppearance : MonoBehaviour {
     static Dictionary<string,Model> database;
     Model config;Animation player; AnimationState playing;Vector2 clipInterval;
     SkinnedMeshRenderer skin; MaterialPropertyBlock block;float[] previous;
+    Color? effectTint;
     float untilRefresh;
     public float AuthoredHeight=>config?.height??2.2f;
     static void LoadDatabase(){
@@ -59,6 +60,13 @@ public sealed class NativeAppearance : MonoBehaviour {
         block=new MaterialPropertyBlock();Refresh();
     }
     public void SetClip(string name){playing=player[name];config.clips.TryGetValue(name,out clipInterval);Refresh();untilRefresh=.05f;}
+    public void SetEffectTint(Color? tint){
+        if(effectTint==tint)return;
+        effectTint=tint;
+        if(previous==null)return;
+        for(int i=0;i<previous.Length;i++)previous[i]=-1;
+        Refresh();
+    }
     void LateUpdate(){untilRefresh-=Time.deltaTime;if(untilRefresh<=0){untilRefresh=.05f;Refresh();}}
     void Refresh() {
         if(config==null||playing==null)return;
@@ -66,7 +74,9 @@ public sealed class NativeAppearance : MonoBehaviour {
         for(int i=0;i<config.geosets.Length;i++) {
             float alpha=config.geosets[i].Evaluate(clipInterval,time*1000)*config.layers[i].Evaluate(clipInterval,time*1000);
             if(Mathf.Approximately(previous[i],alpha))continue;
-            previous[i]=alpha;block.SetFloat("_NativeAlpha",alpha);skin.SetPropertyBlock(block,i);
+            previous[i]=alpha;block.Clear();block.SetFloat("_NativeAlpha",alpha);
+            if(effectTint.HasValue)block.SetColor("_Tint",effectTint.Value);
+            skin.SetPropertyBlock(block,i);
         }
     }
     public bool SurfaceVisible(int index) {if(config==null||playing==null)return true;float ms=playing.time*1000;return config.geosets[index].Evaluate(clipInterval,ms)*config.layers[index].Evaluate(clipInterval,ms)>=.01f;}

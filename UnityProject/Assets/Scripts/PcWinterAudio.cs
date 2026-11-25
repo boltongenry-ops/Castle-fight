@@ -9,16 +9,16 @@ public sealed partial class PcGame
 {
     AudioSource winterWindAudio;
     AudioClip winterWindClip;
-    const string WinterBossTrack = "Frozen Final Stand";
+    const string EpochalBossTrack = "Frozen Final Stand";
     const float WinterBattleMusicVolume = .55f;
     const float WinterMusicFadeSeconds = 1.35f, WinterPhaseTwoPitch = 1.2f;
-    AudioSource winterBossMusic;
-    bool ownsWinterBossClip;
+    AudioSource bossSoundtrack;
+    bool ownsBossSoundtrackClip;
 
-    IEnumerator PrepareWinterBossMusic(int generation)
+    IEnumerator PrepareBossSoundtrack(int generation)
     {
         AudioClip clip;
-        string path = Path.Combine(Application.streamingAssetsPath, "Frontend", WinterBossTrack + ".mp3");
+        string path = Path.Combine(Application.streamingAssetsPath, "Frontend", EpochalBossTrack + ".mp3");
         bool localFile = !Application.isMobilePlatform && File.Exists(path);
         if (localFile)
         {
@@ -29,7 +29,7 @@ public sealed partial class PcGame
                 if (generation != versusSerial) yield break;
                 if (request.result != UnityWebRequest.Result.Success)
                 {
-                    Debug.LogWarning("Winter soundtrack: " + request.error);
+                    Debug.LogWarning("Epochal soundtrack: " + request.error);
                     yield break;
                 }
                 clip = DownloadHandlerAudioClip.GetContent(request);
@@ -37,7 +37,7 @@ public sealed partial class PcGame
         }
         else
         {
-            var load = Resources.LoadAsync<AudioClip>("WinterBattle/" + WinterBossTrack);
+            var load = Resources.LoadAsync<AudioClip>("WinterBattle/" + EpochalBossTrack);
             yield return load;
             if (generation != versusSerial) yield break;
             clip = load.asset as AudioClip;
@@ -53,47 +53,47 @@ public sealed partial class PcGame
             yield break;
         }
 
-        clip.name = WinterBossTrack;
-        ownsWinterBossClip = localFile;
-        winterBossMusic = visuals.AddComponent<AudioSource>();
-        winterBossMusic.playOnAwake = false;
-        winterBossMusic.spatialBlend = 0;
-        winterBossMusic.clip = clip;
-        winterBossMusic.loop = true;
-        winterBossMusic.volume = 1;
+        clip.name = EpochalBossTrack;
+        ownsBossSoundtrackClip = localFile;
+        bossSoundtrack = visuals.AddComponent<AudioSource>();
+        bossSoundtrack.playOnAwake = false;
+        bossSoundtrack.spatialBlend = 0;
+        bossSoundtrack.clip = clip;
+        bossSoundtrack.loop = true;
+        bossSoundtrack.volume = 1;
     }
 
-    void StartWinterBossMusic()
+    void StartBossSoundtrack()
     {
-        if (winterBossMusic) winterBossMusic.Play();
+        if (bossSoundtrack) bossSoundtrack.Play();
     }
 
-    void UpdateWinterBossMusic()
+    void UpdateBossSoundtrack()
     {
-        if (!winterBossMusic || winterIntro || !winterBossMusic.isPlaying) return;
+        if (!bossSoundtrack || winterIntro || hordeIntro || match == null || !bossSoundtrack.isPlaying) return;
         float rate = (1 - WinterBattleMusicVolume) / WinterMusicFadeSeconds;
-        winterBossMusic.volume = Mathf.MoveTowards(winterBossMusic.volume, WinterBattleMusicVolume,
+        bossSoundtrack.volume = Mathf.MoveTowards(bossSoundtrack.volume, WinterBattleMusicVolume,
             Time.unscaledDeltaTime * rate);
-        if (match.WinterPhaseTwo)
-            winterBossMusic.pitch = Mathf.MoveTowards(winterBossMusic.pitch, WinterPhaseTwoPitch,
+        if (match.WinterPhaseTwo || match.HordeSecondStage)
+            bossSoundtrack.pitch = Mathf.MoveTowards(bossSoundtrack.pitch, WinterPhaseTwoPitch,
                 Time.unscaledDeltaTime * .5f);
     }
 
-    void StopWinterBossMusic()
+    void StopBossSoundtrack()
     {
-        if (winterBossMusic) winterBossMusic.Stop();
+        if (bossSoundtrack) bossSoundtrack.Stop();
     }
 
-    void ClearWinterBossMusic()
+    void ClearBossSoundtrack()
     {
-        if (!winterBossMusic) return;
-        StopWinterBossMusic();
-        var clip = winterBossMusic.clip;
-        winterBossMusic.clip = null;
-        Destroy(winterBossMusic);
-        winterBossMusic = null;
-        if (ownsWinterBossClip && clip) Destroy(clip);
-        ownsWinterBossClip = false;
+        if (!bossSoundtrack) return;
+        StopBossSoundtrack();
+        var clip = bossSoundtrack.clip;
+        bossSoundtrack.clip = null;
+        Destroy(bossSoundtrack);
+        bossSoundtrack = null;
+        if (ownsBossSoundtrackClip && clip) Destroy(clip);
+        ownsBossSoundtrackClip = false;
     }
 
     void PrepareWinterAudio()
@@ -118,7 +118,7 @@ public sealed partial class PcGame
 
     void ClearWinterAudio()
     {
-        ClearWinterBossMusic();
+        ClearBossSoundtrack();
         if (winterWindAudio)
         {
             winterWindAudio.Stop();

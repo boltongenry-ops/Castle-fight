@@ -41,7 +41,7 @@ public sealed partial class PcGame {
     void DrawMenuBackground() {
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.18f));
     }
-    void DisposeFrontend(){StopDirectory();DisposeStickers();if(menuAudio)Destroy(menuAudio);DisposeWinterArtwork();}
+    void DisposeFrontend(){StopDirectory();DisposeStickers();if(menuAudio)Destroy(menuAudio);DisposeWinterArtwork();DisposeHordeArtwork();}
     // Only the current pair is decoded; fifteen source paintings stay on disk.
     static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
     static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};
@@ -60,15 +60,16 @@ public sealed partial class PcGame {
         versusSerial++;versusActive=false;versusPrepared=false;mobileRoundPrepared=false;
         if(MobileContent.Active)MobileContent.Current.VersusLoading=false;
         DisposeVersusArt();
-        versusWinter=choirVersus=false;
+        versusWinter=choirVersus=hordeVersus=false;
     }
     void BeginVersus(int a,int b,bool online){
         DisposeVersusArt();versusSerial++;versusA=Mathf.Clamp(a,0,VersusKeys.Length-1);versusB=Mathf.Clamp(b,0,VersusKeys.Length-1);versusActive=true;versusPrepared=false;versusNetwork=online;versusAt=Time.realtimeSinceStartup;versusReadyVisible=0;versusReadyDrawFrame=-1;
         versusNameA=online?ResultPlayerName(networkSlot):"Вы";versusNameB=online?ResultPlayerName(1-networkSlot):"Компьютер";
         choirVersus=!online&&(string)activeChallenge?["id"]==HumanMatch.ChoirTrial;
-        versusWinter=choirVersus||!online&&(string)activeChallenge?["id"]==HumanMatch.WinterTrial;
+        hordeVersus=!online&&(string)activeChallenge?["id"]==HumanMatch.HordeTrial;
+        versusWinter=choirVersus||hordeVersus||!online&&(string)activeChallenge?["id"]==HumanMatch.WinterTrial;
         winterVersusFrame=-1;winterVersusReveal=0;
-        if(versusWinter&&!choirVersus)WinterArtwork();
+        if(versusWinter&&!choirVersus&&!hordeVersus)WinterArtwork();
         if(MobileContent.Active){
             MobileContent.Current.VersusLoading=true;
             PrepareVersusFallbacks();
@@ -114,7 +115,7 @@ public sealed partial class PcGame {
             yield return null;
         }
     }
-    void BeginOfflineVersus(bool next=false){if(versusActive)return;if(testing&&(string)activeChallenge?["id"]!=HumanMatch.WinterTrial&&(string)activeChallenge?["id"]!=HumanMatch.ChoirTrial){if(next)StartRound();else NewMatch();return;}StartCoroutine(OfflineVersus(next));}
+    void BeginOfflineVersus(bool next=false){if(versusActive)return;if(testing&&(string)activeChallenge?["id"]!=HumanMatch.WinterTrial&&(string)activeChallenge?["id"]!=HumanMatch.ChoirTrial&&(string)activeChallenge?["id"]!=HumanMatch.HordeTrial){if(next)StartRound();else NewMatch();return;}StartCoroutine(OfflineVersus(next));}
     IEnumerator OfflineVersus(bool next){
         if(matchMode==1){raceChoice=RandomStagedRace(-1);botRaceChoice=RandomStagedRace(raceChoice);mobileRoundPrepared=true;}
         BeginVersus(raceChoice,matchMode==2?raceChoice:botRaceChoice<0?raceChoice:botRaceChoice,false);int generation=versusSerial;
@@ -125,6 +126,12 @@ public sealed partial class PcGame {
         if(next)StartRound();else NewMatch();
         if(matchRace!=versusA||matchBotRace!=versusB){DisposeVersusArt();versusA=matchRace;versusB=matchBotRace;if(MobileContent.Active)PrepareVersusFallbacks();yield return LoadVersusArt(generation);}
         if(match.FuneralChoir){yield return PrepareRitualGround(generation,true);if(generation!=versusSerial)yield break;yield return PrepareChoirMusic(generation);if(generation!=versusSerial)yield break;}
+        if(match.CursedHorde){
+            yield return PrepareHordeGround(generation);
+            if(generation!=versusSerial)yield break;
+            yield return PrepareBossSoundtrack(generation);
+            if(generation!=versusSerial)yield break;
+        }
         if(match.EternalWinter){
             yield return PrepareWinterPresentation(generation);
             if(generation!=versusSerial)yield break;
@@ -135,7 +142,7 @@ public sealed partial class PcGame {
             if(winterIntro)FrameWinterOpening();
             CloseVersus();
             ReleaseWinterArtwork();
-            if(winterIntro)StartWinterBossMusic();
+            if(winterIntro||hordeIntro)StartBossSoundtrack();
         }
     }
 
