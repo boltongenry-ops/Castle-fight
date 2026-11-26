@@ -41,7 +41,7 @@ public sealed partial class PcGame {
         match.Aspects[1]=aspectPickBot;aspectWaiting=false;
         Debug.Log("CF_PC_ASPECT_PICK team=0 index="+match.Aspects[0]+" bot="+match.Aspects[1]+" left="+aspectRemaining.ToString("F1")+(timeout?" timeout":""));
     }
-    bool AspectShown()=>match!=null&&page==Page.Match&&match.Aspects[0]>=0&&match.Aspects[1]>=0&&!match.Finished&&AspectCount(matchRace)==2;
+    bool AspectShown()=>match!=null&&page==Page.Match&&match.Aspects[0]>=0&&(match.Aspects[1]>=0||match.LastProtocol)&&!match.Finished&&AspectCount(matchRace)==2;
 
     void EnsureAspectStyles() {
         if(aspectEyebrow!=null)return;

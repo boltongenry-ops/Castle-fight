@@ -32,7 +32,7 @@ public sealed partial class PcGame {
     }
 
     void CaptureMythicScore(){
-        if(!(match.EternalWinter||match.FuneralChoir||match.CursedHorde)||!match.ChallengeVictoryEligible||MythicLeaderboardUrl().Length==0)return;
+        if(!CurrentMythic||!match.ChallengeVictoryEligible||MythicLeaderboardUrl().Length==0)return;
         string token=!networkGuest&&NetworkAccountStore.SameService(networkSessionEndpoint,NetworkAccountStore.UnityEndpoint)?
             networkSessionToken:"";
         pendingMythicScore=new MythicScore{challenge=(string)activeChallenge["id"],race=matchRace,timeMs=Mathf.Max(1000,Mathf.RoundToInt(match.Elapsed*1000)),token=token};

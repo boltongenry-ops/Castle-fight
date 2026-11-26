@@ -45,6 +45,8 @@ public sealed partial class HumanMatch {
         public int handBolts;public bool handIronUsed;
         public int bearPhase=-1;public float bearLeft;public bool natureSpirit;public readonly HashSet<string> permanentHeals=new HashSet<string>();
         public int id,team,kind,kills,attackSerial,combatTarget=-1,attackTarget=-1;public Vector2 position,previous,direction,exitWaypoint;public bool leaveCastleLane;
+        internal Vector2 groundPassAxis;
+        internal float groundPassSide,groundPassUntil;
         public float hp,maxHp,mana,maxMana,manaRegen,armor,spellResist,critChance,critMultiplier=1,evasion,stun,stasisLeft,cooldown,deadAge,pending,attackPoseLeft,strikeLeft=-1,castLeft=-1,castPause,shotDamage,shotStun,auraArmor,auraMana,auraDamage,warlockLeft;
         public float auraRegen,auraThorns,auraDamageTick;public float summonLeft,attackOverride=-1,cooldownOverride=-1,sirenFollowup=-1;public bool summoned,noBounty,noCorpse,seaSummon;public int warlockPhase=-1,spellTarget=-1;public string finalCastPose,pendingSpell,pose="Walk";public Weapon pendingWeapon;public bool onRoad,deathProcessed,healthGranted,skirmish;
         public readonly Dictionary<string,int> abilityLevels=new Dictionary<string,int>();public readonly HashSet<string> abilities=new HashSet<string>(),auraIds=new HashSet<string>();public readonly Dictionary<string,float> spellTimers=new Dictionary<string,float>();public readonly List<Effect> effects=new List<Effect>();
@@ -127,7 +129,7 @@ public sealed partial class HumanMatch {
     public bool TryBuild(int team,int kind,int x,int y,out string error) {
         error=PurchaseError(team,kind);
         if(error==""&&(!teamBaseBuildings[team].Contains(Lines[kind].building)||!LegalCell(team,x,y)))error="Стройте в своей зоне, вне дороги и стен";
-        if(error==""&&Huts.Any(h=>h.team==team&&h.x==x&&h.y==y))error="Эта клетка занята";
+        if(error==""&&(ProtocolBlocksPlot(team,x,y)||Huts.Any(h=>h.team==team&&h.x==x&&h.y==y)))error="Эта клетка занята";
         if(error==""&&Builders[team].jobs.Count>=32)error="В очереди уже 32 приказа";
         if(error!=""){Rejected++;return false;}
         var l=Lines[kind];var hut=new Hut {id=nextId++,team=team,kind=kind,x=x,y=y,position=Plot(team,x,y),buildLeft=l.buildSeconds,spawnLeft=l.interval,hp=F(l.buildingStats,"hp",1000),maxHp=F(l.buildingStats,"hp",1000),baseCost=l.cost,spent=l.cost};
@@ -140,7 +142,7 @@ public sealed partial class HumanMatch {
         var l=Lines[kind];float ratio=h.hp/h.maxHp;Gold[team]-=GoldPrice(team,kind);Wood[team]+=l.woodReward-l.woodCost;h.spent+=l.cost;h.income+=l.cost*l.incomeRate;h.kind=kind;h.spawnLeft=Interval(h);h.paused=false;h.cooldown=0;h.strikeLeft=-1;h.pendingWeapon=null;h.spellTimers.Clear();h.maxHp=F(l.buildingStats,"hp",h.maxHp);h.hp=ratio*h.maxHp;h.mana=F(l.buildingStats,"start_mana");Upgrades++;return true;
     }
     void RemoveHut(Hut h){Huts.Remove(h);var b=Builders[h.team];if(b.jobs.Remove(h.id)&&b.jobs.Count==0){b.goal=b.position;b.pose="Stand";}}
-    public bool Sell(int team,int id){var h=Huts.FirstOrDefault(v=>v.id==id&&v.team==team);if(h==null||Finished)return false;if(h.paid)Gold[team]+=(int)(h.baseCost*.2f);RemoveHut(h);return true;}
+    public bool Sell(int team,int id){var h=Huts.FirstOrDefault(v=>v.id==id&&v.team==team);if(h==null||Finished||IsProtocolDefense(h))return false;if(h.paid)Gold[team]+=(int)(h.baseCost*.2f);RemoveHut(h);return true;}
     public bool PauseHut(int team,int id,bool paused){var h=Huts.FirstOrDefault(v=>v.id==id&&v.team==team&&v.paid);if(h==null||Finished)return false;h.paused=paused;return true;}
     readonly Dictionary<Hut,int>[] synchronizedHuts={new Dictionary<Hut,int>(),new Dictionary<Hut,int>()};
     int reservedWaveSlots;

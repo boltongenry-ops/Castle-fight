@@ -110,5 +110,62 @@ public sealed partial class PcGame {
         yield return Shot(folder,"01-smoothed-flight");ClearOnlineProjectiles();Check(onlineProjectiles.Count==0&&projectileTracks.Count==0&&!projectileClock,"Match cleanup releases all projectile histories and resets presentation time");
         MainMenu();var result=new JObject{["status"]=testFailures==0?"PASS":"FAIL",["checks"]=testChecks,["failures"]=testFailures,["frames"]=frames,["movingFrames"]=moving,["activeFrames"]=active,["maxSpeed"]=maxSpeed,["androidDeviceTest"]=false};File.WriteAllText(Path.Combine(folder,"motion024-verification.json"),result.ToString());Debug.Log("CF_MOTION024_TARGETED_"+(testFailures==0?"PASS":"FAIL")+" checks="+testChecks.Count);Application.Quit(testFailures==0?0:1);
     }
+
+    IEnumerator ExerciseGroundMarch(){
+        string folder=BattleLab.Arg("--pc-results",Application.persistentDataPath);
+        Directory.CreateDirectory(folder);
+        yield return null;
+        var catalog=JObject.Parse(RaceCatalog(0));
+        var rows=new JArray();
+        for(int side=0;side<2;side++)foreach(float gate in new[]{0f,2016f/30,3520f/30}){
+            int forward=side==0?1:-1;
+            foreach(float offset in new[]{-2.4f,-1.48f,-.3f,0,.3f,1.48f,2.4f}){
+                var sim=new HumanMatch(catalog){PlayerVersusPlayer=true};
+                SimulationState035.Get(sim).auditGround=true;
+                var kind=sim.Kind("h000");
+                var lead=sim.Spawn(side,kind,new Vector2((gate+.76f)*forward,0));
+                lead.stun=40;lead.onRoad=true;
+                var trailing=sim.Spawn(side,kind,new Vector2((gate-1.4f)*forward,offset));trailing.onRoad=true;
+                var lastDelta=Vector2.zero;
+                var path=new JArray();
+                int reversals=0, ticks=0;
+                for(;ticks<110&&(trailing.position.x*forward-gate)<6;ticks++){
+                    var before=trailing.position;
+                    sim.Step(.05f);
+                    var step=trailing.position-before;
+                    if(ticks>0&&Vector2.Dot(lastDelta,step)<-.005f)reversals++;
+                    path.Add(new JArray(trailing.position.x,trailing.position.y));
+                    lastDelta=step;
+                }
+                rows.Add(new JObject{["side"]=side,["gate"]=gate,["offset"]=offset,["ticks"]=ticks,
+                    ["advance"]=trailing.position.x*forward-gate,["reversals"]=reversals,["path"]=path});
+                Check(ticks<30&&reversals<=1,"Blocked march clears passage without repeated reversals: seat "+side+
+                    ", gate "+gate+", offset "+offset);
+            }
+        }
+        for(int side=0;side<2;side++){
+            int forward=side==0?1:-1;
+            var sim=new HumanMatch(catalog){PlayerVersusPlayer=true};
+            SimulationState035.Get(sim).auditGround=true;
+            int kind=sim.Kind("h000");
+            float gate=2016f/30;
+            var blocker=sim.Spawn(side,kind,new Vector2((gate+.4f)*forward,-.18f));
+            blocker.stun=40;blocker.onRoad=true;
+            var column=new HumanMatch.Unit[18];
+            for(int i=0;i<column.Length;i++){
+                column[i]=sim.Spawn(side,kind,new Vector2((gate-1f-i*.68f)*forward,(i%3-1)*.52f));
+                column[i].onRoad=true;
+            }
+            for(int tick=0;tick<110;tick++)sim.Step(.05f);
+            Check(column.All(u=>u.position.x*forward>gate+6),
+                "An 18-fighter column clears a gate occupied by a stationary ally: seat "+side);
+        }
+        File.WriteAllText(Path.Combine(folder,"ground-march.json"),rows.ToString());
+        File.WriteAllText(Path.Combine(folder,"ground-march-checks.json"),
+            new JObject{["checks"]=testChecks,["failures"]=testFailures}.ToString());
+        Debug.Log("CF_GROUND_MARCH_RESULT failures="+testFailures);
+        Application.Quit(testFailures==0?0:1);
+    }
+
 }
 }

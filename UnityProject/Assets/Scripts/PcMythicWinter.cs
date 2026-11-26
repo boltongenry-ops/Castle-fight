@@ -15,7 +15,7 @@ public sealed partial class PcGame {
     bool mythicTab,winterIntro,winterSkip,winterCast;
     JObject mythicSelection;
     bool MythicRacePicker=>mythicSelection!=null;
-    int mythicRace;
+    int mythicRace,protocolAspect=-1;
     float winterIntroAge;
     PcModel winterQueen;
     ParticleSystem winterGusts;
@@ -46,7 +46,7 @@ public sealed partial class PcGame {
     };
 
     void ChooseMythicRace(JObject trial){
-        mythicSelection=trial;
+        mythicSelection=trial;protocolAspect=-1;
         mythicRace=RaceStaged(raceChoice)?raceChoice:0;
     }
 
@@ -54,7 +54,8 @@ public sealed partial class PcGame {
         var card=new Rect(42,176,1196,500);
         bool choir=(string)mythicSelection["id"]==HumanMatch.ChoirTrial;
         bool horde=(string)mythicSelection["id"]==HumanMatch.HordeTrial;
-        if(horde)DrawHordePainting(card);else if(choir)DrawChoirPainting(card);else DrawWinterPainting(card,true);
+        bool protocol=(string)mythicSelection["id"]==HumanMatch.ProtocolTrial;
+        if(protocol)DrawProtocolPainting(card);else if(horde)DrawHordePainting(card);else if(choir)DrawChoirPainting(card);else DrawWinterPainting(card,true);
         Fill(new Rect(42,176,641,500),new Color(.025f,.047f,.065f,.99f));
         WinterGradient(new Rect(683,176,282,500),true,new Color(.025f,.047f,.065f,.98f));
         WinterGradient(new Rect(682,337,556,339),false,new Color(.019f,.035f,.052f,.99f));
@@ -65,7 +66,7 @@ public sealed partial class PcGame {
             int race=AllRaceUnity[i];
             var cell=new Rect(70+i%3*207,294+i/3*54,197,47);
             bool enabled=GUI.enabled;GUI.enabled=enabled&&RaceStaged(race);
-            if(LobbyButton("mythic.race."+race,cell,"",race==mythicRace))mythicRace=race;
+            if(LobbyButton("mythic.race."+race,cell,"",race==mythicRace)&&mythicRace!=race){mythicRace=race;protocolAspect=-1;}
             var emblem=RaceEmblem(race);
             if(emblem)GUI.DrawTexture(new Rect(cell.x+5,cell.y+5,36,36),emblem,ScaleMode.ScaleToFit);
             Text(cell.x+43,cell.y+2,150,43,AllRaceNames[i],
@@ -75,7 +76,14 @@ public sealed partial class PcGame {
         }
         const float x=718,width=493;
         Fill(new Rect(x-12,389,width+22,217),new Color(.023f,.042f,.061f,.91f));
-        if(horde){
+        if(protocol){
+            Text(x,389,width,41,"Терминатор",heading);
+            FitBossText(new Rect(x,434,width,109),(string)mythicSelection["description"],new GUIStyle(small),18,true);
+            if(AspectCount(mythicRace)==2){
+                string selected=protocolAspect<0?"Без аспекта":AspectField(mythicRace,protocolAspect,"title");
+                if(LobbyButton("protocol.aspect",new Rect(x,553,width,38),selected+"  ›"))protocolAspect=protocolAspect==1?-1:protocolAspect+1;
+            }
+        }else if(horde){
             Text(x,389,width,41,"Алый вождь",heading);
             FitBossText(new Rect(x,436,width,155),(string)mythicSelection["description"],new GUIStyle(small),18,true);
         }else if(choir){
@@ -89,7 +97,8 @@ public sealed partial class PcGame {
         Text(x,534,width,57,"Павшие в оковах переходят к боссу.\nМетель и оковы действуют на вашу расу.",small);
         }
         if(LobbyButton("mythic.begin",new Rect(x,609,285,49),"Начать испытание",true)){
-            var trial=mythicSelection;
+            var trial=(JObject)mythicSelection.DeepClone();
+            if(protocol)trial["player_aspect"]=protocolAspect;
             mythicSelection=null;
             BeginChallenge(trial,mythicRace);
         }

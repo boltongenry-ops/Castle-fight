@@ -125,7 +125,7 @@ public sealed partial class HumanMatch {
     void ThinkBot(){
         if(Finished||NetworkReplica)return;InitBotPolicy();ObserveBot();
         int pending=Builders[1].jobs.Count;if(pending>=(difficulty==2?2:1)){botPlan="Завершает строительство";return;}
-        if(pending==0&&CastleHp[1]<CastleHealthLimit(1)*.45f&&botDanger>0){RepairCastle(1);botPlan="Ремонтирует замок под давлением";return;}
+        if(pending==0&&ChallengeBuilderRepairAllowed(1)&&CastleHp[1]<CastleHealthLimit(1)*.45f&&botDanger>0){RepairCastle(1);botPlan="Ремонтирует замок под давлением";return;}
         if(Builders[1].repairing&&CastleHp[1]<CastleHealthLimit(1)*.8f&&botDanger>0)return;
         botOptions.Clear();
         for(int k=0;k<Lines.Length;k++)if(BotAllowed(k,null))botOptions.Add(new BotOption{kind=k,score=BotScore(k,null),price=GoldPrice(1,k)});
@@ -144,7 +144,7 @@ public sealed partial class HumanMatch {
         var line=Lines[k];bool tower=line.buildingWeapons.Length>0;float desiredX=tower?3:line.Producer?18:21;float best=float.MaxValue;int bx=-1,by=-1;
         var occupied=new bool[32,24];foreach(var h in Huts)if(h.team==1&&h.x>=0&&h.x<32&&h.y>=0&&h.y<24)occupied[h.x,h.y]=true;
         for(int y=0;y<24;y++)for(int x=0;x<32;x++){
-            if(!LegalCell(1,x,y)||occupied[x,y]||Vector2.Distance(Plot(1,x,y),CastlePosition(1))<CastleCollision+Cell*.5f)continue;float dy=Mathf.Min(Mathf.Abs(y-11),Mathf.Abs(y-12));float score=Mathf.Abs(x-desiredX)*1.3f+dy*1.4f+Vector2.Distance(Builders[1].position,Plot(1,x,y))*.015f;
+            if(!LegalCell(1,x,y)||occupied[x,y]||ProtocolBlocksPlot(1,x,y)||Vector2.Distance(Plot(1,x,y),CastlePosition(1))<CastleCollision+Cell*.5f)continue;float dy=Mathf.Min(Mathf.Abs(y-11),Mathf.Abs(y-12));float score=Mathf.Abs(x-desiredX)*1.3f+dy*1.4f+Vector2.Distance(Builders[1].position,Plot(1,x,y))*.015f;
             if(score<best){best=score;bx=x;by=y;}
         }
         return bx>=0&&TryBuild(1,k,bx,by,out _);

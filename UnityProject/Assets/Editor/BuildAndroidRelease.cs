@@ -60,6 +60,8 @@ public static class BuildAndroidRelease {
     public static void BuildCursedHorde048()=>BuildSigned("0.48.0",50);
     public static void BuildCursedHorde0481()=>BuildSigned("0.48.1",51);
     public static void BuildCursedHorde0482()=>BuildSigned("0.48.2",52);
+    public static void BuildGroundMarch0483()=>BuildSigned("0.48.3",53);
+    public static void BuildLastProtocol0484()=>BuildSigned("0.48.4",54);
     public static void BuildWinterFront0462()=>BuildSigned("0.46.2",46);
     public static void BuildWinterBoss0461()=>BuildSigned("0.46.1",45);
     public static void BuildSquad0442()=>BuildSigned("0.44.2",41);

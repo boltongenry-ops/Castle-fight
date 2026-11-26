@@ -106,7 +106,7 @@ public sealed partial class HumanMatch {
                 float best=target==null?acquire*acquire:Mathf.Min(acquire*acquire,(target.position-u.position).sqrMagnitude);
                 foreach(var hut in Huts){
                     if(hut.team==u.team||hut.hp<=0||!hut.paid)continue;
-                    if(target!=null&&(Lines[hut.kind].buildingWeapons?.Length??0)==0)continue;
+                    if(target!=null&&(Lines[hut.kind].buildingWeapons?.Length??0)==0&&!IsProtocolStation(hut))continue;
                     float distanceSqr=(hut.position-u.position).sqrMagnitude;
                     if(distanceSqr>=best)continue;
                     if(VisionTest!=null&&!VisionTest(u.team,hut.position))continue;
@@ -116,6 +116,7 @@ public sealed partial class HumanMatch {
         }
         u.combatTarget=targetId;
         bool canStrike=weapon!=null;
+        bool stationTarget=LastProtocol&&targetId<-1&&IsProtocolStation(FindHut(targetId));
         Vector2 destination=TargetPosition(targetId,u.team),delta=destination-u.position;
         float reach=(weapon?.range??0)+(targetId==-1?CastleCollision:targetId< -1?2:1);
         float distance=delta.magnitude;
@@ -126,7 +127,7 @@ public sealed partial class HumanMatch {
             if(Rooted(u)){u.pose="Stand";return;}
             u.pose="Walk";
             Vector2 waypoint=ground?ArmyWaypoint(u,destination,targetId==-1):destination;
-            bool approachingCastle=ground&&targetId==-1&&waypoint==destination&&distance<=Mathf.Min(24,reach+12)
+            bool approachingCastle=ground&&(targetId==-1||stationTarget)&&waypoint==destination&&distance<=Mathf.Min(24,reach+12)
                 &&delta.x*(u.team==0?1:-1)>0;
             if(approachingCastle){
                 var slot=CastleApproach038(u,destination,reach);
@@ -136,10 +137,15 @@ public sealed partial class HumanMatch {
                 return;
             }
             Vector2 advance=waypoint-u.position;
-            Vector2 direction=ground?GroundSeparation(u,advance.normalized):advance.normalized;
+            Vector2 heading=advance.normalized;
+            // Reach the gate itself before applying a new detour. Otherwise the last
+            // two units of travel can become an oscillation beside an occupied gate.
+            bool enteringPassage=ground&&waypoint!=destination&&advance.sqrMagnitude<=4;
+            Vector2 direction=ground&&!enteringPassage?GroundSeparation(u,heading):heading;
             Vector2 start=u.position;
-            var next=Vector2.MoveTowards(start,start+direction*Mathf.Min(advance.magnitude,Mathf.Max(0,distance-reach+.1f)),MoveSpeed(u)*dt);
-            
+            float step=Mathf.Min(MoveSpeed(u)*dt,Mathf.Max(0,distance-reach+.1f));
+            var next=enteringPassage?Vector2.MoveTowards(start,waypoint,step):
+                start+direction*Mathf.Min(advance.magnitude,step);
             u.position=next;
             if((next-start).sqrMagnitude>.000001f)u.direction=(next-start).normalized;
         }
@@ -230,7 +236,7 @@ public sealed partial class HumanMatch {
     public float Multiplier(string attack,string armorType)=>(float?)damageTable[attack]?[armorType]??1;
     public static float ArmorFactor(float armor)=>armor>=0?1/(1+.06f*armor):2-Mathf.Pow(.94f,-armor);
     void DamageHut(Hut h,float amount,string attack,int team,bool spell=false,bool ignoreArmor=false){if(h==null||h.hp<=0)return;var l=Lines[h.kind];amount*=Multiplier(spell&&attack=="magic"?"spells":attack,(string)l.buildingStats["armor_type"]??"fortified");if(!ignoreArmor&&!(spell&&attack=="magic"))amount*=ArmorFactor(BuildingArmor(h));h.hp-=amount;if(h.hp<=0){BattleAudio.For(this)?.Death(l.building,h.position,true);RemoveHut(h);PulseAt(h.position,4,new Color(1,.4f,.1f),"Здание разрушено");}}
-    void DamageCastle(int team,float amount,string attack,bool spell=false){amount*=Multiplier(spell&&attack=="magic"?"spells":attack,CastleArmorType);if(!(spell&&attack=="magic"))amount*=ArmorFactor(CastleArmorFor(team));CastleHp[team]=Mathf.Max(0,CastleHp[team]-amount);if(team==WinterBossTeam)AdvanceWinterPhase();}
+    void DamageCastle(int team,float amount,string attack,bool spell=false){amount*=Multiplier(spell&&attack=="magic"?"spells":attack,CastleArmorType);if(!(spell&&attack=="magic"))amount*=ArmorFactor(CastleArmorFor(team));ApplyCastleDamage(team,amount);}
     void ResolveAttack(int ownerId,int team,int target,float amount,Weapon w,float stun,bool passives=true,bool handProjectile=false) {
         var victim=FindUnit(target);var owner=FindUnit(ownerId);
         if(victim!=null) {

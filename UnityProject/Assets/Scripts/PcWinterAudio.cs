@@ -10,7 +10,8 @@ public sealed partial class PcGame
     AudioSource winterWindAudio;
     AudioClip winterWindClip;
     const string EpochalBossTrack = "Frozen Final Stand";
-    const float WinterBattleMusicVolume = .55f;
+    const string ProtocolBossTrack = "Krangs Battle";
+    const float WinterBattleMusicVolume = .55f, ProtocolBattleMusicVolume = .48f;
     const float WinterMusicFadeSeconds = 1.35f, WinterPhaseTwoPitch = 1.2f;
     AudioSource bossSoundtrack;
     bool ownsBossSoundtrackClip;
@@ -18,11 +19,14 @@ public sealed partial class PcGame
     IEnumerator PrepareBossSoundtrack(int generation)
     {
         AudioClip clip;
-        string path = Path.Combine(Application.streamingAssetsPath, "Frontend", EpochalBossTrack + ".mp3");
+        bool protocol=match.LastProtocol;
+        string track=protocol?ProtocolBossTrack:EpochalBossTrack;
+        string path = Path.Combine(Application.streamingAssetsPath, "Frontend", track+(protocol?".ogg":".mp3"));
         bool localFile = !Application.isMobilePlatform && File.Exists(path);
         if (localFile)
         {
-            using (var request = UnityWebRequestMultimedia.GetAudioClip(new Uri(path).AbsoluteUri, AudioType.MPEG))
+            using (var request = UnityWebRequestMultimedia.GetAudioClip(new Uri(path).AbsoluteUri,
+                protocol?AudioType.OGGVORBIS:AudioType.MPEG))
             {
                 ((DownloadHandlerAudioClip)request.downloadHandler).compressed = true;
                 yield return request.SendWebRequest();
@@ -37,7 +41,7 @@ public sealed partial class PcGame
         }
         else
         {
-            var load = Resources.LoadAsync<AudioClip>("WinterBattle/" + EpochalBossTrack);
+            var load = Resources.LoadAsync<AudioClip>("WinterBattle/" + track);
             yield return load;
             if (generation != versusSerial) yield break;
             clip = load.asset as AudioClip;
@@ -53,7 +57,7 @@ public sealed partial class PcGame
             yield break;
         }
 
-        clip.name = EpochalBossTrack;
+        clip.name = track;
         ownsBossSoundtrackClip = localFile;
         bossSoundtrack = visuals.AddComponent<AudioSource>();
         bossSoundtrack.playOnAwake = false;
@@ -70,9 +74,10 @@ public sealed partial class PcGame
 
     void UpdateBossSoundtrack()
     {
-        if (!bossSoundtrack || winterIntro || hordeIntro || match == null || !bossSoundtrack.isPlaying) return;
-        float rate = (1 - WinterBattleMusicVolume) / WinterMusicFadeSeconds;
-        bossSoundtrack.volume = Mathf.MoveTowards(bossSoundtrack.volume, WinterBattleMusicVolume,
+        if (!bossSoundtrack || winterIntro || hordeIntro || protocolIntro || match == null || !bossSoundtrack.isPlaying) return;
+        float target=match.LastProtocol?ProtocolBattleMusicVolume:WinterBattleMusicVolume;
+        float rate = (1 - target) / WinterMusicFadeSeconds;
+        bossSoundtrack.volume = Mathf.MoveTowards(bossSoundtrack.volume, target,
             Time.unscaledDeltaTime * rate);
         if (match.WinterPhaseTwo || match.HordeSecondStage)
             bossSoundtrack.pitch = Mathf.MoveTowards(bossSoundtrack.pitch, WinterPhaseTwoPitch,
