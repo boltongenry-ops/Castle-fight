@@ -20,6 +20,7 @@ public sealed partial class PcGame {
     MythicScore pendingMythicScore;
     JArray mythicLeaderboard=new JArray();
     GUIStyle mythicNicknameStyle,mythicRaceStyle,mythicBoardHeading;
+    Texture2D mythicCrown;
     bool mythicBoardLoading,mythicScoreSending,mythicGuestPrompt;
     int mythicBoardPage,mythicPlace;
     string mythicBoardError="",mythicScoreError="",mythicNickname="";
@@ -199,7 +200,12 @@ public sealed partial class PcGame {
             var row=mythicLeaderboard[position];
             float y=252+i*44;
             Fill(new Rect(688,y,528,44),new Color(.06f,.095f,.11f,i%2==0?.72f:.38f));
-            Text(695,y+3,43,31,row["place"]?.ToString()??(position+1).ToString(),small);
+            int place=(int?)row["place"]??position+1;
+            Text(695,y+3,43,31,place.ToString(),small);
+            if(place==1){
+                if(!mythicCrown)mythicCrown=MakeMythicCrown();
+                GUI.DrawTexture(new Rect(711,y+9,21,19),mythicCrown,ScaleMode.ScaleToFit);
+            }
             Text(742,y+1,304,26,(string)row["nickname"]??"",mythicNicknameStyle);
             int race=(int?)row["race"]??-1;
             Text(742,y+24,304,18,RaceTitle(race),mythicRaceStyle);
@@ -214,6 +220,29 @@ public sealed partial class PcGame {
             mythicScoreSending?"Сохраняем…":"Записать своё время"))SubmitPendingMythicScore();
         else if(mythicPlace>0)Text(689,641,526,34,"Ваше место · "+mythicPlace,small);
         else if(mythicBoardError!=""&&mythicLeaderboard.Count>0)Text(689,641,526,34,mythicBoardError,small);
+    }
+    static Texture2D MakeMythicCrown(){
+        const int width=48,height=40;
+        var texture=new Texture2D(width,height,TextureFormat.RGBA32,false){name="Mythic first place crown",
+            wrapMode=TextureWrapMode.Clamp,filterMode=FilterMode.Bilinear};
+        var pixels=new Color32[width*height];
+        var peaks=new[]{.70f,.41f,.92f,.41f,.70f};
+        for(int y=0;y<height;y++)for(int x=0;x<width;x++){
+            float u=(x+.5f)/width,v=(y+.5f)/height;
+            float span=Mathf.InverseLerp(.09f,.91f,u)*4;
+            int segment=Mathf.Min(3,Mathf.FloorToInt(span));
+            float crest=Mathf.Lerp(peaks[segment],peaks[segment+1],span-segment);
+            float left=Mathf.Lerp(.20f,.05f,Mathf.InverseLerp(.18f,.70f,v));
+            if(v<.14f||v>crest||u<left||u>1-left)continue;
+            float light=Mathf.InverseLerp(.14f,.9f,v);
+            var gold=Color.Lerp(new Color(.69f,.35f,.06f),new Color(1,.88f,.45f),light);
+            if(v>=.21f&&v<.29f)gold=new Color(.97f,.68f,.17f);
+            if(Mathf.Abs(u-.5f)*1.4f+Mathf.Abs(v-.40f)<.070f)gold=new Color(1,.92f,.62f);
+            pixels[y*width+x]=gold;
+        }
+        texture.SetPixels32(pixels);
+        texture.Apply(false,true);
+        return texture;
     }
 }
 }

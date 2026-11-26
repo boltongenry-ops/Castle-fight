@@ -40,7 +40,11 @@ public sealed partial class PcGame {
     void SettleChallenge(){
         if(activeChallenge==null||challengeSettled||onlineMatch)return;
         StopBossSoundtrack();
-        if(match.ChallengeVictoryEligible)try{challengeReward=progression.Complete((string)activeChallenge["id"],match.Elapsed);}catch(IOException error){Notice("Не удалось сохранить награду: "+error.Message);return;}
+        if(match.ChallengeVictoryEligible)try{
+            string id=(string)activeChallenge["id"];
+            challengeReward=progression.Complete(id,match.Elapsed);
+            ShareChallengeVictory(id);
+        }catch(IOException error){Notice("Не удалось сохранить награду: "+error.Message);return;}
         challengeSettled=true;CaptureMythicScore();Debug.Log("CF_PC_CHALLENGE_RESULT id="+activeChallenge["id"]+" eligible="+match.ChallengeVictoryEligible+" reward="+challengeReward);
     }
     Color CosmeticColor(JObject row){return row!=null&&ColorUtility.TryParseHtmlString("#"+(string)row["color"],out var color)?color:new Color(.38f,.45f,.43f);}

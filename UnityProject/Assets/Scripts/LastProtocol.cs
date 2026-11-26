@@ -79,9 +79,8 @@ public sealed partial class HumanMatch {
     bool IsProtocolDefense(Hut hut)=>IsProtocolStation(hut)||LastProtocol&&hut!=null&&(hut==protocolTowers[0]||hut==protocolTowers[1]);
 
     bool ProtocolBlocksPlot(int team,int x,int y){
-        if(team!=1||(!LastProtocol&&!AbyssTrialActive))return false;
+        if(team!=1||!LastProtocol)return false;
         var point=Plot(team,x,y);
-        if(AbyssTrialActive)return AbyssBlocksPlot(point);
         for(int i=0;i<protocolStations.Length;i++)
             if(ProtocolStationAlive(i)&&(protocolStations[i].position-point).sqrMagnitude<Cell*Cell||
                 protocolTowers[i].hp>0&&(protocolTowers[i].position-point).sqrMagnitude<Cell*Cell)return true;

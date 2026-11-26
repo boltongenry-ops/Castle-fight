@@ -38,8 +38,8 @@ public sealed partial class PcGame {
     static JObject AbyssDefinition()=>new JObject{
         ["id"]=HumanMatch.AbyssTrial,["title"]="Дыхание Бездны",["opponent"]="Naga Faction",
         ["summary"]="Затопленная карта, глубинные наги и вылазки у замка.",
-        ["description"]="В воде бойцы теряют 25% скорости движения и промахиваются в 10% атак. Мутанты Наг прочнее и сильнее. С 5:15 начинаются вылазки у вашего замка, а при половине HP крепости босса они учащаются, и к ним присоединяется гидра.",
-        ["start_gold"]=620,["opponent_start_gold"]=925,["opponent_castle_hp"]=HumanMatch.AbyssCastleHealth,
+        ["description"]="Наги отстраивают базу с нуля. Вода замедляет наземных бойцов на 25% и даёт 10% промаха. Первая вылазка приходит на 6:30. После потери половины HP замка в вылазках появляется гидра.",
+        ["start_gold"]=620,["opponent_castle_hp"]=HumanMatch.AbyssCastleHealth,
         ["difficulty"]=2,["reward"]=0,["xp"]=0
     };
 

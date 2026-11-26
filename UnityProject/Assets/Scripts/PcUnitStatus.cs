@@ -34,7 +34,7 @@ public sealed partial class PcGame {
         if(match.AbyssWaterAffects(unit))unitDebuffs.Add(new StatusBadge("abyss.water","Глубокая вода",
             "Глубокая вода\nСкорость движения −25%\n10% вероятности промаха оружием",AbilityArt("A00P")??Extra("debuff")));
         if(match.AbyssDeepForm(unit))unitBuffs.Add(new StatusBadge("abyss.form","Глубинная форма",
-            "Глубинная форма\nСкорость атаки +25% · урон +20%\n"+AbyssSkillDescription(unit),AbilityArt("A06V")??Extra("heal")));
+            "Глубинная форма\nЗдоровье +15% · скорость атаки +15% · урон +10%\n"+AbyssSkillDescription(unit),AbilityArt("A06V")??Extra("heal")));
         foreach(var effect in unit.effects){
             if(effect.left<=0||string.IsNullOrEmpty(effect.id))continue;
             bool harmful=effect.id!="BHIr"&&(Debuff(effect)||effect.sourceTeam==1-unit.team);

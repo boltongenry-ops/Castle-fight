@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.48.5";
+    string Version=>MobileContent.Active?Application.version:"0.48.7";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -21,7 +21,7 @@ public sealed partial class PcGame : MonoBehaviour {
     public Texture2D[] itemIcons;public string[] itemIds;public Texture2D[] buildingIcons,unitIcons,abilityIcons,extraCommandIcons;public string[] abilityIds,extraCommandIds;
     public Texture2D[] hudTiles,commandIcons,minimapIcons;public Texture2D goldIcon,woodIcon,armyIcon,timeIndicator,minimapTexture,buttonUp,buttonDown,buttonHighlight;
     public TextAsset catalog,terrainBytes,terrainMetadata,waterMetadata;public NativeMapCamera controls;
-    enum Page { Main,Settings,Setup,Match,Pause,Result,Viewer,Leave,Help,Teams,Network,Progression,Guide }
+    enum Page { Main,Settings,Setup,Match,Pause,Result,Viewer,Leave,Help,Teams,Network,Progression,Guide,Profile }
     Page page=Page.Main,settingsReturn=Page.Main;
     [Serializable] public sealed class Options {public int resolution=0,fps=60;public bool fullscreen,vsync;public bool hdTextures=false,fogOfWar=true;public bool softFog {get=>FogOption034.Get(this);set=>FogOption034.Set(this,value);}public float volume=.8f,musicVolume=.7f,cameraSpeed=1;public int quality=1;}
     Options options=new Options(),draft;string settingsPath,notice="";float noticeLeft,accumulator,screenDeadline;
@@ -230,14 +230,14 @@ public sealed partial class PcGame : MonoBehaviour {
             else if(page==Page.Settings&&HdModels.Panel){if(HdModels.Busy)HdModels.Cancel();else HdModels.Panel=false;}
             else if(page==Page.Settings){page=settingsReturn;}
             else if(page==Page.Network&&showStickerPicker)showStickerPicker=false;
-            else if(page==Page.Network&&showNetworkProfile)CloseNetworkAccount();
+            else if((page==Page.Network||page==Page.Profile)&&showNetworkProfile)CloseNetworkAccount();
             else if(page==Page.Network&&!string.IsNullOrEmpty(socialViewed))socialViewed="";
             else if(page==Page.Network&&socialTab==2&&!string.IsNullOrEmpty(socialPeer))socialPeer="";
             else if(page==Page.Network&&socialTab>0)OpenSocialTab(0);
             else if(page==Page.Network){StopDirectory();page=Page.Main;}
             else if(page==Page.Guide)GuideBack();
             else if(page==Page.Progression&&MythicRacePicker)mythicSelection=null;
-            else if(page==Page.Setup||page==Page.Viewer||page==Page.Progression)MainMenu();
+            else if(page==Page.Setup||page==Page.Viewer||page==Page.Progression||page==Page.Profile)MainMenu();
         }
         if(match!=null&&page!=Page.Result&&!aspectWaiting&&!NetworkBlocked) {
             if(Input.GetKeyDown(KeyCode.F10))page=page==Page.Pause?Page.Match:Page.Pause;
@@ -489,7 +489,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(terrain==null){DrawLoadingScreen();return;}InitGui();UpdateGuiMetrics();if(introPlaying){DrawIntroScreen();return;}
         if(versusActive&&versusWinter)Fill(new Rect(0,0,Screen.width,Screen.height),Color.black);
         else if(WorkshopVisible)DrawWorkshopBleed();
-        else if(page==Page.Main||page==Page.Setup||page==Page.Progression||page==Page.Network||(page==Page.Settings&&settingsReturn==Page.Main))DrawFrontendBleed();
+        else if(page==Page.Main||page==Page.Setup||page==Page.Progression||page==Page.Profile||page==Page.Network||(page==Page.Settings&&settingsReturn==Page.Main))DrawFrontendBleed();
         if(!versusActive&&match!=null&&page!=Page.Viewer)DrawWorldFog();
         Matrix4x4 previous=GUI.matrix;GUI.matrix=Matrix4x4.TRS(new Vector3(guiOrigin.x,guiOrigin.y,0),Quaternion.identity,Vector3.one*guiScale);
         if(versusActive){DrawVersus();DrawNetworkRecovery();GUI.matrix=previous;return;}
@@ -506,7 +506,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(showVoicePanel){DrawVoicePanel();DrawNetworkRecovery();GUI.matrix=previous;return;}
         if(showStickerPicker&&(page==Page.Network||page==Page.Progression)){DrawStickerPicker();DrawNetworkRecovery();GUI.matrix=previous;return;}
         bool updateModal=showUpdatePanel;if(updateModal)GUI.enabled=false;
-        if(page==Page.Main)DrawMain();else if(page==Page.Setup)DrawSetup();else if(page==Page.Settings)DrawSettings();else if(page==Page.Network)DrawNetwork();
+        if(page==Page.Main)DrawMain();else if(page==Page.Setup)DrawSetup();else if(page==Page.Settings)DrawSettings();else if(page==Page.Network)DrawNetwork();else if(page==Page.Profile)DrawAccountProfile();
         else if(page==Page.Guide)DrawGuide();else if(page==Page.Progression)DrawProgression();else if(page==Page.Match){if(HelpOpen)DrawBattleHelp();else{DrawMatch();DrawChallengeHud();}}else if(page==Page.Viewer) {
             Box(new Rect(16,16,1248,56));if(Button("viewer.back",new Rect(26,24,180,40),"← Главное меню"))MainMenu();
             string[] ids={"west","river","east","top"},texts={"Моя база","Река","Восток","Вся карта"};
@@ -533,11 +533,12 @@ public sealed partial class PcGame : MonoBehaviour {
         if(Button("main.network",new Rect(48,363,360,49),"Сетевая игра"))OpenNetwork();
         if(Button("main.challenges",new Rect(48,419,360,49),"Испытания и магазин"))OpenProgression(false);
         if(Button("main.guide",new Rect(48,475,360,49),"Учебник рас"))OpenGuide();
-        if(Button("main.settings",new Rect(48,541,174,43),"Настройки"))OpenSettings();
-        if(Button("main.viewer",new Rect(234,541,174,43),"Карта")){page=Page.Viewer;controls.Focus("west");}
-        if(Button("main.intro",new Rect(48,596,174,43),"Смотреть ролик"))StartIntro(null);
-        if(Button("main.quit",new Rect(234,596,174,43),"Выход"))Application.Quit();
-        Text(48,664,360,28,"CASTLE FIGHT  ·  "+(Application.isMobilePlatform?"ANDROID":"WINDOWS")+"  ·  "+Version,small);
+        if(Button("main.profile",new Rect(48,531,360,43),"Профиль игрока"))OpenAccountProfile();
+        if(Button("main.settings",new Rect(48,585,174,40),"Настройки"))OpenSettings();
+        if(Button("main.viewer",new Rect(234,585,174,40),"Карта")){page=Page.Viewer;controls.Focus("west");}
+        if(Button("main.intro",new Rect(48,631,174,40),"Смотреть ролик"))StartIntro(null);
+        if(Button("main.quit",new Rect(234,631,174,40),"Выход"))Application.Quit();
+        Text(48,679,360,25,"CASTLE FIGHT  ·  "+(Application.isMobilePlatform?"ANDROID":"WINDOWS")+"  ·  "+Version,small);
     }
     void DrawSetup() {
         DrawRaceSelect();

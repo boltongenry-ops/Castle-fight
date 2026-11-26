@@ -98,7 +98,7 @@ public sealed partial class PcGame {
     void ClearHumanEffects(){ClearGroupSelection();humanEffects.Clear();netViews.Clear();netSizes.Clear();reforgedNets.Clear();reforgedAirNets.Clear();wispBursts.Clear();orcDecorModels.Clear();orcDecorAnchors.Clear();effectAnchors.Clear();rangeRing=null;selectedHut=selectedUnit=-1;targetedSpell=null;showRange=false;}
     Texture2D Extra(string name){int i=Array.IndexOf(extraCommandIds,name);return i>=0?HdIcon(extraCommandIcons[i]):CommandIcon(8);}
     // Native A03Y has an empty aart; share the original Bfro frost-attack icon.
-    Texture2D AbilityArt(string id){var clan=BlackHandUi.Ability(id);if(clan)return clan;var hd=HdModels.Icon(ReforgedModelPack.IconAddress("Ability-"+id));if(hd)return hd;var ultimateArt=UltimateAbility034(id);if(ultimateArt)return HdIcon(ultimateArt);if(id=="ANDB")return ContentResources.Load<Texture2D>("CombatType/attack-piercing");if(id=="A064")id="A03C";if(id=="A03Y")id="A03C";foreach(var pack in new[]{pepePack,centaurPack,ultimatePack,nerubianPack,pandarenPack,elvenPack,nightPack,elementalPack,corruptedPack,undeadPack,mechPack,northernPack,chaosPack,naturePack,nagaPack,orcPack}){if(!pack)continue;int index=Array.IndexOf(pack.abilityIds,id);if(index>=0&&pack.abilityIcons[index])return HdIcon(pack.abilityIcons[index]);}int i=Array.IndexOf(abilityIds,id);return i>=0?HdIcon(abilityIcons[i]):null;}
+    Texture2D AbilityArt(string id){if(HumanMatch.IsUndeadPlagueAura(id))id="A05R";var clan=BlackHandUi.Ability(id);if(clan)return clan;var hd=HdModels.Icon(ReforgedModelPack.IconAddress("Ability-"+id));if(hd)return hd;var ultimateArt=UltimateAbility034(id);if(ultimateArt)return HdIcon(ultimateArt);if(id=="ANDB")return ContentResources.Load<Texture2D>("CombatType/attack-piercing");if(id=="A064")id="A03C";if(id=="A03Y")id="A03C";foreach(var pack in new[]{pepePack,centaurPack,ultimatePack,nerubianPack,pandarenPack,elvenPack,nightPack,elementalPack,corruptedPack,undeadPack,mechPack,northernPack,chaosPack,naturePack,nagaPack,orcPack}){if(!pack)continue;int index=Array.IndexOf(pack.abilityIds,id);if(index>=0&&pack.abilityIcons[index])return HdIcon(pack.abilityIcons[index]);}int i=Array.IndexOf(abilityIds,id);return i>=0?HdIcon(abilityIcons[i]):null;}
     bool ArtButton(string id,Rect r,Texture2D art,string key,string tip,bool selected=false) {
         bool hover=r.Contains(HudPointer)&&GUI.enabled;
         GUI.BeginGroup(r);var local=new Rect(0,0,r.width,r.height);
@@ -128,11 +128,13 @@ public sealed partial class PcGame {
     }
     string Cost(HumanMatch.Line l,int team=0)=>match.GoldPrice(team,match.Kind(l.building))+" зол."+(l.woodCost>0?" · "+l.woodCost+" дер.":"")+(l.slots>0?" · 1 легенд.":"");
     void DrawHumanSelection() {
-        if(selectedCastle){aspectInfoOpen=false;DrawCastleCard();return;}
+        if(selectedCastle){aspectInfoOpen=false;DrawCastleCard();DrawPortraitCameraButton(match.BattleCastlePosition(0));return;}
         var h=SelectedHut;var u=SelectedUnit;string title=builderSelected?(matchRace==PepeContent.Race?"Болотный мастер":matchRace==15?"Кочевник-строитель":matchRace==12?"Высший строитель":matchRace==13?"Рабочий роя":matchRace==14?"Пандарен-строитель":matchRace==1?"Батрак":matchRace==2?"Мурлок-рабочий":matchRace==3?"Энт":matchRace==4?"Батрак Хаоса":matchRace==5?"Северный рабочий":matchRace==11?"Эльф-рабочий":matchRace==10?"Ночная бегунья":matchRace==9?"Светлячок":matchRace==8?"Тень-строитель":matchRace==7?"Работник нежити":matchRace==6?"Гоблин-инженер":"Крестьянин"):h!=null?match.Lines[h.kind].name:u!=null?match.Lines[u.kind].unitName:"Нет выделения";
         if(!builderSelected&&u==null||selectedGroup.Count>1)aspectInfoOpen=false;
         if(builderSelected||h!=null||u!=null) {
-            if(portraitTexture)GUI.DrawTexture(new Rect(348,590,109,93),portraitTexture);
+            if(portraitTexture)GUI.DrawTexture(BattlePortraitRect,portraitTexture);
+            DrawPortraitCameraButton(builderSelected?match.Builders[0].position:h!=null?h.position:u.position,
+                !builderSelected&&h==null?match.Height(u):0);
             float hp=builderSelected?220:h!=null?h.hp:u.hp,maxHp=builderSelected?220:h!=null?h.maxHp:u.maxHp;
             Fill(new Rect(348,685,109,16),new Color(.07f,.14f,.03f));Fill(new Rect(350,687,105*Mathf.Clamp01(hp/maxHp),12),new Color(.2f,.75f,.08f));GUI.Label(new Rect(348,684,109,18),Mathf.CeilToInt(hp)+" / "+Mathf.CeilToInt(maxHp),new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter,normal={textColor=Color.white}});
             if(!builderSelected)DrawManaBar(new Rect(348,703,109,13),h!=null?h.mana:u.mana,h!=null?HumanMatch.F(match.Lines[h.kind].buildingStats,"max_mana"):u.maxMana,true);
@@ -140,6 +142,12 @@ public sealed partial class PcGame {
         if(selectedGroup.Count>1)title="Группа: "+selectedGroup.Count;GUI.Label(new Rect(491,578,306,31),title,new GUIStyle(hudText){fontSize=title.Length>24?13:15,alignment=TextAnchor.MiddleCenter});
 
         if(selectedGroup.Count>1)DrawGroupCard();else if(builderSelected)DrawBuilderCard();else if(h!=null)DrawBuildingCard(h);else if(u!=null)DrawUnitCard(u);else GUI.Label(new Rect(504,630,285,55),Application.isMobilePlatform?"Коснитесь бойца или здания\nВыберите рабочего значком слева":"ЛКМ — выбрать бойца или здание\nF1 — вернуться к рабочему",hudSmall);
+    }
+    static readonly Rect BattlePortraitRect=new Rect(348,590,109,93);
+    void DrawPortraitCameraButton(Vector2 position,float height=0){
+        if(Button("portrait.focus",BattlePortraitRect,"",false,GUIStyle.none))
+            controls.PanToWorld(World(position)+Vector3.up*height);
+        if(GUI.enabled&&BattlePortraitRect.Contains(HudPointer))hudTip="Перейти к выбранной цели";
     }
     void DrawBuilderCard() {
         if(skillCardUnit!=-1){skillCardUnit=-1;aspectInfoOpen=false;}
@@ -213,7 +221,7 @@ public sealed partial class PcGame {
         float damage=((u.attackOverride>=0?u.attackOverride:u.elementalWeapons?.FirstOrDefault()?.damage??l.damage)+u.abilities.Sum(id=>(string)match.Abilities[id]?["kind"]=="self_passive"?HumanMatch.F(match.Abilities[id],"damage_bonus"):0)+match.ChaosSealBonus(u)+match.NightFlat(u))*Mathf.Max(0,1+match.Stat(u,"damage"))*Mathf.Max(0,1+u.auraDamage+u.auraDamageNegative)*match.InventoryDamage(u)*match.ElvenWeaponFactor(u.team,false);
         DrawCombatStat(504,false,attacks,attacks.Length==0?"":"Урон: "+NetworkCardStat(u.id,"damage",damage).ToString("F0"),AttackTable(weapons));
         DrawCombatStat(650,true,new[]{l.armorType},"Броня: "+NetworkCardStat(u.id,"armor",u.armor+match.Stat(u,"armor")).ToString("F0"),ArmorTable(l.armorType));
-        GUI.Label(new Rect(504,665,286,22),u.maxMana>0?"Мана: "+Mathf.FloorToInt(u.mana)+" / "+Mathf.FloorToInt(u.maxMana)+" · +"+UnitManaRegen(u).ToString("0.##")+" / с":"Автоматический бой",hudSmall);
+        GUI.Label(new Rect(504,665,286,22),u.maxMana>0?"Мана: "+Mathf.FloorToInt(u.mana)+" / "+Mathf.FloorToInt(u.maxMana)+" · +"+UnitManaRegen(u).ToString("0.##")+" / с":LavaSplitStatus(u)??"Автоматический бой",hudSmall);
         var swampShield=u.effects.Find(e=>e.id==PepeRules.PepeShieldId&&e.left>0);
         GUI.Label(new Rect(504,690,286,22),swampShield!=null?"Болотный щит: "+Mathf.CeilToInt(swampShield.power)+" HP · "+swampShield.left.ToString("F1")+" с":match.PandaStagger(u)>0?"Отложенный урон: "+match.PandaStagger(u).ToString("F0"):match.Rooted(u)?(u.effects.Any(e=>e.left>0&&e.ground)?"Обездвижен и приземлён":"Обездвижен"):u.effects.Any(e=>e.id=="A02I")?"Безумие: "+Mathf.CeilToInt(u.effects.First(e=>e.id=="A02I").left)+" сек.":u.effects.Any(e=>e.id=="A02M")?"Духовное пламя: "+Mathf.CeilToInt(u.effects.First(e=>e.id=="A02M").left)+" сек.":u.stun>0?"Оглушён":u.nightInvisible?"Невидимость · первый удар +"+u.nightBonus:u.nightFade>0?"Уход в тень: "+u.nightFade.ToString("F1")+" с":u.nightVengeance>0?"Месть леса: "+u.nightVengeance+" / 10":u.effects.Count>0?"Эффектов: "+u.effects.Count:match.ChaosSealBonus(u)>0?"Печать демона: "+u.chaosSeal+" / 10":u.warlockPhase==1?"Отступает после взрыва":u.warlockPhase==2?"Удерживает позицию":u.abilities.Contains("CT01")?"Натиск: "+Mathf.RoundToInt(match.CentaurChargeProgress(u)*100)+"%":(u.team==0?RaceName:BotRaceName),hudSmall);
         DrawUnitSkillGrid(u);

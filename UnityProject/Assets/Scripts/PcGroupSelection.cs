@@ -75,10 +75,13 @@ public sealed partial class PcGame {
         for(int i=0;i<selectedGroup.Count;i++){
             var actor=match.Units.FirstOrDefault(u=>u.id==selectedGroup[i]&&u.hp>0);if(actor==null)continue;
             var rect=new Rect(504+i%6*48,617+i/6*45,41,37);
-            if(ArtButton("group.unit."+actor.id,rect,GroupIcon(actor),"",match.Lines[actor.kind].unitName+"\n"+Mathf.CeilToInt(actor.hp)+" / "+Mathf.CeilToInt(actor.maxHp)+" HP",selectedUnit==actor.id))selectedUnit=actor.id;
+            if(ArtButton("group.unit."+actor.id,rect,GroupIcon(actor),"",match.Lines[actor.kind].unitName+"\n"+Mathf.CeilToInt(actor.hp)+" / "+Mathf.CeilToInt(actor.maxHp)+" HP\nПерейти к бойцу",selectedUnit==actor.id)&&CanSeeUnit(actor)){
+                selectedUnit=actor.id;
+                controls.PanToWorld(World(actor.position)+Vector3.up*match.Height(actor));
+            }
             Fill(new Rect(rect.x,rect.yMax,rect.width,3),Color.black);Fill(new Rect(rect.x,rect.yMax,rect.width*actor.hp/actor.maxHp,3),actor.team==0?Color.green:Color.red);
         }
-        GUI.Label(new Rect(504,706,290,14),"Shift — добавить · выбор бойца — карточка",new GUIStyle(hudSmall){fontSize=10});
+        GUI.Label(new Rect(504,706,290,14),"Shift — добавить · портрет — перейти к бойцу",new GUIStyle(hudSmall){fontSize=10});
     }
 }
 }

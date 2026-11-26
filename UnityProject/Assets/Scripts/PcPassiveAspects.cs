@@ -35,7 +35,9 @@ public sealed partial class PcGame {
     }
     bool ElementalLinkReady(HumanMatch.Unit unit)=>match.Huts.Any(h=>h.team==unit.team&&h.hp>0&&h.paid&&match.Lines[h.kind].building=="h063");
     string UnitSkillTip(HumanMatch.Unit unit,string id,Newtonsoft.Json.Linq.JToken cfg){
-        string tip=ContextSkillTip(match.Lines[unit.kind].unit,id,UnitSkillConfig(unit,id,cfg));if(id=="A0F5")tip+="\n\n"+(ElementalLinkReady(unit)?"Действует: союзная Связь стихий построена.":"Не действует: постройте здание «Связь стихий».");return tip;
+        string tip=ContextSkillTip(match.Lines[unit.kind].unit,id,UnitSkillConfig(unit,id,cfg));if(id=="A0F5")tip+="\n\n"+(ElementalLinkReady(unit)?"Действует: союзная Связь стихий построена.":"Не действует: постройте здание «Связь стихий».");
+        if(id=="A0DY"&&LavaSplitStatus(unit) is string status)tip+="\n\n"+status;
+        return tip;
     }
     bool VisibleUnitAbility(string id){var cfg=match.Abilities[id];return !((string)cfg?["kind"]=="marker"&&id!="A07J"&&(bool?)cfg?["card_description"]!=true||(bool?)cfg?["hide_card"]==true||(string)cfg?["kind"]=="native_helper");}
     void DrawUnitSkillGrid(HumanMatch.Unit unit){

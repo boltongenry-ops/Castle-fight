@@ -10,6 +10,16 @@ from urllib import error, parse, request
 
 CHALLENGE = "mythic_eternal_winter"
 CHALLENGES = (CHALLENGE, "mythic_funeral_choir", "mythic_cursed_horde", "mythic_last_protocol", "mythic_abyssal_tide")
+ACHIEVEMENTS = frozenset(CHALLENGES) | frozenset("""
+    five_pillars no_legends mixed_army jade_horde web_and_ice tide_and_fire iron_and_bone
+    wild_defense elemental_siege elf_precision north_storm bone_fortress corrupt_triangle
+    orc_no_rescue chaos_rush swarm_survivor jade_without_safety nature_small_grove
+    centaur_open_steppe human_three_families naga_veterans nature_without_magic chaos_thin_front
+    north_ice_guard mech_field_workshop undead_silent_crypt elemental_four_winds elves_unbroken
+    nerubian_deep_siege ultimate_adaptation siege_iron_marathon siege_deep_bastion siege_no_rest
+    siege_broken_gate siege_steel_watch siege_living_wall siege_steppe_reserve siege_before_dawn
+    siege_prism siege_jade_stock siege_lanterns siege_ultimate_keep
+""".split())
 NORTHERN_RACE = 5
 WINTER_RULES_REVISION = 2
 ROUTE = "/mythic-leaderboard"
@@ -24,6 +34,10 @@ CREATE TABLE IF NOT EXISTS times (
     PRIMARY KEY (challenge, player, race)
 );
 CREATE INDEX IF NOT EXISTS ranked_times ON times(challenge, time_ms, achieved_at);
+CREATE INDEX IF NOT EXISTS player_times ON times(player, challenge);
+CREATE TABLE IF NOT EXISTS achievements (
+    player TEXT NOT NULL, challenge TEXT NOT NULL, PRIMARY KEY (player, challenge)
+);
 """
 
 
@@ -87,12 +101,25 @@ def nickname(value):
     return value
 
 
+RANKED_PLAYERS = """WITH attempts AS (
+    SELECT player, nickname, race, time_ms, achieved_at,
+           ROW_NUMBER() OVER (
+               PARTITION BY player ORDER BY time_ms, achieved_at, race
+           ) AS attempt
+    FROM times WHERE challenge=?
+), ranked AS (
+    SELECT player, nickname, race, time_ms,
+           ROW_NUMBER() OVER (ORDER BY time_ms, achieved_at, player) AS place
+    FROM attempts WHERE attempt=1
+)"""
+
+
 def ranking(connection, challenge=CHALLENGE):
     rows = connection.execute(
-        """SELECT nickname, race, time_ms FROM times WHERE challenge=?
-           ORDER BY time_ms, achieved_at, player, race LIMIT 30""", (challenge,)
+        RANKED_PLAYERS + " SELECT nickname, race, time_ms, place FROM ranked ORDER BY place LIMIT 30",
+        (challenge,),
     )
-    return [{**dict(row), "place": i} for i, row in enumerate(rows, 1)]
+    return [dict(row) for row in rows]
 
 
 def store(payload):
@@ -133,12 +160,39 @@ def store(payload):
                  time_ms=MIN(times.time_ms,excluded.time_ms)""", (challenge, player, race, name, elapsed, revision)
         )
         position = connection.execute(
-            """WITH ranked AS (
-                   SELECT player,race,ROW_NUMBER() OVER (ORDER BY time_ms,achieved_at,player,race) AS place
-                   FROM times WHERE challenge=?
-               ) SELECT place FROM ranked WHERE player=? AND race=?""", (challenge, player, race)
+            RANKED_PLAYERS + " SELECT place FROM ranked WHERE player=?", (challenge, player)
         ).fetchone()[0]
         return {"ok": True, "challenge": challenge, "entries": ranking(connection, challenge), "place": position}
+
+
+def player_achievements(connection, player):
+    identity = "account:" + player
+    rows = connection.execute(
+        """SELECT challenge FROM achievements WHERE player=?
+           UNION SELECT challenge FROM times WHERE player=? ORDER BY challenge""",
+        (identity, identity),
+    )
+    return {"ok": True, "player": player, "achievements": [row[0] for row in rows if row[0] in ACHIEVEMENTS]}
+
+
+def sync_achievements(payload, bearer):
+    choices = payload.get("achievements")
+    if not isinstance(choices, list) or len(choices) > len(ACHIEVEMENTS) or any(
+        not isinstance(value, str) or value not in ACHIEVEMENTS for value in choices
+    ):
+        raise RequestError(400, "invalid_achievements")
+    if not bearer.startswith("Bearer ") or not 0 < len(bearer[7:]) <= 256:
+        raise RequestError(401, "missing_session")
+    profile = public_profile(bearer[7:])
+    player = str(profile["id"])
+    completed = set(choices)
+    completed.update(value for value in profile.get("completed", []) if isinstance(value, str) and value in ACHIEVEMENTS)
+    with closing(connect()) as connection, connection:
+        connection.executemany(
+            "INSERT OR IGNORE INTO achievements(player, challenge) VALUES (?,?)",
+            [("account:" + player, challenge) for challenge in completed],
+        )
+        return player_achievements(connection, player)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -159,6 +213,15 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(404, {"ok": False, "error": "not_found"})
             return
         query = parse.parse_qs(parse.urlsplit(self.path).query)
+        if "profile" in query:
+            player = query["profile"][0]
+            if not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", player):
+                return self.reply(400, {"ok": False, "error": "invalid_player"})
+            try:
+                with closing(connect()) as connection:
+                    return self.reply(200, player_achievements(connection, player))
+            except sqlite3.Error:
+                return self.reply(503, {"ok": False, "error": "storage_unavailable"})
         challenge = query.get("challenge", [CHALLENGE])[0]
         with closing(connect()) as connection:
             self.reply(200, {"ok": True, "challenge": challenge, "entries": ranking(connection, challenge)})
@@ -175,7 +238,10 @@ class Handler(BaseHTTPRequestHandler):
             payload = json.loads(self.rfile.read(size))
             if not isinstance(payload, dict):
                 raise RequestError(400, "invalid_request")
-            self.reply(200, store(payload))
+            if payload.get("action") == "sync_achievements":
+                self.reply(200, sync_achievements(payload, self.headers.get("Authorization", "")))
+            else:
+                self.reply(200, store(payload))
         except RequestError as exc:
             self.reply(exc.status, {"ok": False, "error": exc.code})
         except (ValueError, OSError):

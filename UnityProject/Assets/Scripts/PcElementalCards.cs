@@ -3,11 +3,25 @@ using Newtonsoft.Json.Linq;
 namespace CastleFight {
 public sealed partial class PcGame {
     string[] UnitCardAbilities(HumanMatch.Unit u)=>u.abilities.Concat(match.Lines[u.kind].unit=="h030"?new[]{"A0DY"}:new string[0]).Distinct().Where(id=>ContextAbilityVisible(match.Lines[u.kind].unit,id,match.Abilities[id])).ToArray();
+    static string LavaSplitStatus(HumanMatch.Unit unit){
+        if(unit.elementalLavaGeneration<=0||unit.elementalIllusion)return null;
+        if(unit.elementalLavaGeneration>=HumanMatch.LavaFinalGeneration)return "Лава: разделения исчерпаны";
+        if(unit.elementalLavaPending)return "Лава: отпочковывается";
+        return "Лава: "+unit.elementalLavaHits+" / "+HumanMatch.LavaHitsToSplit+" попаданий";
+    }
     string RaceSkillTip(string id,JToken cfg){
         string desc=null,name=null;
         switch(id){
         case "A0DW":name="Сила жизненной энергии";desc="Успешный урон добавляет 50 × исходный уровень × доля текущего здоровья осадного урона. Числовая броня игнорируется; тип брони учитывается.";break;
-        case "A0DX":name="Ответный разряд";desc="В ответ на обычную ближнюю атаку запускает разряд: 25 урона / 2 с оглушения либо 50 / 4 с у старшего. Исходный бросок включителен: 0–15 / 0–30 из 100.";break;
+        case "A0DX":name="Ответный разряд";desc="В ответ на ближнюю атаку запускает разряд на дистанции до 600: 25 урона и 2 с оглушения, у старшего — 50 урона и 4 с. Шанс: 16% или 31% соответственно.";break;
+        case "A0CH":case "A0CI":
+            name="Разветвлённая молния";
+            desc="Срабатывает при попадании. Дальность атаки "+(id=="A0CH"?"350":"400")+
+                ". Поражает до "+(id=="A0CH"?"2":"4")+" противников, включая основную цель. Дополнительные цели должны быть в радиусе 125 от основной.";
+            break;
+        case "A0F7":case "A0F0":
+            name="Разветвлённая молния · здания";desc="При попадании в здание наносит ему дополнительный магический урон.";
+            break;
         case "A0DY":name="Разделение лавы";desc="После 15 успешных оружейных попаданий через 2 с создаёт обычного огненного элементаля с полным здоровьем и лечит половину недостающего HP родителя. Родитель делится максимум дважды; дети дальше не делятся.";break;
         case "A0F5":name="Стихийная связь · пассивное свойство";desc="При наличии союзного здания «Связь стихий» гибель этого обычного бойца лечит союзников в радиусе 512: 20 за каждое живое исходное стихийное здание, максимум 400. Бойцы другого типа получают 30% лечения.";break;
         case "A0ET":name="Связь стихий · особое здание";desc="При наличии союзной Связи стихий гибель обычного бойца с этой способностью лечит союзников в радиусе 512: 20 за каждое живое исходное элементальное здание, максимум 400. Союзникам другого типа — 30% лечения.";break;

@@ -14,6 +14,18 @@ public sealed partial class HumanMatch {
     public int UndeadRaised,UndeadConversions,UndeadExecutions,UndeadDecays,UndeadInfections,UndeadTransfers;
     float undeadPlagueClock;
     static readonly HashSet<string> UndeadSkeletons=new HashSet<string>{"u002","n00D","u00A","n00C","u00B","n01L","u003","n01M"};
+    static readonly string[] UndeadPlagueAuraIds={"A01L","A05P","A05T"};
+    internal static bool IsUndeadPlagueAura(string id)=>Array.IndexOf(UndeadPlagueAuraIds,id)>=0;
+    static void NameUndeadPlagueAuras(JObject abilities){
+        foreach(var id in UndeadPlagueAuraIds){
+            if(!(abilities[id] is JObject aura)||!(aura["profile"] is JObject profile))continue;
+            aura["name"]="Чума";
+            profile["name"]="Чума";
+            profile["display"]="Чума";
+            aura["icon"]=@"ReplaceableTextures\PassiveButtons\PASBTNPlagueCloud.blp";
+            aura["description"]="Наносит "+F(profile["effects"],"damage_tick")+" магического урона в секунду вражеским органическим бойцам в радиусе "+Mathf.RoundToInt(F(profile,"radius")*30)+".";
+        }
+    }
     public bool UndeadArmy(int team)=>TeamUndead[team]&&Aspects[team]==0;
     bool UndeadRaiser(Hut h)=>Lines[h.kind].abilities.Any(id=>(string)Abilities[id]?["kind"]=="undead_raise_building");
     void UndeadCreated(Unit u) {if(UndeadArmy(u.team)&&UndeadSkeletons.Contains(Lines[u.kind].unit)){u.maxHp*=1.2f;u.hp*=1.2f;}}

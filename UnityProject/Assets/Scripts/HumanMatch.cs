@@ -76,6 +76,7 @@ public sealed partial class HumanMatch {
         difficulty=Mathf.Clamp(botDifficulty,0,2);Gold[0]=Gold[1]=startGold;CastleHp[0]=CastleHp[1]=CastleMax;
         for(int t=0;t<2;t++){var p=new Vector2(t==0?-155:155,12);Builders[t]=new Builder {team=t,position=p,previous=p,goal=p};}
         InitInventory(catalog);damageTable=(JObject)catalog["damageTable"];Abilities=(JObject)catalog["abilities"]??new JObject();
+        NameUndeadPlagueAuras(Abilities);
         CastleRegen=F(catalog["castleStats"],"hp_regen",.5f);CastleArmor=F(catalog["castleStats"],"armor",5);CastleCollision=F(catalog["castleStats"],"collision",172f/30);CastleArmorType=(string)catalog["castleStats"]?["armor_type"]??"fortified";
         BuilderSpeed=Mathf.Clamp(F(catalog["builderStats"],"speed",18.333333f),F(catalog["builderStats"],"min_speed",5),F(catalog["builderStats"],"max_speed",13.333333f));BuilderWalkRate=BuilderSpeed*30/Mathf.Max(1,F(catalog["builderStats"],"walk_animation_speed",300));
         Lines=((JArray)catalog["lines"]).Select(v=>{var s=(JObject)v["stats"];var b=(JObject)v["buildingStats"]??s;var w=((JArray)s["weapons"]??new JArray()).Select(Weapon.Read).ToArray();var first=w.FirstOrDefault();
@@ -102,7 +103,7 @@ public sealed partial class HumanMatch {
     public float Income(int t)=>5+Huts.Where(h=>h.team==t&&h.paid&&h.hp>0).Sum(h=>h.income);
     public float IncomeIn=>Mathf.Max(0,10-(float)incomeAge);
     public int ArmyCount(int t)=>ArmyCount035(t);
-    public float Interval(Hut h)=>(15+h.spent/20f)*(AbyssTrialActive&&h.team==1?.82f:1);
+    public float Interval(Hut h)=>15+h.spent/20f;
     public static Vector2 CastlePosition(int t)=>new Vector2(t==0?-5120f/30:5120f/30,64f/30);
     public static Vector2 Plot(int team,int x,int y)=>new Vector2(((team==0?-6144:2048)+64+x*128)/30f,(y==24?-384:y==25?384:y<12?-1920+y*128:512+(y-12)*128)/30f);
     // CF240_BASE_NERUB.w3x, war3map.wpm: sixteen 32-unit pathing samples per 128-unit plot.

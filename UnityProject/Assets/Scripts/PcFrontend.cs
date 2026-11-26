@@ -29,7 +29,7 @@ public sealed partial class PcGame {
     }
     void UpdateFrontend() {
         if(menuAudio) {
-            bool inMenu=page==Page.Guide||aspectWaiting||page==Page.Progression||page==Page.Main||page==Page.Setup||page==Page.Network||(page==Page.Settings&&settingsReturn!=Page.Pause);
+            bool inMenu=page==Page.Guide||aspectWaiting||page==Page.Progression||page==Page.Profile||page==Page.Main||page==Page.Setup||page==Page.Network||(page==Page.Settings&&settingsReturn!=Page.Pause);
             menuAudio.volume=Mathf.MoveTowards(menuAudio.volume,inMenu?options.musicVolume:0,Time.unscaledDeltaTime*.5f);
         }
         PollLobby();

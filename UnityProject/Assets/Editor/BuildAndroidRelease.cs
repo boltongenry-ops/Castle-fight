@@ -64,6 +64,7 @@ public static class BuildAndroidRelease {
     public static void BuildLastProtocol0484()=>BuildSigned("0.48.4",54);
     public static void BuildProtocolMarch0485()=>BuildSigned("0.48.5",55);
     public static void BuildAbyssTidePreview()=>BuildSigned("0.48.6",56);
+    public static void BuildAbyssBalancePreview()=>BuildSigned("0.48.7",57);
     public static void BuildWinterFront0462()=>BuildSigned("0.46.2",46);
     public static void BuildWinterBoss0461()=>BuildSigned("0.46.1",45);
     public static void BuildSquad0442()=>BuildSigned("0.44.2",41);

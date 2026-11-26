@@ -13,6 +13,8 @@ public sealed partial class HumanMatch {
     public readonly List<ElementalJob> ElementalJobs=new List<ElementalJob>();
     public readonly List<ElementalZone> ElementalZones=new List<ElementalZone>();
     public readonly List<ElementalProjectile> ElementalRays=new List<ElementalProjectile>(),ElementalSpheres=new List<ElementalProjectile>();
+    internal const int LavaHitsToSplit=15,LavaFinalGeneration=3;
+    internal const float LavaSplitDelay=2f;
     float elementalClock;public int ElementalSplits,ElementalMirrors,ElementalBursts,ElementalDetonations;
     bool ElementalEligible(Unit u,int team)=>u!=null&&u.hp>0&&u.team==team&&UnitConfig035(u.kind).sapper;
     bool ElementalIllusion(Unit u)=>u.elementalIllusion||(bool?)Lines[u.kind].stats["illusion"]==true;
@@ -31,13 +33,44 @@ public sealed partial class HumanMatch {
     // Keep the read-only Godot catalog and existing model identities for audits.
     public static bool RemovedElementalCompanion(string raw)=>raw=="h0DC"||raw=="h0DB";
     public string[] ProductionRoster(Line line)=>(line.production??Array.Empty<string>()).Where(raw=>!RemovedElementalCompanion(raw)).ToArray();
-    void ElementalCreated(Unit u,bool production){if(!production||Lines[u.kind].unit!="h030")return;u.elementalLavaGeneration=1;u.pose="Birth";u.castPause=.3f;}
-    public void ElementalAfterWeapon(Unit source,float actual){if(source==null||source.hp<=0||ElementalIllusion(source)||actual<=0||source.elementalLavaGeneration<=0||source.elementalLavaGeneration>=3||source.elementalLavaPending)return;if(++source.elementalLavaHits<15)return;source.elementalLavaPending=true;ElementalJobs.Add(new ElementalJob{kind="lava",source=source,left=2});}
+    void ElementalCreated(Unit u,bool production){
+        if(Lines[u.kind].unit!="h030")return;
+        u.elementalLavaGeneration=1;
+        if(production){u.pose="Birth";u.castPause=.3f;}
+    }
+    public void ElementalAfterWeapon(Unit source,float actual){
+        if(source==null||source.hp<=0||ElementalIllusion(source)||actual<=0||source.elementalLavaGeneration<=0||
+           source.elementalLavaGeneration>=LavaFinalGeneration||source.elementalLavaPending)return;
+        if(++source.elementalLavaHits<LavaHitsToSplit)return;
+        source.elementalLavaPending=true;
+        ElementalJobs.Add(new ElementalJob{kind="lava",source=source,left=LavaSplitDelay});
+    }
+    void CompleteLavaSplit(Unit source){
+        source.elementalLavaPending=false;source.elementalLavaHits=0;source.elementalLavaGeneration++;
+        Heal(source,(source.maxHp-source.hp)*.5f);
+        int kind=Array.FindIndex(Lines,line=>line.unit=="h02Z");
+        if(kind<0)return;
+        var child=Spawn(source.team,kind,source.position+Vector2.up*1.5f);
+        child.onRoad=true;child.leaveCastleLane=false;child.spellBorn=true;
+        child.elementalPose=source.elementalPose="Birth";
+        child.elementalPoseLeft=source.elementalPoseLeft=.75f;child.castPause=.3f;
+        PulseAt(child.position,2.3f,new Color(1,.45f,.12f),"Разделение лавы",.8f,"elemental:A0DY:effect",child.id);
+        ElementalSplits++;
+    }
     void ElementalMirror(Unit source,int roll=-1){if(source.hp<=0||source.elementalMirrorCd>0||source.elementalMirrorPending||(roll<0?(int)(Roll()*100):roll)>=20)return;source.elementalMirrorCd=3;source.elementalMirrorPending=true;source.castPause=Mathf.Max(source.castPause,.5f);ElementalJobs.Add(new ElementalJob{kind="mirror",source=source,left=.5f});}
     void ElementalForged(Unit source,Vector2 point,float actual){using(var snapshot035_1=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_1)if(ElementalEligible(u,1-source.team)&&!Invulnerable(u)&&Vector2.Distance(u.position,point)<=250f/30&&Lines[source.kind].weapons.Any(w=>Flying(u)?w.air:w.ground))DamageUnit(u,actual*.5f,source.team,"chaos",true,false,null,false,true);}
     void ElementalAfterDamage(Unit source,Unit victim,float actual,bool suppress=false){if(actual<=0||suppress)return;if(source!=null&&!ElementalIllusion(source)&&source.abilities.Contains("A03Q")){if(source.abilities.Contains("A0F1"))ElementalForged(source,victim.position,actual);if(source.abilities.Contains("A0DW")&&source.hp>0&&victim.hp>0)DamageUnit(victim,50*F(Lines[source.kind].stats,"level",1)*source.hp/Mathf.Max(1,source.maxHp),source.team,"siege",true,false,source,false,true,0,true);if(Lines[source.kind].unit=="h02Y")ElementalMirror(source);}if(victim.hp>0&&!ElementalIllusion(victim)){if(victim.abilities.Contains("A0DX")&&source!=null&&source.hp>0&&(source.pendingWeapon??WeaponFor(source,victim))?.type=="normal")ElementalRetaliate(source,victim);if(Lines[victim.kind].unit=="o00E"&&!victim.elementalArmed){victim.mana+=actual;if(victim.mana>=680){victim.elementalArmed=true;victim.abilities.Remove("A0C5");Grant(victim,"A0EN");}}}}
     void ElementalTowerHit(int owner,int team,Unit victim,float actual){if(actual<=0||victim.hp<=0)return;var h=Huts.FirstOrDefault(v=>v.id==owner&&v.hp>0);if(h!=null&&Lines[h.kind].building=="h061"&&(int)(Roll()*100)<40)ElementalDummyMissile(team,h.position,victim,Abilities["A0DC"]);}
-    public bool ElementalRetaliate(Unit attacker,Unit victim,int roll=-1){if((attacker.pendingWeapon??WeaponFor(attacker,victim))?.type!="normal")return false;int rank=Mathf.Clamp((int)F(Lines[victim.kind].stats,"level",1),1,2);if((roll<0?(int)(Roll()*100):roll)>15*rank)return false;ElementalDummyMissile(victim.team,victim.position,attacker,Abilities["A0D5"]["ranks"][rank-1]);return true;}
+    public bool ElementalRetaliate(Unit attacker,Unit victim,int roll=-1){
+        if((attacker.pendingWeapon??WeaponFor(attacker,victim))?.type!="normal")return false;
+        int rank=Mathf.Clamp((int)F(Lines[victim.kind].stats,"level",1),1,2);
+        var cfg=Abilities["A0D5"]["ranks"][rank-1];
+        float range=F(cfg,"range");
+        if((attacker.position-victim.position).sqrMagnitude>range*range)return false;
+        if((roll<0?(int)(Roll()*100):roll)>15*rank)return false;
+        ElementalDummyMissile(victim.team,victim.position,attacker,cfg);
+        return true;
+    }
     public void ElementalDummyMissile(int team,Vector2 at,Unit target,JToken cfg){if(!Valid(target,team,cfg,false))return;var f=cfg["fields"];var w=new Weapon{type="missile",missile="elemental:"+(string)cfg["id"],speed=F(f,"amsp",1000)/30,arc=F(f,"amac"),homing=true};var shot=AddShot(team,target.kind,-1,target.id,at,target.position,F(cfg,"power"),w,F(cfg,"stun"),3);shot.chaosSpell="elemental_dummy";shot.elementalConfig=(JObject)cfg.DeepClone();}
     bool ImpactElementalShot(Shot shot){if(shot.chaosSpell!="elemental_dummy")return false;var target=FindUnit(shot.target);if(Valid(target,shot.team,shot.elementalConfig,false)&&!NagaShieldBlock(target)){DamageUnit(target,shot.damage,shot.team);if(target.hp>0){float duration=F(shot.elementalConfig,IsNagaHero(target)?"hero_duration":"duration");target.stun=Mathf.Max(target.stun,duration);PulseAt(target.position,1,Color.cyan,"Оглушение",duration,"elemental:"+(string)shot.elementalConfig["id"]+":target");}}return true;}
     bool ElementalOrb(Unit source,Unit target,JToken cfg){if((string)cfg?["id"]=="A0CN"){if(Valid(target,source.team,cfg,false)){var direction=target.position-source.position;ElementalWaves.Add(new ElementalWave{id=nextId++,team=source.team,origin=source.position,direction=direction.sqrMagnitude>.001f?direction.normalized:source.direction});}return true;}if((string)cfg?["kind"]!="elemental_fork")return false;if(!Valid(target,source.team,cfg,false)||((string)cfg["targets"]??"").Contains("structure"))return true;var victims=new[]{target}.Concat(Units.Where(u=>u!=target&&Valid(u,source.team,cfg,false)&&Vector2.Distance(u.position,target.position)<=F(cfg,"area"))).Take((int)F(cfg,"count",1)).ToArray();foreach(var u in victims){DamageUnit(u,F(cfg,"power"),source.team);ElementalLightning(source.team,source.position,u.position);}return true;}
@@ -64,7 +97,7 @@ public sealed partial class HumanMatch {
     void ElementalStormBurst(int team,Vector2 point,int primary,Unit source=null){if(source!=null&&source.team!=team)source=null;ElementalBursts++;foreach(var u in Units.Where(u=>ElementalEligible(u,1-team)&&!Invulnerable(u)&&!Hidden(u)&&Vector2.Distance(u.position,point)<=300f/30).OrderBy(u=>u.id==primary?0:1).ThenBy(u=>(u.position-point).sqrMagnitude).Take(3).ToArray())DamageUnit(u,45,team,"magic",true,false,source);PulseAt(point,3,Color.cyan,"Стихийная буря",.8f,"elemental:elemental_storm:trigger");}
     void TickElemental(float dt){foreach(var u in Units){u.elementalMirrorCd=Mathf.Max(0,u.elementalMirrorCd-dt);u.elementalResonanceCd=Mathf.Max(0,u.elementalResonanceCd-dt);u.elementalPoseLeft=Mathf.Max(0,u.elementalPoseLeft-dt);}using(var snapshot035_7=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_7)if(u.hp>0&&u.elementalArmed&&u.stun<=0&&!Disabled(u)&&Units.Any(v=>ElementalEligible(v,1-u.team)&&Flying(v)&&Vector2.Distance(v.position,u.position)<=250f/30)||u.hp>0&&u.elementalArmed&&u.stun<=0&&!Disabled(u)&&(Huts.Any(h=>h.paid&&h.hp>0&&h.team!=u.team&&Vector2.Distance(h.position,u.position)<=250f/30)||Vector2.Distance(u.position,new Vector2(BattleCastlePosition(1-u.team).x,0))<=250f/30)){ElementalDetonate(u);DamageUnit(u,u.hp+1,-1,"chaos",true,false,null,false,true);}
         var waveCfg=Abilities["A0CN"];using(var snapshot035_8=SimulationBuffers035.Take(ElementalWaves))foreach(var wave in snapshot035_8){float previous=wave.distance;wave.distance=Mathf.Min(F(waveCfg,"wave_length"),wave.distance+F(waveCfg,"missile_speed")*dt);using(var snapshot035_9=SimulationBuffers035.Take(Units))foreach(var target in snapshot035_9)if(!wave.struck.Contains(target.id)&&Valid(target,wave.team,waveCfg,false)){var offset=target.position-wave.origin;float along=Vector2.Dot(offset,wave.direction);float width=Mathf.Lerp(F(waveCfg,"start_width"),F(waveCfg,"end_width"),Mathf.Clamp01(along/F(waveCfg,"wave_length")));if(CorruptedTouches(offset,wave.direction,previous,wave.distance,F(Lines[target.kind].stats,"collision"),width)){wave.struck.Add(target.id);DamageUnit(target,F(waveCfg,"power"),wave.team);}}if(wave.distance>=F(waveCfg,"wave_length"))ElementalWaves.Remove(wave);}
-        using(var snapshot035_10=SimulationBuffers035.Take(ElementalJobs))foreach(var job in snapshot035_10)if((job.left-=dt)<=.000001f){ElementalJobs.Remove(job);if(job.kind=="sphere"){LaunchElementalSphere(job.team,job.point,job.angle,job.power,job.nova);continue;}var source=job.source;if(source==null||source.hp<=0)continue;if(job.kind=="mirror"){source.elementalMirrorPending=false;var clone=Spawn(source.team,source.kind,source.position+Vector2.right);clone.summoned=true;clone.noBounty=true;clone.summonLeft=60;clone.elementalIllusion=true;clone.onRoad=true;clone.leaveCastleLane=false;clone.maxHp=source.maxHp;clone.hp=source.hp;clone.armor=source.armor;clone.abilities.Clear();clone.abilityLevels.Clear();clone.critChance=clone.evasion=clone.spellResist=0;clone.elementalWeapons=Lines[source.kind].weapons.Select(w=>{var c=w.Copy();c.damage*=.6f;return c;}).ToArray();clone.effects.Add(new Effect{id="elemental_illusion",group="elemental_illusion",left=60,lifetime=60,incoming=1,config=new JObject()});ElementalMirrors++;}else if(job.kind=="lava"){source.elementalLavaPending=false;source.elementalLavaHits=0;source.elementalLavaGeneration++;Heal(source,(source.maxHp-source.hp)*.5f);var child=Spawn(source.team,Array.FindIndex(Lines,l=>l.unit=="h02Z"),source.position+Vector2.up*1.5f);child.onRoad=true;child.leaveCastleLane=false;child.pose="Birth";child.castPause=.3f;child.summoned=false;child.spellBorn=true;source.pose="Birth";ElementalSplits++;}}
+        using(var snapshot035_10=SimulationBuffers035.Take(ElementalJobs))foreach(var job in snapshot035_10)if((job.left-=dt)<=.000001f){ElementalJobs.Remove(job);if(job.kind=="sphere"){LaunchElementalSphere(job.team,job.point,job.angle,job.power,job.nova);continue;}var source=job.source;if(source==null||source.hp<=0)continue;if(job.kind=="mirror"){source.elementalMirrorPending=false;var clone=Spawn(source.team,source.kind,source.position+Vector2.right);clone.summoned=true;clone.noBounty=true;clone.summonLeft=60;clone.elementalIllusion=true;clone.onRoad=true;clone.leaveCastleLane=false;clone.maxHp=source.maxHp;clone.hp=source.hp;clone.armor=source.armor;clone.abilities.Clear();clone.abilityLevels.Clear();clone.critChance=clone.evasion=clone.spellResist=0;clone.elementalWeapons=Lines[source.kind].weapons.Select(w=>{var c=w.Copy();c.damage*=.6f;return c;}).ToArray();clone.effects.Add(new Effect{id="elemental_illusion",group="elemental_illusion",left=60,lifetime=60,incoming=1,config=new JObject()});ElementalMirrors++;}else if(job.kind=="lava"){CompleteLavaSplit(source);}}
         using(var snapshot035_11=SimulationBuffers035.Take(ElementalZones))foreach(var zone in snapshot035_11){zone.timer-=dt;while(zone.timer<=0&&zone.pulses>0){zone.timer+=zone.interval;zone.pulses--;ElementalRainPulse(zone);}if(zone.pulses<=0)ElementalZones.Remove(zone);}elementalClock+=dt;while(elementalClock>=.03f){elementalClock-=.03f;StepElementalProjectiles();}
     }
 }

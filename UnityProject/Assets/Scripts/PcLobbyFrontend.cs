@@ -54,6 +54,7 @@ public sealed partial class PcGame {
                             networkName=(string)networkProfile["name"]??networkName;
                             networkGuest=false;
                         }
+                        if((string)packet["request_type"]=="profile_auth"||(string)packet["request_type"]=="profile_logout")ProfileAuthChanged();
                         if(networkEntryAccount&&HasNetworkProfile){
                             networkEntryAccount=false;showNetworkProfile=false;networkGuest=false;
                         }
@@ -274,13 +275,13 @@ public sealed partial class PcGame {
     void DrawNetworkProfile() {
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.72f));
         LobbyPanel(new Rect(335,115,610,494));
-        Text(374,151,535,45,HasNetworkProfile?"Профиль игрока":"Вход в сетевую игру",heading);
+        Text(374,151,535,45,HasNetworkProfile?"Профиль игрока":page==Page.Profile?"Вход в аккаунт":"Вход в сетевую игру",heading);
         Accent(375,204,530);
         bool entryCheckingToken=WaitingForNetworkAccount&&HasEndpointToken&&(directoryLoading||profilePending||!directoryReady);
         if(entryCheckingToken){
             Text(380,264,500,74,"Восстанавливаем вход в сетевой аккаунт…",label);
         }else if(!HasNetworkProfile) {
-            Text(380,221,515,48,"С аккаунтом сохраняются ранг и история матчей.",small);
+            Text(380,221,515,48,"Аккаунт хранит ранг, историю матчей и достижения.",small);
             Text(380,295,150,29,"Имя",label);profileName=AccountText("account.login",new Rect(530,291,350,40),profileName,20,false,"Логин");
             Text(380,350,150,29,"Пароль",label);profilePassword=AccountText("account.password",new Rect(530,346,350,40),profilePassword,128,true,"Пароль");
             GUI.enabled=!profilePending&&directoryReady;

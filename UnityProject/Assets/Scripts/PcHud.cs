@@ -429,7 +429,7 @@ public sealed partial class PcGame {
         ClassicWispBody040.FacePortrait(portraitModel,portraitCamera);
         portraitCamera.Render();
     }
-    void DestroyHud(){HudTheme.Dispose();if(portraitStage)Destroy(portraitStage);if(portraitTexture){portraitTexture.Release();Destroy(portraitTexture);}}
+    void DestroyHud(){HudTheme.Dispose();if(mythicCrown)Destroy(mythicCrown);if(portraitStage)Destroy(portraitStage);if(portraitTexture){portraitTexture.Release();Destroy(portraitTexture);}}
 }
 }
 

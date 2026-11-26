@@ -7,13 +7,13 @@ namespace CastleFight {
 public sealed partial class HumanMatch {
     public const string AbyssTrial="mythic_abyssal_tide";
     public const float AbyssSlow=.25f, AbyssMiss=.10f;
-    public const float AbyssFirstUndertow=315, AbyssUndertowInterval=42, AbyssRageInterval=28, AbyssUndertowWarning=5;
-    public const float AbyssHaste=.25f, AbyssWeaponPower=1.20f, AbyssUnitHealth=1.28f;
-    public const int AbyssCastleHealth=19000;
+    public const float AbyssFirstUndertow=390, AbyssUndertowInterval=55, AbyssRageInterval=42, AbyssUndertowWarning=5;
+    public const float AbyssHaste=.15f, AbyssWeaponPower=1.10f, AbyssUnitHealth=1.15f;
+    public const int AbyssCastleHealth=15000;
     public const string AbyssQueenCode="n00S";
     internal const float AbyssWorldEast=6144f/30, AbyssWorldNorth=3584f/30;
     static readonly Color AbyssCyan=new Color(.20f,.95f,.76f);
-    static readonly string[] AbyssRaidRoster={"n00X","n00J","n004","n00S","n00H","n007","n01P"};
+    static readonly string[] AbyssRaidRoster={"n00X","n00J","n004","n00S","n01P"};
     static readonly HashSet<string> AbyssPanzerUnits=new HashSet<string>{
         "n00I","n00J","n00K","n002","n00X","n004","n01P","n00W","n01Q","n01R"
     };
@@ -35,7 +35,6 @@ public sealed partial class HumanMatch {
     sealed class AbyssHunter {public Hut target;public float expires;}
     List<AbyssBond> abyssBonds;
     Dictionary<int,AbyssHunter> abyssHunters;
-    Hut abyssOracle,abyssTower,abyssHatchery,abyssSiegeYard;
     int[] abyssRaidKinds;
     int abyssHunterKind=-1;
     float abyssNextRaid=AbyssFirstUndertow,abyssNextCharm;
@@ -56,25 +55,7 @@ public sealed partial class HumanMatch {
         abyssHunters=new Dictionary<int,AbyssHunter>(4);
         abyssRaidKinds=Array.ConvertAll(AbyssRaidRoster,raw=>Array.FindIndex(Lines,line=>line.unit==raw));
         abyssHunterKind=Array.FindIndex(Lines,line=>line.unit=="n01R");
-        var castle=CastlePosition(1);
-        abyssOracle=PlaceChallengeStructure("h00M",castle+new Vector2(-19,12),2200);
-        abyssTower=PlaceChallengeStructure("h00N",castle+new Vector2(-28,-10),2500);
-        abyssHatchery=AbyssProducer("h00F",castle+new Vector2(-12,21),1250,17);
-        abyssSiegeYard=AbyssProducer("h01B",castle+new Vector2(-10,-21),1550,32);
     }
-
-    Hut AbyssProducer(string raw,Vector2 point,float hp,float firstSpawn){
-        var hut=PlaceChallengeStructure(raw,point,hp);
-        hut.spent=hut.baseCost=Lines[hut.kind].cost;
-        hut.spawnLeft=firstSpawn;
-        return hut;
-    }
-
-    bool AbyssBlocksPlot(Vector2 point)=>AbyssTrialActive&&(
-        abyssOracle.hp>0&&(abyssOracle.position-point).sqrMagnitude<Cell*Cell||
-        abyssTower.hp>0&&(abyssTower.position-point).sqrMagnitude<Cell*Cell||
-        abyssHatchery.hp>0&&(abyssHatchery.position-point).sqrMagnitude<Cell*Cell||
-        abyssSiegeYard.hp>0&&(abyssSiegeYard.position-point).sqrMagnitude<Cell*Cell);
 
     public bool AbyssWaterAffects(Unit unit)=>AbyssTrialActive&&unit.team==0&&
         !Flying(unit)&&!Invulnerable(unit)&&Lines[unit.kind].category!="visual"&&Lines[unit.kind].unit!="YTct"&&
@@ -152,7 +133,6 @@ public sealed partial class HumanMatch {
         }
         if(!AbyssSecondPhase&&CastleHp[1]>0&&CastleHp[1]<=AbyssCastleHealth*.5f){
             AbyssSecondPhase=true;
-            abyssNextRaid=Mathf.Min(abyssNextRaid,Elapsed+AbyssRageInterval);
             PulseAt(CastlePosition(1),8,AbyssCyan,"Бездна наступает",2.2f);
         }
         if(Elapsed<abyssNextRaid)return;
@@ -177,7 +157,7 @@ public sealed partial class HumanMatch {
         PulseAt(unit.position,4.5f,AbyssCyan,"Панцирь лопнул",1);
         using(var snapshot=SimulationBuffers035.Take(Units))foreach(var victim in snapshot)
             if(Valid(victim,1,null,false)&&!Flying(victim)&&(victim.position-unit.position).sqrMagnitude<=4.5f*4.5f)
-                DamageUnit(victim,85,1,"normal",false,killer:unit);
+                DamageUnit(victim,65,1,"normal",false,killer:unit);
     }
 
     void AbyssWeaponReleased(Unit source,Weapon weapon){
