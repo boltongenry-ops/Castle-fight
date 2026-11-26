@@ -82,6 +82,26 @@ public sealed partial class PcGame {
             sim.BeginChallengeRules(ProtocolDefinition());
             sim.CheckProtocolExceptions(race,Check);
         }
+        var human=JObject.Parse(RaceCatalog(0));
+        var nature=JObject.Parse(RaceCatalog(3));
+        var core=new HumanMatch(human,10000,1,-1,-1,nature);
+        core.CheckShopBountyRetreat(Check);
+        var march=new HumanMatch(human,600,2,-1,-1,bot);
+        march.BeginChallengeRules(ProtocolDefinition());
+        march.CheckProtocolMarch(Check);
+        if(match!=null&&match.LastProtocol){
+            match.Elapsed=HumanMatch.ProtocolDeadline-.02f;
+            Tick(.05f);
+            Check(protocolMarchIntro&&protocolChassis&&controls.InputBlocked,"At 7:00 the march cinematic takes over");
+            float held=match.Elapsed;
+            yield return RecoveryWait(()=>protocolMarchIntroAge>=3.2f&&protocolMarchIntro,"The launch reaches its lift shot",10);
+            Check(protocolLiftCue&&ProtocolCastleLift()>1.75f&&Mathf.Abs(match.Elapsed-held)<.001f,
+                "Chassis rises with battle time paused · lift "+ProtocolCastleLift()+" time "+match.Elapsed);
+            yield return Shot(folder,"06-walking-castle");
+            yield return Action("protocol.march.skip");
+            Check(!protocolMarchIntro&&match.ProtocolMarch&&match.ProtocolMarchPosition.x<HumanMatch.CastlePosition(1).x-4&&FogActive,
+                "Skipping moves the fortress onto the road and returns control with fog");
+        }
         MainMenu();Check(!protocolProps&&!protocolIntro&&!protocolGroundMesh&&!protocolArmorAtlas,"Leaving cleans up the effects, terrain and atlas overrides");
         File.WriteAllText(Path.Combine(folder,"last-protocol-checks.json"),new JObject{["checks"]=testChecks,["failures"]=testFailures}.ToString());
         Debug.Log("CF_PROTOCOL_RESULT failures="+testFailures);
@@ -136,6 +156,92 @@ public sealed partial class PcGame {
 }
 
 public sealed partial class HumanMatch {
+    internal void CheckShopBountyRetreat(Action<bool,string> check){
+        PlayerVersusPlayer=true;
+        foreach(var item in new[]{("I001",300),("I004",120),("I00A",900),("I003",900),("I009",180),("I005",180)}){
+            Elapsed=0;
+            int index=ShopIndex(item.Item1);
+            check(index>=0&&Stock(0,index).count==1&&Stock(1,index).count==1,"Opening stock on both sides "+item.Item1);
+            if(index<0)continue;
+            int purchasedAt=item.Item1=="I004"?35:0;
+            Elapsed=purchasedAt;
+            check(BuyItem(0,index,out _)&&Stock(0,index).count==0&&Stock(1,index).count==1,
+                "Buying starts the refill for the purchaser only "+item.Item1);
+            Elapsed=purchasedAt+item.Item2-.01f;
+            check(Stock(0,index).count==0,"Stock remains unavailable before its native timer "+item.Item1);
+            Elapsed=purchasedAt+item.Item2;
+            check(Stock(0,index).count==1,"Restocks at the native timer "+item.Item1);
+        }
+        int orb=ShopIndex("I006");
+        Elapsed=899;
+        check(Stock(0,orb).count==0&&ItemPurchaseError(0,orb).Contains("15"),"The lightning orb unlock is a real 15-minute gate");
+        Elapsed=900;
+        check(Stock(0,orb).count==1,"The orb appears immediately at its unlock");
+        int barracks=Kind("h000");
+        var at=new Vector2(80,0);
+        var enemy=new Hut{id=nextId++,team=1,kind=barracks,hp=11,maxHp=11,position=at,started=true,paid=true,spent=100};
+        Huts.Add(enemy);
+        float bank=Gold[0];DamageHut(enemy,1000,"siege",0);DamageHut(enemy,1000,"siege",0);
+        check(!Huts.Contains(enemy)&&Gold[0]-bank==20,"Destroying native barracks awards exactly 20 gold once");
+        var queue=new Hut{id=nextId++,team=1,kind=barracks,hp=11,maxHp=11,position=at,spent=100};
+        Huts.Add(queue);bank=Gold[0];DamageHut(queue,1000,"siege",0);
+        check(Gold[0]==bank,"Unpaid building orders cannot be farmed for gold");
+
+        int rubick=Array.FindIndex(Lines,line=>Strings(line.stats["abilities"]).Any(id=>(string)Abilities[id]?["kind"]=="warlock_blast"));
+        foreach(int kind in new[]{rubick,Kind("h023")}){
+            var front=Spawn(0,barracks,Vector2.zero);
+            var retreat=Spawn(1,kind,new Vector2(8,0));
+            var other=Spawn(1,barracks,new Vector2(10,0));
+            if(kind==rubick)retreat.warlockPhase=1;else retreat.bearPhase=0;
+            front.combatTarget=retreat.id;
+            front.attackTarget=retreat.id;
+            front.pendingWeapon=WeaponFor(front,retreat);
+            front.strikeLeft=.3f;front.cooldown=2;
+            TickUnit(front,.05f);
+            check(front.combatTarget==other.id&&front.strikeLeft<0,"A forced retreat cancels pursuit and reacquires the advancing opponent");
+            float hp=retreat.hp;DamageUnit(retreat,12,0,"normal",false);
+            check(retreat.hp<hp,"A retreating unit remains damageable by attacks already in flight");
+            retreat.warlockPhase=retreat.bearPhase=-1;other.hp=0;
+            front.combatTarget=-1;
+            TickUnit(front,.05f);
+            check(front.combatTarget==retreat.id,"Targeting resumes after the retreat phase");
+            Units.Clear();
+        }
+    }
+
+    internal void CheckProtocolMarch(Action<bool,string> check){
+        PlayerVersusPlayer=true;
+        Elapsed=ProtocolDeadline-.1f;
+        CastleHp[1]=5200;
+        Step(.05f);
+        check(!ProtocolMarch&&ProtocolTimeLeft>0,"The walking castle stays docked before seven minutes");
+        float hp=CastleHp[1];
+        Step(.08f);
+        check(ProtocolMarch&&ProtocolTimeLeft==0&&CastleHp[1]>=hp+1599&&ProtocolStationsUp==2,
+            "Timeout launches the fortress with reinforced armor regardless of remaining stations");
+        var start=ProtocolMarchPosition;
+        var infantry=Spawn(0,Kind("h000"),start+new Vector2(-6,-1));
+        var second=Spawn(0,Kind("h000"),start+new Vector2(-7,2));
+        var air=Spawn(0,Kind("h015"),start+new Vector2(-6,2));
+        var airTwo=Spawn(0,Kind("h015"),start+new Vector2(-7,4));
+        float front=infantry.hp,next=second.hp;
+        Elapsed+=.4f;TickLastProtocol(.05f);
+        check(infantry.hp<front&&second.hp<next&&ProtocolMarchStrike>0,"Heavy melee damages multiple ground targets");
+        check(Shots.Where(s=>s.weapon==ProtocolRocket).Select(s=>s.target).OrderBy(id=>id)
+            .SequenceEqual(new[]{air.id,airTwo.id}),"A rocket volley fires only at two distinct flying targets");
+        float airHp=air.hp;TickShots(2);
+        check(air.hp<airHp,"The traveling rocket deals damage on impact");
+        for(int i=0;i<80;i++){Elapsed+=.05f;TickLastProtocol(.05f);}
+        check(ProtocolMarchPosition.x<start.x-15&&BattleCastlePosition(1)==ProtocolMarchPosition,
+            "The attackable throne follows the road toward the player");
+        float core=CastleHp[1];
+        ApplyCastleDamage(1,100);
+        check(CastleHp[1]<core,"The mobile fortress remains a valid damage target with live stations");
+        ProtocolMarchPosition=CastlePosition(0)+Vector2.right*(CastleCollision+4);
+        hp=CastleHp[0];Elapsed+=2;TickLastProtocol(.05f);
+        check(CastleHp[0]<hp,"The marching fortress can actually damage the player’s castle");
+    }
+
     internal void ProtocolVisualProbe(bool discharge){
         if(discharge){
             Elapsed+=ProtocolWarning+.05f;

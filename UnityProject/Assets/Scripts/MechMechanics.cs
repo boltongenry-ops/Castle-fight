@@ -101,13 +101,13 @@ public sealed partial class HumanMatch {
         if(flags.Contains("structure")) {
             float modifier=(string)cfg["id"]=="A099"?F(fields,"Sds1",1):1;
             using(var snapshot035_5=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_5)if(h.paid&&h.hp>0&&h.team!=team){float d=Vector2.Distance(h.position,point);if(d<=Mathf.Max(full,outer))DamageHut(h,F(fields,d<=full?"Dda2":"Dda4")*modifier,"magic",team,true);}
-            float castle=Vector2.Distance(CastlePosition(1-team),point);if(castle<=Mathf.Max(full,outer))DamageCastle(1-team,F(fields,castle<=full?"Dda2":"Dda4")*modifier,"magic",true);
+            float castle=Vector2.Distance(BattleCastlePosition(1-team),point);if(castle<=Mathf.Max(full,outer))DamageCastle(1-team,F(fields,castle<=full?"Dda2":"Dda4")*modifier,"magic",true);
         }MechExplosions++;PulseAt(point,Mathf.Max(full,outer),new Color(1,.55f,.1f),"Взрыв");
     }
     bool TickMechUnit(Unit u,float dt) {
         if(MechMine(u)){u.pose="Stand";return true;}if(Lines[u.kind].unit=="n01U")return MechRepair(u,dt);if(Lines[u.kind].unit!="n01V")return false;
         if(u.mechFuse){u.pose="Stand";return true;}
-        bool near=Units.Any(v=>MechTrigger(v,u.team)&&Vector2.Distance(v.position,u.position)<=5)||Huts.Any(h=>h.hp>0&&h.paid&&h.team!=u.team&&Vector2.Distance(h.position,u.position)<=5+F(Lines[h.kind].buildingStats,"collision"))||Vector2.Distance(u.position,CastlePosition(1-u.team))<=5+CastleCollision;
+        bool near=Units.Any(v=>MechTrigger(v,u.team)&&Vector2.Distance(v.position,u.position)<=5)||Huts.Any(h=>h.hp>0&&h.paid&&h.team!=u.team&&Vector2.Distance(h.position,u.position)<=5+F(Lines[h.kind].buildingStats,"collision"))||Vector2.Distance(u.position,BattleCastlePosition(1-u.team))<=5+CastleCollision;
         if(!near)return false;u.mechFuse=true;u.strikeLeft=-1;MechJobs.Add(new MechJob {kind="sapper",source=u.id,team=u.team,left=F(Abilities["A099"],"duration")});return true;
     }
     bool MechRepair(Unit u,float dt) {
@@ -118,7 +118,7 @@ public sealed partial class HumanMatch {
             u.mechRepairTarget=candidates.Count>0?candidates[Mathf.Min(candidates.Count-1,(int)(Roll()*candidates.Count))]:-1000000;target=FindUnit(u.mechRepairTarget);hut=FindHut(u.mechRepairTarget);castle=u.mechRepairTarget==-1;
         }
         if(target==null&&hut==null&&!castle){u.pose="Stand";return true;}
-        Vector2 point=target?.position??hut?.position??CastlePosition(u.team),delta=point-u.position;u.direction=delta.normalized;
+        Vector2 point=target?.position??hut?.position??BattleCastlePosition(u.team),delta=point-u.position;u.direction=delta.normalized;
         if(delta.magnitude>F(Abilities["A09K"],"range")){u.position=Vector2.MoveTowards(u.position,point,MoveSpeed(u)*dt);u.pose="Walk";return true;}
         float max=target?.maxHp??hut?.maxHp??CastleHealthLimit(u.team),hp=target?.hp??hut?.hp??CastleHp[u.team];string raw=target!=null?Lines[target.kind].unit:hut!=null?Lines[hut.kind].building:"hcas";var values=mechRepairValues[raw];if(values==null){u.pose="Stand";return true;}
         float rate=max/Mathf.Max(1,F(values,"seconds")*F(Abilities["A09K"]?["fields"],"Rep2",1));float healed=PayMechRepair(u.team,raw,max,Mathf.Min(rate*dt,max-hp));

@@ -259,7 +259,7 @@ public sealed partial class HumanMatch {
         SimulationPhase035.Mark("auras");BlackHandZones(dt);TickShots(dt);SimulationPhase035.Mark("projectiles");BeginUnitBatch033();using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_4)if(u.hp>0){TickUnit(u,dt);UnitMoved033(u);}EndUnitBatch033();SimulationPhase035.Mark("unit_decisions_movement");FlushUndeadBirths();FlushFinalBirths();
         Units.RemoveAll(u=>u.hp<=0&&u.deadAge>3);Shots.RemoveAll(s=>s.age>s.duration+(s.kind==2||s.kind==3?.35f:0));
         if(CastleHp[0]<=0||CastleHp[1]<=0)Winner=CastleHp[0]<=0&&CastleHp[1]<=0?-1:CastleHp[0]<=0?1:0;
-        ResolveChallengeClock();
+        ResolveChallengeClock(dt);
         FlushWinterDefections();
     }
     public void Surrender(int team){if(!Finished&&team>=0&&team<2)Winner=1-team;}

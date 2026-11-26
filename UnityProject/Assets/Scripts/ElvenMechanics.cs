@@ -70,7 +70,7 @@ public sealed partial class HumanMatch {
         foreach(var u in Units)if(Valid(u,team,cfg,false)&&Vector2.Distance(u.position,point)<=F(cfg,"range")&&!ElvenBurning(team,u.id,id))choices.Add(Tuple.Create(u.id,u.position));
         if(((string)cfg["targets"]??"").Contains("structure")){
             foreach(var hut in Huts)if(hut.team!=team&&hut.paid&&hut.hp>0&&Vector2.Distance(hut.position,point)<=F(cfg,"range")&&!ElvenBurning(team,HutTarget(hut),id))choices.Add(Tuple.Create(HutTarget(hut),hut.position));
-            if(CastleHp[1-team]>0&&Vector2.Distance(CastlePosition(1-team),point)<=F(cfg,"range")&&!ElvenBurning(team,-1,id))choices.Add(Tuple.Create(-1,CastlePosition(1-team)));
+            if(CastleHp[1-team]>0&&Vector2.Distance(BattleCastlePosition(1-team),point)<=F(cfg,"range")&&!ElvenBurning(team,-1,id))choices.Add(Tuple.Create(-1,BattleCastlePosition(1-team)));
         }
         if(choices.Count==0)return false;var target=choices.FirstOrDefault(v=>v.Item1==suggested)??choices[Mathf.Min(choices.Count-1,(int)(Roll()*choices.Count))];ElvenMissile(source,line,team,point,target.Item1,target.Item2,cfg);return true;
     }
@@ -112,7 +112,7 @@ public sealed partial class HumanMatch {
         foreach(var u in Units)if(Valid(u,shot.team,mask,false)&&!Invulnerable(u)&&!Hidden(u)&&NightCanDetect(shot.team,u))result.Add(Tuple.Create(u.id,u.position));
         if(((string)pattern["targets"]??"").Contains("structure")){
             foreach(var h in Huts)if(h.team!=shot.team&&h.paid&&h.hp>0)result.Add(Tuple.Create(HutTarget(h),h.position));
-            if(CastleHp[1-shot.team]>0)result.Add(Tuple.Create(-1,CastlePosition(1-shot.team)));
+            if(CastleHp[1-shot.team]>0)result.Add(Tuple.Create(-1,BattleCastlePosition(1-shot.team)));
         }
         return result;
     }

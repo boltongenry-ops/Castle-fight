@@ -110,7 +110,7 @@ public sealed partial class HumanMatch {
             float radius=F(cfg,"area");
             using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_2)if(u.hp>0&&u.team!=shot.team&&!Hidden(u)&&(bool?)Lines[u.kind].stats["invulnerable"]!=true&&!Flying(u)&&(id=="A04L"&&Vector2.Distance(u.position,shot.end)<=radius))DamageUnit(u,F(cfg,"power"),shot.team,"chaos",false);
             using(var snapshot035_3=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_3)if(h.paid&&h.hp>0&&h.team!=shot.team&&(HutTarget(h)==shot.target||id=="A04L"&&Vector2.Distance(h.position,shot.end)<=radius)){DamageHut(h,F(cfg,"power"),"chaos",shot.team);if(h.hp>0)FreezeNorthernStructure(HutTarget(h),shot.team,"Bfrz",F(cfg,"freeze"));}
-            if(id=="A04L"&&Vector2.Distance(CastlePosition(1-shot.team),shot.end)<=radius)DamageCastle(1-shot.team,F(cfg,"power"),"chaos");
+            if(id=="A04L"&&Vector2.Distance(BattleCastlePosition(1-shot.team),shot.end)<=radius)DamageCastle(1-shot.team,F(cfg,"power"),"chaos");
             PulseAt(shot.end,Mathf.Max(2,radius),Color.cyan,"Заморозка");return true;
         }
         var target=FindUnit(shot.target);
@@ -131,7 +131,7 @@ public sealed partial class HumanMatch {
     public NorthernOrb SpawnNorthernOrb(int team,Vector2 point,float nativeDegrees) {var orb=new NorthernOrb {id=nextId++,team=team,position=point,previous=point,heading=-nativeDegrees*Mathf.Deg2Rad};NorthernOrbs.Add(orb);return orb;}
     void NorthernOrbFire(NorthernOrb orb) {
         var cfg=Abilities["A080"];float range=F(cfg,"range");var targets=Units.Where(v=>Valid(v,orb.team,cfg,false)&&Vector2.Distance(v.position,orb.position)<=range).Select(v=>v.id).ToList();
-        targets.AddRange(Huts.Where(v=>v.paid&&v.hp>0&&v.team!=orb.team&&Vector2.Distance(v.position,orb.position)<=range).Select(HutTarget));if(CastleHp[1-orb.team]>0&&Vector2.Distance(CastlePosition(1-orb.team),orb.position)<=range)targets.Add(-1);
+        targets.AddRange(Huts.Where(v=>v.paid&&v.hp>0&&v.team!=orb.team&&Vector2.Distance(v.position,orb.position)<=range).Select(HutTarget));if(CastleHp[1-orb.team]>0&&Vector2.Distance(BattleCastlePosition(1-orb.team),orb.position)<=range)targets.Add(-1);
         if(targets.Count==0)return;int target=targets[Mathf.Min(targets.Count-1,(int)(Roll()*targets.Count))];var shot=NorthernSpellShot(orb.team,Mathf.Max(0,Kind("h03O")),-orb.id,orb.position,target,"A080");shot.startHeight=F(Abilities["A04I"],"orbFlyHeight",10);
     }
     void NorthernOrbControl(NorthernOrb orb) {

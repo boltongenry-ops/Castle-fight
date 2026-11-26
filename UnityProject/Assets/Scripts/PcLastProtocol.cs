@@ -21,6 +21,7 @@ public sealed partial class PcGame {
     int protocolReskinnedMaterials;
     AudioSource protocolAudio;
     AudioClip protocolChargeSound,protocolShotSound;
+    Vector3 protocolCastleOrigin;
     readonly List<LineRenderer> protocolCircles=new List<LineRenderer>(9);
     readonly LineRenderer[] protocolWires=new LineRenderer[2];
     readonly Transform[] protocolGates=new Transform[2];
@@ -30,7 +31,7 @@ public sealed partial class PcGame {
     static JObject ProtocolDefinition()=>new JObject{
         ["id"]=HumanMatch.ProtocolTrial,["title"]="Последний протокол",["opponent"]="Mech Coalition",
         ["summary"]="Минное поле, две электростанции и орудие Терминатора.",
-        ["description"]="Пройдите минное поле и зенитки. Каждая электростанция уменьшает урон по замку на 35%. Разрушьте обе и доведите замок до 40% HP. Следите за полосой залпа: после выстрела ворота откроются на 12 секунд.",
+        ["description"]="Мины и зенитки прикрывают две электростанции. Каждая даёт замку 35% защиты. Разрушьте обе и доведите замок до 40% HP. После залпа ворота открываются на 12 с. На 7-й минуте Терминатор выдвинет трон к вашему замку.",
         ["start_gold"]=600,["opponent_start_gold"]=750,["opponent_castle_hp"]=HumanMatch.ProtocolCastleHealth,
         ["difficulty"]=2,["reward"]=0,["xp"]=0
     };
@@ -68,6 +69,7 @@ public sealed partial class PcGame {
 
     void BeginProtocolIntro(){
         protocolIntro=true;protocolIntroAge=0;protocolLastOpening=0;
+        protocolCastleOrigin=castleObjects[1].transform.position;
         protocolProps=new GameObject("Последний протокол");
         protocolProps.transform.SetParent(visuals.transform,false);
         protocolMaterial=new Material(Shader.Find("Sprites/Default")??shellMaterial.shader);
@@ -183,7 +185,7 @@ public sealed partial class PcGame {
         if(visible)line.startColor=line.endColor=color;
     }
 
-    void RenderProtocol(){
+    void RenderProtocol(float interpolation=1){
         if(!protocolProps||!protocolProps.activeInHierarchy||match==null)return;
         for(int i=0;i<protocolCircles.Count;i++){
             var mine=match.ProtocolMines[i];
@@ -194,23 +196,36 @@ public sealed partial class PcGame {
         for(int i=0;i<protocolWires.Length;i++){
             var station=HumanMatch.ProtocolStationPoint(i);
             bool seen=protocolIntro||FogVisible(station)&&FogVisible(HumanMatch.CastlePosition(1));
-            bool powered=match.ProtocolStationAlive(i)&&(!protocolIntro||protocolIntroAge>1.4f+i*1.2f);
+            bool powered=!match.ProtocolMarch&&match.ProtocolStationAlive(i)&&(!protocolIntro||protocolIntroAge>1.4f+i*1.2f);
             RenderProtocolCable(i,seen,powered);
         }
-        bool castleVisible=protocolIntro||FogVisible(new Vector2(match.ProtocolBeamX,0));
+        bool castleVisible=protocolIntro||FogVisible(match.ProtocolMarch?match.ProtocolMarchPosition:new Vector2(match.ProtocolBeamX,0));
         if(protocolActor)protocolActor.gameObject.SetActive(castleVisible);
+        if(match.ProtocolMarch){
+            var center=ProtocolMarchViewPosition(interpolation);
+            var lift=Vector3.up*ProtocolCastleLift();
+            if(castleViews[1])castleViews[1].transform.position=World(center)+lift;
+            castleObjects[1].transform.position=protocolCastleOrigin+World(center)-World(HumanMatch.CastlePosition(1))+lift;
+            RenderProtocolChassis(center,lift.y);
+            if(protocolActor){
+                protocolActor.transform.position=World(center+new Vector2(-9,-1))+lift*.68f;
+                bool moves=protocolMarchIntro?protocolMarchIntroAge>4.3f:
+                    (match.ProtocolMarchPosition-match.ProtocolMarchPrevious).sqrMagnitude>.0001f;
+                protocolActor.Play(match.ProtocolMarchAttacking?"Attack":moves?"Walk":"Stand",1,match.ProtocolMarchStrike);
+            }
+        }
         bool flash=match.ProtocolGatesOpen&&match.ProtocolOpenFor>HumanMatch.ProtocolVulnerable-.38f;
         bool warning=match.ProtocolWarningActive;
         ProtocolTint(protocolRail,warning||flash,flash?ProtocolCyan:
             new Color(1,.62f,.16f,.48f+Mathf.PingPong(Time.unscaledTime*2,.5f)));
         RenderProtocolArcs(flash);
-        ProtocolTint(protocolShield,castleVisible&&!match.ProtocolGatesOpen&&(!protocolIntro||protocolIntroAge>4.5f),
+        ProtocolTint(protocolShield,castleVisible&&!match.ProtocolMarch&&!match.ProtocolGatesOpen&&(!protocolIntro||protocolIntroAge>4.5f),
             new Color(.20f,.66f,.98f,.65f));
         float gap=protocolIntro?1-Mathf.SmoothStep(0,1,Mathf.InverseLerp(4.1f,5.55f,protocolIntroAge)):
             match.ProtocolGatesOpen?Mathf.Min(1,Mathf.Min(HumanMatch.ProtocolVulnerable-match.ProtocolOpenFor,match.ProtocolOpenFor)*3):0;
         for(int i=0;i<protocolGates.Length;i++){
             var gate=protocolGates[i];
-            gate.gameObject.SetActive(castleVisible);
+            gate.gameObject.SetActive(castleVisible&&!match.ProtocolMarch);
             gate.position=World(new Vector2(match.ProtocolBeamX+3.2f,2+(i==0?-1:1)*(1.9f+gap*4)))+Vector3.up*2.05f;
         }
         if(match.ProtocolGatesOpen&&match.ProtocolOpenFor>protocolLastOpening+.2f){
@@ -296,13 +311,18 @@ public sealed partial class PcGame {
         }
         GUI.color=previous;
         float x=ProtocolHud.x+83,y=ProtocolHud.y;
-        FitBossText(new Rect(x,y+21,228,23),"Последний протокол",protocolHudTitle,17);
-        string signal=!match.ProtocolSecondStage?
+        FitBossText(new Rect(x,y+21,181,23),"Последний протокол",protocolHudTitle,17);
+        if(!match.ProtocolMarch){
+            int seconds=Mathf.CeilToInt(match.ProtocolTimeLeft);
+            FitBossText(new Rect(x+184,y+21,43,23),(seconds/60)+":"+(seconds%60).ToString("00"),protocolHudDetail,16);
+        }
+        string signal=match.ProtocolMarch?"Терминатор наступает":!match.ProtocolSecondStage?
             "Электростанции "+match.ProtocolStationsUp+"/2 · "+(match.ProtocolStationsUp*35)+"% защиты":
             match.ProtocolGatesOpen?"Ворота открыты · "+Mathf.CeilToInt(match.ProtocolOpenFor)+" с":
             (match.ProtocolWarningActive?"Залп через ":"Орудие заряжается · ")+Mathf.CeilToInt(match.ProtocolShotIn)+" с";
         FitBossText(new Rect(x,y+42,228,21),signal,protocolHudDetail,14);
-        float meter=match.ProtocolGatesOpen?match.ProtocolOpenFor/HumanMatch.ProtocolVulnerable:
+        float meter=match.ProtocolMarch?match.CastleHp[1]/match.CastleHealthLimit(1):
+            match.ProtocolGatesOpen?match.ProtocolOpenFor/HumanMatch.ProtocolVulnerable:
             match.ProtocolSecondStage?1-match.ProtocolShotIn/(match.ProtocolWarningActive?HumanMatch.ProtocolWarning:HumanMatch.ProtocolCycle):
             (2-match.ProtocolStationsUp)*.5f;
         var glow=match.ProtocolWarningActive?ProtocolGold:ProtocolCyan;
@@ -324,8 +344,12 @@ public sealed partial class PcGame {
 
     void ClearProtocol(){
         protocolIntro=false;
+        ClearProtocolMarchPresentation();
         ClearProtocolGround();
-        if(protocolProps)Destroy(protocolProps);
+        if(protocolProps){
+            if(castleObjects[1])castleObjects[1].transform.position=protocolCastleOrigin;
+            Destroy(protocolProps);
+        }
         if(protocolMaterial)Destroy(protocolMaterial);
         if(protocolGateMaterial)Destroy(protocolGateMaterial);
         if(protocolChargeSound)Destroy(protocolChargeSound);

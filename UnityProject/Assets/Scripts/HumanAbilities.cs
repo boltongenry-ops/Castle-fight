@@ -234,7 +234,7 @@ public sealed partial class HumanMatch {
         var cfg=Abilities[fire.ability];float radius=F(cfg,"area",5);
         using(var snapshot035_8=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_8)if(Valid(u,fire.team,cfg,false)&&Vector2.Distance(u.position,fire.center)<=radius)DamageUnit(u,amount,fire.team);
         using(var snapshot035_9=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_9)if(h.team!=fire.team&&h.paid&&h.hp>0&&Vector2.Distance(h.position,fire.center)<=radius)DamageHut(h,amount,"magic",fire.team,true);
-        if(Vector2.Distance(CastlePosition(1-fire.team),fire.center)<=radius)DamageCastle(1-fire.team,amount,"magic",true);
+        if(Vector2.Distance(BattleCastlePosition(1-fire.team),fire.center)<=radius)DamageCastle(1-fire.team,amount,"magic",true);
     }
     public float BuildingArmor(Hut h)=>F(Lines[h.kind].buildingStats,"armor")-h.dragonArmorRank*2+MechBuildingArmor(h)+(TeamHuman[h.team]&&Aspects[h.team]==0&&Lines[h.kind].building=="h006"?2:0);
     void TickAspects(float dt) {

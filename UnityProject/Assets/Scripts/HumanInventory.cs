@@ -17,7 +17,16 @@ public sealed partial class HumanMatch {
         public float Boost=>boosts.Where(b=>b.left>0).Select(b=>b.power).DefaultIfEmpty(0).Max();
     }
     public JArray ShopItems;public JObject ItemCatalog;public readonly Inventory[] Inventories={new Inventory(),new Inventory()};public int ItemShots,ItemsBought,ItemsUsed;
-    void InitInventory(JObject data){ShopItems=(JArray)data["shopItems"]??new JArray();ItemCatalog=(JObject)data["itemCatalog"]??new JObject();foreach(var bag in Inventories)foreach(var item in ShopItems)bag.stocks[(string)item["id"]]=new ItemStock {next=F(item,"stock_start")};}
+    void InitInventory(JObject data){
+        ShopItems=(JArray)data["shopItems"]??new JArray();
+        ItemCatalog=(JObject)data["itemCatalog"]??new JObject();
+        foreach(var bag in Inventories)foreach(var item in ShopItems){
+            float opening=Mathf.Max(0,F(item,"stock_start"));
+            // Stock sold in the opening is already on the shelf when the player takes control.
+            if(opening<=30)opening=0;
+            bag.stocks[(string)item["id"]]=new ItemStock {next=Mathf.Max(opening,F(item,"unlock_time"))};
+        }
+    }
     public int ShopIndex(string id)=>ShopItems.ToList().FindIndex(v=>(string)v["id"]==id);
     public ItemStock Stock(int team,int index) {
         var item=ShopItems[index];var record=Inventories[team].stocks[(string)item["id"]];int max=(int)item["stock_max"];
@@ -26,14 +35,14 @@ public sealed partial class HumanMatch {
     public string ItemPurchaseError(int team,int index) {
         if(team<0||team>1||index<0||index>=ShopItems.Count)return "Предмет не продаётся в замке";if(Finished)return "Матч завершён";
         if(!ChallengeShopAllowed(team))return "Испытание: покупки в замке недоступны";
-        var item=ShopItems[index];if(Elapsed<F(item,"unlock_time"))return "Доступно после 15 минут раунда";
+        var item=ShopItems[index];float unlock=F(item,"unlock_time");if(Elapsed<unlock)return "Доступно после "+Mathf.CeilToInt(unlock/60)+" минут раунда";
         var stock=Stock(team,index);if(stock.count<=0)return "Предмет появится через "+Mathf.CeilToInt(Mathf.Max(0,stock.next-Elapsed))+" с";
         if(AvailableGold(team)<F(item,"gold"))return "Недостаточно золота";if(AvailableWood(team)<F(item,"wood"))return "Недостаточно дерева";
         return (string)item["mode"]!="purchase"&&Inventories[team].Used>=6?"Инвентарь заполнен: 6 слотов":"";
     }
     public bool BuyItem(int team,int index,out string error) {
         error=ItemPurchaseError(team,index);if(error!="")return false;var item=ShopItems[index];var bag=Inventories[team];string id=(string)item["id"];var stock=Stock(team,index);
-        if(stock.count==(int)item["stock_max"])stock.next=Elapsed+F(item,"stock_regen");stock.count--;Gold[team]-=F(item,"gold");Wood[team]-=(int?)item["wood"]??0;ItemsBought++;
+        if(stock.count==(int)item["stock_max"]||stock.count==1)stock.next=Elapsed+F(item,"stock_regen");stock.count--;Gold[team]-=F(item,"gold");Wood[team]-=(int?)item["wood"]??0;ItemsBought++;
         if((string)item["mode"]=="purchase") {
             if(id=="I004")LegendaryLimit[team]++;else bag.boosts.Add(new ItemBoost {id=id,power=F(item,"power"),left=F(item,"duration")});
             PulseAt(Builders[team].position,3,Color.yellow,(string)item["name"]);return true;
@@ -54,7 +63,7 @@ public sealed partial class HumanMatch {
                 if(rate>0){float period=1/rate;slot.accumulator=Mathf.Min(slot.accumulator+dt,period*8);while(slot.accumulator+.000001f>=period){slot.accumulator-=period;FireItemStaff(team,item);}}
                 float repair=F(item,"repair")*slot.count*dt;if(repair<=0)continue;float radius=F(item,"range",23.333333f);var position=Builders[team].position;
                 foreach(var h in Huts)if(h.team==team&&h.hp>0&&Vector2.Distance(h.position,position)<=radius+.00001f)h.hp=Mathf.Min(h.maxHp,h.hp+repair);
-                if(Vector2.Distance(CastlePosition(team),position)<=radius+.00001f)RestoreCastleHealth(team,repair);
+                if(Vector2.Distance(BattleCastlePosition(team),position)<=radius+.00001f)RestoreCastleHealth(team,repair);
             }
         }
     }

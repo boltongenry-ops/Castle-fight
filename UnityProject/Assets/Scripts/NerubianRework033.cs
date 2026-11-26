@@ -62,8 +62,8 @@ public sealed partial class HumanMatch {
         if(!Nerub(source)||!AbilityView035.Get(source,Abilities).kinds.Contains("nerub_ambush"))return current;
         float radius=current==null?6:Mathf.Min(6,Vector2.Distance(source.position,current.position)+1);float sq=radius*radius;
         bool Marked(Unit v){foreach(var e in v.effects)if(e.id=="ANMK"&&e.sourceTeam==source.team&&e.left>0)return true;return false;}
-        if(TryFindBestUnit033(source.position,(radius+.00001f)*(radius+.00001f),source.team,v=>Vector2.Distance(source.position,v.position)<=radius&&Marked(v)&&WeaponFor(source,v)!=null,out var indexed))return indexed??current;
-        Unit best=null;float distance=float.MaxValue;foreach(var v in Units){if(v.team==source.team||v.hp<=0||!v.onRoad)continue;float d=(v.position-source.position).sqrMagnitude;if(Vector2.Distance(source.position,v.position)>radius||d>=distance||!Marked(v)||WeaponFor(source,v)==null)continue;best=v;distance=d;}return best??current;
+        if(TryFindBestUnit033(source.position,(radius+.00001f)*(radius+.00001f),source.team,v=>Vector2.Distance(source.position,v.position)<=radius&&!OnForcedRetreat(v)&&Marked(v)&&WeaponFor(source,v)!=null,out var indexed))return indexed??current;
+        Unit best=null;float distance=float.MaxValue;foreach(var v in Units){if(v.team==source.team||v.hp<=0||!v.onRoad)continue;float d=(v.position-source.position).sqrMagnitude;if(Vector2.Distance(source.position,v.position)>radius||d>=distance||OnForcedRetreat(v)||!Marked(v)||WeaponFor(source,v)==null)continue;best=v;distance=d;}return best??current;
     }
     void NerubTowerBarrage(Hut tower,Weapon weapon,int primary){
         if(Finished||NetworkReplica||tower.hp<=0||!tower.paid||tower.paused||BuildingDisabled(tower)>0||!new[]{"hNT1","hNT2"}.Contains(Lines[tower.kind].building))return;

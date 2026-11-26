@@ -42,9 +42,9 @@ public sealed partial class HumanMatch {
         return families<=0||ChallengeProducerFamilies>=families;
     }
 
-    void ResolveChallengeClock(){
+    void ResolveChallengeClock(float dt){
         if(ChallengeRules==null||Finished)return;
-        TickEternalWinter();TickChoir();TickCursedHorde();TickLastProtocol();
+        TickEternalWinter();TickChoir();TickCursedHorde();TickLastProtocol(dt);
         float survive=ChallengeSurvivalTime;
         if(survive>0&&Elapsed>=survive){
             Winner=ChallengeFinalConditions()?0:1;

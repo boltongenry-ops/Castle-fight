@@ -21,7 +21,9 @@ public sealed partial class PcGame {
         for(int i=0;i<match.ShopItems.Count;i++) {
             var item=match.ShopItems[i];string id=(string)item["id"];var stock=match.Stock(0,i);int col=i%3,row=i/3;var rect=Slot(col,row);string error=match.ItemPurchaseError(0,i);
             string tip=(string)item["name"]+"\n"+item["gold"]+" зол. · запас "+stock.count+" / "+item["stock_max"]+"\n"+(string)item["desc"]+(error==""?"\nНажмите, чтобы купить":"\n"+error);
-            if(ArtButton("shop.buy."+id,rect,ItemArt(id),stock.count.ToString(),tip)){if(onlineMatch)NetworkCommand(PcServerReplica.BuyItem(i));else{bool bought=match.BuyItem(0,i,out var why);Notice(bought?"Куплено: "+item["name"]:why);}}
+            int seconds=Mathf.CeilToInt(Mathf.Max(0,stock.next-match.Elapsed));
+            string counter=stock.count>0?stock.count.ToString():(seconds/60)+":"+(seconds%60).ToString("00");
+            if(ArtButton("shop.buy."+id,rect,ItemArt(id),counter,tip)){if(onlineMatch)NetworkCommand(PcServerReplica.BuyItem(i));else{bool bought=match.BuyItem(0,i,out var why);Notice(bought?"Куплено: "+item["name"]:why);}}
             if(error!="")Fill(new Rect(rect.x,rect.y,rect.width,rect.height-16),new Color(0,0,0,.45f));
         }
         if(ArtButton("builder.buy-rescue",Slot(3,0),Extra("rescue"),"+","Дополнительный спасительный удар\n1000 золота")){if(onlineMatch)NetworkCommand(PcServerReplica.Command("buy_rescue"));else Notice(match.BuyRescue(0)?"Получен дополнительный заряд":"Нужно 1000 свободного золота");}

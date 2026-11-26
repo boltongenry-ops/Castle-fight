@@ -31,7 +31,7 @@ public sealed partial class HumanMatch {
             float radius=F(Abilities["A007"],"area",700f/30);
             foreach(var u in Units)if(u.team==h.team&&u.hp>0&&Vector2.Distance(u.position,h.position)<=radius)u.hp=Mathf.Min(u.maxHp,u.hp+7.5f*dt);
             foreach(var target in Huts)if(target.team==h.team&&target.paid&&target.hp>0&&Vector2.Distance(target.position,h.position)<=radius)target.hp=Mathf.Min(target.maxHp,target.hp+2.5f*dt);
-            if(Vector2.Distance(CastlePosition(h.team),h.position)<=radius)RestoreCastleHealth(h.team,2.5f*dt);
+            if(Vector2.Distance(BattleCastlePosition(h.team),h.position)<=radius)RestoreCastleHealth(h.team,2.5f*dt);
         }
         if(raw=="h00I") {
             var cfg=Abilities["A00M"];if(h.mana<F(cfg,"mana")||(h.spellTimers.TryGetValue("A00M",out float wait)&&wait>0))return;

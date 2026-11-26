@@ -10,7 +10,7 @@ public sealed partial class PcGame {
     readonly Vector3[] fogProjectionNodes=new Vector3[FogMeshWidth*FogMeshHeight];
     Vector3 fogCameraPosition;Quaternion fogCameraRotation;Matrix4x4 fogProjection;Rect fogViewport;int fogWidth,fogHeight;bool fogSoft;double fogProjectionMs,fogMaskMs;
     readonly HashSet<int> fogKnownHuts=new HashSet<int>();
-    bool FogActive=>match!=null&&!winterIntro&&!choirIntro&&!hordeIntro&&!protocolIntro&&(onlineMatch?onlineFog:(activeChallenge!=null||options.fogOfWar));
+    bool FogActive=>match!=null&&!winterIntro&&!choirIntro&&!hordeIntro&&!protocolIntro&&!protocolMarchIntro&&(onlineMatch?onlineFog:(activeChallenge!=null||options.fogOfWar));
     bool FogVisible(Vector2 point)=>!FogActive||fog!=null&&fog.Visible(point);
     bool CanSeeUnit(HumanMatch.Unit unit)=>unit!=null&&match.NightCanDetect(0,unit)&&(unit.team==0||FogVisible(unit.position));
     bool CanInspectHut(HumanMatch.Hut hut)=>hut!=null&&(hut.team==0||FogVisible(hut.position));
@@ -39,7 +39,8 @@ public sealed partial class PcGame {
         if(match==null)return;
         foreach(var unit in match.Units)if(units.TryGetValue(unit.id,out var view)&&unit.hp>0)view.gameObject.SetActive(CanSeeUnit(unit)&&(match.MechMine(unit)?unit.team==0||unit.mechMineAge<2:!match.Hidden(unit)));
         foreach(var hut in match.Huts)if(huts.TryGetValue(hut.id,out var view))view.gameObject.SetActive(!FogActive||hut.team==0||fogKnownHuts.Contains(hut.id));
-        bool castleKnown=!FogActive||fog.Known(HumanMatch.CastlePosition(1));castleObjects[1].SetActive(castleKnown&&!castleViews[1]);if(castleViews[1])castleViews[1].gameObject.SetActive(castleKnown);
+        var enemyCastle=match.BattleCastlePosition(1);
+        bool castleKnown=!FogActive||(match.ProtocolMarch?fog.Visible(enemyCastle):fog.Known(enemyCastle));castleObjects[1].SetActive(castleKnown&&!castleViews[1]);if(castleViews[1])castleViews[1].gameObject.SetActive(castleKnown);
         if(builders[1])builders[1].gameObject.SetActive(FogVisible(match.Builders[1].position));
         foreach(var shot in match.Shots)if(projectiles.TryGetValue(shot.id,out var view))view.gameObject.SetActive(!elvenBeams.ContainsKey(shot.id)&&(shot.kind!=4||ShowBeam036(shot))&&FogVisible(new Vector2(view.transform.position.x,-view.transform.position.z)));
         if(onlineMatch)foreach(var pair in onlineProjectiles)if(pair.Value)pair.Value.SetActive(ProjectileBorn(pair.Key)&&FogVisible(new Vector2(pair.Value.transform.position.x,-pair.Value.transform.position.z)));
