@@ -38,13 +38,14 @@ public sealed partial class PcGame {
     static int ConstructionRole(HumanMatch.Line line)=>line.building=="h008"?3:line.Producer&&line.unit!="n01U"?0:line.category=="tower"&&line.building!="h001"?2:1;
     int[] ConstructionKinds()=>match.BaseKinds.OrderBy(i=>matchRace==12?match.Lines[i].ultimateSlot:ConstructionRole(match.Lines[i])).ThenBy(i=>i).ToArray();
     int[] ConstructionPageKinds(){var order=ConstructionKinds();int size=order.Length>11?10:11;constructionPage=Mathf.Clamp(constructionPage,0,(order.Length-1)/size);return order.Skip(constructionPage*size).Take(size).ToArray();}
-    GameObject CatalogModel(int race,int team,int row,string raw,bool building){
+    GameObject CatalogModel(int race,int team,int row,string raw,bool building,bool classic=false){
         if(race==BlackHand.Race){if(!building&&row>=15)return null;var model=building?BlackHandBuildings.Model(row,team):BlackHandArt.Fighter(row,team);if(model)return model;row=BlackHand.ArtRow(row);}
         var pack=Pack(race);var arr=pack?(building?pack.buildings:pack.units):(building?buildingModels:unitModels);
         int count=arr.Length/2;
         if(raw=="h008"&&row>=count)return building?OptionalModel(buildingModels[team*(buildingModels.Length/2)+SharedChestRow],team):null;
         if(MobileContent.Active&&race==12)return OptionalModel(UltimateModel034(team,row,building),team);
-        return OptionalModel(arr[team*count+row],team);
+        var modelPrefab=arr[team*count+row];
+        return classic?modelPrefab:OptionalModel(modelPrefab,team);
     }
     Texture2D CatalogBuildingIcon(int race,int row,string raw){if(race==BlackHand.Race){var icon=BlackHandBuildings.Icon(row);if(icon)return icon;row=BlackHand.ArtRow(row);}var revised=ContentResources.Load<Texture2D>("NerubianBuildingIcon/"+raw);if(revised)return revised;if(MobileContent.Active&&race==12)return UltimateIcon034(row);var pack=Pack(race);var icons=pack?pack.buildingIcons:buildingIcons;return raw=="h008"&&row>=icons.Length?buildingIcons[SharedChestRow]:icons[row];}
     Texture2D MatchBuildingIcon(int kind){string raw=match.Lines[kind].building;int race=raceIndices[matchRace].ContainsKey(raw)?matchRace:matchBotRace;return CatalogBuildingIcon(race,raceIndices[race][raw],raw);}

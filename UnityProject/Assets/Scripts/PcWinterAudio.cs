@@ -74,7 +74,7 @@ public sealed partial class PcGame
 
     void UpdateBossSoundtrack()
     {
-        if (!bossSoundtrack || winterIntro || hordeIntro || protocolIntro || match == null || !bossSoundtrack.isPlaying) return;
+        if (!bossSoundtrack || winterIntro || hordeIntro || protocolIntro || abyssIntro || match == null || !bossSoundtrack.isPlaying) return;
         float target=match.LastProtocol?ProtocolBattleMusicVolume:WinterBattleMusicVolume;
         float rate = (1 - target) / WinterMusicFadeSeconds;
         bossSoundtrack.volume = Mathf.MoveTowards(bossSoundtrack.volume, target,

@@ -37,7 +37,7 @@ public sealed partial class PcGame {
     };
 
     bool ActiveProtocolTrial=>(string)activeChallenge?["id"]==HumanMatch.ProtocolTrial;
-    bool CurrentMythic=>match!=null&&(match.EternalWinter||match.FuneralChoir||match.CursedHorde||match.LastProtocol);
+    bool CurrentMythic=>match!=null&&(match.EternalWinter||match.FuneralChoir||match.CursedHorde||match.LastProtocol||match.AbyssTrialActive);
 
     void DrawProtocolPainting(Rect area){
         if(!protocolPainting)protocolPainting=LoadProtocolPainting();

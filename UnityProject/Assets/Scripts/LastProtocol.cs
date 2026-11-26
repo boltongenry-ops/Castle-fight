@@ -56,8 +56,8 @@ public sealed partial class HumanMatch {
         protocolActorKind=Kind("h09J");
         for(int i=0;i<protocolStations.Length;i++){
             var position=ProtocolStationPoint(i);
-            protocolStations[i]=PlaceProtocolStructure("h09T",position,i==0?1900:2300);
-            protocolTowers[i]=PlaceProtocolStructure("h05L",position+new Vector2(12,-position.y*2),1150);
+            protocolStations[i]=PlaceChallengeStructure("h09T",position,i==0?1900:2300);
+            protocolTowers[i]=PlaceChallengeStructure("h05L",position+new Vector2(12,-position.y*2),1150);
         }
         foreach(float lane in new[]{-6f,0,6}){
             protocolMines.Add(new ProtocolMine(new Vector2(55+lane,lane)));
@@ -66,9 +66,9 @@ public sealed partial class HumanMatch {
         }
     }
 
-    Hut PlaceProtocolStructure(string raw,Vector2 position,float hp){
+    Hut PlaceChallengeStructure(string raw,Vector2 position,float hp){
         int kind=Kind(raw);
-        if(kind<0)throw new InvalidOperationException("Missing Last Protocol structure "+raw);
+        if(kind<0)throw new InvalidOperationException("Missing challenge structure "+raw);
         var hut=new Hut{id=nextId++,team=1,kind=kind,x=-1,y=-1,position=position,hp=hp,maxHp=hp,
             paid=true,started=true,mana=BuildingConfig035(kind).maxMana};
         Huts.Add(hut);
@@ -79,8 +79,9 @@ public sealed partial class HumanMatch {
     bool IsProtocolDefense(Hut hut)=>IsProtocolStation(hut)||LastProtocol&&hut!=null&&(hut==protocolTowers[0]||hut==protocolTowers[1]);
 
     bool ProtocolBlocksPlot(int team,int x,int y){
-        if(!LastProtocol||team!=1)return false;
+        if(team!=1||(!LastProtocol&&!AbyssTrialActive))return false;
         var point=Plot(team,x,y);
+        if(AbyssTrialActive)return AbyssBlocksPlot(point);
         for(int i=0;i<protocolStations.Length;i++)
             if(ProtocolStationAlive(i)&&(protocolStations[i].position-point).sqrMagnitude<Cell*Cell||
                 protocolTowers[i].hp>0&&(protocolTowers[i].position-point).sqrMagnitude<Cell*Cell)return true;

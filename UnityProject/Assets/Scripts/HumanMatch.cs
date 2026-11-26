@@ -30,6 +30,7 @@ public sealed partial class HumanMatch {
     }
     public sealed class Builder {
         public int team;public Vector2 position,previous,goal,direction=Vector2.right;public string pose="Stand";public bool repairing;
+        public int repairBuilding=-1;
         public readonly List<int> jobs=new List<int>();
     }
     public sealed class Effect {
@@ -101,7 +102,7 @@ public sealed partial class HumanMatch {
     public float Income(int t)=>5+Huts.Where(h=>h.team==t&&h.paid&&h.hp>0).Sum(h=>h.income);
     public float IncomeIn=>Mathf.Max(0,10-(float)incomeAge);
     public int ArmyCount(int t)=>ArmyCount035(t);
-    public float Interval(Hut h)=>15+h.spent/20f;
+    public float Interval(Hut h)=>(15+h.spent/20f)*(AbyssTrialActive&&h.team==1?.82f:1);
     public static Vector2 CastlePosition(int t)=>new Vector2(t==0?-5120f/30:5120f/30,64f/30);
     public static Vector2 Plot(int team,int x,int y)=>new Vector2(((team==0?-6144:2048)+64+x*128)/30f,(y==24?-384:y==25?384:y<12?-1920+y*128:512+(y-12)*128)/30f);
     // CF240_BASE_NERUB.w3x, war3map.wpm: sixteen 32-unit pathing samples per 128-unit plot.
@@ -221,7 +222,22 @@ public sealed partial class HumanMatch {
     public bool ResumeBuilding(int team,int hutId){if(Finished||team<0||team>1)return false;var h=Huts.FirstOrDefault(v=>v.id==hutId&&v.team==team&&!v.paid);if(h==null)return false;var b=Builders[team];if(!b.jobs.Contains(hutId))b.jobs.Insert(0,hutId);b.repairing=false;return true;}
     public bool RepairCastle(int team){
         if(Finished||team<0||team>1||!ChallengeBuilderRepairAllowed(team)||CastleHp[team]>=CastleHealthLimit(team))return false;
-        MoveBuilder(team,Builders[team].position);Builders[team].repairing=true;return true;
+        StartRepair(Builders[team],-1);
+        return true;
+    }
+    public const float WorkerRepairRate=15;
+    public static bool CanRepairBuilding(int team,Hut hut)=>hut!=null&&hut.team==team&&hut.paid&&hut.hp>0&&hut.hp<hut.maxHp-.05f;
+    public bool RepairBuilding(int team,int hutId){
+        if(Finished||team<0||team>1||hutId<=0)return false;
+        var hut=Huts.FirstOrDefault(value=>value.id==hutId);
+        if(!CanRepairBuilding(team,hut))return false;
+        StartRepair(Builders[team],hutId);
+        return true;
+    }
+    void StartRepair(Builder builder,int hutId){
+        MoveBuilder(builder.team,builder.position);
+        builder.repairBuilding=hutId;
+        builder.repairing=true;
     }
     public bool Blink(int team,Vector2 p){if(Finished||team<0||team>1||float.IsNaN(p.x)||float.IsNaN(p.y)||float.IsInfinity(p.x)||float.IsInfinity(p.y)||Mathf.Abs(p.x)>6144f/30||Mathf.Abs(p.y)>2048f/30)return false;var b=Builders[team];MoveBuilder(team,b.position);PulseAt(b.position,2,Color.cyan,"Скачок",.633f,"blinkout");if(!InsideBase(team,p))p=new Vector2(team==0?-4544f/30:4544f/30,448f/30);b.position=b.previous=b.goal=p;PulseAt(p,2,Color.cyan,"",1.2f,"blinkin");return true;}
     static Vector2 BuilderWaypoint(Vector2 from,Vector2 goal) {
@@ -231,13 +247,31 @@ public sealed partial class HumanMatch {
     void TickBuilder(Builder b,float dt) {
         b.previous=b.position;Hut hut=null;while(b.jobs.Count>0){hut=Huts.FirstOrDefault(h=>h.id==b.jobs[0]&&!h.paid);if(hut!=null)break;b.jobs.RemoveAt(0);}
         Vector2 destination=hut!=null?hut.position+new Vector2(0,-Mathf.Sign(hut.position.y)*2.4f):b.goal;
-        if(b.repairing){var d=b.position-CastlePosition(b.team);destination=CastlePosition(b.team)+(d.sqrMagnitude>.01f?d.normalized:Vector2.right)*6.7f;}
+        Hut repair=null;
+        if(b.repairing&&b.repairBuilding>0){
+            repair=Huts.FirstOrDefault(h=>h.id==b.repairBuilding);
+            if(CanRepairBuilding(b.team,repair))destination=repair.position+new Vector2(0,-Mathf.Sign(repair.position.y)*2.4f);
+            else{b.repairing=false;b.repairBuilding=-1;repair=null;destination=b.goal=b.position;}
+        }
+        if(b.repairing&&repair==null){
+            var point=CastlePosition(b.team);
+            var d=b.position-point;
+            destination=point+(d.sqrMagnitude>.01f?d.normalized:Vector2.right)*6.7f;
+        }
         if((destination-b.position).sqrMagnitude>.16f){var waypoint=BuilderWaypoint(b.position,destination);b.direction=(waypoint-b.position).normalized;b.position=Vector2.MoveTowards(b.position,waypoint,BuilderSpeed*dt);b.pose="Walk";}
         else if(hut!=null){hut.started=true;hut.buildLeft=Mathf.Max(0,hut.buildLeft-dt);b.pose="Stand Work";b.direction=(hut.position-b.position).normalized;if(hut.buildLeft<=0){var l=Lines[hut.kind];Gold[b.team]-=GoldPrice(b.team,hut.kind);Wood[b.team]+=l.woodReward-l.woodCost;hut.paid=true;hut.income=l.cost*l.incomeRate;hut.mana=F(l.buildingStats,"start_mana");b.jobs.RemoveAt(0);b.goal=b.position;}}
         else if(b.repairing){
-            b.pose="Stand Work";b.direction=(CastlePosition(b.team)-b.position).normalized;
-            RestoreCastleHealth(b.team,15*dt);
-            if(CastleHp[b.team]>=CastleHealthLimit(b.team))b.repairing=false;
+            b.pose="Stand Work";
+            b.direction=((repair?.position??CastlePosition(b.team))-b.position).normalized;
+            if(repair!=null){
+                repair.hp=Mathf.Min(repair.maxHp,repair.hp+WorkerRepairRate*dt);
+                if(repair.hp>=repair.maxHp){
+                    b.repairing=false;b.repairBuilding=-1;b.goal=b.position;
+                }
+            }else{
+                RestoreCastleHealth(b.team,WorkerRepairRate*dt);
+                if(CastleHp[b.team]>=CastleHealthLimit(b.team)){b.repairing=false;b.goal=b.position;}
+            }
         }
         else b.pose="Stand";
     }

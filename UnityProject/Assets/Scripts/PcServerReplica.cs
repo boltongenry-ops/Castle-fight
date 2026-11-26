@@ -13,6 +13,7 @@ public sealed class PcServerReplica {
     readonly Func<int,string,int> unitKind;
     public int UnknownUnits { get; private set; }
     public int UnknownBuildings { get; private set; }
+    public bool SupportsBuildingRepair { get; private set; }
     public PcServerReplica(HumanMatch world,int slot,Func<int,string,int> unitKind) {
         this.world=world??throw new ArgumentNullException(nameof(world));
         if(slot<0||slot>1)throw new ArgumentOutOfRangeException(nameof(slot));
@@ -39,7 +40,10 @@ public sealed class PcServerReplica {
             int team=(int?)row["t"]??-1;if(team<0||team>1)continue;int local=Team(team);var point=Point(row["p"]);
             string pose=Pose(row);float yaw=Number(row["yaw"]);var direction=new Vector2(Mathf.Sin(yaw)*(slot==1?-1:1),Mathf.Cos(yaw));
             if((bool?)row["builder"]==true) {
-                var builder=world.Builders[local];builder.previous=builder.position;builder.position=point;builder.direction=direction;builder.pose=pose;builder.repairing=(bool?)row["repair"]??false;continue;
+                var builder=world.Builders[local];builder.previous=builder.position;builder.position=point;builder.direction=direction;builder.pose=pose;builder.repairing=(bool?)row["repair"]??false;
+                builder.repairBuilding=(int?)row["repair_building"]??-1;
+                if(local==0)SupportsBuildingRepair=row["repair_building"]!=null;
+                continue;
             }
             int kind=unitKind(local,(string)row["r"]??"");if(kind<0||kind>=world.Lines.Length){unknownUnits++;continue;}
             int id=(int?)row["id"]??0;if(id<=0)continue;

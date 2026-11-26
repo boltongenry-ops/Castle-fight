@@ -43,6 +43,7 @@ public sealed partial class PcGame {
             }
         } else if(SelectedHut is HumanMatch.Hut h&&h.team==0) {
             if(Input.GetKeyDown(KeyCode.P))ToggleProduction(h);
+            if(Input.GetKeyDown(KeyCode.R)&&BuildingRepairVisible(h))RepairBuildingOrder(h);
             if(Input.GetKeyDown(KeyCode.U)&&match.Lines[h.kind].upgrades.Length>0)UpgradeSelected(match.Kind(match.Lines[h.kind].upgrades[0]));
             if(Input.GetKeyDown(KeyCode.Delete))SellSelected();
         }
@@ -51,6 +52,14 @@ public sealed partial class PcGame {
     void BeginBuilderSpell(string spell){if(spell=="rescue"&&!RescueVisible){Notice("Купите спасительный удар в магазине замка (F2)");return;}selectedItem=-1;chosen=-1;buildMenu=false;moveOrder=false;targetedSpell=spell;Notice(spell=="blink"?"Скачок: укажите точку ЛКМ":"Спасительный удар: укажите область ЛКМ");}
     void ExecuteBuilderSpell(Vector2 p){if(onlineMatch){try{NetworkCommand(PcServerReplica.BuilderSpell(targetedSpell,p));targetedSpell=null;}catch(ArgumentOutOfRangeException){Notice("Точка вне карты");}return;}bool ok=targetedSpell=="blink"?match.Blink(0,p):match.Rescue(0,p);Notice(ok?"Приказ выполнен":"Недоступно: проверьте область, заряд и перезарядку");if(ok)targetedSpell=null;}
     void RepairOrder(){if(onlineMatch){NetworkCommand(PcServerReplica.Command("repair"));selectedItem=chosen=-1;buildMenu=moveOrder=false;targetedSpell=null;return;}if(match.RepairCastle(0)){selectedItem=chosen=-1;buildMenu=moveOrder=false;targetedSpell=null;Notice("Рабочий отправляется ремонтировать замок");}else Notice(match.ChallengeBuilderRepairAllowed(0)?"Замок полностью восстановлен":"В испытании строитель не может ремонтировать замок");}
+    bool BuildingRepairVisible(HumanMatch.Hut hut)=>HumanMatch.CanRepairBuilding(0,hut)&&
+        (!onlineMatch||onlineReplica?.SupportsBuildingRepair==true);
+    void RepairBuildingOrder(HumanMatch.Hut hut){
+        if(!BuildingRepairVisible(hut))return;
+        bool ordered=onlineMatch?NetworkCommand(PcServerReplica.BuildingAction("repair_building",hut.id)):
+            match.RepairBuilding(0,hut.id);
+        if(ordered)Notice("Приказ починить: "+match.Lines[hut.kind].name);
+    }
     void SetProductionPaused(bool paused){if(onlineMatch)NetworkCommand(PcServerReplica.PauseAll(paused));else match.PauseAll(0,paused);Notice(paused?"Выпуск бойцов остановлен":"Выпуск бойцов возобновлён");}
     void SynchronizeSquad(){
         if(onlineMatch){
@@ -129,7 +138,7 @@ public sealed partial class PcGame {
             if(!builderSelected)DrawManaBar(new Rect(348,703,109,13),h!=null?h.mana:u.mana,h!=null?HumanMatch.F(match.Lines[h.kind].buildingStats,"max_mana"):u.maxMana,true);
         }
         if(selectedGroup.Count>1)title="Группа: "+selectedGroup.Count;GUI.Label(new Rect(491,578,306,31),title,new GUIStyle(hudText){fontSize=title.Length>24?13:15,alignment=TextAnchor.MiddleCenter});
-        
+
         if(selectedGroup.Count>1)DrawGroupCard();else if(builderSelected)DrawBuilderCard();else if(h!=null)DrawBuildingCard(h);else if(u!=null)DrawUnitCard(u);else GUI.Label(new Rect(504,630,285,55),Application.isMobilePlatform?"Коснитесь бойца или здания\nВыберите рабочего значком слева":"ЛКМ — выбрать бойца или здание\nF1 — вернуться к рабочему",hudSmall);
     }
     void DrawBuilderCard() {
@@ -138,7 +147,7 @@ public sealed partial class PcGame {
         var b=match.Builders[0];var hut=b.jobs.Count>0?match.Huts.FirstOrDefault(v=>v.id==b.jobs[0]):null;
         if(hut!=null){GUI.Label(new Rect(504,665,286,21),match.Lines[hut.kind].name+" · очередь: "+b.jobs.Count,hudSmall);Fill(new Rect(504,685,279,5),new Color(.08f,.07f,.04f));Fill(new Rect(504,685,279*(1-hut.buildLeft/match.Lines[hut.kind].buildSeconds),5),new Color(.74f,.57f,.2f));}
         else GUI.Label(new Rect(504,665,286,23),Application.isMobilePlatform?"Коснитесь поля — идти":"ПКМ — идти · B — строительство",hudSmall);
-        GUI.Label(new Rect(504,690,286,22),b.repairing?"Ремонт замка: 15 здоровья / сек.":b.pose=="Walk"?"Выполняет приказ движения":b.pose=="Stand Work"?"Строит здание":"Ожидает приказа",hudSmall);
+        GUI.Label(new Rect(504,690,286,22),b.repairing?(b.repairBuilding>0?"Ремонт здания":"Ремонт замка")+" · +15 HP/с":b.pose=="Walk"?"Выполняет приказ движения":b.pose=="Stand Work"?"Строит здание":"Ожидает приказа",hudSmall);
         if(buildMenu) {
             int slot=0;foreach(int i in ConstructionPageKinds()){var l=match.Lines[i];string tip=l.name+" ("+l.hotkey+")\n"+Cost(l)+"\n"+(l.Producer?l.unitName+" · выпуск "+l.interval.ToString("F1")+" сек.":BuildingSummary(l.building));
                 if(ArtButton("build."+i,Slot(slot%4,slot/4),HdIcon(MatchBuildingIcon(i)),l.hotkey,tip,chosen==i))Select(i);slot++;}
@@ -185,6 +194,9 @@ public sealed partial class PcGame {
         for(int i=0;i<l.upgrades.Length;i++){int k=match.Kind(l.upgrades[i]);var next=match.Lines[k];string tip="Улучшить: "+next.name+"\n"+Cost(next,h.team)+(next.Producer?"\nВыпуск после улучшения: "+(15+(h.spent+next.cost)/20f).ToString("F1")+" сек.":"\n"+BuildingSummary(next.building)+"\nМана: +"+HumanMatch.F(next.buildingStats,"mana_regen").ToString("F2")+" / с");if(ArtButton("upgrade."+next.building,Slot(i,0),HdIcon(MatchBuildingIcon(k)),i==0?"U":"",tip))UpgradeSelected(k);}
         if(l.Producer&&ArtButton("building.pause",Slot(0,1),Extra(h.paused?"resume_all":"pause"),"P",h.paused?"Возобновить производство":"Приостановить производство",h.paused))ToggleProduction(h);
         if(l.abilities.Contains("A09A")&&ArtButton("building.range",Slot(1,1),Extra("attack"),"","Показать радиус действия",showRange))showRange=!showRange;
+        if(BuildingRepairVisible(h)&&ArtButton("building.repair",Slot(1,2),Extra("repair"),"R",
+            "Починить (R)\nСтроитель восстанавливает 15 здоровья в секунду · бесплатно",
+            match.Builders[0].repairing&&match.Builders[0].repairBuilding==h.id))RepairBuildingOrder(h);
         if(ArtButton("building.sell",Slot(3,2),Extra("sell"),"Del","Продать здание\nВернётся "+(int)(h.baseCost*.2f)+" золота (20% начальной цены)"))SellSelected();
     }
     string BuildingStatus(HumanMatch.Hut h) {

@@ -5,7 +5,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class HumanMatch {
     public Unit Spawn(int team,int kind,Vector2 position,bool production=false,Hut producer=null) {
-        if(production&&Lines[kind].unit=="u00F")kind=Array.FindIndex(Lines,l=>l.unit=="h030");var u=new Unit {id=nextId++,team=team,kind=kind,position=position,previous=position,hp=Lines[kind].hp,direction=team==0?Vector2.right:Vector2.left};Ensure(u);Units.Add(u);InvalidateArmyCounts035();OnSpawnIndexed033(u);MechCreated(u,production,producer);UndeadCreated(u);ElementalCreated(u,production);NightCreated(u);ApplyUltimate(u);Spawned++;if(production)ChaosProduced(u);
+        if(production&&Lines[kind].unit=="u00F")kind=Array.FindIndex(Lines,l=>l.unit=="h030");var u=new Unit {id=nextId++,team=team,kind=kind,position=position,previous=position,hp=Lines[kind].hp,direction=team==0?Vector2.right:Vector2.left};Ensure(u);Units.Add(u);InvalidateArmyCounts035();OnSpawnIndexed033(u);MechCreated(u,production,producer);UndeadCreated(u);ElementalCreated(u,production);NightCreated(u);ApplyUltimate(u);StrengthenAbyssSpawn(u);Spawned++;if(production)ChaosProduced(u);
         // Godot gameplay.route_through_arch: leave the keep's column before
         // heading to the road. Flying units can cross the footprint directly.
         if(!Flying(u)&&Mathf.Abs(position.x-(team==0?-5120f/30:5120f/30))<320f/30&&Mathf.Abs(position.y)>256f/30){u.leaveCastleLane=true;u.exitWaypoint=new Vector2(team==0?-4736f/30:4736f/30,position.y);}
@@ -37,9 +37,9 @@ public sealed partial class HumanMatch {
         foreach(var id in AbilityView035.Get(u,Abilities).passives){var c=Ranked(u,id);if((string)c?["kind"]=="self_passive"&&name!="armor")value+=F(c,name);}
         return value;
     }
-    public float MoveSpeed(Unit u)=>BaseMoveSpeed(u)*WinterMoveFactor(u)*(HordeRaging(u)?1.25f:1)*(FuneralChoir?1-.65f*Burial(u):1);
+    public float MoveSpeed(Unit u)=>BaseMoveSpeed(u)*WinterMoveFactor(u)*(HordeRaging(u)?1.25f:1)*(FuneralChoir?1-.65f*Burial(u):1)*AbyssMoveFactor(u);
     float BaseMoveSpeed(Unit u){var l=Lines[u.kind];if(u.elementalArmed)return Rooted(u)?0:15;float fixedMove=-1;foreach(var e in u.effects)if(e.left>0){float candidate=F(e.config,"move_override");if(candidate>0&&(fixedMove<0||candidate<fixedMove))fixedMove=candidate;}if(fixedMove>=0)return Rooted(u)?0:fixedMove;return l.speed<=0||Rooted(u)?0:Mathf.Clamp((l.speed+(TeamNaga[u.team]&&Aspects[u.team]==0?-20f/30:0))*(1+ItemPassive(u.team,"speed_bonus",u))*Mathf.Max(0,1+Stat(u,"speed")+(u.nightInvisible?u.nightSpeed:0)),UnitConfig035(u.kind).minSpeed,UnitConfig035(u.kind).maxSpeed);}
-    public float AttackSpeed(Unit u)=>Mathf.Clamp(1+(Lines[u.kind].unit=="bU02" && u.hp*10<u.maxHp*3?.4f:0)+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5)*WinterAttackFactor(u);
+    public float AttackSpeed(Unit u)=>Mathf.Clamp(1+(Lines[u.kind].unit=="bU02" && u.hp*10<u.maxHp*3?.4f:0)+AbyssAttackHaste(u)+Stat(u,"haste")+ItemPassive(u.team,"haste_bonus",u),.2f,5)*WinterAttackFactor(u);
     public Weapon WeaponFor(Unit u,Unit target=null,bool structure=false){
         if(Ethereal(u)||Disarmed(u))return null;
         foreach(var w in u.elementalWeapons??Lines[u.kind].weapons)if((target==null||!HordeImmuneToWeapon(target,w)&&!Invulnerable(target)&&!CorruptedAirborne(target)&&!Hidden(target)&&NightCanDetect(u.team,target)&&Lines[target.kind].unit!="n02E")&&(target==null||Lines[target.kind].unit!="YTct"||w.targets.Contains("tree"))&&(target==null||!Ethereal(target)||w.attack=="magic"||w.attack=="spells")&&(structure?w.structure:target!=null&&Flying(target)?w.air:w.ground))return w;
@@ -73,7 +73,8 @@ public sealed partial class HumanMatch {
         if(u.pandaSplit||Hidden(u)||Lines[u.kind].category=="visual")return;
         if(TickNatureBear(u,dt)||TickWarlock(u,dt))return;
         if(u.stun>0||Disabled(u)){u.strikeLeft=-1;u.pendingSpell=null;u.castLeft=-1;u.pose="Stand";return;}
-        if(TickHordeActor(u,dt))return;
+        if(TickHordeActor(u,dt)||TickAbyssHunter(u,dt))return;
+        TickAbyssPanzer(u);
         if(TickElementalWind(u,dt))return;TickMechPassiveFire(u);TickElvenPassive(u);if(TickMechUnit(u,dt))return;
         if(u.castLeft>=0){u.castLeft-=dt;u.pose=u.finalCastPose??"Spell";if(u.castLeft<=0){var id=u.pendingSpell;u.pendingSpell=null;u.castLeft=-1;bool ok=Cast(u,id,u.spellTarget);u.spellTimers[id]=ok?SpellCooldown(u,id):.25f;}return;}
         if(u.castPause>0){u.pose=u.finalCastPose??"Spell";return;}u.finalCastPose=null;
@@ -157,13 +158,14 @@ public sealed partial class HumanMatch {
     }
     void BeginAttack(Unit u,Weapon weapon,int target) {
         NightOnAttacked(FindUnit(target));u.pendingWeapon=weapon;float haste=AttackSpeed(u);u.cooldown=(u.cooldownOverride>0?u.cooldownOverride:weapon.cooldown)/haste;u.strikeLeft=weapon.point/haste;u.attackTarget=target;u.attackSerial++;u.attackPoseLeft=(weapon.point+weapon.backswing)/haste;
-        float flat=u.abilities.Sum(id=>(string)Abilities[id]?["kind"]=="self_passive"?F(Abilities[id],"damage_bonus"):0);u.shotDamage=((u.attackOverride>=0?u.attackOverride:weapon.damage)+flat+ChaosSealBonus(u)+NightFlat(u))*Mathf.Max(0,1+Stat(u,"damage"))*Mathf.Max(0,1+u.auraDamage+u.auraDamageNegative)*InventoryDamage(u);u.shotDamage*=ElvenWeaponFactor(u.team,false);u.shotDamage+=NightOpening(u);u.shotStun=0;bool elvenCritical=u.critChance>0&&Roll()<u.critChance;if(elvenCritical)u.shotDamage*=u.critMultiplier;
+        float flat=u.abilities.Sum(id=>(string)Abilities[id]?["kind"]=="self_passive"?F(Abilities[id],"damage_bonus"):0);u.shotDamage=((u.attackOverride>=0?u.attackOverride:weapon.damage)+flat+ChaosSealBonus(u)+NightFlat(u))*Mathf.Max(0,1+Stat(u,"damage"))*Mathf.Max(0,1+u.auraDamage+u.auraDamageNegative)*InventoryDamage(u);u.shotDamage*=ElvenWeaponFactor(u.team,false)*AbyssWeaponDamage(u);u.shotDamage+=NightOpening(u);u.shotStun=0;bool elvenCritical=u.critChance>0&&Roll()<u.critChance;if(elvenCritical)u.shotDamage*=u.critMultiplier;
         var victim=FindUnit(target);if(victim!=null)foreach(var id in u.abilities){var c=Abilities[id];var p=c?["profile"];if((string)c?["kind"]!="bash"||!(Flying(victim)?((string)p?["targets"]??"").Contains("air"):((string)p?["targets"]??"").Contains("ground")))continue;if(Roll()<F(p,"chance")){u.shotDamage+=F(p,"bonus");u.shotStun=F(p,Lines[victim.kind].armorType=="hero"?"hero_duration":"duration");}}if(elvenCritical&&TeamElven[u.team]&&Aspects[u.team]==1)u.shotDamage*=1.25f;CentaurOpening(u);
     }
     void Release(Unit u) {
         if(!TargetAlive(u.attackTarget))return;var w=u.pendingWeapon;if(w==null)return;CorruptedEnhance(u,ref w);
         if(BlackHandRelease(u))return;
-        if(ChaosFighter(u))u.chaosAttackingUntil=Elapsed+1;Vector2 end=TargetPosition(u.attackTarget,u.team);bool storm=ElementalStormReleased(u,u.attackTarget);bool heat=MechHeatReleased(u,u.attackTarget);float miss=CentaurMissChance(u,w);if(miss>0&&Roll()<miss){if(storm){if(w.type=="normal"||w.type=="instant")ElementalStormBurst(u.team,end,u.attackTarget,u);else{var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="elemental_miss";failed.elementalStorm=true;failed.elementalStormSource=u;}}if(heat){if(w.type=="normal"||w.type=="instant")MechHeatBurst(u.team,end,u.attackTarget);else {var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="mech_miss";failed.mechHeat=true;}}ChaosMisses++;PulseAt(u.position,1,Color.white,"Промах");return;}
+        if(ChaosFighter(u))u.chaosAttackingUntil=Elapsed+1;Vector2 end=TargetPosition(u.attackTarget,u.team);bool storm=ElementalStormReleased(u,u.attackTarget);bool heat=MechHeatReleased(u,u.attackTarget);float miss=WeaponMissChance(u,w);if(miss>0&&Roll()<miss){if(storm){if(w.type=="normal"||w.type=="instant")ElementalStormBurst(u.team,end,u.attackTarget,u);else{var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="elemental_miss";failed.elementalStorm=true;failed.elementalStormSource=u;}}if(heat){if(w.type=="normal"||w.type=="instant")MechHeatBurst(u.team,end,u.attackTarget);else {var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="mech_miss";failed.mechHeat=true;}}ChaosMisses++;PulseAt(u.position,1,Color.white,"Промах");return;}
+        AbyssWeaponReleased(u,w);
         if(w.type=="normal")BattleAudio.For(this)?.Swing(Lines[u.kind].unit,u.position);
         if(w.type=="normal"||w.type=="instant") {
             if(Vector2.Distance(u.position,end)<=w.range+(u.attackTarget==-1?CastleCollision:u.attackTarget< -1?2:1))ResolveAttack(u.id,u.team,u.attackTarget,u.shotDamage,w,u.shotStun);
@@ -231,7 +233,7 @@ public sealed partial class HumanMatch {
         if(!execute&&!pandaDebt)amount=PandaDefer(victim,amount,team,killer);
         victim.hp=Mathf.Max(Mathf.Min(before,minimumHp),victim.hp-amount);if(!pandaDebt&&victim.hp>0){NatureOnDamage(victim);if(before>victim.hp){TriggerBerserk(victim,before);if(team!=victim.team)TriggerHandIron(victim,before);NorthernRage(victim);if(victim.nightStealth>0){NightReveal(victim);if(killer!=null&&killer.team!=victim.team)victim.combatTarget=killer.id;}}}
         if(!pandaDebt){ElementalAfterDamage(killer,victim,Mathf.Max(0,before-victim.hp),suppressElemental);NerubAfterDamage(victim,amount,spell);PandaAfterDamage(victim,amount);}
-        if(victim.hp<=0&&!victim.deathProcessed){victim.deathProcessed=true;bool winterDefection=QueueWinterDefection(victim);BattleAudio.For(this)?.Death(Lines[victim.kind].unit,victim.position);victim.pose="Death";victim.pendingSpell=null;victim.strikeLeft=-1;Kills++;if(team>=0&&team<2&&team!=victim.team){TeamKills[team]++;if(!victim.noBounty)Gold[team]+=Mathf.Max(1,(int)(victim.maxHp/50));}
+        if(victim.hp<=0&&!victim.deathProcessed){victim.deathProcessed=true;ForgetAbyssHunter(victim);bool winterDefection=QueueWinterDefection(victim);BattleAudio.For(this)?.Death(Lines[victim.kind].unit,victim.position);victim.pose="Death";victim.pendingSpell=null;victim.strikeLeft=-1;Kills++;if(team>=0&&team<2&&team!=victim.team){TeamKills[team]++;if(!victim.noBounty)Gold[team]+=Mathf.Max(1,(int)(victim.maxHp/50));}
             NerubDied(victim);ElvenDied(victim,team);NightKilled(killer,victim);NightDeathAspect(victim);ElementalDied(victim,killer,team);CorruptedDied(victim);UndeadDied(victim,killer);MechDied(victim);OrcKilled(killer,victim);NagaOnDeath(victim);ChaosDeath(victim);
             if(winterDefection)victim.deadAge=4;
             else if(!victim.noCorpse&&!ElementalIllusion(victim)&&((int?)Lines[victim.kind].stats["death_type"]??0)%2==1&&Organic(victim))Corpses.Add(new Corpse {unit=victim,left=F(Lines[victim.kind].stats,"corpse_duration",90)});

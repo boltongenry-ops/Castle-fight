@@ -73,7 +73,8 @@ public sealed partial class PcGame {
         if(id==HumanMatch.WinterTrial)DrawWinterPainting(tile,true);
         else if(id==HumanMatch.ChoirTrial)DrawChoirPainting(tile);
         else if(id==HumanMatch.HordeTrial)DrawHordePainting(tile);
-        else if(id==HumanMatch.ProtocolTrial)DrawProtocolPainting(tile);else Fill(tile,WinterInk);
+        else if(id==HumanMatch.ProtocolTrial)DrawProtocolPainting(tile);
+        else if(id==HumanMatch.AbyssTrial)DrawAbyssPainting(tile);else Fill(tile,WinterInk);
         WinterGradient(tile,true,new Color(.01f,.02f,.03f,.99f));
         Border(tile,id==selectedMythicId?WinterBlue:WinterLine,id==selectedMythicId?2:1);
         Text(tile.x+14,tile.y+3,tile.width-125,32,(string)row["title"],raceTitleStyle);
@@ -92,7 +93,8 @@ public sealed partial class PcGame {
             if(winterVersusFrame>=0)winterVersusReveal+=Mathf.Min(.07f,Time.unscaledDeltaTime);
             winterVersusFrame=Time.frameCount;
         }
-        if(protocolVersus)DrawProtocolPainting(new Rect(0,0,1280,720));
+        if(abyssVersus)DrawAbyssPainting(new Rect(0,0,1280,720));
+        else if(protocolVersus)DrawProtocolPainting(new Rect(0,0,1280,720));
         else if(hordeVersus)DrawHordePainting(new Rect(0,0,1280,720));
         else if(choirVersus)DrawChoirPainting(new Rect(0,0,1280,720));else DrawWinterPainting(new Rect(0,0,1280,720),true);
         WinterGradient(new Rect(0,0,565,637),true,new Color(.014f,.025f,.041f,.93f));
@@ -105,10 +107,10 @@ public sealed partial class PcGame {
         Border(portrait,WinterLine,1);
         Text(45,495,350,44,VersusNames[versusA],new GUIStyle(label){wordWrap=true,fontSize=23});
         Text(294,278,134,89,"VS",new GUIStyle(title){fontSize=62,alignment=TextAnchor.MiddleCenter,normal={textColor=WinterBlue}});
-        Text(588,495,570,65,protocolVersus?"Последний протокол":hordeVersus?"Проклятая Орда":choirVersus?"Погребальный хор":"Вечная зима",new GUIStyle(raceTitleStyle){fontSize=48,normal={textColor=Color.white}});
-        Text(594,570,605,44,protocolVersus?"Терминатор · Коалиция механизмов":hordeVersus?"Алый вождь · Орда":choirVersus?"Верховный некромант · Нежить":"Ледяная королева · Северные королевства",label);
+        Text(588,495,570,65,abyssVersus?"Дыхание Бездны":protocolVersus?"Последний протокол":hordeVersus?"Проклятая Орда":choirVersus?"Погребальный хор":"Вечная зима",new GUIStyle(raceTitleStyle){fontSize=48,normal={textColor=Color.white}});
+        Text(594,570,605,44,abyssVersus?"Королева глубин · Наги":protocolVersus?"Терминатор · Коалиция механизмов":hordeVersus?"Алый вождь · Орда":choirVersus?"Верховный некромант · Нежить":"Ледяная королева · Северные королевства",label);
         Fill(new Rect(0,637,1280,83),new Color(.009f,.017f,.029f,.98f));
-        DrawVersusLoading(protocolVersus?ProtocolGold:hordeVersus?HordeAccent:WinterBlue);
+        DrawVersusLoading(abyssVersus?AbyssAccent:protocolVersus?ProtocolGold:hordeVersus?HordeAccent:WinterBlue);
         float fade=1-Mathf.SmoothStep(0,1,Mathf.Clamp01(winterVersusReveal/.8f));
         if(fade>0)Fill(new Rect(0,0,1280,720),new Color(0,0,0,fade));
     }

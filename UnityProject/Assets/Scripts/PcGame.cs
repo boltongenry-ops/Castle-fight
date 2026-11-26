@@ -46,7 +46,7 @@ public sealed partial class PcGame : MonoBehaviour {
         yield return OpenDesktopMenuBuilders();
         terrain=new NativeMapTerrain(terrainBytes.bytes,JObject.Parse(terrainMetadata.text),(JObject)JObject.Parse(waterMetadata.text)["water"]);
         settingsPath=BattleLab.Arg("--pc-settings-file",Path.Combine(Application.persistentDataPath,"pc-settings.json"));
-        string testMode=BattleLab.Arg("--pc-test");testing=testMode=="last-protocol"||testMode=="ground-march"||testMode=="cursed-horde"||testMode=="castle-themes"||testMode=="mythic-winter"||testMode=="battle-social"||testMode=="battle-help"||testMode=="pepe"||testMode=="hud-themes"||testMode=="art040"||testMode=="models039"||testMode=="workshop038"||testMode=="spell-audit036"||testMode=="optimization035"||testMode=="challenge034"||testMode=="nerubian033"||testMode=="nerubian032"||testMode=="structure031"||testMode=="combat030"||testMode=="centaur028"||testMode=="bot027"||testMode=="units026"||testMode=="cards025"||testMode=="motion024"||testMode=="network023"||testMode=="polish022"||testMode=="recovery"||testMode=="social"||testMode=="guide"||testMode=="fog"||testMode=="frontend"||testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"||testMode=="elven"||testMode=="polish"||testMode=="night"||testMode=="elemental"||testMode=="corrupted"||testMode=="undead"||testMode=="mech"||testMode=="northern"||testMode=="1"||testMode=="naga"||testMode=="nature"||testMode=="classic"||testMode=="menu"||testMode=="chaos";
+        string testMode=BattleLab.Arg("--pc-test");testing=testMode=="abyss-tide"||testMode=="last-protocol"||testMode=="ground-march"||testMode=="cursed-horde"||testMode=="castle-themes"||testMode=="mythic-winter"||testMode=="battle-social"||testMode=="battle-help"||testMode=="pepe"||testMode=="hud-themes"||testMode=="art040"||testMode=="models039"||testMode=="workshop038"||testMode=="spell-audit036"||testMode=="optimization035"||testMode=="challenge034"||testMode=="nerubian033"||testMode=="nerubian032"||testMode=="structure031"||testMode=="combat030"||testMode=="centaur028"||testMode=="bot027"||testMode=="units026"||testMode=="cards025"||testMode=="motion024"||testMode=="network023"||testMode=="polish022"||testMode=="recovery"||testMode=="social"||testMode=="guide"||testMode=="fog"||testMode=="frontend"||testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"||testMode=="elven"||testMode=="polish"||testMode=="night"||testMode=="elemental"||testMode=="corrupted"||testMode=="undead"||testMode=="mech"||testMode=="northern"||testMode=="1"||testMode=="naga"||testMode=="nature"||testMode=="classic"||testMode=="menu"||testMode=="chaos";
         LoadSettings();if(MapArt.Preferred)yield return MapArt.Apply(controls);if(HdModels.Preferred)StartCoroutine(HdModels.OpenCached());LoadMatchRules();Apply(options,false);controls.HideToolbar=true;controls.TouchOverUi=TouchOverUi;controls.TouchPanAllowed=()=>chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder;
         controls.AllowGridToggle=false;controls.buildGrid.SetActive(false);
         if(testing&&!MobileContent.Active&&testMode!="hud-themes"&&testMode!="workshop038"&&testMode!="models039"&&testMode!="art040"&&testMode!="pepe"&&testMode!="battle-help"&&testMode!="battle-social"&&testMode!="mythic-winter"&&testMode!="castle-themes"&&testMode!="cursed-horde"&&testMode!="ground-march")PreserveAssetAuditForHistoricalTests();
@@ -64,7 +64,7 @@ public sealed partial class PcGame : MonoBehaviour {
         Debug.Log("CF_PC_READY page="+page+" build="+Version);
         StartCoroutine(CompleteStartupLoading());if(!MobileContent.Active)StartCoroutine(LoadMobileFrontendArt());
         if(!testing){StartCoroutine(CheckGameRelease(true));if(!string.IsNullOrEmpty(networkSessionToken))BeginDirectory();}
-        if(testing)StartCoroutine(testMode=="last-protocol"?ExerciseLastProtocol():testMode=="ground-march"?ExerciseGroundMarch():testMode=="cursed-horde"?ExerciseCursedHorde():testMode=="castle-themes"?ExerciseCastleThemes():testMode=="mythic-winter"?ExerciseWinterTrial():testMode=="battle-social"?ExerciseBattleSocial():testMode=="battle-help"?ExerciseBattleHelp():testMode=="pepe"?ExercisePepe():testMode=="hud-themes"?ExerciseHudThemes():testMode=="art040"?ExerciseReforgedArt040():testMode=="models039"?ExerciseModels039():testMode=="workshop038"?ExerciseWorkshop038():testMode=="spell-audit036"?ExerciseSpellAudit036():testMode=="optimization035"?ExerciseOptimization035():testMode=="challenge034"?ExerciseChallenge034():testMode=="nerubian033"?ExerciseNerubian033():testMode=="nerubian032"?ExerciseNerubian032():testMode=="structure031"?ExerciseStructure031():testMode=="combat030"?ExerciseCombat030():testMode=="centaur028"?ExerciseCentaur028():testMode=="bot027"?ExerciseBot027():testMode=="units026"?ExerciseUnits026():testMode=="cards025"?ExerciseCards025():testMode=="motion024"?ExerciseProjectileMotion024():testMode=="network023"?ExerciseNetwork023():testMode=="polish022"?ExerciseFrontend022():testMode=="recovery"?ExerciseRecovery():testMode=="social"?ExerciseSocial():testMode=="guide"?ExerciseGuide():testMode=="fog"?ExerciseFog():testMode=="frontend"?ExerciseFrontend():testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"?ExerciseFinalRaceOnly(testMode):testMode=="elven"?ExerciseElvenOnly():testMode=="polish"?ExercisePolishOnly():testMode=="night"?ExerciseNightOnly():testMode=="elemental"?ExerciseElementalOnly():testMode=="corrupted"?ExerciseCorruptedOnly():testMode=="undead"?ExerciseUndeadOnly():testMode=="mech"?ExerciseMechOnly():testMode=="northern"?ExerciseNorthernOnly():testMode=="chaos"?ExerciseChaosOnly():testMode=="classic"?ExerciseClassicOnly():testMode=="menu"?ExerciseMenu():testMode=="naga"?ExerciseNagaOnly():testMode=="nature"?ExerciseNatureOnly():Exercise());
+        if(testing)StartCoroutine(testMode=="abyss-tide"?ExerciseAbyssTide():testMode=="last-protocol"?ExerciseLastProtocol():testMode=="ground-march"?ExerciseGroundMarch():testMode=="cursed-horde"?ExerciseCursedHorde():testMode=="castle-themes"?ExerciseCastleThemes():testMode=="mythic-winter"?ExerciseWinterTrial():testMode=="battle-social"?ExerciseBattleSocial():testMode=="battle-help"?ExerciseBattleHelp():testMode=="pepe"?ExercisePepe():testMode=="hud-themes"?ExerciseHudThemes():testMode=="art040"?ExerciseReforgedArt040():testMode=="models039"?ExerciseModels039():testMode=="workshop038"?ExerciseWorkshop038():testMode=="spell-audit036"?ExerciseSpellAudit036():testMode=="optimization035"?ExerciseOptimization035():testMode=="challenge034"?ExerciseChallenge034():testMode=="nerubian033"?ExerciseNerubian033():testMode=="nerubian032"?ExerciseNerubian032():testMode=="structure031"?ExerciseStructure031():testMode=="combat030"?ExerciseCombat030():testMode=="centaur028"?ExerciseCentaur028():testMode=="bot027"?ExerciseBot027():testMode=="units026"?ExerciseUnits026():testMode=="cards025"?ExerciseCards025():testMode=="motion024"?ExerciseProjectileMotion024():testMode=="network023"?ExerciseNetwork023():testMode=="polish022"?ExerciseFrontend022():testMode=="recovery"?ExerciseRecovery():testMode=="social"?ExerciseSocial():testMode=="guide"?ExerciseGuide():testMode=="fog"?ExerciseFog():testMode=="frontend"?ExerciseFrontend():testMode=="ultimate"||testMode=="nerubian"||testMode=="pandaren"?ExerciseFinalRaceOnly(testMode):testMode=="elven"?ExerciseElvenOnly():testMode=="polish"?ExercisePolishOnly():testMode=="night"?ExerciseNightOnly():testMode=="elemental"?ExerciseElementalOnly():testMode=="corrupted"?ExerciseCorruptedOnly():testMode=="undead"?ExerciseUndeadOnly():testMode=="mech"?ExerciseMechOnly():testMode=="northern"?ExerciseNorthernOnly():testMode=="chaos"?ExerciseChaosOnly():testMode=="classic"?ExerciseClassicOnly():testMode=="menu"?ExerciseMenu():testMode=="naga"?ExerciseNagaOnly():testMode=="nature"?ExerciseNatureOnly():Exercise());
 #if CF_ONLINE_QA
         if(BattleLab.Arg("--pc-online-qa")!="")StartCoroutine(ExerciseOnlineMatch());
 #endif
@@ -146,6 +146,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(match.FuneralChoir)BeginChoirIntro();
         if(match.CursedHorde)BeginHordeIntro();
         if(match.LastProtocol)BeginProtocolIntro();
+        if(match.AbyssTrialActive)BeginAbyssIntro();
         Debug.Log("CF_PC_MATCH_START race="+RaceEnglish+" botRace="+BotRaceName+" gold="+startGold+" difficulty="+difficulty+" aspects="+(aspectRound?1:0)+" mode="+matchMode);
     }
 
@@ -153,7 +154,7 @@ public sealed partial class PcGame : MonoBehaviour {
 
     void ClearMatch() {
         ClearChoirCastle();castleThemes.Clear();
-        ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();
+        ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();ClearAbyss();
         ClearWorkshopBattle();
         ClearOnlineProjectiles();
         aspectInfoOpen=false;skillCardUnit=-1;skillCardPage=0;
@@ -197,6 +198,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(versusActive){controls.InputBlocked=true;controls.EdgePan=false;return;}
         if(hordeIntro){UpdateHordeIntro();return;}
         if(protocolIntro){UpdateProtocolIntro();return;}
+        if(abyssIntro){UpdateAbyssIntro();return;}
         if(protocolMarchIntro){UpdateProtocolMarchIntro();return;}
         if(choirIntro){UpdateChoirIntro();return;}
         if(match!=null&&match.FuneralChoir)UpdateChoirBattle();
@@ -340,7 +342,7 @@ public sealed partial class PcGame : MonoBehaviour {
             if(u.hp<=0&&u.deadAge>3){if(units.TryGetValue(u.id,out var consumed))consumed.gameObject.SetActive(false);continue;}
             if(match.Hidden(u)&&!match.MechMine(u)){if(units.TryGetValue(u.id,out var hidden))hidden.gameObject.SetActive(false);continue;}
             if(units.TryGetValue(u.id,out var oldView)&&(!art036.unitKinds.TryGetValue(u.id,out int oldKind)||oldKind!=u.kind||unitViewTeams.TryGetValue(u.id,out int oldTeam)&&oldTeam!=u.team)){if(match.CursedHorde)ForgetHordeView(oldView);oldView.gameObject.SetActive(false);Destroy(oldView.gameObject);units.Remove(u.id);unitViewTeams.Remove(u.id);effectAnchors.Remove(u.id);}
-            bool born=!units.TryGetValue(u.id,out var view);if(born){var prefab=RaceModel(u.team,u.kind,false);if(!prefab)continue;view=Instantiate(prefab,visuals.transform).GetComponent<PcModel>();units.Add(u.id,view);unitViewTeams[u.id]=u.team;art036.unitKinds[u.id]=u.kind;}
+            bool born=!units.TryGetValue(u.id,out var view);if(born){var prefab=RaceModel(u.team,u.kind,false);if(!prefab)continue;view=Instantiate(prefab,visuals.transform).GetComponent<PcModel>();units.Add(u.id,view);unitViewTeams[u.id]=u.team;art036.unitKinds[u.id]=u.kind;if(match.AbyssTrialActive)StyleAbyssActor(view,u);}
             view.transform.position=World(Vector2.Lerp(u.previous,u.position,alpha))+Vector3.up*match.Height(u);
             if(match.FuneralChoir){
                 if(born&&match.IsCrawler(u)){
@@ -373,6 +375,7 @@ public sealed partial class PcGame : MonoBehaviour {
         RenderReforgedEffects();RenderNorthernEffects(alpha);RenderMechEffects();RenderUndeadEffects();RenderCorruptedEffects();RenderElementalEffects(alpha);RenderNightEffects();RenderElvenEffects();RenderFinalEffects();RenderPepeSkills();RenderHumanEffects();RenderBuilderCosmetic();ApplyFogViews();DrawOptionalVortices();
         RenderHordeBattle();
         RenderProtocol(alpha);
+        RenderAbyssTide();
         RenderWinterCastle();
         if(match.FuneralChoir)RenderChoirCastle();
         SweepHdEffects040();
@@ -492,6 +495,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(versusActive){DrawVersus();DrawNetworkRecovery();GUI.matrix=previous;return;}
         if(hordeIntro){DrawHordeIntro();GUI.matrix=previous;return;}
         if(protocolIntro){DrawProtocolIntro();GUI.matrix=previous;return;}
+        if(abyssIntro){DrawAbyssIntro();GUI.matrix=previous;return;}
         if(protocolMarchIntro){DrawProtocolMarchIntro();GUI.matrix=previous;return;}
         if(choirIntro){DrawChoirIntro();GUI.matrix=previous;return;}
         if(winterIntro){DrawWinterIntro();GUI.matrix=previous;return;}
@@ -598,7 +602,7 @@ public sealed partial class PcGame : MonoBehaviour {
             if(Button("result.menu",new Rect(450,450,380,48),onlineMatch?"Вернуться в комнату":"Главное меню")){if(onlineMatch){onlineDecision=true;SendNetwork(new JObject { ["type"]="return_lobby" });}else MainMenu();}GUI.enabled=true;
         }
     }
-    void OnDestroy(){ClearChoirCastle();castleThemes.Clear();ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();if(protocolPainting)Destroy(protocolPainting);MapArt.Abort();MapArt.Restore();HdModels.Cancel();HdModels.Select(false);if(ownChatBubble)Destroy(ownChatBubble);if(peerChatBubble)Destroy(peerChatBubble);if(chatToolbarIcon)Destroy(chatToolbarIcon);if(micToolbarIcon)Destroy(micToolbarIcon);CloseVersus();if(resultEmblem)Destroy(resultEmblem);if(rankSheet)Destroy(rankSheet);if(castleLogo)Destroy(castleLogo);DisposeVoice();DisposeFrontend();DisposeWorkshop();DisposeRichAura();DisposeFog();DisposeGuide();if(Art036.bundle)Art036.bundle.Unload(false);if(builderCosmeticMaterial)Destroy(builderCosmeticMaterial);DisposeReforgedFx();if(flameMaterial)Destroy(flameMaterial);if(wispMaterial)Destroy(wispMaterial);if(wispMeshMaterial)Destroy(wispMeshMaterial);if(armorAuraMaterial)Destroy(armorAuraMaterial);if(orcRuneMaterial)Destroy(orcRuneMaterial);DestroyHud();foreach(var t in new[]{panel,normal,hot,active})if(t)Destroy(t);if(ringMesh)Destroy(ringMesh);}
+    void OnDestroy(){ClearChoirCastle();castleThemes.Clear();ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();ClearAbyss();if(abyssPainting)Destroy(abyssPainting);if(protocolPainting)Destroy(protocolPainting);MapArt.Abort();MapArt.Restore();HdModels.Cancel();HdModels.Select(false);if(ownChatBubble)Destroy(ownChatBubble);if(peerChatBubble)Destroy(peerChatBubble);if(chatToolbarIcon)Destroy(chatToolbarIcon);if(micToolbarIcon)Destroy(micToolbarIcon);CloseVersus();if(resultEmblem)Destroy(resultEmblem);if(rankSheet)Destroy(rankSheet);if(castleLogo)Destroy(castleLogo);DisposeVoice();DisposeFrontend();DisposeWorkshop();DisposeRichAura();DisposeFog();DisposeGuide();if(Art036.bundle)Art036.bundle.Unload(false);if(builderCosmeticMaterial)Destroy(builderCosmeticMaterial);DisposeReforgedFx();if(flameMaterial)Destroy(flameMaterial);if(wispMaterial)Destroy(wispMaterial);if(wispMeshMaterial)Destroy(wispMeshMaterial);if(armorAuraMaterial)Destroy(armorAuraMaterial);if(orcRuneMaterial)Destroy(orcRuneMaterial);DestroyHud();foreach(var t in new[]{panel,normal,hot,active})if(t)Destroy(t);if(ringMesh)Destroy(ringMesh);}
 
     // Exercises the same GUI button branches as a click, using the rendered native player.
     IEnumerator Action(string id) {Debug.Log("CF_QA_ACTION "+id);pendingTestAction=id;float until=Time.realtimeSinceStartup+3;while(pendingTestAction!=null&&Time.realtimeSinceStartup<until)yield return null;Check(pendingTestAction==null,"button "+id);yield return null;}

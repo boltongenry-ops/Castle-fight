@@ -9,7 +9,7 @@ from pathlib import Path
 from urllib import error, parse, request
 
 CHALLENGE = "mythic_eternal_winter"
-CHALLENGES = (CHALLENGE, "mythic_funeral_choir", "mythic_cursed_horde", "mythic_last_protocol")
+CHALLENGES = (CHALLENGE, "mythic_funeral_choir", "mythic_cursed_horde", "mythic_last_protocol", "mythic_abyssal_tide")
 NORTHERN_RACE = 5
 WINTER_RULES_REVISION = 2
 ROUTE = "/mythic-leaderboard"

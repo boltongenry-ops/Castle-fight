@@ -3,7 +3,12 @@ using System.Linq;
 using UnityEngine;
 namespace CastleFight {
 public sealed partial class HumanMatch {
-    public sealed class NagaWave {public int team;public Vector2 origin,direction;public float distance,previousDistance,age,spentDamage;public readonly HashSet<int> struck=new HashSet<int>();}
+    public sealed class NagaWave {
+        public int team;
+        public Vector2 origin,direction;
+        public float distance,previousDistance,age,spentDamage,turnAt;
+        public readonly HashSet<int> struck=new HashSet<int>();
+    }
     public readonly List<NagaWave> ActiveNagaWaves=new List<NagaWave>();
     public int NagaQuakes {get;private set;}
     public int NagaControls {get;private set;}
@@ -43,6 +48,7 @@ public sealed partial class HumanMatch {
         if(raw=="h00M"||raw=="h00N") {
             string id=raw=="h00M"?"A00O":"A09X";var cfg=Abilities[id];
             if(h.mana<F(cfg,"mana")||(h.spellTimers.TryGetValue(id,out float wait)&&wait>0))return;
+            if(raw=="h00M"&&AbyssTrialActive&&h.team==1){AbyssOracleCast(h);return;}
             var targets=Units.Where(u=>NagaCandidate(u,h.team)).ToArray();if(targets.Length==0)return;
             var target=targets[Mathf.Min(targets.Length-1,(int)(Roll()*targets.Length))];
             h.mana-=F(cfg,"mana");h.spellTimers[id]=BuildingCooldown(h,F(cfg,"cd"));SpellsCast++;
@@ -54,21 +60,35 @@ public sealed partial class HumanMatch {
                 }
             } else {
                 Vector2 delta=target.position-h.position;var direction=delta.sqrMagnitude<.001f?(h.team==0?Vector2.right:Vector2.left):delta.normalized;
-                ActiveNagaWaves.Add(new NagaWave {team=h.team,origin=h.position,direction=direction});NagaWaves++;
+                ActiveNagaWaves.Add(new NagaWave {team=h.team,origin=h.position,direction=direction,
+                    turnAt=AbyssTrialActive&&h.team==1?AbyssWaveEdge(h.position,direction):0});NagaWaves++;
             }
         }
     }
     void TickNagaWaves(float dt) {
+        if(ActiveNagaWaves.Count==0)return;
         var cfg=Abilities["A00P"];if(cfg==null)return;
-        foreach(var wave in ActiveNagaWaves.ToArray()) {
-            wave.age+=dt;float previous=wave.previousDistance=wave.distance;wave.distance=Mathf.Min(F(cfg,"wave_length",400),wave.distance+F(cfg,"missile_speed",50)*dt);
-            foreach(var victim in Units.ToArray()) {
+        float length=F(cfg,"wave_length",400),speed=F(cfg,"missile_speed",50);
+        using(var snapshot=SimulationBuffers035.Take(Units))
+        for(int i=0;i<ActiveNagaWaves.Count;) {
+            var wave=ActiveNagaWaves[i];
+            float limit=wave.turnAt>0?wave.turnAt:wave.turnAt<0?-wave.turnAt:length;
+            wave.age+=dt;float previous=wave.previousDistance=wave.distance;
+            wave.distance=Mathf.Min(limit,wave.distance+speed*dt);
+            foreach(var victim in snapshot) {
                 if(wave.struck.Contains(victim.id)||!Valid(victim,wave.team,cfg,false)||Flying(victim))continue;
                 var offset=victim.position-wave.origin;float along=Vector2.Dot(offset,wave.direction),radius=F(Lines[victim.kind].stats,"collision");
                 if(along<Mathf.Max(0,previous-radius)||along>wave.distance+radius||(offset-wave.direction*along).magnitude>F(cfg,"start_width",200f/30)+radius)continue;
                 wave.struck.Add(victim.id);float amount=Mathf.Min(F(cfg,"power"),Mathf.Max(0,F(cfg,"max_damage",99999)-wave.spentDamage));if(amount<=0)continue;wave.spentDamage+=amount;DamageUnit(victim,amount,wave.team);PulseAt(victim.position,1,new Color(.35f,.7f,1),"",.65f,"naga_wave_impact");
             }
-            if(wave.distance>=F(cfg,"wave_length",400))ActiveNagaWaves.Remove(wave);
+            if(wave.distance<limit){i++;continue;}
+            if(wave.turnAt<=0){ActiveNagaWaves.RemoveAt(i);continue;}
+            wave.origin+=wave.direction*limit;
+            wave.direction=-wave.direction;
+            wave.turnAt=-wave.turnAt;
+            wave.distance=wave.previousDistance=wave.spentDamage=0;
+            wave.struck.Clear();
+            i++;
         }
     }
 }

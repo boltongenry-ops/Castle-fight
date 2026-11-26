@@ -105,6 +105,7 @@ namespace CastleFight {
                     return Result(TryPoint(team,command["point"],out var move)&&match.MoveBuilder(team,move));
                 case "stop":return Result(match.MoveBuilder(team,match.Builders[team].position));
                 case "repair":return Result(match.RepairCastle(team));
+                case "repair_building":return Result(match.RepairBuilding(team,id));
                 case "builder_spell":
                     if(!TryPoint(team,command["point"],out var point))break;
                     string spell=(string)command["spell"];
@@ -131,7 +132,8 @@ namespace CastleFight {
             foreach(var b in match.Builders)
                 if(b.team==viewer||Visible(viewer,b.position))
                     units.Add(new JObject{["t"]=b.team,["builder"]=true,["p"]=Point(b.position),
-                        ["yaw"]=Yaw(b.direction),["a"]=new JArray(b.pose),["repair"]=b.repairing});
+                        ["yaw"]=Yaw(b.direction),["a"]=new JArray(b.pose),["repair"]=b.repairing,
+                        ["repair_building"]=b.repairing?b.repairBuilding:-1});
             foreach(var u in match.Units){
                 if(u.team!=viewer&&(!Visible(viewer,u.position)||!match.NightCanDetect(viewer,u)))continue;
                 units.Add(new JObject{
