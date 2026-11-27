@@ -1,57 +1,27 @@
-import json
 from pathlib import Path
-import subprocess
-import sys
-from tempfile import TemporaryDirectory
-
-
-REPO = 'boltongenry-ops/Castle-fight'
-TAG = 'v0.49.1'
-NAME = 'CastleFight-Portable.exe'
-EXPECTED = 'sha256:fe793b725216271dccd89151ff0dc792002d7747edc8890b14211cfa53f61243'
-INPUTS = Path(__file__).resolve().parent
-
-
-def check_release():
-    response = subprocess.check_output([
-        'gh', 'release', 'view', TAG, '-R', REPO, '--json', 'assets,isDraft,isPrerelease',
-    ])
-    release = json.loads(response)
-    if release['isPrerelease']:
-        raise RuntimeError('Expected a stable release')
-    for asset in release['assets']:
-        if asset['name'] == NAME and asset['state'] == 'uploaded':
-            if asset['digest'] != EXPECTED or asset['size'] != 2146319222:
-                raise RuntimeError('Published Portable differs from the verified build')
-            return True
-    return False
-
-
-def main():
-    if check_release():
-        print('Verified Portable already published', flush=True)
-        return
-    with TemporaryDirectory(prefix='castle-fight-release-049-') as tmp:
-        temp = Path(tmp)
-        baseline = temp / 'baseline.exe'
-        portable = temp / NAME
-        subprocess.run([
-            'curl', '--fail', '--location', '--retry', '3', '--max-time', '600',
-            '--silent', '--show-error', '--output', str(baseline),
-            f'https://github.com/{REPO}/releases/download/v0.49.0/{NAME}',
-        ], check=True)
-        subprocess.run([
-            sys.executable, str(INPUTS / 'reconstruct_portable.py'), str(baseline),
-            str(INPUTS / 'windows.literal'), str(INPUTS / 'recipe0491.json'), '--output', str(portable),
-        ], check=True)
-        if not check_release():
-            upload = subprocess.run(['gh', 'release', 'upload', TAG, str(portable), '-R', REPO])
-            if upload.returncode and not check_release():
-                upload.check_returncode()
-    if not check_release():
-        raise RuntimeError('The verified Portable was not published')
-    print('Verified Portable available on GitHub', flush=True)
-
-
-if __name__ == '__main__':
-    main()
+import hashlib,subprocess,json,sys,zipfile
+base=Path('release_inputs'); m=json.loads((base/'recipe.json').read_bytes());repo='boltongenry-ops/Castle-fight';tag='v0.45.1'
+def gh(*args):return subprocess.check_output(['gh',*args,'-R',repo],text=True)
+def sha(p):
+ with p.open('rb') as f:return hashlib.file_digest(f,'sha256').hexdigest()
+def assets():return {a['name']:a for a in json.loads(gh('release','view',tag,'--json','assets,isDraft'))['assets']}
+def download_parts(items,out):
+ with out.open('wb') as dest:
+  for name,h,n in items:
+   x=Path('chunks')/name;assert x.stat().st_size==n and sha(x)==h;dest.write(x.read_bytes())
+def ensure_asset(p,h):
+ a=assets().get(p.name)
+ if a and a['state']=='uploaded':assert a['digest']=='sha256:'+h;return
+ gh('release','upload',tag,str(p),'--clobber')
+ assert assets()[p.name]['digest']=='sha256:'+h
+assert json.loads(gh('release','view',tag,'--json','isDraft'))['isDraft']
+gh('release','download',tag,'-p','*.part','-D','chunks')
+apk=Path('CastleFight-Android.apk');download_parts(m['android']['parts'],apk);assert sha(apk)==m['android']['sha'];ensure_asset(apk,sha(apk))
+old=Path('old/CastleFight-Portable.exe');gh('release','download','v0.45.0','-p',old.name,'-D','old');assert sha(old)==m['old']
+lit=Path('literal');download_parts(m['parts'],lit);new=Path(old.name)
+with new.open('wb') as out,old.open('rb') as o,lit.open('rb') as l:
+ for kind,offset,size in m['blocks']:
+  inp=o if kind=='old' else l;inp.seek(offset)
+  while size:
+   data=inp.read(min(size,2**20));assert data;out.write(data);size-=len(data)
+assert sha(new)==m['new'];ensure_asset(new,m['new']);print('Both uploaded and verified.')
