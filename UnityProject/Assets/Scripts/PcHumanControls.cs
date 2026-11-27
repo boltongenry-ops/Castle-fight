@@ -136,14 +136,20 @@ public sealed partial class PcGame {
             DrawPortraitCameraButton(builderSelected?match.Builders[0].position:h!=null?h.position:u.position,
                 !builderSelected&&h==null?match.Height(u):0);
             float hp=builderSelected?220:h!=null?h.hp:u.hp,maxHp=builderSelected?220:h!=null?h.maxHp:u.maxHp;
-            Fill(new Rect(348,685,109,16),new Color(.07f,.14f,.03f));Fill(new Rect(350,687,105*Mathf.Clamp01(hp/maxHp),12),new Color(.2f,.75f,.08f));GUI.Label(new Rect(348,684,109,18),Mathf.CeilToInt(hp)+" / "+Mathf.CeilToInt(maxHp),new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter,normal={textColor=Color.white}});
-            if(!builderSelected)DrawManaBar(new Rect(348,703,109,13),h!=null?h.mana:u.mana,h!=null?HumanMatch.F(match.Lines[h.kind].buildingStats,"max_mana"):u.maxMana,true);
+            if(CommandDeskHud)DrawDeskHealth(hp,maxHp);
+            else{
+                Fill(new Rect(348,685,109,16),new Color(.07f,.14f,.03f));Fill(new Rect(350,687,105*Mathf.Clamp01(hp/maxHp),12),new Color(.2f,.75f,.08f));GUI.Label(new Rect(348,684,109,18),Mathf.CeilToInt(hp)+" / "+Mathf.CeilToInt(maxHp),new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter,normal={textColor=Color.white}});
+            }
+            if(!builderSelected)DrawManaBar(CommandDeskHud?new Rect(492,604,302,12):new Rect(348,703,109,13),
+                h!=null?h.mana:u.mana,h!=null?HumanMatch.F(match.Lines[h.kind].buildingStats,"max_mana"):u.maxMana,true);
         }
-        if(selectedGroup.Count>1)title="Группа: "+selectedGroup.Count;GUI.Label(new Rect(491,578,306,31),title,new GUIStyle(hudText){fontSize=title.Length>24?13:15,alignment=TextAnchor.MiddleCenter});
+        if(selectedGroup.Count>1)title="Группа: "+selectedGroup.Count;
+        if(CommandDeskHud)DrawDeskTitle(title);
+        else GUI.Label(new Rect(491,578,306,31),title,new GUIStyle(hudText){fontSize=title.Length>24?13:15,alignment=TextAnchor.MiddleCenter});
 
         if(selectedGroup.Count>1)DrawGroupCard();else if(builderSelected)DrawBuilderCard();else if(h!=null)DrawBuildingCard(h);else if(u!=null)DrawUnitCard(u);else GUI.Label(new Rect(504,630,285,55),Application.isMobilePlatform?"Коснитесь бойца или здания\nВыберите рабочего значком слева":"ЛКМ — выбрать бойца или здание\nF1 — вернуться к рабочему",hudSmall);
     }
-    static readonly Rect BattlePortraitRect=new Rect(348,590,109,93);
+    Rect BattlePortraitRect=>CommandDeskHud?new Rect(311,552,151,151):new Rect(348,590,109,93);
     void DrawPortraitCameraButton(Vector2 position,float height=0){
         if(Button("portrait.focus",BattlePortraitRect,"",false,GUIStyle.none))
             controls.PanToWorld(World(position)+Vector3.up*height);
@@ -221,9 +227,14 @@ public sealed partial class PcGame {
         float damage=((u.attackOverride>=0?u.attackOverride:u.elementalWeapons?.FirstOrDefault()?.damage??l.damage)+u.abilities.Sum(id=>(string)match.Abilities[id]?["kind"]=="self_passive"?HumanMatch.F(match.Abilities[id],"damage_bonus"):0)+match.ChaosSealBonus(u)+match.NightFlat(u))*Mathf.Max(0,1+match.Stat(u,"damage"))*Mathf.Max(0,1+u.auraDamage+u.auraDamageNegative)*match.InventoryDamage(u)*match.ElvenWeaponFactor(u.team,false);
         DrawCombatStat(504,false,attacks,attacks.Length==0?"":"Урон: "+NetworkCardStat(u.id,"damage",damage).ToString("F0"),AttackTable(weapons));
         DrawCombatStat(650,true,new[]{l.armorType},"Броня: "+NetworkCardStat(u.id,"armor",u.armor+match.Stat(u,"armor")).ToString("F0"),ArmorTable(l.armorType));
-        GUI.Label(new Rect(504,665,286,22),u.maxMana>0?"Мана: "+Mathf.FloorToInt(u.mana)+" / "+Mathf.FloorToInt(u.maxMana)+" · +"+UnitManaRegen(u).ToString("0.##")+" / с":LavaSplitStatus(u)??"Автоматический бой",hudSmall);
+        string lava=LavaSplitStatus(u);
+        if(CommandDeskHud&&lava!=null){
+            float charge=u.elementalLavaGeneration>=HumanMatch.LavaFinalGeneration?1:
+                u.elementalLavaHits/(float)HumanMatch.LavaHitsToSplit;
+            DrawDeskMeter(new Rect(492,663,302,18),charge,new Color(.74f,.39f,.09f),lava);
+        }else GUI.Label(new Rect(504,665,286,22),u.maxMana>0?"Мана: "+Mathf.FloorToInt(u.mana)+" / "+Mathf.FloorToInt(u.maxMana)+" · +"+UnitManaRegen(u).ToString("0.##")+" / с":lava??"Автоматический бой",hudSmall);
         var swampShield=u.effects.Find(e=>e.id==PepeRules.PepeShieldId&&e.left>0);
-        GUI.Label(new Rect(504,690,286,22),swampShield!=null?"Болотный щит: "+Mathf.CeilToInt(swampShield.power)+" HP · "+swampShield.left.ToString("F1")+" с":match.PandaStagger(u)>0?"Отложенный урон: "+match.PandaStagger(u).ToString("F0"):match.Rooted(u)?(u.effects.Any(e=>e.left>0&&e.ground)?"Обездвижен и приземлён":"Обездвижен"):u.effects.Any(e=>e.id=="A02I")?"Безумие: "+Mathf.CeilToInt(u.effects.First(e=>e.id=="A02I").left)+" сек.":u.effects.Any(e=>e.id=="A02M")?"Духовное пламя: "+Mathf.CeilToInt(u.effects.First(e=>e.id=="A02M").left)+" сек.":u.stun>0?"Оглушён":u.nightInvisible?"Невидимость · первый удар +"+u.nightBonus:u.nightFade>0?"Уход в тень: "+u.nightFade.ToString("F1")+" с":u.nightVengeance>0?"Месть леса: "+u.nightVengeance+" / 10":u.effects.Count>0?"Эффектов: "+u.effects.Count:match.ChaosSealBonus(u)>0?"Печать демона: "+u.chaosSeal+" / 10":u.warlockPhase==1?"Отступает после взрыва":u.warlockPhase==2?"Удерживает позицию":u.abilities.Contains("CT01")?"Натиск: "+Mathf.RoundToInt(match.CentaurChargeProgress(u)*100)+"%":(u.team==0?RaceName:BotRaceName),hudSmall);
+        GUI.Label(CommandDeskHud?new Rect(587,689,208,22):new Rect(504,690,286,22),swampShield!=null?"Болотный щит: "+Mathf.CeilToInt(swampShield.power)+" HP · "+swampShield.left.ToString("F1")+" с":match.PandaStagger(u)>0?"Отложенный урон: "+match.PandaStagger(u).ToString("F0"):match.Rooted(u)?(u.effects.Any(e=>e.left>0&&e.ground)?"Обездвижен и приземлён":"Обездвижен"):u.effects.Any(e=>e.id=="A02I")?"Безумие: "+Mathf.CeilToInt(u.effects.First(e=>e.id=="A02I").left)+" сек.":u.effects.Any(e=>e.id=="A02M")?"Духовное пламя: "+Mathf.CeilToInt(u.effects.First(e=>e.id=="A02M").left)+" сек.":u.stun>0?"Оглушён":u.nightInvisible?"Невидимость · первый удар +"+u.nightBonus:u.nightFade>0?"Уход в тень: "+u.nightFade.ToString("F1")+" с":u.nightVengeance>0?"Месть леса: "+u.nightVengeance+" / 10":u.effects.Count>0?"Эффектов: "+u.effects.Count:match.ChaosSealBonus(u)>0?"Печать демона: "+u.chaosSeal+" / 10":u.warlockPhase==1?"Отступает после взрыва":u.warlockPhase==2?"Удерживает позицию":u.abilities.Contains("CT01")?"Натиск: "+Mathf.RoundToInt(match.CentaurChargeProgress(u)*100)+"%":(u.team==0?RaceName:BotRaceName),hudSmall);
         DrawUnitSkillGrid(u);
     }
     static readonly string[] ArmorTypes={"unarmored","light","medium","heavy","fortified","normal","hero","divine"};
@@ -248,4 +259,3 @@ public sealed partial class PcGame {
     }
 }
 }
-

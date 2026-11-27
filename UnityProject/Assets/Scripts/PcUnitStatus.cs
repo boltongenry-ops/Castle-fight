@@ -73,7 +73,8 @@ public sealed partial class PcGame {
         foreach(var badges in new[]{unitDebuffs,unitBuffs}){
             foreach(var badge in badges){
                 if(shown==3)return;
-                var cell=new Rect(715+shown++*26,664,24,24);
+                var cell=CommandDeskHud?new Rect(492+shown*30,687,27,27):new Rect(715+shown*26,664,24,24);
+                shown++;
                 DrawStatusArt(cell,badge.art,ReferenceEquals(badges,unitDebuffs)?red:green);
                 StatusTip(cell,badge.id,badge.tip,"summary.");
             }

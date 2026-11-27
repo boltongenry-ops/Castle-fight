@@ -54,8 +54,8 @@ public sealed partial class PcGame {
         EnsureRaceStyles();if(progressShop){DrawWorkshop();return;}
         var all=(JArray)progression.Catalog["challenges"];
         var state=Workshop;
-        Fill(new Rect(20,18,1240,684),new Color(.025f,.04f,.045f,.96f));Border(new Rect(20,18,1240,684),new Color(.36f,.31f,.22f));
-        DrawProfileBadge(new Rect(42,34,64,64));Text(126,32,740,44,"Испытания и награды",heading);
+        AtlasSurface(new Rect(20,18,1240,684));
+        DrawProfileBadge(new Rect(42,34,64,64));Text(126,30,740,49,"Испытания и награды",atlasTitle);
         Text(128,77,895,27,"Ур. "+progression.MasteryLevel+" · "+progression.MasteryTitle+"  |  "+progression.Experience+" / "+progression.NextLevelExperience+" опыта  |  "+progression.CompletedCount+" / "+all.Count+" пройдено  |  "+progression.Coins+" жетонов",small);
         if(Button("progress.back",new Rect(1074,38,164,42),MythicRacePicker?"← Назад":"← В меню")){
             if(MythicRacePicker)mythicSelection=null;else MainMenu();
@@ -80,11 +80,12 @@ public sealed partial class PcGame {
         progressionScroll=GUI.BeginScrollView(new Rect(40,176,1200,502),progressionScroll,new Rect(0,0,1174,rows.Length*(cardHeight+10)));
         for(int i=0;i<rows.Length;i++){
             var row=rows[i];string id=(string)row["id"];float y=i*(cardHeight+10);
-            Fill(new Rect(0,y,1170,cardHeight),new Color(.055f,.08f,.085f));
-            Border(new Rect(0,y,1170,cardHeight),new Color(.26f,.30f,.28f));
+            AtlasTile(new Rect(0,y,1170,cardHeight),false,false);
+            AtlasScene(3,new Rect(12,y+13,102,146));
+            Fill(new Rect(12,y+13,102,146),new Color(.033f,.042f,.023f,.5f));
             int a=Array.IndexOf(ProgressRaces,(string)row["race"]),b=Array.IndexOf(ProgressRaces,(string)row["opponent"]);var first=RaceEmblem(a);var second=RaceEmblem(b);
-            if(first)GUI.DrawTexture(new Rect(16,y+18,52,52),first,ScaleMode.ScaleToFit);
-            if(second)GUI.DrawTexture(new Rect(58,y+61,52,52),second,ScaleMode.ScaleToFit);
+            if(first)GUI.DrawTexture(new Rect(18,y+30,52,52),first,ScaleMode.ScaleToFit);
+            if(second)GUI.DrawTexture(new Rect(58,y+87,52,52),second,ScaleMode.ScaleToFit);
             Text(128,y+12,790,34,(string)row["title"],raceTitleStyle);Text(128,y+50,816,76,(string)row["description"],new GUIStyle(label){fontSize=18,wordWrap=true});
             bool done=progression.Completed(id);
             string summary=done?"Пройдено · лучший результат "+TimeSpan.FromSeconds(progression.Best(id)).ToString(@"mm\:ss"):

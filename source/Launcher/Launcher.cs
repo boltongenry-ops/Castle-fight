@@ -50,8 +50,8 @@ static class SessionHandoff {
 sealed class LauncherForm:Form {
     const string Endpoint="wss://45-15-156-101.fatmetal.net/play";
     readonly JavaScriptSerializer json=new JavaScriptSerializer{MaxJsonLength=1024*1024};readonly UpdateCore core=new UpdateCore(Path.Combine(Program.Home,"Game"));
-    readonly Label status=new Label(),account=new Label();readonly ForgeProgress progress=new ForgeProgress();readonly ForgeButton play=new ForgeButton{Primary=true},guest=new ForgeButton(),check=new ForgeButton(),cancel=new ForgeButton(),login=new ForgeButton(),logout=new ForgeButton();readonly TextBox name=new TextBox(),password=new TextBox();
-    CancellationTokenSource stopping;Release ready;string token="",nickname="";bool busy;
+    readonly Label status=new Label(),account=new Label();readonly ForgeProgress progress=new ForgeProgress();readonly ForgeButton play=new ForgeButton{Primary=true},guest=new ForgeButton(),check=new ForgeButton(),cancel=new ForgeButton(),login=new ForgeButton(),logout=new ForgeButton(),changes=new ForgeButton();readonly TextBox name=new TextBox(),password=new TextBox();
+    CancellationTokenSource stopping;Release ready,checkedRelease;string token="",nickname="";bool busy;
     Image backdrop;float ui=1;string phase="ПОДГОТОВКА К БИТВЕ";bool accountError;
     readonly ForgeButton minimize=new ForgeButton{Chrome=true,Symbol="minimize"},close=new ForgeButton{Chrome=true,Symbol="close"};
     readonly Label percent=new Label();Label loginCaption,passwordCaption;
@@ -90,6 +90,8 @@ sealed class LauncherForm:Form {
         percent.Bounds=R(622,564,66,25);percent.Text="0%";percent.TextAlign=ContentAlignment.MiddleRight;percent.Font=Body(16);percent.ForeColor=LauncherTheme.Gold;percent.BackColor=Color.Transparent;Controls.Add(percent);
         Style(check,"Проверить файлы",40,669,170,30);check.TabIndex=5;check.Click+=async delegate{await UpdateGame();};
         Style(cancel,"Отложить загрузку",226,669,188,30);cancel.TabIndex=6;cancel.Enabled=false;cancel.Visible=false;cancel.Click+=delegate{if(stopping!=null)stopping.Cancel();};
+        Style(changes,"Что изменилось",430,669,166,30);changes.TabIndex=7;changes.Enabled=false;
+        changes.Click+=delegate{using(var window=CreateNotesWindow(checkedRelease??ready))window.ShowDialog(this);};
         Style(play,"ИГРАТЬ",756,566,324,62);play.Font=LauncherTheme.Heading(27*ui);play.TabIndex=3;play.Enabled=false;play.Click+=delegate{Launch(false);};
         Style(guest,"Играть гостем",756,640,324,42);guest.TabIndex=4;guest.Enabled=false;guest.Click+=delegate{Launch(true);};
         AcceptButton=play;
@@ -105,6 +107,17 @@ sealed class LauncherForm:Form {
                 if(previewState=="loading"){busy=true;phase="ОБНОВЛЯЕМ ИГРУ";status.Text="Загружаем модели и текстуры · 248 МБ из 620 МБ";progress.Value=400;percent.Text="40%";play.Enabled=guest.Enabled=check.Enabled=false;cancel.Visible=cancel.Enabled=true;}
                 if(previewState=="error"){phase="ЗАГРУЗКА ПРИОСТАНОВЛЕНА";status.Text="Не удалось подключиться к серверу обновлений. Проверьте соединение и нажмите «Проверить файлы».";progress.Value=370;percent.Text="37%";play.Enabled=guest.Enabled=false;accountError=true;account.Text="Неверный логин или пароль.\nПроверьте данные и попробуйте снова.";}
                 if(previewState=="account"){token="preview-only";nickname="Повелитель Очень Длинного Имени";name.Text="CastleCommander";account.Text="Вход сохранён на этом компьютере.\nМожно отправляться в сетевую игру.";}
+                if(previewState=="changes"){
+                    var fixture=new Release{version="0.48.11",windows=new WindowsRelease(),
+                        changes_ru=new object[]{"Меню и лобби в стиле карты кампании.","Поправлены профиль и выбор расы.","Осада замка на экране загрузки."}};
+                    using(var window=CreateNotesWindow(fixture)){
+                        window.Show(this);window.Update();
+                        using(var bitmap=new Bitmap(window.Width,window.Height)){
+                            window.DrawToBitmap(bitmap,new Rectangle(0,0,window.Width,window.Height));bitmap.Save(preview);
+                        }
+                    }
+                    Close();return;
+                }
                 RefreshAccount();Invalidate();Update();
                 using(var bitmap=new Bitmap(Width,Height)){DrawToBitmap(bitmap,new Rectangle(0,0,Width,Height));bitmap.Save(preview);}
                 Close();
@@ -171,14 +184,54 @@ sealed class LauncherForm:Form {
         if(IsDisposed||Disposing||!IsHandleCreated)return;
         try{BeginInvoke((Action)delegate{if(IsDisposed)return;status.Text=text;tips.SetToolTip(status,text);progress.Value=Math.Max(0,Math.Min(1000,(int)(fraction*1000)));percent.Text=(progress.Value/10)+"%";});}catch(InvalidOperationException){}
     }
+    Form CreateNotesWindow(Release release){
+        var dialog=new Form{Text="Что изменилось",ClientSize=new Size(U(574),U(306)),BackColor=Color.FromArgb(20,31,24),
+            ForeColor=LauncherTheme.Text,StartPosition=FormStartPosition.CenterParent,FormBorderStyle=FormBorderStyle.None,
+            MaximizeBox=false,MinimizeBox=false,ShowInTaskbar=false};
+        dialog.Paint+=delegate(object sender,PaintEventArgs e){
+            using(var gold=new Pen(Color.FromArgb(150,199,165,98))){
+                e.Graphics.DrawRectangle(gold,0,0,dialog.ClientSize.Width-1,dialog.ClientSize.Height-1);
+                e.Graphics.DrawRectangle(gold,U(5),U(5),dialog.ClientSize.Width-U(10)-1,dialog.ClientSize.Height-U(10)-1);
+                e.Graphics.DrawLine(gold,U(26),U(79),U(548),U(79));
+            }
+        };
+        dialog.Controls.Add(new Label{Bounds=R(26,22,370,44),Text="Что изменилось",
+            Font=LauncherTheme.Heading(30*ui),ForeColor=LauncherTheme.Text});
+        dialog.Controls.Add(new Label{Bounds=R(418,26,130,33),Text=release==null?"":release.WindowsVersion(),
+            TextAlign=ContentAlignment.MiddleCenter,BackColor=Color.FromArgb(47,42,25),
+            Font=Body(16,FontStyle.Bold),ForeColor=LauncherTheme.Gold});
+        var notes=release==null?new string[0]:release.Notes();
+        var list=new Panel{Bounds=R(26,92,522,142),AutoScroll=true,BackColor=Color.FromArgb(15,23,18)};
+        int y=U(5),width=U(480);
+        var rowFont=Body(16);
+        string[] lines=notes.Length==0?new[]{"Список изменений для этой версии пока не опубликован."}:
+            notes.Select(line=>"• "+line).ToArray();
+        foreach(string line in lines){
+            var measured=TextRenderer.MeasureText(line,rowFont,new Size(width,int.MaxValue),TextFormatFlags.WordBreak|TextFormatFlags.NoPrefix);
+            int height=measured.Height+U(12);
+            list.Controls.Add(new Label{Bounds=new Rectangle(U(12),y,width,height),Text=line,UseMnemonic=false,
+                Font=rowFont,ForeColor=LauncherTheme.Text});
+            y+=height+U(5);
+        }
+        dialog.Controls.Add(list);
+        dialog.Disposed+=delegate{rowFont.Dispose();};
+        var closeNotes=new ForgeButton{Bounds=R(384,249,164,40),Font=Body(15),Text="Закрыть",DialogResult=DialogResult.OK};
+        dialog.Controls.Add(closeNotes);dialog.AcceptButton=dialog.CancelButton=closeNotes;
+        return dialog;
+    }
     async Task UpdateGame(){
         if(busy)return;busy=true;phase="ОБНОВЛЯЕМ ИГРУ";Invalidate();check.Enabled=play.Enabled=guest.Enabled=false;cancel.Enabled=true;cancel.Visible=true;progress.Maximum=1000;stopping=new CancellationTokenSource();ready=null;
         try{
             bool failed=false;
-            try{ready=await Task.Run(delegate{var release=core.Fetch();core.Apply(release,ShowProgress,stopping.Token);return release;});status.Text="Версия "+ready.WindowsVersion()+" установлена. Всё готово к новой битве.";phase="ИГРА ГОТОВА";progress.Value=1000;percent.Text="100%";play.Enabled=true;}
+            try{
+                var release=await Task.Run(delegate{return core.Fetch();});
+                checkedRelease=release;changes.Enabled=true;
+                await Task.Run(delegate{core.Apply(release,ShowProgress,stopping.Token);});
+                ready=release;status.Text="Версия "+ready.WindowsVersion()+" установлена. Всё готово к новой битве.";phase="ИГРА ГОТОВА";progress.Value=1000;percent.Text="100%";play.Enabled=true;
+            }
             catch(Exception e){failed=true;phase="ЗАГРУЗКА ПРИОСТАНОВЛЕНА";status.Text=e is OperationCanceledException?"Загрузка отложена. Проверка продолжится при следующем запуске.":"Не удалось обновить игру: "+e.GetBaseException().Message;}
             if(failed)try{var installed=await Task.Run(delegate{return core.Installed();});if(installed!=null){await Task.Run(delegate{core.Apply(installed,delegate(string t,float p){},CancellationToken.None);});ready=installed;play.Enabled=true;phase="ДОСТУПНА СОХРАНЁННАЯ ВЕРСИЯ";status.Text+=" Сохранённая версия доступна.";}}catch(Exception){}
-        }finally{busy=false;check.Enabled=true;guest.Visible=true;guest.Enabled=play.Enabled;cancel.Enabled=false;cancel.Visible=false;stopping.Dispose();stopping=null;tips.SetToolTip(status,status.Text);Invalidate();}
+        }finally{busy=false;check.Enabled=true;guest.Visible=true;guest.Enabled=play.Enabled;changes.Enabled=checkedRelease!=null||ready!=null;cancel.Enabled=false;cancel.Visible=false;stopping.Dispose();stopping=null;tips.SetToolTip(status,status.Text);Invalidate();}
     }
     static Dictionary<string,object> Object(object value){return value as Dictionary<string,object>??new Dictionary<string,object>();}
     static string Field(Dictionary<string,object> value,string key){object found;return value.TryGetValue(key,out found)?Convert.ToString(found):"";}

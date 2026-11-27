@@ -41,13 +41,21 @@ public sealed partial class PcGame {
         for(int y=0;y<5;y++)Fill(new Rect(rect.x+y,rect.y+y,10-2*y,1),color);
     }
     void DrawNetworkRacePicker(){
-        Fill(new Rect(0,0,1280,720),new Color(0,0,0,.8f));LobbyPanel(new Rect(185,76,910,572));
-        Text(215,96,620,48,"ВЫБЕРИТЕ РАСУ",heading);
+        EnsureRaceStyles();
+        Fill(new Rect(0,0,1280,720),new Color(0,0,0,.8f));AtlasSurface(new Rect(185,76,910,572),true);
+        Text(215,96,620,48,"Выберите расу",atlasTitle);
         if(LobbyButton("network.race.close",new Rect(900,98,165,42),"Закрыть"))showNetworkRacePicker=false;
         for(int i=0;i<networkRaceNames.Length;i++){
             int col=i%3,row=i/3;var rect=new Rect(215+col*287,166+row*80,267,64);
             bool available=NetworkRaceAvailable(i),previous=GUI.enabled;if(!available)GUI.enabled=false;
-            try{if(LobbyButton("network.race.select."+i,rect,networkRaceLabels[i]+(available?"":"  · нет на сервере"),i==networkRace))ChooseNetworkRace(i);}finally{GUI.enabled=previous;}
+            try{
+                AtlasTile(rect,i==networkRace,available&&rect.Contains(Event.current.mousePosition));
+                var emblem=RaceEmblem(i);
+                if(emblem)GUI.DrawTexture(new Rect(rect.x+9,rect.y+11,42,42),emblem,ScaleMode.ScaleToFit);
+                Text(rect.x+59,rect.y+9,196,46,networkRaceLabels[i]+(available?"":" · недоступна"),
+                    available?raceNameStyle:raceNameLocked);
+                if(Button("network.race.select."+i,rect,"",false,GUIStyle.none)&&available)ChooseNetworkRace(i);
+            }finally{GUI.enabled=previous;}
         }
     }
     bool ValidateNetworkLoadouts(int a,int b,JArray loadouts){

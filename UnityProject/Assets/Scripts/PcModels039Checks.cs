@@ -11,7 +11,7 @@ public sealed partial class PcGame {
         string relay=BattleLab.Arg("--pc-reforged-fixture");
         Check(!HdModels.Preferred&&!HdModels.Active&&!HdModels.Installed,"Old hdTextures setting does not opt in or load Reforged");
         Check(!MenuBuilder(0).GetComponent<PcModel>().reforged,"Default race preview uses classic model");
-        yield return Action("main.settings");yield return Action("settings.models");
+        yield return Action("main.settings");yield return Action("settings.tab.3");yield return Action("settings.models");
         yield return HdModels.Transfer(true,relay);
         Check(!HdModels.Busy&&!HdModels.Installed,"Download refused before selecting Reforged");
         yield return Action("models.reforged");
@@ -20,7 +20,7 @@ public sealed partial class PcGame {
         yield return Shot(folder,"01-model-settings");
         yield return Action("models.back");yield return Action("settings.apply");
         Check(HdModels.Preferred&&!HdModels.Active,"Applying the option without a package stays classic");
-        yield return Action("main.settings");yield return Action("settings.models");
+        yield return Action("main.settings");yield return Action("settings.tab.3");yield return Action("settings.models");
         yield return HdModels.Transfer(true,relay);
         Check(HdModels.Installed&&HdModels.Active&&HdModels.Bytes==HdModels.Total,"Explicit download verifies and activates the model package");
 
@@ -57,7 +57,7 @@ public sealed partial class PcGame {
         options.fogOfWar=false;FocusBuilder();controls.FocusWorld(World(unit.position),39);
         yield return Shot(folder,"02-reforged-battle");
 
-        page=Page.Pause;yield return Action("pause.settings");yield return Action("settings.models");
+        page=Page.Pause;yield return Action("pause.settings");yield return Action("settings.tab.3");yield return Action("settings.models");
         yield return Action("models.classic");yield return Action("models.back");yield return Action("settings.apply");
         RenderMatch();
         Check(!HdModels.Active&&HdModels.Installed&&!huts[hut.id].reforged&&!units[unit.id].reforged&&castleObjects[0].activeSelf,

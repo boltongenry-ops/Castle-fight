@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.48.7";
+    string Version=>MobileContent.Active?Application.version:"0.49.0";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -105,7 +105,7 @@ public sealed partial class PcGame : MonoBehaviour {
         HudThemePreference.For(result).Choice=HudThemePreference.For(value).Choice;
         return result;
     }
-    void OpenSettings(){settingsReturn=page;draft=Copy(options);MapArt.Draft=MapArt.Preferred;MapArt.Panel=false;HdModels.Draft=HdModels.Preferred;HdModels.Panel=false;page=Page.Settings;}
+    void OpenSettings(){settingsReturn=page;campaignSettingsTab=0;draft=Copy(options);MapArt.Draft=MapArt.Preferred;MapArt.Panel=false;HdModels.Draft=HdModels.Preferred;HdModels.Panel=false;page=Page.Settings;}
     void SaveSettings() {
         options=Copy(draft);Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(settingsPath)));
         string temp=settingsPath+".tmp";var saved=JObject.Parse(JsonUtility.ToJson(options,true));saved["softFog"]=options.softFog;saved["modelStyle"]=HdModels.Draft?"reforged":"classic";
@@ -464,27 +464,26 @@ public sealed partial class PcGame : MonoBehaviour {
         primary=new GUIStyle(button){normal={background=Solid(new Color(.74f,.57f,.29f)),textColor=new Color(.08f,.09f,.09f)},hover={background=Solid(new Color(.91f,.72f,.4f)),textColor=Color.black}};
         InitHud();
         // The in-game HUD keeps its Warcraft textures; the PC menus use a separate, restrained skin.
-        var ink=Solid(new Color(.075f,.085f,.088f,.98f));var hoverInk=Solid(new Color(.13f,.145f,.145f));var pressedInk=Solid(new Color(.18f,.18f,.16f));
+        var ink=Solid(new Color(.069f,.104f,.085f,.98f));var hoverInk=Solid(new Color(.15f,.19f,.12f));var pressedInk=Solid(new Color(.18f,.18f,.13f));
         var bronze=Solid(new Color(.30f,.235f,.15f));var bronzeHover=Solid(new Color(.39f,.30f,.18f));
         menuButton=new GUIStyle(GUI.skin.button){font=font,fontSize=17,alignment=TextAnchor.MiddleLeft,clipping=TextClipping.Clip,padding=new RectOffset(16,12,0,0),border=new RectOffset(),normal={background=ink,textColor=new Color(.88f,.87f,.81f)},hover={background=hoverInk,textColor=Color.white},active={background=pressedInk,textColor=Color.white},focused={background=ink,textColor=new Color(.95f,.92f,.82f)}};
         menuPrimary=new GUIStyle(menuButton){normal={background=bronze,textColor=new Color(1f,.92f,.72f)},hover={background=bronzeHover,textColor=Color.white},active={background=pressedInk,textColor=Color.white},focused={background=bronze,textColor=Color.white}};
         menuInput=new GUIStyle(GUI.skin.textField){font=font,fontSize=17,alignment=TextAnchor.MiddleLeft,padding=new RectOffset(14,10,0,0),border=new RectOffset(),normal={background=ink,textColor=new Color(.95f,.93f,.86f)},focused={background=hoverInk,textColor=Color.white},hover={background=hoverInk,textColor=Color.white}};
         menuArrow=new GUIStyle(label){fontSize=19,alignment=TextAnchor.MiddleCenter,normal={textColor=new Color(.78f,.66f,.44f)}};
     }
-    void Box(Rect rect){if(page==Page.Match){StoneFrame(rect);return;}Fill(rect,new Color(.025f,.033f,.038f,.97f));Border(rect,new Color(.33f,.30f,.24f,.9f));Fill(new Rect(rect.x+1,rect.y+1,rect.width-2,2),new Color(.62f,.49f,.30f,.85f));}
+    void Box(Rect rect){if(page==Page.Match){StoneFrame(rect);return;}AtlasSurface(rect);}
     void Text(float x,float y,float w,float h,string value,GUIStyle style=null)=>GUI.Label(new Rect(x,y,w,h),value,style??label);
     void Accent(float x,float y,float w){var before=GUI.color;GUI.color=new Color(.8f,.64f,.36f);GUI.DrawTexture(new Rect(x,y,w,2),Texture2D.whiteTexture);GUI.color=before;}
     bool Button(string id,Rect rect,string text,bool prominent=false,GUIStyle custom=null) {
-        bool menu=custom==null&&page!=Page.Match;
-        GUI.SetNextControlName(id);bool clicked=GUI.Button(rect,text,custom??(menu?(prominent?menuPrimary:menuButton):(prominent?primary:button)));
+        if(custom==null&&page!=Page.Match)return AtlasControl(id,rect,text,prominent);
+        GUI.SetNextControlName(id);bool clicked=GUI.Button(rect,text,custom??(prominent?primary:button));
         if(testing)clicked=false;
         if(pendingTestAction==id&&Event.current.type==EventType.Repaint){pendingTestAction=null;clicked=true;}
-        if(menu){bool hovered=GUI.enabled&&rect.Contains(Event.current.mousePosition);Border(rect,hovered?new Color(.75f,.62f,.40f):prominent?new Color(.60f,.48f,.31f):new Color(.26f,.28f,.27f),1);if(prominent)Fill(new Rect(rect.x,rect.y,3,rect.height),new Color(.76f,.62f,.40f));}
-        else if(custom==null&&GUI.enabled&&rect.Contains(Event.current.mousePosition))Border(rect,new Color(.85f,.68f,.3f),1);
+        if(custom==null&&GUI.enabled&&rect.Contains(Event.current.mousePosition))Border(rect,new Color(.85f,.68f,.3f),1);
         return clicked;
     }
     void OnGUI() {
-        if(polishLoadingPreview){ContentLoadingScreen.Draw(loadingBackground,loadingHammer,warcraftFont,"Все ресурсы · скачивание\n284 / 3012 МБ",.37f,"",true);return;}
+        if(polishLoadingPreview){ContentLoadingScreen.Draw(loadingBackground,loadingSiege,warcraftFont,"Скачиваем модели и оформление · 284 / 765 МБ",.37f,"",true,previewTime:loadingPreviewTime);return;}
         if(MobileContent.Active&&MobileContent.Current.Busy&&!versusActive)return;
         if(terrain==null){DrawLoadingScreen();return;}InitGui();UpdateGuiMetrics();if(introPlaying){DrawIntroScreen();return;}
         if(versusActive&&versusWinter)Fill(new Rect(0,0,Screen.width,Screen.height),Color.black);
@@ -508,9 +507,12 @@ public sealed partial class PcGame : MonoBehaviour {
         bool updateModal=showUpdatePanel;if(updateModal)GUI.enabled=false;
         if(page==Page.Main)DrawMain();else if(page==Page.Setup)DrawSetup();else if(page==Page.Settings)DrawSettings();else if(page==Page.Network)DrawNetwork();else if(page==Page.Profile)DrawAccountProfile();
         else if(page==Page.Guide)DrawGuide();else if(page==Page.Progression)DrawProgression();else if(page==Page.Match){if(HelpOpen)DrawBattleHelp();else{DrawMatch();DrawChallengeHud();}}else if(page==Page.Viewer) {
-            Box(new Rect(16,16,1248,56));if(Button("viewer.back",new Rect(26,24,180,40),"← Главное меню"))MainMenu();
+            Box(new Rect(16,16,1248,64));if(Button("viewer.back",new Rect(29,26,192,44),"← Главное меню"))MainMenu();
             string[] ids={"west","river","east","top"},texts={"Моя база","Река","Восток","Вся карта"};
-            for(int i=0;i<4;i++)if(Button("view."+ids[i],new Rect(220+i*160,24,150,40),texts[i]))controls.Focus(ids[i]);
+            for(int i=0;i<4;i++)if(Button("view."+ids[i],new Rect(242+i*164,26,150,44),texts[i]))controls.Focus(ids[i]);
+            if(Button("viewer.map-settings",new Rect(938,26,309,44),"Оформление карты")){
+                OpenSettings();campaignSettingsTab=3;HdModels.Panel=true;MapArt.Panel=true;
+            }
         } else if(page==Page.Help||page==Page.Teams)DrawInfoPanel();
         else if(page==Page.Pause||page==Page.Leave||page==Page.Result)DrawOverlay();
         if(showStickerPicker&&page==Page.Progression)DrawStickerPicker();
@@ -521,25 +523,7 @@ public sealed partial class PcGame : MonoBehaviour {
         DismissBuildMenuOnEmptyClick();
         GUI.matrix=previous;
     }
-    void DrawMain() {
-        DrawMenuBackground();
-        Fill(new Rect(0,0,470,720),new Color(.012f,.018f,.023f,.93f));Fill(new Rect(469,0,1,720),new Color(.53f,.43f,.29f,.55f));
-        DrawCastleLogo(new Rect(27,10,408,245));
-        var descriptionStyle=new GUIStyle(label){fontSize=17,padding=new RectOffset(0,0,0,0)};
-        const string description="Постройте армию. Удержите рубеж.\nРазрушьте замок противника.";
-        float descriptionHeight=descriptionStyle.CalcHeight(new GUIContent(description),360);
-        Text(48,307-18-descriptionHeight,360,descriptionHeight,description,descriptionStyle);
-        if(Button("main.play",new Rect(48,307,360,49),"Играть с ботом",true))page=Page.Setup;
-        if(Button("main.network",new Rect(48,363,360,49),"Сетевая игра"))OpenNetwork();
-        if(Button("main.challenges",new Rect(48,419,360,49),"Испытания и магазин"))OpenProgression(false);
-        if(Button("main.guide",new Rect(48,475,360,49),"Учебник рас"))OpenGuide();
-        if(Button("main.profile",new Rect(48,531,360,43),"Профиль игрока"))OpenAccountProfile();
-        if(Button("main.settings",new Rect(48,585,174,40),"Настройки"))OpenSettings();
-        if(Button("main.viewer",new Rect(234,585,174,40),"Карта")){page=Page.Viewer;controls.Focus("west");}
-        if(Button("main.intro",new Rect(48,631,174,40),"Смотреть ролик"))StartIntro(null);
-        if(Button("main.quit",new Rect(234,631,174,40),"Выход"))Application.Quit();
-        Text(48,679,360,25,"CASTLE FIGHT  ·  "+(Application.isMobilePlatform?"ANDROID":"WINDOWS")+"  ·  "+Version,small);
-    }
+    void DrawMain()=>DrawCampaignMenu();
     void DrawSetup() {
         DrawRaceSelect();
     }
@@ -548,26 +532,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(showResourceDownloads){DrawResourceDownloads();return;}
         if(HdModels.Panel){DrawModelSettings();return;}
         if(ThemesOpen){DrawThemeSettings();return;}
-        Box(new Rect(250,24,780,672));Text(288,48,680,43,SettingsLayout035.Mobile?"Настройки Android":"Настройки ПК",heading);Accent(288,101,700);
-        GUI.enabled=!confirmDisplay&&!SettingsLayout035.Mobile;
-        Text(290,120,310,31,"Разрешение",label);if(Button("settings.resolution",SettingsLayout035.Control(0),SettingsLayout035.Mobile?"По экрану устройства":sizes[draft.resolution]))draft.resolution=(draft.resolution+1)%sizes.Length;
-        Text(290,164,310,31,"Режим экрана",label);if(Button("settings.fullscreen",SettingsLayout035.Control(1),SettingsLayout035.Mobile?"На весь экран":draft.fullscreen?"Без рамки на весь экран":"В окне"))draft.fullscreen=!draft.fullscreen;GUI.enabled=!confirmDisplay;
-        Text(290,208,310,31,"Качество изображения",label);if(Button("settings.quality",SettingsLayout035.Control(2),new[]{"Низкое","Среднее","Высокое"}[draft.quality]))draft.quality=(draft.quality+1)%3;
-        Text(290,252,310,31,"Ограничение кадров",label);if(Button("settings.fps",SettingsLayout035.Control(3),draft.fps==0?"Без ограничения":draft.fps+" FPS"))draft.fps=draft.fps==30?60:draft.fps==60?90:draft.fps==90?120:draft.fps==120?0:30;
-        Text(290,296,310,31,"Вертикальная синхронизация",label);if(Button("settings.vsync",SettingsLayout035.Control(4),draft.vsync?"Включена":"Выключена"))draft.vsync=!draft.vsync;
-        Text(290,340,310,31,"Общая громкость",label);draft.volume=GUI.HorizontalSlider(new Rect(620,SettingsLayout035.Mobile?341:349,250,SettingsLayout035.Mobile?38:22),draft.volume,0,1);Text(895,340,80,28,(draft.volume*100).ToString("F0")+"%",small);
-        Text(290,384,310,31,"Музыка в меню",label);draft.musicVolume=GUI.HorizontalSlider(new Rect(620,SettingsLayout035.Mobile?385:393,250,SettingsLayout035.Mobile?38:22),draft.musicVolume,0,1);Text(895,384,80,28,(draft.musicVolume*100).ToString("F0")+"%",small);
-        Text(290,428,310,31,"Скорость камеры",label);draft.cameraSpeed=GUI.HorizontalSlider(new Rect(620,SettingsLayout035.Mobile?429:437,250,SettingsLayout035.Mobile?38:22),draft.cameraSpeed,.5f,2);Text(895,428,80,28,draft.cameraSpeed.ToString("F1")+"×",small);
-        Text(290,472,310,31,"Туман войны",label);GUI.enabled=!confirmDisplay&&activeChallenge==null;if(Button("settings.fog",SettingsLayout035.Control(8),activeChallenge!=null?"Включён в испытании":draft.fogOfWar?"Включён":"Выключен"))draft.fogOfWar=!draft.fogOfWar;GUI.enabled=!confirmDisplay;
-        Text(290,516,310,31,"Простое затемнение",label);GUI.enabled=!confirmDisplay;if(Button("settings.softfog",SettingsLayout035.Control(9),draft.softFog?"Включено  [x]":"Выключено  [ ]"))draft.softFog=!draft.softFog;GUI.enabled=!confirmDisplay;
-        if(Button("settings.theme",new Rect(290,565,189,38),"Тема интерфейса"))ThemesOpen=true;
-        if(Button("settings.models",new Rect(491,565,160,38),"Модели и карта"))HdModels.Panel=true;
-        if(MobileContent.Active||SettingsLayout035.PreviewMobile){if(Button("settings.downloads",SettingsLayout035.Downloads,"Ресурсы игры"))showResourceDownloads=true;}
-        if(Button("settings.updates",SettingsLayout035.Updates,"Обновления")){showUpdatePanel=true;StartCoroutine(CheckGameRelease());}
-        if(Button("settings.cancel",SettingsLayout035.Cancel,"Отмена")){if(confirmDisplay)RevertDisplay();page=settingsReturn;}
-        if(Button("settings.apply",SettingsLayout035.Apply,"Применить",true))PreviewSettings();
-        GUI.enabled=true;
-        if(showResourceDownloads)DrawResourceDownloads();
+        DrawCampaignSettings();
         if(confirmDisplay) {
             Box(new Rect(360,230,560,220));Text(390,257,500,69,"Сохранить новый режим экрана?\nОткат через "+Mathf.CeilToInt(screenDeadline-Time.unscaledTime)+" сек.",label);
             if(Button("settings.keep",new Rect(390,362,230,48),"Сохранить",true))SaveSettings();
@@ -585,7 +550,9 @@ public sealed partial class PcGame : MonoBehaviour {
     }
     void DrawOverlay() {
         if(page==Page.Result&&onlineMatch){DrawOnlineResult();return;}
-        GUI.enabled=false;if(match!=null)DrawMatch();GUI.enabled=true;Box(new Rect(0,0,1280,720));Box(new Rect(410,145,460,445));Accent(450,187,50);
+        GUI.enabled=false;if(match!=null)DrawMatch();GUI.enabled=true;
+        Fill(new Rect(0,0,1280,720),new Color(.015f,.022f,.015f,.73f));
+        AtlasSurface(new Rect(410,145,460,445),true);Accent(450,187,50);
         string caption=page==Page.Result?(match.Winner==0?"Победа":match.Winner==1?"Поражение":"Ничья"):page==Page.Leave?"Завершить матч?":"Пауза";
         Text(450,215,380,60,caption,heading);
         if(page==Page.Pause) {

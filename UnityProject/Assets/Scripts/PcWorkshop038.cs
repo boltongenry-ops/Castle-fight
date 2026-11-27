@@ -27,7 +27,7 @@ public sealed partial class PcGame {
         public PcModel mannequin,battleBuilder;
         public WorkshopFx038 fittingEffects,battleEffects;
         public int mannequinRace=-1;
-        public GUIStyle title,details,description,caption,center,tab;
+        public GUIStyle title,details,description,caption,center;
     }
 
     static readonly ConditionalWeakTable<PcGame,WorkshopState> workshops038=new ConditionalWeakTable<PcGame,WorkshopState>();
@@ -101,24 +101,20 @@ public sealed partial class PcGame {
                 fontSize=16,alignment=TextAnchor.MiddleLeft,padding=new RectOffset(0,0,0,0),normal={textColor=WorkshopText}
             };
             state.center=new GUIStyle(state.caption){alignment=TextAnchor.MiddleCenter};
-            state.tab=new GUIStyle(menuButton){alignment=TextAnchor.MiddleCenter,padding=new RectOffset(4,4,0,0)};
         }
-        Fill(new Rect(0,0,1280,88),new Color(.025f,.039f,.042f,.97f));
-        Fill(new Rect(0,87,1280,1),new Color(.66f,.49f,.27f,.7f));
+        AtlasSurface(new Rect(19,14,1233,74));
         Text(38,15,590,52,"Мастерская",state.title);
         WorkshopCoin(new Rect(681,26,38,38));
         Text(731,24,189,42,progression.Coins+" жетонов",state.details);
-        if(Button("progress.challenges",new Rect(925,21,148,48),"Испытания",false,menuButton))OpenProgression(false);
-        if(Button("progress.back",new Rect(1084,21,157,48),"В меню",false,menuButton))MainMenu();
+        if(Button("progress.challenges",new Rect(925,21,148,48),"Испытания"))OpenProgression(false);
+        if(Button("progress.back",new Rect(1084,21,157,48),"В меню"))MainMenu();
 
-        Fill(new Rect(23,96,730,605),new Color(.027f,.044f,.048f,.95f));
-        Border(new Rect(23,96,730,605),new Color(.27f,.34f,.33f,.93f));
+        AtlasSurface(new Rect(23,96,730,605));
         for(int i=0;i<WorkshopCategories.Length;i++){
             var tab=new Rect(35+i*111,108,104,47);
-            if(Button("workshop.tab."+i,tab,WorkshopCategories[i],state.category==i,state.tab))WorkshopCategory(i);
-            if(state.category==i)Fill(new Rect(tab.x+7,tab.yMax-3,tab.width-14,2),WorkshopGold);
+            if(Button("workshop.tab."+i,tab,WorkshopCategories[i],state.category==i))WorkshopCategory(i);
         }
-        if(Button("workshop.collection",new Rect(590,108,151,47),state.collection?"Все товары":"Мои покупки",state.collection,state.tab)){
+        if(Button("workshop.collection",new Rect(590,108,151,47),state.collection?"Все товары":"Мои покупки",state.collection)){
             state.collection=!state.collection;state.scrollY=0;state.item=null;purchaseConfirm=null;
         }
 
@@ -147,7 +143,7 @@ public sealed partial class PcGame {
         string id=(string)item["id"],kind=(string)item["kind"];
         bool selected=state.item==id,owned=progression.Owned(id),equipped=owned&&progression.Equipped(kind)==id;
         var tint=CosmeticColor(item);
-        Fill(card,selected?new Color(.16f,.146f,.107f):new Color(.071f,.102f,.109f,.95f));
+        AtlasTile(card,selected,false);
         Fill(new Rect(card.x+1,card.y+1,card.width-2,73),new Color(tint.r*.16f,tint.g*.16f,tint.b*.19f,.93f));
         Border(card,selected?WorkshopGold:new Color(.25f,.31f,.30f),selected?2:1);
         DrawWorkshopIcon(new Rect(card.x+77,card.y+7,64,64),item);
@@ -168,19 +164,18 @@ public sealed partial class PcGame {
             Fill(new Rect(915,169,190,190),new Color(.042f,.066f,.07f,.9f));
             Border(new Rect(915,169,190,190),goldEdge,2);
             DrawWorkshopIcon(new Rect(931,185,158,158),row);
-            if((string)row["kind"]=="stickers"&&Button("progress.preview.meme",new Rect(900,400,220,46),"Смотреть набор",false,menuButton))
+            if((string)row["kind"]=="stickers"&&Button("progress.preview.meme",new Rect(900,400,220,46),"Смотреть набор"))
                 OpenWorkshopStickers();
         }
         if(fitting){
             Fill(new Rect(793,420,432,42),new Color(.033f,.044f,.043f,.9f));
             var race=state.previewRace;
-            if(Button("workshop.race.prev",new Rect(794,420,51,42),"‹",false,menuButton))state.previewRace=(race+15)%16;
-            if(Button("workshop.race.next",new Rect(1174,420,51,42),"›",false,menuButton))state.previewRace=(race+1)%16;
+            if(Button("workshop.race.prev",new Rect(794,420,51,42),"‹"))state.previewRace=(race+15)%16;
+            if(Button("workshop.race.next",new Rect(1174,420,51,42),"›"))state.previewRace=(race+1)%16;
             Text(852,427,313,27,RaceTitle(race),state.center);
         }
         var detail=new Rect(768,476,483,225);
-        Fill(detail,new Color(.039f,.056f,.057f,.98f));
-        Border(detail,goldEdge,1);
+        AtlasSurface(detail);
         if(row==null){Text(790,503,425,49,"Выбери товар в этой категории",state.details);return;}
         string id=(string)row["id"],kind=(string)row["kind"];
         bool owned=progression.Owned(id),equipped=owned&&progression.Equipped(kind)==id;
@@ -193,7 +188,7 @@ public sealed partial class PcGame {
         string action=owned?kind=="stickers"?"Открыть набор":equipped?"Снять":"Надеть":
             purchaseConfirm==id?"Подтвердить":"Купить";
         bool enabled=GUI.enabled;GUI.enabled=enabled&&(owned||progression.Coins>=(int)row["cost"]);
-        if(Button("progress.item."+id,new Rect(1026,637,204,47),action,true,menuPrimary))WorkshopPurchase(row,equipped);
+        if(Button("progress.item."+id,new Rect(1026,637,204,47),action,true))WorkshopPurchase(row,equipped);
         GUI.enabled=enabled;
     }
 

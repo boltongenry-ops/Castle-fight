@@ -199,7 +199,7 @@ public sealed partial class PcGame {
             if(position>=mythicLeaderboard.Count)break;
             var row=mythicLeaderboard[position];
             float y=252+i*44;
-            Fill(new Rect(688,y,528,44),new Color(.06f,.095f,.11f,i%2==0?.72f:.38f));
+            Fill(new Rect(688,y,528,44),new Color(.14f,.17f,.11f,i%2==0?.76f:.38f));
             int place=(int?)row["place"]??position+1;
             Text(695,y+3,43,31,place.ToString(),small);
             if(place==1){

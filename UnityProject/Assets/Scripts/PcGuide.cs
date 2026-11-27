@@ -98,9 +98,9 @@ public sealed partial class PcGame {
         return text.ToString();
     }
     void DrawGuide(){
-        EnsureRaceStyles();Fill(new Rect(16,18,1248,76),new Color(.025f,.04f,.045f,.94f));
+        EnsureRaceStyles();AtlasSurface(new Rect(16,18,1248,76));
         if(Button("guide.back",new Rect(30,34,202,43),guideRace<0?"← В меню":guideEntry<0?"← К строителям":"← Назад"))GuideBack();
-        Text(260,32,760,44,guideRace<0?"Учебник Castle Fight":GuideRaceName(guideRace),heading);
+        Text(260,28,760,51,guideRace<0?"Учебник Castle Fight":GuideRaceName(guideRace),atlasTitle);
         if(Button("guide.menu",new Rect(1088,34,162,43),"Главное меню"))MainMenu();
         if(guideRace<0){
             Text(280,108,780,32,"Выберите строителя — откроется книга его расы",label);
@@ -114,7 +114,7 @@ public sealed partial class PcGame {
         DrawGuideEntry();
     }
     void DrawGuideGrid(){
-        Fill(new Rect(24,112,1232,584),new Color(.025f,.04f,.045f,.94f));Text(42,124,400,36,"Постройки и башни",raceTitleStyle);
+        AtlasSurface(new Rect(24,112,1232,584));Text(42,124,400,36,"Постройки и башни",raceTitleStyle);
         Text(680,128,100,30,"Поиск",small);guideQuery=GUI.TextField(new Rect(780,125,452,34),guideQuery,new GUIStyle(GUI.skin.textField){font=label.font,fontSize=18});
         var entries=GuideEntries().ToArray();guideGridScroll=GUI.BeginScrollView(new Rect(40,176,1200,504),guideGridScroll,new Rect(0,0,1176,Mathf.Ceil(entries.Length/6f)*153));
         for(int i=0;i<entries.Length;i++){int kind=entries[i];var line=guideAuthority.Lines[kind];float x=i%6*196,y=i/6*153;var card=new Rect(x,y,184,141);
@@ -124,7 +124,7 @@ public sealed partial class PcGame {
         GUI.EndScrollView();if(entries.Length==0)Text(64,230,1000,40,"По этому запросу ничего не найдено.",label);
     }
     void DrawGuideEntry(){
-        var line=guideAuthority.Lines[guideEntry];Fill(new Rect(24,112,604,584),new Color(.025f,.04f,.045f,.96f));Text(44,128,564,42,line.name,raceTitleStyle);Text(44,173,564,27,guideUnit?"БОЕЦ  /  "+guideAuthority.Lines[GuideActorKind].unitName:"ПОСТРОЙКА",small);
+        var line=guideAuthority.Lines[guideEntry];AtlasSurface(new Rect(24,112,604,584));Text(44,128,564,42,line.name,raceTitleStyle);Text(44,173,564,27,guideUnit?"БОЕЦ  /  "+guideAuthority.Lines[GuideActorKind].unitName:"ПОСТРОЙКА",small);
         var descStyle=new GUIStyle(label){wordWrap=true,fontSize=18};float height=descStyle.CalcHeight(new GUIContent(guideDescription),536)+24;
         guideTextScroll=GUI.BeginScrollView(new Rect(44,212,564,390),guideTextScroll,new Rect(0,0,536,height));GUI.Label(new Rect(0,0,536,height),guideDescription,descStyle);GUI.EndScrollView();
         int n=0;foreach(string raw in line.upgrades){int kind=guideAuthority.Kind(raw);if(kind<0)continue;if(Button("guide.upgrade."+raw,new Rect(44+n*188,626,178,46),"Улучшить → "+(n+1),true))GuideSelectEntry(kind,true);n++;}
@@ -139,4 +139,3 @@ public sealed partial class PcGame {
     void DisposeGuide(){CloseGuide();}
 }
 }
-

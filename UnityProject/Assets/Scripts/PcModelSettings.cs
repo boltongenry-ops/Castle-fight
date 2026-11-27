@@ -15,17 +15,18 @@ public sealed partial class PcGame {
     void DrawModelSettings(){
         if(MapArt.Panel){DrawMapArtSettings();return;}
         var models=HdModels;
-        Box(new Rect(240,66,800,588));
-        Text(286,93,710,50,"Модели",heading);Accent(286,153,708);
+        AtlasSurface(new Rect(240,66,800,588),true);
+        Text(286,93,455,50,"Модели бойцов",atlasTitle);Accent(286,153,708);
         bool interactive=GUI.enabled;GUI.enabled=interactive&&!models.Busy;
         if(Button("models.map",new Rect(755,96,239,43),"Оформление карты"))MapArt.Panel=true;
         if(Button("models.classic",new Rect(286,179,330,52),"Классические",!models.Draft))models.Draft=false;
         if(Button("models.reforged",new Rect(644,179,350,52),"Reforged",models.Draft))models.Draft=true;
         GUI.enabled=interactive;
 
-        Text(286,259,708,56,models.Draft?"HD-модели, иконки, эффекты и снаряды.":"Классический стиль доступен для всех рас.",label);
+        AtlasScene(3,new Rect(286,247,218,139));
+        Text(520,251,474,59,models.Draft?"HD-модели, иконки, эффекты и снаряды.":"Классический стиль доступен для всех рас.",label);
         string detail=models.Draft?"12 моделей кентавров и пандаренов и часть построек пока в классическом стиле.":"Можно включить Reforged и скачать модели здесь в любое время.";
-        Text(286,316,708,64,detail,small);
+        Text(520,312,474,70,detail,small);
         if(models.Draft||models.HasCache||models.ConfirmDelete){
             if(models.Total>0){
                 var bar=new Rect(287,407,707,14);

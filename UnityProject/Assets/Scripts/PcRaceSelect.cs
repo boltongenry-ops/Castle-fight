@@ -32,6 +32,7 @@ public sealed partial class PcGame {
     // Unity race index (0 humans, 1 orcs, 2 naga, 3 nature) where the race is staged.
     static readonly int[] AllRaceUnity={4,11,8,0,1,2,5,10,7,6,3,9,12,13,14,15,PepeContent.Race,BlackHand.Race};
     int matchMode;bool aspectsOn;Vector2 raceLoreScroll,raceRulesScroll;
+    bool choosingBotRace;
     readonly JArray[] raceAspects=new JArray[MobileContent.RaceResources.Length];
     readonly Dictionary<string,Texture2D> raceEmblemCache=new Dictionary<string,Texture2D>();
     readonly Dictionary<string,Texture2D> aspectIconCache=new Dictionary<string,Texture2D>();
@@ -116,45 +117,54 @@ public sealed partial class PcGame {
 
     void DrawRaceSelect() {
         EnsureRaceStyles();
+        EnsureCampaignStyles();
         DrawMenuBackground();
-        GUI.Label(new Rect(36,42,620,42),"Выберите свою расу",raceHeadingStyle);
-        if(Button("setup.back",new Rect(1080,50,164,40),"← Назад"))MainMenu();
-        Text(36,92,620,22,AllRaceNames.Length+" РАС  /  ВАША АРМИЯ",small);
-        const float gridX=36,gridTop=124,gridWidth=764,gap=7,cardHeight=76;
+        AtlasSurface(new Rect(20,20,1240,670));
+        GUI.Label(new Rect(38,33,620,51),"Выбор расы",atlasTitle);
+        if(Button("setup.back",new Rect(1075,36,160,43),"← Назад")){MainMenu();return;}
+        if(matchMode!=0)choosingBotRace=false;
+        if(Button("setup.army",new Rect(38,94,173,43),"Ваша армия",!choosingBotRace))choosingBotRace=false;
+        bool enabled=GUI.enabled;GUI.enabled=enabled&&matchMode==0;
+        if(Button("setup.enemy",new Rect(220,94,173,43),"Противник",choosingBotRace))choosingBotRace=true;
+        GUI.enabled=enabled;
+        if(choosingBotRace&&Button("setup.enemy.same",new Rect(402,94,203,43),"Та же раса",botRaceChoice<0))botRaceChoice=-1;
+        const float gridX=38,gridTop=150,gridWidth=816,gap=8,cardHeight=75;
         float cardWidth=(gridWidth-gap*2)/3f;
         var pointer=Event.current.mousePosition;
         for(int i=0;i<AllRaceIds.Length;i++) {
             int column=i%3,row=i/3;var rect=new Rect(gridX+column*(cardWidth+gap),gridTop+row*(cardHeight+gap),cardWidth,cardHeight);
             int unity=AllRaceUnity[i];bool available=RaceStaged(unity);
-            bool selected=available&&unity==raceChoice;
+            bool selected=available&&unity==(choosingBotRace?botRaceChoice:raceChoice);
             bool hovered=rect.Contains(pointer)&&GUI.enabled;
-            Fill(rect,selected?new Color(.145f,.188f,.169f,.98f):new Color(.051f,.106f,.137f,.96f));
-            Border(rect,selected?new Color(.80f,.66f,.38f):hovered?new Color(.55f,.50f,.36f):new Color(.16f,.24f,.27f),selected?2:1);
-            if(selected)Fill(new Rect(rect.x,rect.y,3,rect.height),new Color(.80f,.66f,.38f));
+            AtlasTile(rect,selected,hovered&&available);
             var emblem=RaceEmblemAt(i);
             var artRect=new Rect(rect.x+12,rect.y+12,48,48);
             if(emblem) {GUI.color=available?Color.white:new Color(1,1,1,.38f);GUI.DrawTexture(artRect,emblem,ScaleMode.ScaleToFit);GUI.color=Color.white;}
             else {Fill(artRect,new Color(.10f,.13f,.14f,.9f));Border(artRect,new Color(.24f,.27f,.25f));}
             GUI.Label(new Rect(rect.x+72,rect.y+8,rect.width-84,40),AllRaceNames[i],available?raceNameStyle:raceNameLocked);
             GUI.Label(new Rect(rect.x+72,rect.y+50,rect.width-84,18),available?AllRaceTags[i]:"Перенос впереди",raceTagStyle);
-            string id=available?(unity==0?"setup.human":unity==1?"setup.orc":unity==2?"setup.naga":unity==3?"setup.nature":unity==4?"setup.chaos":unity==5?"setup.northern":unity==6?"setup.mech":unity==7?"setup.undead":unity==8?"setup.corrupted":unity==9?"setup.elemental":unity==10?"setup.night":unity==11?"setup.elven":unity==12?"setup.ultimate":unity==13?"setup.nerubian":unity==14?"setup.pandaren":unity==15?"setup.centaur":"setup.pepe"):"setup.race-"+AllRaceIds[i];
+            string id=choosingBotRace?"setup.enemy."+unity:available?"setup."+SetupRaceKeys[unity]:"setup.race-"+AllRaceIds[i];
             if(Button(id,rect,"",false,raceCardStyle)) {
-                if(available){raceChoice=unity;raceLoreScroll=raceRulesScroll=Vector2.zero;if(matchMode==2)botRaceChoice=-1;menuPortraitRaw=null;}
+                if(available&&choosingBotRace){botRaceChoice=unity;raceLoreScroll=Vector2.zero;}
+                else if(available){raceChoice=unity;raceLoreScroll=raceRulesScroll=Vector2.zero;if(matchMode==2)botRaceChoice=-1;menuPortraitRaw=null;}
                 else Notice("Эта раса ещё не перенесена в Unity");
             }
         }
         DrawRacePanel();
     }
+    static readonly string[] SetupRaceKeys={"human","orc","naga","nature","chaos","northern","mech","undead",
+        "corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
+
     void DrawRacePanel() {
         var panelRect=new Rect(876,106,368,562);
-        Fill(panelRect,new Color(.035f,.052f,.065f,.97f));Border(panelRect,new Color(.21f,.27f,.25f));
-        Fill(new Rect(panelRect.x+1,panelRect.y+1,panelRect.width-2,2),new Color(.55f,.45f,.30f,.85f));
-        var frame=new Rect(892,122,76,76);Fill(frame,new Color(.03f,.045f,.055f));Border(frame,new Color(.30f,.34f,.30f));
-        if(portraitTexture&&page==Page.Setup)GUI.DrawTexture(frame,portraitTexture,ScaleMode.ScaleToFit);
-        else {var emblem=RaceEmblem(raceChoice);if(emblem)GUI.DrawTexture(frame,emblem,ScaleMode.ScaleToFit);}
-        GUI.Label(new Rect(982,122,246,76),RaceTitle(raceChoice),raceTitleStyle);
-        int godot=RaceOfUnity(raceChoice);
-        DrawRaceDescription(new Rect(892,204,336,58),godot>=0?AllRaceLore[godot]:"",small,ref raceLoreScroll);
+        AtlasSurface(panelRect);
+        int previewRace=choosingBotRace&&botRaceChoice>=0?botRaceChoice:raceChoice;
+        var frame=new Rect(892,122,108,108);AtlasTile(frame,false,false);
+        if(previewRace==raceChoice&&portraitTexture&&page==Page.Setup)GUI.DrawTexture(frame,portraitTexture,ScaleMode.ScaleToFit);
+        else {var emblem=RaceEmblem(previewRace);if(emblem)GUI.DrawTexture(frame,emblem,ScaleMode.ScaleToFit);}
+        GUI.Label(new Rect(1010,124,218,51),RaceTitle(previewRace),raceTitleStyle);
+        int godot=RaceOfUnity(previewRace);
+        DrawRaceDescription(new Rect(1010,176,218,87),godot>=0?AllRaceLore[godot]:"",small,ref raceLoreScroll);
         Accent(892,268,336);
         GUI.Label(new Rect(892,276,300,20),"ПАРАМЕТРЫ БИТВЫ",raceEyebrowStyle);
         string[] modes={"Выбор расы","Случайные расы","Зеркальная битва"};
@@ -182,7 +192,7 @@ public sealed partial class PcGame {
     bool OptionRow(string id,float y,string caption,string value,bool enabled=true) {
         GUI.Label(new Rect(892,y+7,104,24),caption,raceOptionStyle);
         bool was=GUI.enabled;GUI.enabled=was&&enabled;
-        bool clicked=Button(id,new Rect(1000,y,228,34),value);
+        bool clicked=AtlasControl(id,new Rect(1000,y,228,34),value,dropdown:true);
         GUI.enabled=was;return clicked;
     }
     string OpponentLabel() {

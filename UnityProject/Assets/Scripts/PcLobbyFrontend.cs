@@ -18,7 +18,7 @@ public sealed partial class PcGame {
     string[] networkServerRaces;
     bool NetworkRaceAvailable(int index)=>index>=0&&index<networkRaceNames.Length&&(networkServerRaces??networkRaceNames.Take(15).ToArray()).Contains(networkRaceNames[index]);
     int NetworkRaceCount=>(networkServerRaces??networkRaceNames.Take(15).ToArray()).Length;
-    string profileName="",profilePassword="";JObject networkProfile;
+    string profileName="",profilePassword="",rememberedAccountName="";JObject networkProfile;
     readonly string[] networkRaceNames={"Human Alliance","Orcish Horde","Naga Faction","Nature Force","Chaos Legions","Northern Realms","Mech Coalition","Undead Forces","Corrupted Conglomerate","Elementals' Universe","Night Elfs","Elven Union","Ultimate Builder","Nerubian Swarm","Pandaren Order","Centaur Khanates","Pepe Brotherhood","Black Hand"};
     readonly string[] networkRaceLabels={"Люди","Орки","Наги","Природа","Хаос","Северяне","Механизмы","Нежить","Осквернённые","Элементали","Ночные эльфы","Союз эльфов","Высший строитель","Нерубы","Пандарены","Кентавры","Пепе","Чёрная Рука"};
     void PollLobby() {
@@ -46,15 +46,20 @@ public sealed partial class PcGame {
                 case "profile":
                     if((string)packet["request_type"]=="profile_social"){ReceiveSocial(packet);break;}
                     socialSupported=socialSupported||(int?)packet["social_supported"]==1;profilePending=false;profilePassword="";directoryStatus=(string)packet["message"]??((bool?)packet["ok"]==true?"Профиль обновлён":"Ошибка профиля");
-                    if((string)packet["request_type"]=="profile_auth"){if((bool?)packet["ok"]==true){bool supported=socialSupported;ResetSocial();socialSupported=supported;networkSessionToken=(string)packet["token"]??"";networkSessionEndpoint=connectedEndpoint;if(!testing)NetworkAccountStore.Save(networkSessionEndpoint,networkSessionToken);}else if((string)packet["action"]=="token"){networkSessionToken="";if(!testing)NetworkAccountStore.Clear();}}
-                    if((string)packet["request_type"]=="profile_logout"&&(bool?)packet["ok"]==true){networkSessionToken="";if(!testing)NetworkAccountStore.Clear();bool supported=socialSupported;ResetSocial();socialSupported=supported;}
-                    if((bool?)packet["ok"]==true){
-                        if(packet["profile"] is JObject updated)networkProfile=updated;
-                        if(HasNetworkProfile){
-                            networkName=(string)networkProfile["name"]??networkName;
-                            networkGuest=false;
-                        }
-                        if((string)packet["request_type"]=="profile_auth"||(string)packet["request_type"]=="profile_logout")ProfileAuthChanged();
+                    string request=(string)packet["request_type"];
+                    bool succeeded=(bool?)packet["ok"]==true;
+                    bool signedIn=request=="profile_auth"&&succeeded;
+                    bool signedOut=request=="profile_logout"&&succeeded;
+                    if(signedIn||signedOut){bool supported=socialSupported;ResetSocial();socialSupported=supported;}
+                    if(signedIn){
+                        networkSessionToken=(string)packet["token"]??"";
+                        networkSessionEndpoint=connectedEndpoint;
+                        rememberedAccountName="";
+                    }
+                    if(signedOut||request=="profile_auth"&&!succeeded&&(string)packet["action"]=="token")ClearAccountIdentity();
+                    if(succeeded){
+                        if(!signedOut&&packet["profile"] is JObject updated)ApplyAccountProfile(updated);
+                        if(signedIn||signedOut)ProfileAuthChanged();
                         if(networkEntryAccount&&HasNetworkProfile){
                             networkEntryAccount=false;showNetworkProfile=false;networkGuest=false;
                         }
@@ -74,6 +79,21 @@ public sealed partial class PcGame {
             }
         }
     }
+    void ApplyAccountProfile(JObject profile){
+        networkProfile=profile;
+        if(!HasNetworkProfile)return;
+        rememberedAccountName=(string)profile["name"]??"";
+        if(rememberedAccountName.Length>0)networkName=rememberedAccountName;
+        networkGuest=false;
+        if(!testing)NetworkAccountStore.Save(networkSessionEndpoint,networkSessionToken,rememberedAccountName);
+    }
+
+    void ClearAccountIdentity(){
+        networkProfile=null;
+        networkSessionToken=rememberedAccountName="";
+        if(!testing)NetworkAccountStore.Clear();
+    }
+
     async void SendNetwork(JObject packet){if(((string)packet["type"]??"").StartsWith("profile_")&&(string)packet["type"]!="profile_social")profileDeadline=Time.realtimeSinceStartup+18;try{if(network!=null)await network.SendAsync(packet);}catch(Exception e){directoryStatus="Ошибка отправки: "+e.GetBaseException().Message;}}
     void StopDirectory() {
         CloseVersus();showNetworkRacePicker=false;networkLoadError="";failedNetworkLoad=null;networkSight.Clear();networkUnitCards.Clear();networkBuildingCards.Clear();RestoreOfflineNetworkSetup();
@@ -130,40 +150,26 @@ public sealed partial class PcGame {
     void ChangeRace(){showNetworkRacePicker=true;}
     void ChooseNetworkRace(int index){if(!NetworkRaceAvailable(index))return;networkRace=index;showNetworkRacePicker=false;if(networkSlot>=0)SendNetwork(new JObject{["type"]="race",["race"]=networkRaceNames[index]});}
     void Configure(string key,JToken value){if(networkSlot!=0||!(networkRoom?["config"] is JObject old))return;var cfg=(JObject)old.DeepClone();cfg[key]=value;SendNetwork(new JObject { ["type"]="configure",["config"]=cfg });}
-    GUIStyle lobbyButtonStyle,lobbyPrimaryStyle;Font lobbyFont;
-    // The layout and palette follow the Godot lobby: a common header, two player
-    // cards and room settings on the left, chat on the right, actions below.
-    void LobbyPanel(Rect r) {
-        Fill(new Rect(r.x+3,r.y+4,r.width,r.height),new Color(0,0,0,.28f));
-        Fill(r,new Color(.025f,.05f,.065f,.96f));Border(r,new Color(.32f,.38f,.33f,.95f));
-        Fill(new Rect(r.x+1,r.y+1,r.width-2,2),new Color(.43f,.43f,.32f,.7f));
-    }
+    Font lobbyFont;
+    void LobbyPanel(Rect r)=>AtlasSurface(r);
     bool LobbyButton(string id,Rect r,string caption,bool prominent=false) {
-        bool enabled=GUI.enabled&&(!showNetworkRacePicker||id.StartsWith("network.race.")),hovered=enabled&&r.Contains(Event.current.mousePosition);
-        bool dropdown=caption.Contains("▾");caption=caption.Replace("▾","").TrimEnd();
-        Color background=!enabled?new Color(.063f,.10f,.125f):hovered?new Color(.13f,.20f,.22f):prominent?new Color(.13f,.20f,.20f):new Color(.078f,.137f,.165f);
-        Color edge=!enabled?new Color(.19f,.24f,.26f):hovered?new Color(.75f,.69f,.51f):prominent?new Color(.64f,.54f,.35f):new Color(.27f,.34f,.35f);
-        Fill(new Rect(r.x+2,r.y+3,r.width,r.height),new Color(0,0,0,.32f));Fill(r,background);Border(r,edge);
-        Fill(new Rect(r.x+7,r.y+2,r.width-14,1),new Color(1,1,1,enabled?.11f:.04f));
-        if(prominent&&enabled)Fill(new Rect(r.x+2,r.y+r.height*.5f-7,2,14),new Color(.85f,.72f,.47f));
-        if(lobbyButtonStyle==null){lobbyButtonStyle=new GUIStyle(menuButton){fontSize=16,alignment=TextAnchor.MiddleCenter,padding=new RectOffset(8,8,0,0)};
-            lobbyButtonStyle.normal.background=null;lobbyButtonStyle.hover.background=null;lobbyButtonStyle.active.background=null;lobbyButtonStyle.focused.background=null;
-            lobbyPrimaryStyle=new GUIStyle(lobbyButtonStyle);}
-        var style=prominent?lobbyPrimaryStyle:lobbyButtonStyle;if(lobbyFont)style.font=lobbyFont;
-        style.normal.textColor=!enabled?new Color(.45f,.5f,.49f):prominent?new Color(1,.88f,.64f):new Color(.91f,.9f,.86f);
-        if(dropdown)DrawLobbyChevron(new Rect(r.xMax-25,r.center.y-4,10,8),enabled);
-        string visible=caption;float available=r.width-(dropdown?48:18);if(style.CalcSize(new GUIContent(visible)).x>available){while(visible.Length>1&&style.CalcSize(new GUIContent(visible+"…")).x>available)visible=visible.Substring(0,visible.Length-1);visible+="…";}bool clicked=Button(id,r,visible,false,style);return clicked&&enabled&&!(Application.isMobilePlatform&&socialTouchMoved);
+        bool wasEnabled=GUI.enabled;
+        GUI.enabled=wasEnabled&&(!showNetworkRacePicker||id.StartsWith("network.race.",StringComparison.Ordinal));
+        bool clicked=AtlasControl(id,r,caption.Replace("▾","").TrimEnd(),prominent,caption.Contains("▾"));
+        GUI.enabled=wasEnabled;
+        return clicked&&!(Application.isMobilePlatform&&socialTouchMoved);
     }
     void DrawNetwork() {
+        EnsureCampaignStyles();
         if(!lobbyFont)lobbyFont=ContentResources.Load<Font>("PcLobby/Manrope");
         var oldLabel=label.font;var oldSmall=small.font;var oldHeading=heading.font;var oldInput=menuInput.font;
         if(lobbyFont){label.font=lobbyFont;small.font=lobbyFont;heading.font=lobbyFont;menuInput.font=lobbyFont;}
         try{DrawNetworkContent();if(showNetworkRacePicker)DrawNetworkRacePicker();if(!string.IsNullOrEmpty(networkLoadError))DrawNetworkLoadError();}finally{label.font=oldLabel;small.font=oldSmall;heading.font=oldHeading;menuInput.font=oldInput;}
     }
     void DrawNetworkContent() {
-        DrawMenuBackground();Fill(new Rect(0,0,1280,720),new Color(.01f,.025f,.035f,.45f));
+        DrawMenuBackground();AtlasSurface(new Rect(20,14,1240,669));
         bool joined=networkSlot>=0&&networkRoom!=null;
-        Text(42,25,580,42,joined?"Игровая комната":"Сетевая игра",new GUIStyle(heading){fontSize=29,normal={textColor=new Color(.85f,.73f,.47f)}});
+        Text(42,23,580,47,joined?"Игровая комната":"Сетевая игра",atlasTitle);
         if(showNetworkProfile){DrawNetworkProfile();return;}
         if((joined||socialTab>0)&&LobbyButton("network.profile",new Rect(690,24,184,44),"Профиль")){
             if(HasNetworkProfile)OpenSocialTab(3);
@@ -172,7 +178,7 @@ public sealed partial class PcGame {
         if(joined&&LobbyButton("network.leave",new Rect(887,24,184,44),"К списку игр")){StopDirectory();BeginDirectory();}
         if(LobbyButton("network.back",new Rect(1084,24,154,44),"В меню")){StopDirectory();page=Page.Main;}
         DrawSocialTabs();
-        Text(44,687,1160,28,directoryStatus,small);
+        Fill(new Rect(20,684,1240,30),AtlasInk);Text(44,684,1160,28,directoryStatus,small);
         if(showStickerPicker){DrawStickerPicker();return;}
         if(socialTab>0){DrawSocialContent();return;}
         GUI.BeginGroup(new Rect(0,26,1280,650));
@@ -197,7 +203,7 @@ public sealed partial class PcGame {
             bool joinable=(bool?)room["joinable"]==true;
             string state=(string)room["state"]=="playing"?"Идёт бой":(string)room["state"]=="loading"?"Загрузка":joinable?"Ожидает игрока":"Места заняты";
             float y=row*74;
-            Fill(new Rect(0,y,741,66),new Color(.053f,.084f,.096f,.9f));
+            AtlasTile(new Rect(0,y,741,66),false,false);
             Text(12,y+4,445,28,(string)room["host"]??"Игрок",label);
             Text(12,y+33,445,24,state,small);
             Text(470,y+12,72,42,((int?)room["players"]??0)+" / "+((int?)room["capacity"]??2),label);
@@ -208,7 +214,10 @@ public sealed partial class PcGame {
         }
         GUI.EndScrollView();
         Text(900,131,312,40,HasNetworkProfile?"Вы вошли":"Гостевой вход",heading);
-        if(HasNetworkProfile)Text(900,174,312,38,networkName,label);
+        if(HasNetworkProfile){
+            DrawProfileBadge(new Rect(900,174,38,38));
+            Text(948,174,260,38,FitAtlasAccountName(networkName,253),atlasProfileName);
+        }
         else networkName=AccountText("guest.name",new Rect(900,173,315,44),networkName,24,false,"Имя в игре");
         GUI.enabled=directoryReady;
         if(LobbyButton("network.profile",new Rect(900,230,315,47),"Профиль")){
@@ -218,6 +227,7 @@ public sealed partial class PcGame {
         GUI.enabled=directoryReady&&directoryCanCreate;
         if(LobbyButton("network.create",new Rect(900,301,315,58),"Создать игру",true))EnterRoom("create","");
         GUI.enabled=true;
+        AtlasScene(2,new Rect(900,374,315,112));
         if(LobbyButton("network.endpoint",new Rect(900,500,315,41),"Адрес сервера"))networkEndpointOpen=!networkEndpointOpen;
         if(networkEndpointOpen){
             directoryEndpoint=GUI.TextField(new Rect(900,548,315,46),directoryEndpoint,256,menuInput);
@@ -274,7 +284,7 @@ public sealed partial class PcGame {
     }
     void DrawNetworkProfile() {
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.72f));
-        LobbyPanel(new Rect(335,115,610,494));
+        AtlasSurface(new Rect(335,115,610,494),true);
         Text(374,151,535,45,HasNetworkProfile?"Профиль игрока":page==Page.Profile?"Вход в аккаунт":"Вход в сетевую игру",heading);
         Accent(375,204,530);
         bool entryCheckingToken=WaitingForNetworkAccount&&HasEndpointToken&&(directoryLoading||profilePending||!directoryReady);

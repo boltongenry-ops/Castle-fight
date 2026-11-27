@@ -153,7 +153,7 @@ public sealed class MobileContent : MonoBehaviour {
         if(!File.Exists(destination)||new FileInfo(destination).Length!=(long)row["size"])File.Copy(CacheFile(row),destination,true);if(foreground)Busy=wasBusy;
     }
     public void DeferDownloadAll(){if(bulkActive){cancelBulk=true;retry=true;}}
-    void OnGUI(){if(!Busy||VersusLoading)return;GUI.depth=-10000;int action=ContentLoadingScreen.Draw(background,hammer,font,status,progress,error,bulkActive);if((action&1)!=0)retry=true;if((action&2)!=0)DeferDownloadAll();}
+    void OnGUI(){if(!Busy||VersusLoading)return;GUI.depth=-10000;int action=ContentLoadingScreen.Draw(null,null,font,status,progress,error,bulkActive,fallback:background);if((action&1)!=0)retry=true;if((action&2)!=0)DeferDownloadAll();}
 
 }
 public static class ContentResources {

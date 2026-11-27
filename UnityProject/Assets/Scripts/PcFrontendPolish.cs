@@ -31,7 +31,7 @@ public sealed partial class PcGame {
     }
     bool showResourceDownloads;long resourceRemaining;float resourceNextRefresh;
     void DrawResourceDownloads(){
-        Fill(new Rect(0,0,1280,720),new Color(0,0,0,.75f));Box(new Rect(280,140,720,430));Text(320,173,640,45,"РЕСУРСЫ ИГРЫ",heading);Accent(320,228,640);
+        Fill(new Rect(0,0,1280,720),new Color(0,0,0,.75f));AtlasSurface(new Rect(280,140,720,430),true);Text(320,173,640,45,"Ресурсы игры",atlasTitle);Accent(320,228,640);
         var loader=MobileContent.Current;long total=loader.TotalContentBytes;if(Time.unscaledTime>=resourceNextRefresh){resourceRemaining=loader.RemainingContentBytes;resourceNextRefresh=Time.unscaledTime+1;}long remaining=resourceRemaining;
         Text(320,251,630,100,"На устройстве: "+((total-remaining)/1048576f).ToString("F0")+" / "+(total/1048576f).ToString("F0")+" МБ\n"+(remaining==0?"Все ресурсы уже скачаны.":"Докачать: "+(remaining/1048576f).ToString("F0")+" МБ"),label);
         Text(320,354,630,66,"Скачайте все расы, оформление и озвучку заранее. Загрузка продолжается после обрыва; модели не загружаются в память.",small);

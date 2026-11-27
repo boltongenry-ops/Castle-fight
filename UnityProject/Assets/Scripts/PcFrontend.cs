@@ -18,6 +18,7 @@ public sealed partial class PcGame {
         if(!testing&&BattleLab.Arg("--pc-test")==""&&NetworkAccountStore.Read() is JObject saved){
             networkSessionEndpoint=(string)saved["endpoint"]??"";
             networkSessionToken=(string)saved["token"]??"";
+            rememberedAccountName=(string)saved["nickname"]??"";
         }
     }
     // Godot MenuMusic.continue_after_intro: the soundtrack resumes at the frame the
@@ -35,13 +36,17 @@ public sealed partial class PcGame {
         PollLobby();
     }
     void DrawFrontendBleed() {
-        if(menuArtwork)GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),menuArtwork,ScaleMode.ScaleAndCrop);
+        bool atlas=page==Page.Main||page==Page.Setup||page==Page.Progression||
+            page==Page.Profile||page==Page.Network||page==Page.Settings&&settingsReturn==Page.Main;
+        if(atlas)PrepareCampaignArtwork();
+        var backdrop=atlas&&campaignMap?campaignMap:menuArtwork;
+        if(backdrop)GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),backdrop,ScaleMode.ScaleAndCrop);
         else {GUI.color=new Color(.015f,.025f,.03f);GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),Texture2D.whiteTexture);GUI.color=Color.white;}
     }
     void DrawMenuBackground() {
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.18f));
     }
-    void DisposeFrontend(){StopDirectory();DisposeStickers();if(menuAudio)Destroy(menuAudio);DisposeWinterArtwork();DisposeHordeArtwork();}
+    void DisposeFrontend(){StopDirectory();DisposeStickers();DisposeCampaignArtwork();DisposeLoadingArt();if(menuAudio)Destroy(menuAudio);DisposeWinterArtwork();DisposeHordeArtwork();}
     // Only the current pair is decoded; fifteen source paintings stay on disk.
     static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
     static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};
@@ -181,21 +186,21 @@ public sealed partial class PcGame {
         float entrance=Mathf.SmoothStep(0,1,(Time.realtimeSinceStartup-versusAt)/.55f);
         VersusPainting(new Rect(-24*(1-entrance),0,608,720),versusLeft?versusLeft:versusLeftFallback,false);
         VersusPainting(new Rect(672+24*(1-entrance),0,608,720),versusRight?versusRight:versusRightFallback,true);
-        var gold=new Color(.85f,.70f,.40f);for(int i=0;i<16;i++){float alpha=(1-i/16f)*.85f;Fill(new Rect(592-i*3,0,3,720),new Color(.012f,.018f,.024f,alpha));Fill(new Rect(685+i*3,0,3,720),new Color(.012f,.018f,.024f,alpha));}
-        Fill(new Rect(0,0,1280,58),new Color(.008f,.014f,.022f,.68f));
+        var gold=AtlasGold;for(int i=0;i<16;i++){float alpha=(1-i/16f)*.85f;Fill(new Rect(592-i*3,0,3,720),new Color(.012f,.018f,.024f,alpha));Fill(new Rect(685+i*3,0,3,720),new Color(.012f,.018f,.024f,alpha));}
+        AtlasSurface(new Rect(0,0,1280,58));
         Text(240,12,800,36,"ПРОТИВОСТОЯНИЕ",new GUIStyle(heading){fontSize=27,alignment=TextAnchor.MiddleCenter,normal={textColor=gold}});
         Fill(new Rect(639,80,2,162),new Color(.66f,.51f,.28f,.5f));Fill(new Rect(639,401,2,160),new Color(.66f,.51f,.28f,.5f));
         Text(542,263,196,112,"VS",new GUIStyle(title){fontSize=82,alignment=TextAnchor.MiddleCenter,normal={textColor=gold}});
         Text(550,377,180,32,"1 × 1",new GUIStyle(label){alignment=TextAnchor.MiddleCenter,normal={textColor=new Color(.76f,.8f,.83f)}});
         for(int side=0;side<2;side++){
-            float x=side==0?42:714;Fill(new Rect(x-12,521,548,109),new Color(.008f,.016f,.024f,.83f));Fill(new Rect(x,521,500,1),new Color(.75f,.59f,.32f,.7f));
+            float x=side==0?42:714;AtlasSurface(new Rect(x-12,521,548,109));
             int race=side==0?versusA:versusB;
             var emblem=RaceEmblem(race);
             if(emblem)GUI.DrawTexture(new Rect(x+8,545,57,57),emblem,ScaleMode.ScaleToFit);
             Text(x+64,534,432,40,VersusNames[race],new GUIStyle(heading){fontSize=29,alignment=TextAnchor.MiddleCenter,normal={textColor=gold}});
             Text(x,580,500,33,side==0?versusNameA:versusNameB,new GUIStyle(label){fontSize=22,alignment=TextAnchor.MiddleCenter});
         }
-        Fill(new Rect(0,637,1280,83),new Color(.008f,.014f,.021f,.97f));
+        AtlasSurface(new Rect(0,637,1280,83));
         DrawVersusLoading(gold);
     }
     void DrawVersusLoading(Color gold){

@@ -51,7 +51,8 @@ public sealed partial class PcGame {
     static Rect ConsoleCell(float x,float y,float width,float height)=>new Rect(819.2f+x*.8f,520+(y-176)*200/336f,width*.8f,height*200/336f);
     static Rect CommandSlot(int column,int row,bool mobile)=>mobile?new Rect(970+column*76,492+row*76,70,70):ConsoleCell(209+column*87,245+row*87,80,80);
     Rect Slot(int column,int row)=>HudThemeIndex==0?CommandSlot(column,row,Application.isMobilePlatform):ThemedCommandSlot(column,row);
-    static Rect InventorySlot(int cell)=>ConsoleCell(5+cell%2*84,290+cell/2*73,64,62);
+    Rect InventorySlot(int cell)=>CommandDeskHud?new Rect(823+cell%2*66,574+cell/2*43,56,39):
+        ConsoleCell(5+cell%2*84,290+cell/2*73,64,62);
     void DrawWarcraftHud() {
         if(Event.current.type==EventType.Repaint){
             float shade=0;
@@ -432,4 +433,3 @@ public sealed partial class PcGame {
     void DestroyHud(){HudTheme.Dispose();if(mythicCrown)Destroy(mythicCrown);if(portraitStage)Destroy(portraitStage);if(portraitTexture){portraitTexture.Release();Destroy(portraitTexture);}}
 }
 }
-

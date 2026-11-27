@@ -13,7 +13,10 @@ public sealed class FileRow {public string path,sha256;public long size,offset,c
 public sealed class WindowsRelease {public string url,sha256,entryPoint,version;public long size;public List<FileRow> files;}
 public sealed class Release {
     public int schema;public string version;public WindowsRelease windows;
+    public object[] changes_ru;
     public string WindowsVersion(){return windows.version??version;}
+    public string[] Notes(){return (changes_ru??new object[0]).OfType<string>().Select(s=>s.Trim())
+        .Where(s=>s.Length>0).Take(24).Select(s=>s.Length<=480?s:s.Substring(0,479)+"…").ToArray();}
 }
 public sealed class UpdateResult {public int checkedFiles,changedFiles;public long networkBytes;}
 public sealed class UpdateCore {

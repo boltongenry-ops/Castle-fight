@@ -29,10 +29,10 @@ namespace CastleFight {
             }
         }
 
-        public static void Save(string endpoint,string token){
+        public static void Save(string endpoint,string token,string nickname){
             if(string.IsNullOrEmpty(token)||!Uri.TryCreate(endpoint,UriKind.Absolute,out var target)||target.Scheme!="wss")return;
             try{
-                var data=new JObject{["endpoint"]=endpoint,["token"]=token};
+                var data=new JObject{["endpoint"]=endpoint,["token"]=token,["nickname"]=nickname};
                 byte[] encrypted=Encrypt(Encoding.UTF8.GetBytes(data.ToString(Newtonsoft.Json.Formatting.None)));
                 if(encrypted!=null){
                     PlayerPrefs.SetString(Preference,Convert.ToBase64String(encrypted));

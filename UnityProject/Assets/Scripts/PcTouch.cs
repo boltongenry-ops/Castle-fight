@@ -48,6 +48,7 @@ public sealed partial class PcGame {
         if(hadBuilder&&!builderSelected&&!selectedCastle&&selectedHut<0&&selectedUnit<0){builderSelected=true;OrderBuilder(point);}
     }
     void UpdateTouchScroll(){
+        UpdateNotesTouch();
         UpdateProgressionTouch();
         UpdatePassiveAspectTouch();UpdateSpellScroll();
         if(page!=Page.Network||showNetworkProfile||showStickerPicker||showVoicePanel){scrollFinger=-1;return;}

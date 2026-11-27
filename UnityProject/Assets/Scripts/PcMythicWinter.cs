@@ -50,6 +50,30 @@ public sealed partial class PcGame {
         mythicRace=RaceStaged(raceChoice)?raceChoice:0;
     }
 
+    static readonly Rect MythicRacePanel=new Rect(42,176,641,500);
+    const float MythicRaceInset=28,MythicRaceGap=12;
+
+    static Rect MythicRaceCell(int index){
+        float width=(MythicRacePanel.width-2*MythicRaceInset-2*MythicRaceGap)/3;
+        return new Rect(MythicRacePanel.x+MythicRaceInset+index%3*(width+MythicRaceGap),
+            293+index/3*56,width,49);
+    }
+
+    static Rect MythicRaceNameRect(Rect cell)=>new Rect(cell.x+48,cell.y+4,cell.width-63,cell.height-8);
+
+    GUIStyle MythicRaceNameStyle()=>new GUIStyle(small){wordWrap=true,clipping=TextClipping.Clip,
+        alignment=TextAnchor.MiddleLeft,padding=new RectOffset()};
+
+    static float FitMythicRaceName(GUIStyle style,GUIContent content,Rect rect){
+        style.fontSize=13;
+        float height=style.CalcHeight(content,rect.width);
+        while(height>rect.height&&style.fontSize>11){
+            style.fontSize--;
+            height=style.CalcHeight(content,rect.width);
+        }
+        return height;
+    }
+
     void DrawMythicRacePicker(){
         var card=new Rect(42,176,1196,500);
         bool choir=(string)mythicSelection["id"]==HumanMatch.ChoirTrial;
@@ -57,22 +81,26 @@ public sealed partial class PcGame {
         bool protocol=(string)mythicSelection["id"]==HumanMatch.ProtocolTrial;
         bool abyssTrial=(string)mythicSelection["id"]==HumanMatch.AbyssTrial;
         if(abyssTrial)DrawAbyssPainting(card);else if(protocol)DrawProtocolPainting(card);else if(horde)DrawHordePainting(card);else if(choir)DrawChoirPainting(card);else DrawWinterPainting(card,true);
-        Fill(new Rect(42,176,641,500),new Color(.025f,.047f,.065f,.99f));
-        WinterGradient(new Rect(683,176,282,500),true,new Color(.025f,.047f,.065f,.98f));
+        AtlasSurface(MythicRacePanel);
+        WinterGradient(new Rect(683,176,282,500),true,new Color(.070f,.104f,.076f,.98f));
         WinterGradient(new Rect(682,337,556,339),false,new Color(.019f,.035f,.052f,.99f));
         Border(card,WinterLine,1);
         Text(66,194,700,49,(string)mythicSelection["title"],raceTitleStyle);
         Text(69,249,705,31,"Выберите свою обычную расу",label);
+        var nameStyle=MythicRaceNameStyle();
+        var nameContent=new GUIContent();
         for(int i=0;i<AllRaceUnity.Length;i++){
             int race=AllRaceUnity[i];
-            var cell=new Rect(70+i%3*207,294+i/3*54,197,47);
+            var cell=MythicRaceCell(i);
             bool enabled=GUI.enabled;GUI.enabled=enabled&&RaceStaged(race);
             if(LobbyButton("mythic.race."+race,cell,"",race==mythicRace)&&mythicRace!=race){mythicRace=race;protocolAspect=-1;}
             var emblem=RaceEmblem(race);
-            if(emblem)GUI.DrawTexture(new Rect(cell.x+5,cell.y+5,36,36),emblem,ScaleMode.ScaleToFit);
-            Text(cell.x+43,cell.y+2,150,43,AllRaceNames[i],
-                new GUIStyle(small){fontSize=13,wordWrap=true,alignment=TextAnchor.MiddleLeft,padding=new RectOffset(),
-                    normal={textColor=race==mythicRace?WinterBlue:Color.white}});
+            if(emblem)GUI.DrawTexture(new Rect(cell.x+10,cell.center.y-17,34,34),emblem,ScaleMode.ScaleToFit);
+            nameStyle.normal.textColor=race==mythicRace?AtlasInk:GUI.enabled?AtlasIvory:AtlasMuted;
+            var nameRect=MythicRaceNameRect(cell);
+            nameContent.text=AllRaceNames[i];
+            FitMythicRaceName(nameStyle,nameContent,nameRect);
+            GUI.Label(nameRect,nameContent,nameStyle);
             GUI.enabled=enabled;
         }
         const float x=718,width=493;

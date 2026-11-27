@@ -16,6 +16,8 @@ public sealed partial class PcGame {
     bool medalSyncBusy,peerMedalsLoading,peerMedalsError,showPeerMedals,showAllProfileChallenges;
     int profileMedalPage,peerMedalPage,medalPeerRequest;
     const int MedalsPerPage=8;
+    static readonly Rect ProfileAccountButton=new Rect(787,44,250,48);
+    static readonly Rect ProfileBackButton=new Rect(1054,44,181,48);
 
     string AchievementToken=>!networkGuest&&NetworkAccountStore.SameService(networkSessionEndpoint,NetworkAccountStore.UnityEndpoint)
         ?networkSessionToken:"";
@@ -94,12 +96,18 @@ public sealed partial class PcGame {
         if(showNetworkProfile){DrawNetworkProfile();return;}
         LobbyPanel(new Rect(20,18,1240,684));
         DrawProfileBadge(new Rect(45,39,72,72));
-        Text(137,35,740,43,HasNetworkProfile?(string)networkProfile["name"]??"Профиль":"Профиль игрока",heading);
+        Text(137,32,590,49,FitAtlasLabel(HasNetworkProfile?(string)networkProfile["name"]??"Профиль":"Профиль игрока",590,atlasTitle),atlasTitle);
         int shared=medalOwner==AccountMedalOwner?ownMedals.Count:0;
         int complete=ProfileChallenges.Count(row=>IsProfileChallengeComplete((string)row["id"]));
         string rank=HasNetworkProfile?RankNames[RankIndex((int?)networkProfile["wins"]??0)]+" · ":"";
-        Text(139,81,880,31,rank+complete+" / "+ProfileChallenges.Length+" пройдено"+(HasNetworkProfile?" · "+shared+" опубликовано":""),label);
-        if(LobbyButton("account-profile.back",new Rect(1054,42,181,48),"← В меню")){MainMenu();return;}
+        Text(139,81,586,31,rank+complete+" / "+ProfileChallenges.Length+" пройдено"+(HasNetworkProfile?" · "+shared+" опубликовано":""),label);
+        if(LobbyButton("account-profile.login",ProfileAccountButton,HasNetworkProfile?"Аккаунт":"Войти в аккаунт")){
+            showNetworkProfile=true;profileName=HasEndpointToken?networkName:"";
+            networkGuest=false;networkEntryAccount=false;
+            if(!directoryReady)BeginDirectory();
+        }
+        if(LobbyButton("account-profile.back",ProfileBackButton,"← В меню")){MainMenu();return;}
+        Accent(45,122,1190);
 
         if(LobbyButton("account-profile.earned",new Rect(45,135,235,46),"Достижения",!showAllProfileChallenges)){
             showAllProfileChallenges=false;profileMedalPage=0;
@@ -109,23 +117,33 @@ public sealed partial class PcGame {
         }
         if(HasNetworkProfile){
             GUI.enabled=!medalSyncBusy;
-            if(LobbyButton("account-profile.sync",new Rect(694,135,306,46),medalSyncBusy?"Синхронизация…":"Опубликовать с устройства")){
+            if(LobbyButton("account-profile.sync",new Rect(929,135,306,46),medalSyncBusy?"Синхронизация…":"Опубликовать с устройства")){
                 var earned=ProfileChallenges.Select(row=>(string)row["id"]).Where(progression.Completed).ToArray();
                 StartCoroutine(SyncProfileMedals(earned));
             }
             GUI.enabled=true;
-        }
-        if(LobbyButton("account-profile.login",new Rect(1012,135,223,46),HasNetworkProfile?"Аккаунт":"Войти в аккаунт")){
-            showNetworkProfile=true;profileName=HasEndpointToken?networkName:"";
-            networkGuest=false;networkEntryAccount=false;
-            if(!directoryReady)BeginDirectory();
         }
         string status=!string.IsNullOrEmpty(medalSyncStatus)?medalSyncStatus:HasNetworkProfile?
             "Опубликуйте старые прохождения с этого устройства. Новые победы публикуются при входе в аккаунт.":
             "Достижения остаются на устройстве. Войдите в аккаунт, чтобы их видели другие игроки.";
         Text(48,190,1182,31,status,small);
         var rows=showAllProfileChallenges?ProfileChallenges:ProfileChallenges.Where(row=>IsProfileChallengeComplete((string)row["id"])).ToArray();
+        if(rows.Length==0){
+            DrawEmptyProfileAwards();
+            return;
+        }
         DrawMedalGrid(rows,232,98,ref profileMedalPage,true);
+    }
+
+    void DrawEmptyProfileAwards(){
+        AtlasTile(new Rect(45,232,1190,412),false,false);
+        var illustration=new Rect(704,271,501,334);
+        AtlasScene(2,illustration);
+        Border(illustration,AtlasEdge);
+        Text(85,358,567,51,"Первая награда",atlasTitle);
+        Text(85,417,567,32,"Пройдите любое испытание, чтобы получить её.",label);
+        if(LobbyButton("account-profile.challenges",new Rect(85,472,230,48),"К испытаниям",true))
+            OpenProgression(false);
     }
 
     bool IsProfileChallengeComplete(string id)=>progression.Completed(id)||IsPublishedMedal(id);

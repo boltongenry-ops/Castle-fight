@@ -102,6 +102,7 @@ public sealed partial class PcGame {
         File.WriteAllText(partial,"incomplete");
         page=Page.Pause;
         OpenSettings();
+        yield return Action("settings.tab.3");
         yield return Action("settings.models");
         yield return Action("models.delete");
         yield return Action("models.keep");

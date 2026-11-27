@@ -4,14 +4,14 @@ public sealed partial class PcGame {
     ReforgedMap MapArt=>ReforgedMap.For(this);
     void DrawMapArtSettings(){
         var art=MapArt;
-        Box(new Rect(240,66,800,588));Text(286,93,510,50,"Оформление карты",heading);
+        AtlasSurface(new Rect(240,66,800,588),true);
+        Text(286,93,480,50,"Оформление карты",atlasTitle);
         bool interactive=GUI.enabled;GUI.enabled=interactive&&!art.Busy;
         if(Button("map.models",new Rect(777,96,217,43),"Модели бойцов")){art.Panel=false;art.Confirm=false;}
         Accent(286,153,708);
-        if(Button("map.classic",new Rect(286,179,330,52),"Классическая",!art.Draft))art.Draft=false;
-        if(Button("map.reforged",new Rect(644,179,350,52),"Reforged",art.Draft))art.Draft=true;
-        Text(286,260,710,68,"Земля, каменные дорожки, деревья и декорации поля боя.",label);
-        Text(286,331,710,60,"Карта скачивается отдельно. Стиль бойцов выбирается независимо.",small);
+        if(AtlasEdition("map.classic",new Rect(286,173,345,205),"Классическая",0,!art.Draft))art.Draft=false;
+        if(AtlasEdition("map.reforged",new Rect(649,173,345,205),"Reforged",1,art.Draft))art.Draft=true;
+        Text(286,388,708,28,"Текстуры земли, дорожки и декорации. Карта скачивается отдельно от моделей.",small);
         Text(286,417,710,54,art.Confirm?"Удалить скачанное оформление карты?":art.Status!=""?art.Status:art.Installed?"Пакет карты скачан":"Пакет карты ещё не скачан",small);
         if(art.Busy){
             var bar=new Rect(286,486,708,12);Fill(bar,new Color(.12f,.14f,.14f));
@@ -26,6 +26,8 @@ public sealed partial class PcGame {
         }else if(art.Draft&&Button("map.download",new Rect(644,515,350,48),"Скачать карту Reforged",true))StartCoroutine(art.Download(controls));
         GUI.enabled=interactive&&!art.Busy;
         if(Button("map.back",new Rect(286,586,260,47),"← К настройкам")){art.Panel=false;HdModels.Panel=false;art.Confirm=false;}
+        if(art.Draft!=art.Preferred&&!art.Busy)
+            Text(575,586,417,47,"Новый стиль включится после «Применить» в настройках.",small);
         GUI.enabled=interactive;
     }
 }
