@@ -270,8 +270,8 @@ public sealed partial class PcGame {
     void UpdateSocial(){
         if(socialPending&&Time.realtimeSinceStartup>socialDeadline){socialPending=false;notificationReading=null;directoryStatus="Сервис профилей не ответил. Повторите запрос";}
         if(socialQueued!=null&&!socialPending&&!profilePending&&Time.realtimeSinceStartup>=socialNext){var next=socialQueued;socialQueued=null;SocialRequest((string)next["action"],next);return;}
-        if(!directoryReady||!HasNetworkProfile||!socialSupported||socialPending||profilePending||showNetworkProfile||showStickerPicker||Time.realtimeSinceStartup<socialDue||Time.realtimeSinceStartup<socialNext)return;
-        if(RequestAccountAvatar())return;
+        if(!directoryReady||!HasNetworkProfile||!socialSupported||socialPending||profilePending||Time.realtimeSinceStartup<socialDue||Time.realtimeSinceStartup<socialNext)return;
+        if(RequestAccountAvatar()||showNetworkProfile||showStickerPicker)return;
         float now=Time.realtimeSinceStartup;
         socialDue=now+SocialPollInterval;
         if(RequestNotificationHistory())return;

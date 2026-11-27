@@ -54,7 +54,7 @@ public sealed class NativeMapCamera : MonoBehaviour {
         shown=target;shownDistance=distance;Apply();
     }
     void Apply(){float pitch=56*Mathf.Deg2Rad;transform.position=shown+(gateAngle?gateOffset*shownDistance/58:new Vector3(0,shownDistance*Mathf.Sin(pitch),-shownDistance*Mathf.Cos(pitch)));transform.LookAt(shown);}
-    public void GameplayViewport(bool active) {
+    public void GameplayViewport(bool active,float blend=1) {
         if(!view)return;
         // Keep rendering behind the console's transparent leaves. Shift the optical
         // centre into the playable area without leaving any uncleared screen pixels.
@@ -63,7 +63,7 @@ public sealed class NativeMapCamera : MonoBehaviour {
         Rect safe=Application.isMobilePlatform?Screen.safeArea:new Rect(0,0,Screen.width,Screen.height);float scale=Mathf.Min(safe.width/1280f,safe.height/720f);
         float centreFromTop=Screen.height-safe.yMax+(safe.height-720*scale)/2+274*scale;
         var projection=Matrix4x4.Perspective(view.fieldOfView,view.aspect,view.nearClipPlane,view.farClipPlane);
-        projection[1,2]=2*centreFromTop/Screen.height-1;view.projectionMatrix=projection;
+        projection[1,2]=(2*centreFromTop/Screen.height-1)*blend;view.projectionMatrix=projection;
     }
     public void FocusWorld(Vector3 point,float zoom=45){top=false;view.orthographic=false;gateAngle=false;target=shown=point;distance=shownDistance=zoom;Apply();}
     public void PanToWorld(Vector3 point){target=shown=point;if(top){FocusWorld(point,85);return;}Apply();}

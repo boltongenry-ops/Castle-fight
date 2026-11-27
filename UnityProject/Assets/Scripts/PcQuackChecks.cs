@@ -22,9 +22,16 @@ public sealed partial class PcGame {
         yield return Shot(folder,"01-boss-card");
         yield return Action("mythic.begin");
         testHoldAuthority=true;
+        float readyUntil=Time.realtimeSinceStartup+55;
+        while(versusActive&&Time.realtimeSinceStartup<readyUntil)yield return null;
+        if(versusActive||match==null){
+            Debug.LogError("The Quackalypse versus screen did not finish preparing the match");
+            Application.Quit(1);
+            yield break;
+        }
         string captureFolder=BattleLab.Arg("--pc-quack-reel");
         if(captureFolder.Length>0){
-            quackSceneAge=9;
+            quackSceneAge=QuackOpeningEnd;
             yield return null;
             Directory.CreateDirectory(captureFolder);
             for(int frame=0;frame<320;frame++){
@@ -55,27 +62,50 @@ public sealed partial class PcGame {
         Check(quackKing&&quackGuards.Count(guard=>guard)==3&&quackEmoji&&quackReveal,"Opening has the Great Quack, guards and both generated textures");
         Check(quackCroak&&quackCroak.frequency==24000&&quackCroak.length>.5f,"Speech has the recorded croak");
         Check(quackHudFrame&&quackHudFrame.width>quackHudFrame.height*3,"The frog-medallion banner is loaded");
+        Check(bossSoundtrack&&bossSoundtrack.isPlaying&&bossSoundtrack.loop&&bossSoundtrack.clip.name==EpochalBossTrack&&
+            Mathf.Approximately(bossSoundtrack.volume,1),"Frozen Final Stand loops at full volume during the opening");
         quackSceneAge=4.3f;
         yield return null;
         yield return Shot(folder,"02-opening-orders");
         quackSceneAge=6.1f;
         yield return null;
-        yield return Shot(folder,"03a-eyes-start");
+        yield return Shot(folder,"03a-face-start");
         quackSceneAge=6.65f;
         yield return null;
-        Check(QuackEyeShot&&quackEyePose&&QuackEyeBandBottom-QuackEyeBandTop<=125,"The opening holds a stable pose for the narrow eyes-only shot");
+        Check(quackScene==QuackScene.Opening&&quackFacePose&&Camera.main.projectionMatrix[1,2]==0,
+            "The full-face close-up uses a held pose and a centered projection");
         yield return Shot(folder,"03-king-close");
         quackSceneAge=6.95f;
         yield return null;
-        yield return Shot(folder,"03c-eyes-end");
-        quackSceneAge=7.75f;
+        yield return Shot(folder,"03c-face-end");
+        var camera=Camera.main;
+        FrameQuackOpening(QuackFaceEnd-.02f);
+        var closePosition=camera.transform.position;
+        FrameQuackOpening(QuackFaceEnd+.02f);
+        Check(Vector3.Distance(closePosition,camera.transform.position)<.1f,"The full-face shot pulls back without a cut");
+        quackSceneAge=QuackSwampCue+.15f;
         yield return null;
         yield return Shot(folder,"03b-swamp-transition");
         Check(quackSwampRevealed&&quackGround.Count>0&&quackWetland&&quackWetland.activeSelf&&quackWetlandMesh.vertexCount>0,
             "The camera return reveals the swamp textures and the combined puddle and lily mesh");
         Check(!match.QuackDownpour&&quackDrizzle&&quackDownpour&&quackDrizzle!=quackDownpour,"The swamp opens with drizzle and has a separate downpour texture");
-        quackSceneAge=9;
+        quackSceneAge=QuackFlyoverStart+1.45f;
         yield return null;
+        yield return Shot(folder,"03d-flyover");
+        FrameQuackOpening(QuackOpeningEnd);
+        var landing=camera.transform.position;
+        var landingProjection=camera.projectionMatrix;
+        var soundtrack=bossSoundtrack;
+        float songTime=soundtrack?soundtrack.time:0;
+        quackSceneAge=QuackOpeningEnd;
+        yield return null;
+        yield return null;
+        Check(quackScene==QuackScene.None&&builderSelected&&Vector3.Distance(landing,camera.transform.position)<.01f&&
+            landingProjection.Equals(camera.projectionMatrix),"The flyover lands at the exact gameplay camera and projection");
+        yield return new WaitForSecondsRealtime(1.55f);
+        Check(bossSoundtrack&&bossSoundtrack==soundtrack&&soundtrack.isPlaying&&soundtrack.time>songTime&&
+            Mathf.Approximately(soundtrack.volume,WinterBattleMusicVolume),"The winter track continues under gameplay at reduced volume");
+        yield return Shot(folder,"03e-builder-handoff");
         var humans=JObject.Parse(RaceCatalog(0));
         var pepe=JObject.Parse(RaceCatalog(PepeContent.Race));
         new HumanMatch(humans,500,2,-1,-1,pepe).CheckQuackRules(QuackDefinition(),Check);
@@ -118,6 +148,7 @@ public sealed partial class PcGame {
         match.DebugQuackHitCastle();
         Tick(.05f);
         Check(match.Winner==0&&page==Page.Result,"Second lethal hit gives the actual victory");
+        Check(bossSoundtrack&&!bossSoundtrack.isPlaying,"The challenge stops the soundtrack on victory");
         File.WriteAllText(Path.Combine(folder,"quackalypse-verification.json"),new JObject{
             ["status"]=testFailures==0?"PASS":"FAIL",["version"]=Version,["checks"]=testChecks
         }.ToString());
@@ -128,7 +159,7 @@ public sealed partial class PcGame {
     IEnumerator BenchmarkQuackalypse(string folder){
         Application.targetFrameRate=-1;
         QualitySettings.vSyncCount=0;
-        quackSceneAge=9;
+        quackSceneAge=QuackOpeningEnd;
         yield return null;
         var report=new JObject{["resolution"]=Screen.width+"x"+Screen.height,["gpu"]=SystemInfo.graphicsDeviceName,
             ["cpu"]=SystemInfo.processorType,["units"]=112};

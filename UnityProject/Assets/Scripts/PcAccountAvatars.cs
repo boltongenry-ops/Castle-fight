@@ -16,6 +16,8 @@ public sealed partial class PcGame {
         public bool open,picking;
         public string error="",requestedRevision="";
         public JObject ownIdentity;
+        public string ownImageRevision;
+        public byte[] ownImageBytes;
         public readonly Dictionary<string,Texture2D> images=new Dictionary<string,Texture2D>();
         public readonly Dictionary<string,float> nextRequest=new Dictionary<string,float>();
         public readonly Queue<JToken> pending=new Queue<JToken>();
@@ -31,7 +33,12 @@ public sealed partial class PcGame {
             ["avatar_ref"]=(string)profile["avatar_ref"],
             ["equipped"]=(int?)profile["account_progression"]==1?profile["equipped"]?["avatar"]?.DeepClone():null
         };
-        if(prior!=(string)profile["avatar_ref"])socialDue=0;
+        string revision=(string)profile["avatar_ref"];
+        if(revision!=Avatars.ownImageRevision){
+            Avatars.ownImageRevision=null;
+            Avatars.ownImageBytes=null;
+        }
+        if(prior!=revision)socialDue=0;
     }
 
     Texture2D AccountAvatar(JToken profile){
@@ -39,7 +46,8 @@ public sealed partial class PcGame {
         string revision=(string)profile["avatar_ref"]??"";
         var state=Avatars;
         if(revision!=""){
-            if(state.images.TryGetValue(revision,out var known))return known;
+            var known=CachedAccountAvatar(revision);
+            if(known)return known;
             float now=Time.realtimeSinceStartup;
             if(HasNetworkProfile&&(string)profile["id"]!=(string)networkProfile["id"]&&
                (!state.nextRequest.TryGetValue(revision,out float next)||now>=next)&&state.pending.Count<12){
@@ -55,11 +63,23 @@ public sealed partial class PcGame {
         return template<0?null:RaceEmblem(AvatarTemplateRaces[template]);
     }
 
+    Texture2D CachedAccountAvatar(string revision){
+        var state=Avatars;
+        if(state.images.TryGetValue(revision,out var texture)){
+            if(texture)return texture;
+            state.images.Remove(revision);
+            state.nextRequest.Remove(revision);
+        }
+        if(revision!=state.ownImageRevision||state.ownImageBytes==null||
+           revision!=(string)state.ownIdentity?["avatar_ref"])return null;
+        return StoreAccountAvatar(revision,state.ownImageBytes);
+    }
+
     bool RequestAccountAvatar(){
         var state=Avatars;
         string ownRevision=(string)networkProfile?["avatar_ref"]??"";
         float now=Time.realtimeSinceStartup;
-        if(ownRevision!=""&&!state.images.ContainsKey(ownRevision)&&
+        if(ownRevision!=""&&!CachedAccountAvatar(ownRevision)&&
            (!state.nextRequest.TryGetValue(ownRevision,out float retry)||now>=retry)){
             state.nextRequest[ownRevision]=now+12;
             state.requestedRevision=ownRevision;
@@ -69,7 +89,7 @@ public sealed partial class PcGame {
         while(state.pending.Count>0){
             var profile=state.pending.Dequeue();
             string revision=(string)profile["avatar_ref"];
-            if(string.IsNullOrEmpty(revision)||state.images.ContainsKey(revision))continue;
+            if(string.IsNullOrEmpty(revision)||CachedAccountAvatar(revision))continue;
             state.requestedRevision=revision;
             SocialRequest("avatar",new JObject{["peer"]=(string)profile["id"]});
             return true;
@@ -89,7 +109,7 @@ public sealed partial class PcGame {
     bool CacheAccountAvatar(string revision,string image){
         var state=Avatars;
         if(string.IsNullOrEmpty(revision)||string.IsNullOrEmpty(image)||image.Length>21848)return false;
-        if(state.images.ContainsKey(revision))return true;
+        if(CachedAccountAvatar(revision))return true;
         byte[] bytes;
         try{bytes=Convert.FromBase64String(image);}catch(FormatException){return false;}
         if(!AvatarDimensions(bytes,out int width,out int height)||width!=128||height!=128)return false;
@@ -97,8 +117,19 @@ public sealed partial class PcGame {
             string digest=BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-","");
             if(!string.Equals(revision,digest,StringComparison.OrdinalIgnoreCase))return false;
         }
+        if(!StoreAccountAvatar(revision,bytes))return false;
+        if(revision==(string)state.ownIdentity?["avatar_ref"]){
+            state.ownImageRevision=revision;
+            state.ownImageBytes=bytes;
+        }
+        return true;
+    }
+
+    Texture2D StoreAccountAvatar(string revision,byte[] bytes){
+        var state=Avatars;
         var texture=new Texture2D(2,2,TextureFormat.RGB24,false);
-        if(!texture.LoadImage(bytes,true)){Destroy(texture);return false;}
+        if(!texture.LoadImage(bytes,true)){Destroy(texture);return null;}
+        texture.hideFlags=HideFlags.DontUnloadUnusedAsset;
         if(state.images.Count>=24){
             string own=(string)state.ownIdentity?["avatar_ref"];
             string oldest=null;
@@ -107,13 +138,19 @@ public sealed partial class PcGame {
         }
         state.images.Add(revision,texture);
         state.nextRequest.Remove(revision);
-        return true;
+        return texture;
     }
 
     void ResetAccountAvatarRequests(){
         Avatars.pending.Clear();
         Avatars.nextRequest.Clear();
         Avatars.requestedRevision="";
+    }
+
+    void ClearOwnAvatarIdentity(){
+        Avatars.ownIdentity=null;
+        Avatars.ownImageRevision=null;
+        Avatars.ownImageBytes=null;
     }
 
     void DisposeAccountAvatars(){

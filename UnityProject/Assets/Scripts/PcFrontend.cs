@@ -163,7 +163,7 @@ public sealed partial class PcGame {
             yield return null;
         }
     }
-    void BeginOfflineVersus(bool next=false){if(versusActive)return;if(testing&&(string)activeChallenge?["id"]!=HumanMatch.WinterTrial&&(string)activeChallenge?["id"]!=HumanMatch.ChoirTrial&&(string)activeChallenge?["id"]!=HumanMatch.HordeTrial&&!ActiveProtocolTrial&&!ActiveAbyssTrial){if(next)StartRound();else NewMatch();return;}StartCoroutine(OfflineVersus(next));}
+    void BeginOfflineVersus(bool next=false){if(versusActive)return;if(testing&&(string)activeChallenge?["id"]!=HumanMatch.WinterTrial&&(string)activeChallenge?["id"]!=HumanMatch.ChoirTrial&&(string)activeChallenge?["id"]!=HumanMatch.HordeTrial&&!ActiveProtocolTrial&&!ActiveAbyssTrial&&(string)activeChallenge?["id"]!=HumanMatch.QuackTrial){if(next)StartRound();else NewMatch();return;}StartCoroutine(OfflineVersus(next));}
     IEnumerator OfflineVersus(bool next){
         if(matchMode==1){raceChoice=RandomStagedRace(-1);botRaceChoice=RandomStagedRace(raceChoice);mobileRoundPrepared=true;}
         BeginVersus(raceChoice,matchMode==2?raceChoice:botRaceChoice<0?raceChoice:botRaceChoice,false);int generation=versusSerial;
@@ -180,7 +180,7 @@ public sealed partial class PcGame {
             yield return PrepareBossSoundtrack(generation);
             if(generation!=versusSerial)yield break;
         }
-        if(match.LastProtocol||match.AbyssTrialActive){
+        if(match.LastProtocol||match.AbyssTrialActive||match.QuackActive){
             yield return PrepareBossSoundtrack(generation);
             if(generation!=versusSerial)yield break;
         }
@@ -196,7 +196,7 @@ public sealed partial class PcGame {
             if(abyssIntro)UpdateAbyssIntro(false);
             CloseVersus();
             ReleaseWinterArtwork();
-            if(winterIntro||hordeIntro||protocolIntro||abyssIntro)StartBossSoundtrack();
+            if(winterIntro||hordeIntro||protocolIntro||abyssIntro||match.QuackActive)StartBossSoundtrack();
         }
     }
 

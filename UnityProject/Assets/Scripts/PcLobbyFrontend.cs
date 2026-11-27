@@ -98,7 +98,7 @@ public sealed partial class PcGame {
 
     void ClearAccountIdentity(){
         networkProfile=null;
-        Avatars.ownIdentity=null;
+        ClearOwnAvatarIdentity();
         AccountHub.owner="";AccountHub.activity="";CloseAccountOverlay();
         networkSessionToken=rememberedAccountName="";
         if(!testing)NetworkAccountStore.Clear(networkGuest);

@@ -9,8 +9,8 @@ public sealed partial class PcGame {
     const string QuackTitle="Великий Квакалипсис";
     static readonly Color QuackGreen=new Color(.59f,.94f,.46f);
     static readonly Rect QuackHud=new Rect(268,28,294,79);
-    const float QuackEyeShotStart=6.05f,QuackEyeShotEnd=7.12f;
-    const float QuackEyeBandTop=305f,QuackEyeBandBottom=415f;
+    const float QuackFaceStart=6.05f,QuackFaceEnd=7.12f,QuackFlyoverStart=8f,QuackOpeningEnd=11.35f;
+    const float QuackSwampCue=7.73f,QuackFaceDistance=7.5f,QuackPullbackDistance=28f;
     const float QuackFirstCrack=.86f,QuackBreak=1.93f,QuackMeme=2.40f,QuackRitual=4.06f;
     const float QuackCall=QuackRitual+.78f,QuackPoolsShot=QuackRitual+2.15f,QuackReversalEnd=9.3f;
     static readonly float[] QuackCrackCues={QuackFirstCrack,1.18f,1.55f,QuackBreak};
@@ -20,7 +20,7 @@ public sealed partial class PcGame {
     QuackScene quackScene;
     float quackSceneAge,quackEmojiAt=-100;
     int quackEmojiSeen,quackSpeechCue,quackGlassCue;
-    bool quackLighting,quackCast,quackVersus,quackSkip,quackEyePose;
+    bool quackLighting,quackCast,quackVersus,quackSkip,quackFacePose;
     Color quackDay;
     Light quackSun;
     float quackSunIntensity;
@@ -54,7 +54,7 @@ public sealed partial class PcGame {
 
     void BeginQuackPresentation(){
         quackScene=QuackScene.Opening;quackSceneAge=0;quackCast=quackSkip=false;quackEmojiSeen=quackSpeechCue=0;quackEmojiAt=-100;
-        quackEyePose=false;
+        quackFacePose=false;
         quackDay=RenderSettings.ambientLight;quackLighting=true;
         quackSun=RenderSettings.sun;
         if(!quackSun){
@@ -131,13 +131,14 @@ public sealed partial class PcGame {
         }
         if(quackKing){
             bool speaking=opening?time>=1.15f&&time<4.9f:quackCast;
-            if(QuackEyeShot)HoldQuackEyePose();
+            if(opening&&time>=QuackFaceStart)HoldQuackFacePose();
             else quackKing.Play(speaking?"Attack":"Stand",.85f,opening?quackSpeechCue:1);
         }
         bool jump=(quackSkip||Input.GetKeyDown(KeyCode.Escape))&&(opening||match.QuackDownpour);
-        float end=opening?8.65f:QuackReversalEnd;
-        if(opening&&(time>=QuackEyeShotEnd||jump))RevealQuackSwamp();
-        if(opening||time>=QuackRitual)FrameQuackScene(opening,time,end);
+        float end=opening?QuackOpeningEnd:QuackReversalEnd;
+        if(opening&&(time>=QuackSwampCue||jump))RevealQuackSwamp();
+        if(opening)FrameQuackOpening(jump?end:time);
+        else if(time>=QuackRitual)FrameQuackReversal(time);
         RenderMatch();
         if(!jump&&time<end)return;
         quackScene=QuackScene.None;
@@ -181,11 +182,9 @@ public sealed partial class PcGame {
         }
     }
 
-    bool QuackEyeShot=>quackScene==QuackScene.Opening&&quackSceneAge>=QuackEyeShotStart&&quackSceneAge<QuackEyeShotEnd;
-
-    void HoldQuackEyePose(){
-        if(quackEyePose)return;
-        quackEyePose=true;
+    void HoldQuackFacePose(){
+        if(quackFacePose)return;
+        quackFacePose=true;
         var clip=quackKing.StandClip();
         var animation=quackKing.animatedRoot.GetComponent<Animation>();
         if(!clip||!animation)return;
@@ -196,36 +195,40 @@ public sealed partial class PcGame {
         animation.Sample();
     }
 
-    void FrameQuackScene(bool opening,float time,float end){
-        if(QuackEyeShot){
-            float shot=Mathf.InverseLerp(QuackEyeShotStart,QuackEyeShotEnd,time);
-            Vector3 gaze=quackKingHead+Vector3.up*1.15f+Vector3.left*.88f+Vector3.forward*.35f;
-            FrameWinterCamera(gaze,Mathf.Lerp(4.65f,4.35f,shot),93f,9f);
-            var camera=Camera.main;
-            if(camera){
-                camera.ResetProjectionMatrix();
-                var projection=camera.projectionMatrix;
-                float bandCenter=guiOrigin.y+(QuackEyeBandTop+QuackEyeBandBottom)*.5f*guiScale;
-                projection[1,2]=2*bandCenter/Screen.height-1;
-                camera.projectionMatrix=projection;
-            }
-            return;
-        }
-        if(quackEyePose){
-            quackEyePose=false;
-            if(Camera.main)Camera.main.ResetProjectionMatrix();
-        }
+    static float QuackEase(float start,float end,float time)=>Mathf.SmoothStep(0,1,Mathf.InverseLerp(start,end,time));
+    static float QuackHandoff(float time)=>QuackEase(QuackOpeningEnd-.7f,QuackOpeningEnd,time);
+
+    void FrameQuackOpening(float time){
         var king=World(QuackKingPoint)+Vector3.up*2.3f;
-        float pan=Mathf.SmoothStep(0,1,Mathf.InverseLerp(end-1.5f,end,time));
-        float close=opening?Mathf.SmoothStep(0,1,Mathf.InverseLerp(5.3f,QuackEyeShotStart,time)):0;
-        king=Vector3.Lerp(king,quackKingHead,close);
-        if(!opening){
-            float sweep=Mathf.SmoothStep(0,1,Mathf.InverseLerp(QuackPoolsShot-.35f,QuackPoolsShot+1.15f,time));
-            king=Vector3.Lerp(king,World(HumanMatch.QuackPoolPoint(0)),sweep);
+        var face=quackKingHead+Vector3.up*.55f+Vector3.left*.88f+Vector3.forward*.35f;
+        if(time<QuackFaceStart){
+            float approach=QuackEase(5.3f,QuackFaceStart,time);
+            FrameWinterCamera(Vector3.Lerp(king,face,approach),Mathf.Lerp(32,QuackFaceDistance+.65f,approach),
+                Mathf.Lerp(48,93,approach),Mathf.Lerp(45,17,approach));
+        }else if(time<QuackFaceEnd){
+            float close=QuackEase(QuackFaceStart,QuackFaceEnd,time);
+            FrameWinterCamera(face,QuackFaceDistance+.65f*(1-close),93,17);
+        }else if(time<QuackFlyoverStart){
+            float pullback=QuackEase(QuackFaceEnd,QuackFlyoverStart,time);
+            FrameWinterCamera(Vector3.Lerp(face,king,pullback),Mathf.Lerp(QuackFaceDistance,QuackPullbackDistance,pullback),
+                Mathf.Lerp(93,68,pullback),Mathf.Lerp(17,43,pullback));
+        }else{
+            float travel=QuackEase(QuackFlyoverStart,QuackOpeningEnd,time);
+            float rise=Mathf.Sin(travel*Mathf.PI)*24;
+            FrameWinterCamera(Vector3.Lerp(king,World(match.Builders[0].position),travel)+Vector3.up*rise,
+                Mathf.Lerp(QuackPullbackDistance,40,travel)+rise,68*(1-travel),Mathf.Lerp(43,56,travel));
+            controls.GameplayViewport(true,QuackHandoff(time));
         }
+    }
+
+    void FrameQuackReversal(float time){
+        var king=World(QuackKingPoint)+Vector3.up*2.3f;
+        float sweep=QuackEase(QuackPoolsShot-.35f,QuackPoolsShot+1.15f,time);
+        king=Vector3.Lerp(king,World(HumanMatch.QuackPoolPoint(0)),sweep);
+        float pan=QuackEase(QuackReversalEnd-1.5f,QuackReversalEnd,time);
         var target=Vector3.Lerp(king,World(match.Builders[0].position),pan);
-        float distance=Mathf.Lerp(Mathf.Lerp(32,12f,close),45,pan)+Mathf.Sin(pan*Mathf.PI)*42;
-        FrameWinterCamera(target,distance,Mathf.Lerp(48,73,close)*(1-pan),Mathf.Lerp(45,30,close)+pan*24);
+        float distance=Mathf.Lerp(32,45,pan)+Mathf.Sin(pan*Mathf.PI)*42;
+        FrameWinterCamera(target,distance,48*(1-pan),45+pan*24);
     }
 
     void RenderQuackCastle(GameObject castle){
@@ -325,20 +328,25 @@ public sealed partial class PcGame {
             GUI.color=old;
             return;
         }
-        if(quackScene==QuackScene.Opening){
+        bool opening=quackScene==QuackScene.Opening;
+        float handoff=opening?QuackHandoff(quackSceneAge):0;
+        float bandTop=Mathf.Lerp(65,screen.y,handoff);
+        float bandBottom=Mathf.Lerp(611,screen.yMax,handoff);
+        if(opening){
             if(quackSceneAge>=1.15f&&quackSceneAge<4.85f)DrawQuackSpeech();
-            float transition=Mathf.Max(0,1-Mathf.Abs(quackSceneAge-7.12f)/.28f);
-            if(!QuackEyeShot&&transition>0)Fill(new Rect(screen.x,65,screen.width,546),new Color(.67f,.83f,.62f,transition*.75f));
+            float mist=Mathf.SmoothStep(0,1,1-Mathf.Abs(quackSceneAge-QuackSwampCue)/.42f);
+            if(mist>0)Fill(new Rect(screen.x,bandTop,screen.width,bandBottom-bandTop),new Color(.45f,.64f,.49f,mist*.48f));
         }
-        float bandTop=QuackEyeShot?QuackEyeBandTop:65;
-        float bandBottom=QuackEyeShot?QuackEyeBandBottom:611;
         Fill(new Rect(screen.x,screen.y,screen.width,bandTop-screen.y),Color.black);
         Fill(new Rect(screen.x,bandBottom,screen.width,screen.yMax-bandBottom),Color.black);
+        var tint=GUI.color;
+        GUI.color=new Color(tint.r,tint.g,tint.b,tint.a*(1-handoff));
         string caption=quackScene==QuackScene.Opening
             ?(quackSceneAge<5?"Дождь Болотного колокола":"Братство выходит на охоту")
             :(quackSceneAge<QuackPoolsShot?"Великий Квак взывает к ливню":"Ливень накрывает болото");
         FitBossText(new Rect(49,628,910,52),caption,new GUIStyle(heading){normal={textColor=QuackGreen}},26);
         if(LobbyButton("quack.skip",new Rect(1061,642,167,42),"Пропустить"))quackSkip=true;
+        GUI.color=tint;
     }
 
     void DrawQuackSpeech(){
@@ -493,8 +501,7 @@ public sealed partial class PcGame {
     }
 
     void ClearQuackActors(){
-        if(quackEyePose&&Camera.main)Camera.main.ResetProjectionMatrix();
-        quackEyePose=false;
+        quackFacePose=false;
         if(quackRitualEffect)Destroy(quackRitualEffect);
         quackRitualEffect=null;
         if(quackKing)Destroy(quackKing.gameObject);

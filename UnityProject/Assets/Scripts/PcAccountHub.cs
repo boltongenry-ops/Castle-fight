@@ -83,7 +83,7 @@ public sealed partial class PcGame {
     }
 
     void RestoreAccountMode(bool guest){
-        Avatars.ownIdentity=null;
+        ClearOwnAvatarIdentity();
         networkGuest=guest;
         var saved=NetworkAccountStore.Read(guest);
         networkSessionEndpoint=(string)saved?["endpoint"]??"";
@@ -441,8 +441,20 @@ public sealed partial class PcGame {
         ReceiveAccountOperation("profile_update",new JObject{["ok"]=true,["profile"]=confirmed});
         Check(ProfileAvatar()&&ProfileAvatar().width==128,"The confirmed upload displays its actual JPEG immediately");
         var displayed=ProfileAvatar();
+        yield return Action("main.profile");
+        yield return Action("account-profile.back");
+        yield return Resources.UnloadUnusedAssets();
+        Check(page==Page.Main&&ProfileAvatar()==displayed&&displayed,
+            "Returning from the actual profile button keeps the uploaded texture in the menu across asset cleanup");
+        yield return Shot(folder,"00a-menu-uploaded-avatar");
         Destroy(displayed);
+        yield return null;
+        var restored=ProfileAvatar();
+        Check(restored&&restored!=displayed&&restored.width==128,
+            "If the render texture was destroyed, the verified image restores the same avatar without a network request");
+        Destroy(restored);
         Avatars.images.Remove(revision);
+        ClearOwnAvatarIdentity();
         ResetAccountAvatarRequests();
         networkProfile=null;
         ApplyAccountProfile(confirmed);
