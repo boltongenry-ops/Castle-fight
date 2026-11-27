@@ -85,6 +85,7 @@ public sealed partial class PcGame {
     void ApplyAccountProfile(JObject profile){
         networkProfile=profile;
         if(!HasNetworkProfile)return;
+        RememberOwnAvatar(profile);
         rememberedAccountName=(string)profile["name"]??"";
         if(rememberedAccountName.Length>0)networkName=rememberedAccountName;
         networkGuest=(bool?)profile["guest"]==true;
@@ -97,6 +98,7 @@ public sealed partial class PcGame {
 
     void ClearAccountIdentity(){
         networkProfile=null;
+        Avatars.ownIdentity=null;
         AccountHub.owner="";AccountHub.activity="";CloseAccountOverlay();
         networkSessionToken=rememberedAccountName="";
         if(!testing)NetworkAccountStore.Clear(networkGuest);

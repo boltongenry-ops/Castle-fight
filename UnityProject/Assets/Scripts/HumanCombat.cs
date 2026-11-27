@@ -9,7 +9,7 @@ public sealed partial class HumanMatch {
             int elder=Array.FindIndex(Lines,line=>line.unit=="h030");
             if(elder>=0)kind=elder;
         }
-        var u=new Unit {id=nextId++,team=team,kind=kind,position=position,previous=position,hp=Lines[kind].hp,direction=team==0?Vector2.right:Vector2.left};Ensure(u);Units.Add(u);InvalidateArmyCounts035();OnSpawnIndexed033(u);MechCreated(u,production,producer);UndeadCreated(u);ElementalCreated(u,production);NightCreated(u);ApplyUltimate(u);StrengthenAbyssSpawn(u);Spawned++;if(production)ChaosProduced(u);
+        var u=new Unit {id=nextId++,team=team,kind=kind,position=position,previous=position,hp=Lines[kind].hp,direction=team==0?Vector2.right:Vector2.left};Ensure(u);Units.Add(u);InvalidateArmyCounts035();OnSpawnIndexed033(u);MechCreated(u,production,producer);UndeadCreated(u);ElementalCreated(u,production);NightCreated(u);ApplyUltimate(u);StrengthenAbyssSpawn(u);StrengthenQuackUnit(u);Spawned++;if(production)ChaosProduced(u);
         // Godot gameplay.route_through_arch: leave the keep's column before
         // heading to the road. Flying units can cross the footprint directly.
         if(!Flying(u)&&Mathf.Abs(position.x-(team==0?-5120f/30:5120f/30))<320f/30&&Mathf.Abs(position.y)>256f/30){u.leaveCastleLane=true;u.exitWaypoint=new Vector2(team==0?-4736f/30:4736f/30,position.y);}
@@ -106,7 +106,7 @@ public sealed partial class HumanMatch {
             }
             target=best;
         }
-        target=NerubHuntTarget(u,target);if(target!=null)u.skirmish=true;
+        target=NerubHuntTarget(u,QuackFocusMarked(u,target));if(target!=null)u.skirmish=true;
         int targetId=target?.id??-1;
         Weapon weapon=WeaponFor(u,target,target==null);
         float acquire=l.acquisitionRange;

@@ -37,6 +37,7 @@ public sealed partial class HumanMatch {
         if(e.id=="A02T"){float age=e.lifetime-e.left;float duration=F(c?["fields"],e.lifetime<=3.01f?"Prg5":"Prg4");e.root=age<duration;e.speed=age<e.lifetime*.8f?-.8f:0;}
         if((string)c?["kind"]=="regen"){u.hp=Mathf.Min(u.maxHp,u.hp+e.power*step/Mathf.Max(.01f,e.lifetime));u.mana=Mathf.Min(u.maxMana,u.mana+F(c,"restore_mana")*step/Mathf.Max(.01f,e.lifetime));}
         else if(F(c,"regen")>0)u.hp=Mathf.Min(u.maxHp,u.hp+F(c,"regen")*step);
+        if(e.rainRelay&&e.left<=0&&u.effects.Contains(e))RelayQuackShield(u,e);
         }u.effects.RemoveAll(e=>e.left<=0);RefreshNerubVenomFields(u);}
     void UpdateAuras() {
         foreach(var u in Units){u.auraSpeed=0;u.auraSpeedNegative=0;u.auraHasteNegative=0;u.auraHaste=0;u.auraArmorNegative=0;u.auraVampiric=0;u.auraDamageNegative=0;u.auraArmor=0;u.auraMana=0;u.auraDamage=0;u.auraRegen=0;u.auraThorns=0;u.auraDamageTick=0;u.auraIds.Clear();}

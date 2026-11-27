@@ -81,6 +81,7 @@ public sealed partial class PcGame {
     }
 
     void RestoreAccountMode(bool guest){
+        Avatars.ownIdentity=null;
         networkGuest=guest;
         var saved=NetworkAccountStore.Read(guest);
         networkSessionEndpoint=(string)saved?["endpoint"]??"";
@@ -229,7 +230,8 @@ public sealed partial class PcGame {
 
     void DrawAccountOverlay(){
         EnsureRaceStyles();
-        Fill(new Rect(0,0,1280,720),new Color(0,0,0,.35f));
+        if(AccountHub.overlay==AccountOverlay.Messages)
+            Fill(new Rect(0,0,1280,720),new Color(0,0,0,.35f));
         var box=AccountOverlayRect;
         if(Event.current.type==EventType.MouseDown&&!box.Contains(Event.current.mousePosition)){
             Event.current.Use();CloseAccountOverlay();return;
@@ -359,10 +361,11 @@ public sealed partial class PcGame {
             ChatBubble(new Rect(x,y,bubble,h),own);
             long at=(long?)message["at"]??0;
             Text(x+12,y+4,bubble-24,23,at>0?DateTimeOffset.FromUnixTimeMilliseconds(at).LocalDateTime.ToString("dd.MM HH:mm"):"",timestamp);
-            Text(x+12,y+28,bubble-24,h-30,MessageSummary(message),body);
-            if(!own&&(string)message["kind"]=="invite"&&networkSlot<0&&LobbyButton("hub.chat.join."+message["id"],new Rect(x+12,y+58,bubble-24,40),"Войти в комнату")){
-                string code=(string)message["text"];
-                CloseAccountOverlay();OpenNetwork();EnterRoom("join",code);break;
+            bool invite=(string)message["kind"]=="invite";
+            bool declined=!own&&invite&&InvitationDeclined(message);
+            Text(x+12,y+28,bubble-24,h-30,declined?"Приглашение отклонено":MessageSummary(message),body);
+            if(!own&&invite&&!declined&&CanAcceptSocialInvitation&&LobbyButton("hub.chat.join."+message["id"],new Rect(x+12,y+58,bubble-24,40),"Войти в комнату")){
+                AcceptSocialInvitation((string)message["text"]);break;
             }
             y+=h+8;
         }
@@ -394,10 +397,34 @@ public sealed partial class PcGame {
         string folder=BattleLab.Arg("--pc-results");
         System.IO.Directory.CreateDirectory(folder);
         yield return new WaitForSecondsRealtime(2);
-        networkProfile=new JObject{["id"]="qa-main",["name"]="Страж замка",["wins"]=13,["coins"]=160,
+        var fixture=new JObject{["id"]="qa-main",["name"]="Страж замка",["wins"]=13,["coins"]=160,["avatar"]="ogru",["avatar_ref"]="qa-avatar",
             ["account_progression"]=1,["best_ms"]=new JObject{["five_pillars"]=94000},
             ["completed"]=new JArray("five_pillars")};
-        rememberedAccountName="Страж замка";networkSessionToken="qa-fixture";networkSessionEndpoint=NetworkAccountStore.UnityEndpoint;
+        networkSessionToken="qa-fixture";networkSessionEndpoint=NetworkAccountStore.UnityEndpoint;
+        ApplyAccountProfile(fixture);
+        var avatar=TemplateAvatar("ogru");
+        var uploaded=new Texture2D(2,2,TextureFormat.RGB24,false);
+        uploaded.SetPixels(new[]{Color.cyan,Color.blue,Color.cyan,Color.blue});uploaded.Apply();
+        Avatars.images.Add("qa-avatar",uploaded);
+        yield return Action("main.profile");
+        Check(ProfileAvatar()==uploaded,"Opening the full profile retains the uploaded avatar");
+        StopDirectory();MainMenu();
+        Check(!HasNetworkProfile&&ProfileAvatar()==uploaded,"Header retains the uploaded avatar while reconnecting");
+        var template=(JObject)fixture.DeepClone();
+        template["avatar_ref"]="";
+        ApplyAccountProfile(template);networkProfile=null;
+        Check(avatar&&ProfileAvatar()==avatar,"Header retains an avatar template while reconnecting");
+        ClearAccountIdentity();
+        Check(ProfileAvatar()!=uploaded&&Avatars.ownIdentity==null,"Signing out clears the remembered avatar");
+        networkSessionToken="qa-fixture";networkSessionEndpoint=NetworkAccountStore.UnityEndpoint;
+        ApplyAccountProfile(fixture);
+        Check(!IntroAlreadyShown(0,0)&&IntroAlreadyShown(1,0)&&IntroAlreadyShown(0,1),"Startup video plays on new installs and is skipped after an attempt or legacy completion");
+        var viewport=new Vector2(2400,1080);
+        var imageSize=new Vector2(1920,1080);
+        var start=LandscapeFrame(viewport,imageSize,0,1);
+        var later=LandscapeFrame(viewport,imageSize,12,1);
+        Check(start!=later&&start.Contains(Vector2.zero)&&start.Contains(viewport)&&later.Contains(Vector2.zero)&&later.Contains(viewport),
+            "Animated landscape moves and covers an ultrawide phone screen");
         var peer=new JObject{["id"]="qa-peer",["name"]="Мастер осады",["avatar"]="ogru",["online"]=true,["activity"]="challenge",
             ["challenge"]=HumanMatch.AbyssTrial,["wins"]=7,["games"]=14};
         var offline=new JObject{["id"]="qa-offline",["name"]="Маршал",["avatar"]="hrif",["online"]=false,
@@ -406,6 +433,7 @@ public sealed partial class PcGame {
         Check(AccountCompleted("five_pillars")&&Mathf.Approximately(AccountBest("five_pillars"),94)&&AccountCoins==160,"Account progress is drawn from the authenticated profile");
         Check(AccountPeerStatus(peer).Contains((string)progression.Challenge(HumanMatch.AbyssTrial)["title"]),"Online player shows the exact challenge name");
         Check(AccountPeerStatus(offline).Contains("был(а)"),"Offline friend shows last seen");
+        yield return Shot(folder,"00-main");
         yield return Action("account.friends");
         Check(AccountHub.overlay==AccountOverlay.Friends,"Friends dropdown opens from the main menu");
         yield return Shot(folder,"01-friends");
@@ -419,6 +447,46 @@ public sealed partial class PcGame {
         yield return Shot(folder,"03-dialogue");
         yield return Action("account.overlay.close");
         Check(!AccountOverlayOpen&&page==Page.Main,"Closing a conversation returns to the same screen");
+
+        long now=DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        var incoming=new JObject{["id"]=44,["from"]="qa-peer",["to"]="qa-main",["kind"]="text",
+            ["text"]="Привет! Проверим пропуск и посмотрим, как работает вторая стадия?",["at"]=now};
+        var snapshot=new JObject{["ok"]=true,["action"]="state",["friends"]=new JArray(),
+            ["conversations"]=new JArray(new JObject{["player"]=peer,["last"]=incoming,["unread"]=1})};
+        ReceiveSocial(snapshot);
+        ReceiveSocial(snapshot);
+        Check(socialNotifications.Count==1,"A repeated social poll does not duplicate a notification");
+        yield return null;
+        Check(activeNotification?.Id==44&&notificationChime,"The message toast displays with a notification sound");
+        yield return Shot(folder,"07-message-toast");
+        yield return Action("social.toast.open");
+        Check(socialPeer=="qa-peer"&&AccountHub.overlay==AccountOverlay.Messages&&page==Page.Main,"The toast opens the correct direct chat");
+        CloseAccountOverlay();
+
+        var invite=new JObject{["id"]=45,["from"]="qa-peer",["to"]="qa-main",["kind"]="invite",["text"]="TEST42",["at"]=now};
+        var ownReply=new JObject{["id"]=46,["from"]="qa-main",["to"]="qa-peer",["kind"]="text",["text"]="Сейчас зайду",["at"]=now};
+        var scan=new NotificationHistory{Peer="qa-peer",Last=46,Unread=1};
+        FinishNotificationHistory(scan,new JObject{["ok"]=true,["peer"]=peer,["messages"]=new JArray(invite,ownReply)});
+        yield return null;
+        Check(activeNotification?.Invitation==true&&activeNotification.Room=="TEST42","An invite is found even if the conversation's last message is outgoing");
+        yield return Action("social.toast.open");
+        Check(notificationDecision,"The invitation opens accept and decline controls");
+        directoryReady=true;
+        yield return Shot(folder,"08-match-invite");
+        yield return Action("social.toast.decline");
+        Check(activeNotification==null&&InvitationDeclined(invite),"Declining closes the toast and marks the invitation in chat");
+
+        var nextInvite=(JObject)invite.DeepClone();
+        nextInvite["id"]=47;
+        QueueSocialNotification(peer,nextInvite);
+        directoryReady=true;
+        yield return null;
+        yield return Action("social.toast.open");
+        yield return Action("social.toast.accept");
+        Check(page==Page.Network&&activeNotification==null&&directoryStatus=="Входим в комнату…",
+            "Accepting opens the invited room flow on the existing connection");
+        directoryReady=false;
+
         pendingMythicScore=new MythicScore{challenge=HumanMatch.AbyssTrial,race=2,timeMs=365000,token=networkSessionToken};
         page=Page.Progression;mythicGuestPrompt=true;AccountHub.mythicComment="Вторая попытка. Выстоял до последней волны!";
         yield return Shot(folder,"04-score-comment");

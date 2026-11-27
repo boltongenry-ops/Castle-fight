@@ -36,8 +36,7 @@ public sealed partial class PcGame {
     readonly JArray[] raceAspects=new JArray[MobileContent.RaceResources.Length];
     readonly Dictionary<string,Texture2D> raceEmblemCache=new Dictionary<string,Texture2D>();
     readonly Dictionary<string,Texture2D> aspectIconCache=new Dictionary<string,Texture2D>();
-    GUIStyle raceCardStyle,raceNameStyle,raceNameLocked,raceTagStyle,raceTitleStyle,raceOptionStyle,raceSummaryStyle,raceEyebrowStyle,raceHeadingStyle;
-    PcModel menuPortraitModel;string menuPortraitRaw;
+    GUIStyle raceCardStyle,raceNameStyle,raceNameLocked,raceTagStyle,raceTitleStyle,raceSetupTitleStyle,raceOptionStyle,raceSummaryStyle,raceEyebrowStyle,raceHeadingStyle;
 
     int RequiredWins=>roundsChoice/2+1;
     bool RaceStaged(int race)=>race>=0&&race<MobileContent.RaceResources.Length&&(race!=PepeContent.Race||PepeContent.Available);
@@ -109,6 +108,7 @@ public sealed partial class PcGame {
         raceNameLocked=new GUIStyle(raceNameStyle){normal={textColor=new Color(.55f,.58f,.56f)}};
         raceTagStyle=new GUIStyle(small){fontSize=11,wordWrap=false,clipping=TextClipping.Clip,normal={textColor=new Color(.55f,.66f,.66f)}};
         raceTitleStyle=new GUIStyle(label){fontSize=22,fontStyle=FontStyle.Bold,wordWrap=true,clipping=TextClipping.Clip,normal={textColor=new Color(.85f,.73f,.47f)}};
+        raceSetupTitleStyle=new GUIStyle(raceTitleStyle){fontSize=18,padding=new RectOffset()};
         raceOptionStyle=new GUIStyle(small){fontSize=15,wordWrap=false,clipping=TextClipping.Clip};
         raceEyebrowStyle=new GUIStyle(small){fontSize=12,wordWrap=false,clipping=TextClipping.Clip,normal={textColor=new Color(.62f,.70f,.70f)}};
         raceHeadingStyle=new GUIStyle(heading){normal={textColor=new Color(.85f,.73f,.47f)}};
@@ -146,7 +146,7 @@ public sealed partial class PcGame {
             string id=choosingBotRace?"setup.enemy."+unity:available?"setup."+SetupRaceKeys[unity]:"setup.race-"+AllRaceIds[i];
             if(Button(id,rect,"",false,raceCardStyle)) {
                 if(available&&choosingBotRace){botRaceChoice=unity;raceLoreScroll=Vector2.zero;}
-                else if(available){raceChoice=unity;raceLoreScroll=raceRulesScroll=Vector2.zero;if(matchMode==2)botRaceChoice=-1;menuPortraitRaw=null;}
+                else if(available){raceChoice=unity;raceLoreScroll=raceRulesScroll=Vector2.zero;if(matchMode==2)botRaceChoice=-1;}
                 else Notice("Эта раса ещё не перенесена в Unity");
             }
         }
@@ -158,13 +158,16 @@ public sealed partial class PcGame {
     void DrawRacePanel() {
         var panelRect=new Rect(876,106,368,562);
         AtlasSurface(panelRect);
-        int previewRace=choosingBotRace&&botRaceChoice>=0?botRaceChoice:raceChoice;
-        var frame=new Rect(892,122,108,108);AtlasTile(frame,false,false);
-        if(previewRace==raceChoice&&portraitTexture&&page==Page.Setup)GUI.DrawTexture(frame,portraitTexture,ScaleMode.ScaleToFit);
-        else {var emblem=RaceEmblem(previewRace);if(emblem)GUI.DrawTexture(frame,emblem,ScaleMode.ScaleToFit);}
-        GUI.Label(new Rect(1010,124,218,51),RaceTitle(previewRace),raceTitleStyle);
+        int previewRace=SetupPreviewRace;
+        var frame=new Rect(892,122,180,120);
+        Fill(frame,AtlasInk);
+        var portrait=RaceArtworkFor(previewRace);
+        if(!portrait)portrait=RaceEmblem(previewRace);
+        if(portrait)GUI.DrawTexture(frame,portrait,ScaleMode.ScaleToFit);
+        Border(frame,AtlasEdge);
+        Text(1084,118,144,65,RaceTitle(previewRace),raceSetupTitleStyle);
         int godot=RaceOfUnity(previewRace);
-        DrawRaceDescription(new Rect(1010,176,218,87),godot>=0?AllRaceLore[godot]:"",small,ref raceLoreScroll);
+        DrawRaceDescription(new Rect(1084,184,144,76),godot>=0?AllRaceLore[godot]:"",small,ref raceLoreScroll);
         Accent(892,268,336);
         GUI.Label(new Rect(892,276,300,20),"ПАРАМЕТРЫ БИТВЫ",raceEyebrowStyle);
         string[] modes={"Выбор расы","Случайные расы","Зеркальная битва"};
@@ -183,6 +186,7 @@ public sealed partial class PcGame {
         DrawRaceDescription(new Rect(892,558,336,52),summary,raceSummaryStyle,ref raceRulesScroll);
         if(Button("setup.start",new Rect(892,616,336,46),"Начать битву  →",true))BeginOfflineVersus();
     }
+    int SetupPreviewRace=>choosingBotRace&&botRaceChoice>=0?botRaceChoice:raceChoice;
     void DrawRaceDescription(Rect viewport,string text,GUIStyle style,ref Vector2 scroll) {
         var wrapped=new GUIStyle(style){wordWrap=true,clipping=TextClipping.Clip,padding=new RectOffset(),
             alignment=TextAnchor.UpperLeft};
@@ -208,48 +212,6 @@ public sealed partial class PcGame {
         return -1;
     }
 
-    // The race panel shows the staged builder as a live portrait, like Godot unit_portrait.gd.
-    // The panel follows whichever model set this player carries: the classic build has
-    // populated SD arrays and empty Reforged ones, the Reforged build the opposite.
     static GameObject FirstModel(GameObject[] models)=>models!=null&&models.Length>0?models[0]:null;
-    GameObject RacePreviewPrefab()=>MenuBuilder(raceChoice);
-    void EnsurePortraitRig() {
-        if(portraitCamera)return;
-        portraitStage=new GameObject("Selection portrait stage");portraitStage.transform.position=new Vector3(0,-1000,0);
-        portraitCamera=new GameObject("Selection portrait camera").AddComponent<Camera>();portraitCamera.transform.SetParent(portraitStage.transform);
-        portraitCamera.fieldOfView=28;portraitCamera.nearClipPlane=.05f;portraitCamera.farClipPlane=100;portraitCamera.cullingMask=1<<31;
-        portraitCamera.clearFlags=CameraClearFlags.SolidColor;portraitCamera.backgroundColor=new Color(.055f,.043f,.025f);portraitCamera.enabled=false;
-        portraitTexture=new RenderTexture(256,256,16);portraitCamera.targetTexture=portraitTexture;
-        if(Camera.main)Camera.main.cullingMask&=~(1<<31);
-    }
-    void RenderMenuPortrait() {
-        if(page!=Page.Setup){if(portraitCamera)portraitCamera.enabled=false;return;}
-        var prefab=RacePreviewPrefab();if(!prefab){if(portraitCamera)portraitCamera.enabled=false;return;}
-        EnsurePortraitRig();
-        if(portraitModel){portraitModel.gameObject.SetActive(false);Destroy(portraitModel.gameObject);portraitModel=null;portraitRaw=null;}
-        if(menuPortraitRaw!=prefab.name) {
-            if(menuPortraitModel){menuPortraitModel.gameObject.SetActive(false);Destroy(menuPortraitModel.gameObject);}
-            menuPortraitModel=Instantiate(prefab,portraitStage.transform).GetComponent<PcModel>();menuPortraitRaw=prefab.name;
-            foreach(var tr in menuPortraitModel.GetComponentsInChildren<Transform>())tr.gameObject.layer=31;
-            menuPortraitModel.transform.localRotation=Quaternion.identity;
-            menuPortraitModel.SamplePose();
-            var workerHead=menuPortraitModel.GetComponentsInChildren<Transform>().FirstOrDefault(v=>v.name.Equals("Bone_Head",StringComparison.OrdinalIgnoreCase));
-            if(ClassicWispBody040.IsWisp(menuPortraitModel.raw))FrameWisp040(menuPortraitModel);
-            else if(menuPortraitModel.raw=="h018"&&workerHead){var point=workerHead.position+Vector3.up*.08f;portraitCamera.transform.position=point+new Vector3(0,.05f,1.9f);portraitCamera.transform.LookAt(point);}
-            else if(menuPortraitModel.HeadBounds(out var face)) {
-                var anchor=menuPortraitModel.GetComponentsInChildren<Transform>().FirstOrDefault(t=>string.Equals(t.name,"Head Ref",StringComparison.OrdinalIgnoreCase));
-                float span=Mathf.Clamp(Mathf.Max(face.size.x,face.size.y),.28f,.7f);
-                var point=anchor?anchor.position+Vector3.up*span*.2f:face.center;float distance=Mathf.Max(1.6f,span*3.3f);
-                portraitCamera.transform.position=point+new Vector3(0,span*.03f,distance);portraitCamera.transform.LookAt(point);
-            } else {
-                var bounds=menuPortraitModel.BodyBounds();float size=Mathf.Max(.6f,Mathf.Max(bounds.size.x,bounds.size.y));
-                var point=bounds.center+Vector3.up*(bounds.size.y*.1f);
-                portraitCamera.transform.position=point+new Vector3(0,size*.1f,Mathf.Max(2f,size*1.9f));portraitCamera.transform.LookAt(point);
-            }
-        }
-        if(HdArt040&&menuPortraitModel&&menuPortraitModel.reforged)DrawHdActor040(menuPortraitModel,false,Time.unscaledTime,portraitCamera,31);
-        ClassicWispBody040.FacePortrait(menuPortraitModel,portraitCamera);
-        portraitCamera.Render();
-    }
 }
 }

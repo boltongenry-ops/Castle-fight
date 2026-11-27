@@ -10,7 +10,7 @@ from pathlib import Path
 from urllib import error, parse, request
 
 CHALLENGE = "mythic_eternal_winter"
-CHALLENGES = (CHALLENGE, "mythic_funeral_choir", "mythic_cursed_horde", "mythic_last_protocol", "mythic_abyssal_tide")
+CHALLENGES = (CHALLENGE, "mythic_funeral_choir", "mythic_cursed_horde", "mythic_last_protocol", "mythic_abyssal_tide", "mythic_quackalypse")
 ACHIEVEMENTS = frozenset(CHALLENGES) | frozenset("""
     five_pillars no_legends mixed_army jade_horde web_and_ice tide_and_fire iron_and_bone
     wild_defense elemental_siege elf_precision north_storm bone_fortress corrupt_triangle

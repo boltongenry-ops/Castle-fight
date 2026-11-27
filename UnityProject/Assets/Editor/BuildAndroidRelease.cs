@@ -67,6 +67,10 @@ public static class BuildAndroidRelease {
     public static void BuildAbyssBalancePreview()=>BuildSigned("0.48.7",57);
     public static void BuildCommandDeskPreview()=>BuildSigned("0.49.0",63);
     public static void BuildAccountGuide0491()=>BuildSigned("0.49.1",64);
+    public static void BuildMenu0492()=>BuildSigned("0.49.2",65);
+    public static void BuildQuack0493()=>BuildSigned("0.49.3",66);
+    public static void BuildQuack0494()=>BuildSigned("0.49.4",67);
+    public static void BuildSocial0495()=>BuildSigned("0.49.5",68);
     public static void BuildWinterFront0462()=>BuildSigned("0.46.2",46);
     public static void BuildWinterBoss0461()=>BuildSigned("0.46.1",45);
     public static void BuildSquad0442()=>BuildSigned("0.44.2",41);

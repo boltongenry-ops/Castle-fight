@@ -23,7 +23,7 @@ public sealed partial class HumanMatch {
             if(!ChallengeRescueAllowed)RescueCharges[team]=0;
         }
         Gold[1]=Mathf.Max(0,F(ChallengeRules,"opponent_start_gold",Gold[1]));
-        PrepareEternalWinter();BeginChoir();BeginCursedHorde();BeginLastProtocol();BeginAbyssTrial();
+        PrepareEternalWinter();BeginChoir();BeginCursedHorde();BeginLastProtocol();BeginAbyssTrial();BeginQuackTrial();
     }
 
     public float RestoreCastleHealth(int team,float amount){
@@ -44,7 +44,7 @@ public sealed partial class HumanMatch {
 
     void ResolveChallengeClock(float dt){
         if(ChallengeRules==null||Finished)return;
-        TickEternalWinter();TickChoir();TickCursedHorde();TickLastProtocol(dt);TickAbyssTide();
+        TickEternalWinter();TickChoir();TickCursedHorde();TickLastProtocol(dt);TickAbyssTide();TickQuackTrial();
         float survive=ChallengeSurvivalTime;
         if(survive>0&&Elapsed>=survive){
             Winner=ChallengeFinalConditions()?0:1;

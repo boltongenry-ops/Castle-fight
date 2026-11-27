@@ -3,25 +3,25 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Video;
 namespace CastleFight {
-// Godot startup_intro.gd parity: the source intro movie plays once per launch,
-// covering the screen in 16:9, then the menu soundtrack continues from the frame
-// the movie stopped at. Skipping is allowed only after one complete viewing.
 public sealed partial class PcGame {
     const float IntroMusicOffset=70.52f;
+    const string IntroShownKey="cf-intro-shown", IntroCompletedKey="cf-intro-completed";
     VideoPlayer introPlayer;RenderTexture introTexture;AudioSource introAudio;
     bool introPlaying,introLeaving,introCaptureDone;
     float introFade,introStall,introFurthest,introPlayedAt;
     string introCapturePath;
 
-    bool IntroWanted() {
+    bool IntroAllowed() {
         if(testing)return false;
-        bool forced=BattleLab.Arg("--pc-intro")!="";
-        if(!forced&&(BattleLab.Arg("--pc-mode")!=""||BattleLab.Arg("--map-shot")!=""||BattleLab.Arg("--map-view")!=""||BattleLab.Arg("--pc-startup-shot")!=""))return false;
-        return File.Exists(Path.Combine(MobileContent.MediaRoot,"Frontend/startup_intro.mp4"))||ContentResources.Load<VideoClip>("PcIntro")!=null;
+        if(BattleLab.Arg("--pc-intro")!="")return true;
+        return !IntroAlreadyShown(PlayerPrefs.GetInt(IntroShownKey),PlayerPrefs.GetInt(IntroCompletedKey))
+            &&BattleLab.Arg("--pc-mode")==""&&BattleLab.Arg("--map-shot")==""&&BattleLab.Arg("--map-view")==""&&BattleLab.Arg("--pc-startup-shot")=="";
     }
-    void StartIntro(string capturePath) {
+    static bool IntroAlreadyShown(int shown,int completed)=>shown!=0||completed!=0;
+    bool StartIntro(string capturePath) {
         string video=Path.Combine(MobileContent.MediaRoot,"Frontend/startup_intro.mp4");var clip=File.Exists(video)?null:ContentResources.Load<VideoClip>("PcIntro");
-        if(!clip&&!File.Exists(video)){Debug.Log("CF_PC_INTRO_MISSING");return;}
+        if(!clip&&!File.Exists(video)){Debug.Log("CF_PC_INTRO_MISSING");return false;}
+        if(BattleLab.Arg("--pc-intro")==""){PlayerPrefs.SetInt(IntroShownKey,1);PlayerPrefs.Save();}
         if(menuAudio)menuAudio.Stop();introLeaving=false;controls.InputBlocked=true;
         introCapturePath=capturePath;introPlaying=true;introFurthest=0;introStall=0;introFade=0;introCaptureDone=false;
         introTexture=new RenderTexture(1280,720,0){name="Startup intro"};introTexture.Create();
@@ -39,6 +39,7 @@ public sealed partial class PcGame {
         introPlayer.prepareCompleted+=player=>{player.Play();introStall=0;Debug.Log("CF_PC_INTRO_PREPARED length="+player.length);};
         introPlayer.Prepare();introPlayedAt=Time.realtimeSinceStartup;
         Debug.Log("CF_PC_INTRO_START source=startup_intro.mp4 duration=36.40 url="+(!clip));
+        return true;
     }
     void OnIntroFinished(VideoPlayer player) {
         if(!introPlaying||introLeaving)return;
@@ -46,14 +47,14 @@ public sealed partial class PcGame {
     }
     void RequestIntroSkip() {
         if(!introPlaying||introLeaving||BattleLab.Arg("--pc-intro-lock")=="1")return;
-        Debug.Log("CF_PC_INTRO_SKIP_REQUEST");if(PlayerPrefs.GetInt("cf-intro-completed",0)==0)return;
+        Debug.Log("CF_PC_INTRO_SKIP_REQUEST");
         FinishIntro(false);
     }
     void FinishIntro(bool completed) {
         if(introLeaving)return;introLeaving=true;
         float played=Mathf.Max(0,introFurthest);
         if(introPlayer)introPlayer.loopPointReached-=OnIntroFinished;
-        if(completed){PlayerPrefs.SetInt("cf-intro-completed",1);PlayerPrefs.Save();}
+        if(completed&&BattleLab.Arg("--pc-intro")==""){PlayerPrefs.SetInt(IntroCompletedKey,1);PlayerPrefs.Save();}
         if(introPlayer){introPlayer.Stop();introPlayer.targetTexture=null;Destroy(introPlayer.gameObject);introPlayer=null;introAudio=null;}
         if(introTexture){introTexture.Release();Destroy(introTexture);introTexture=null;}
         introResumeMusic=IntroMusicOffset+played;
@@ -102,7 +103,7 @@ public sealed partial class PcGame {
         if(introLeaving)Fill(new Rect(0,0,Screen.width,Screen.height),new Color(0,0,0,introFade));
         GUI.matrix=Matrix4x4.TRS(new Vector3(guiOrigin.x,guiOrigin.y,0),Quaternion.identity,Vector3.one*guiScale);
 
-        if(!introLeaving&&PlayerPrefs.GetInt("cf-intro-completed",0)==1&&Button("intro.skip",new Rect(1080,638,170,52),"Пропустить  ›",true))RequestIntroSkip();
+        if(!introLeaving&&BattleLab.Arg("--pc-intro-lock")!="1"&&Button("intro.skip",new Rect(1080,638,170,52),"Пропустить  ›",true))RequestIntroSkip();
         GUI.matrix=previous;
     }
 }

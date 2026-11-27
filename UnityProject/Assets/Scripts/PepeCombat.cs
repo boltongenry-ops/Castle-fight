@@ -48,7 +48,8 @@ public sealed partial class HumanMatch {
 
     void PepeGiveShield(Unit unit, float points, float seconds, string sourceSkill = "PShd") {
         unit.effects.Add(new Effect {id=PepeShieldId, group=PepeShieldId, left=seconds, lifetime=seconds,
-            power=points, sourceTeam=unit.team, config=(JObject)Abilities[PepeShieldId]});
+            power=points, sourceTeam=unit.team, config=(JObject)Abilities[PepeShieldId],
+            rainRelay=QuackActive&&unit.team==1&&sourceSkill=="PGSh"});
         PulseAt(unit.position, 1.2f, ReedGreen, "", .65f, "pepe:"+sourceSkill,unit.id);
     }
 

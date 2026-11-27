@@ -88,6 +88,7 @@ public sealed partial class HumanMatch {
     }
 
     void ApplyCastleDamage(int team,float amount){
+        if(QuackCastleHit(team,amount))return;
         if(team==1&&LastProtocol&&!ProtocolMarch){
             if(!ProtocolSecondStage){
                 amount*=1-.35f*ProtocolStationsUp;

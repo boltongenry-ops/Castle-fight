@@ -359,8 +359,7 @@ public sealed partial class PcGame {
     }
     void LateUpdate() {
         UpdateWorkshopPreview();
-        if(match==null){RenderMenuPortrait();return;}
-        if(menuPortraitModel){menuPortraitModel.gameObject.SetActive(false);Destroy(menuPortraitModel.gameObject);menuPortraitModel=null;menuPortraitRaw=null;}
+        if(match==null)return;
         var prefab=PortraitPrefab(out var raw);if(!prefab)return;
         if(!portraitCamera) {
             portraitStage=new GameObject("Selection portrait stage");portraitStage.transform.position=new Vector3(0,-1000,0);

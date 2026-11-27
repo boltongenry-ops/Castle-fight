@@ -328,8 +328,7 @@ public sealed partial class PcGame {
         if(AtlasCard("main.network",new Rect(840,346,352,265),2,"Сетевая игра"))OpenNetwork();
 
         if(AtlasButton("main.viewer",new Rect(132,652,109,43),"Карта")){page=Page.Viewer;controls.Focus("west");}
-        if(AtlasButton("main.intro",new Rect(248,652,109,43),"Ролик"))StartIntro(null);
-        if(AtlasButton("main.quit",new Rect(364,652,109,43),"Выход"))Application.Quit();
+        if(AtlasButton("main.quit",new Rect(248,652,109,43),"Выход"))Application.Quit();
         if(AtlasButton("main.guide",new Rect(891,651,174,46),"Учебник",icon:5))OpenGuide();
         if(AtlasButton("main.settings",new Rect(1077,651,176,46),"Настройки",icon:4))OpenSettings();
         GUI.Label(new Rect(532,689,217,18),(Application.isMobilePlatform?"ANDROID":"WINDOWS")+"  "+Version,

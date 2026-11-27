@@ -8,6 +8,8 @@ namespace CastleFight {
 public sealed partial class PcGame {
     Texture2D menuArtwork;
     AudioSource menuAudio;
+    Texture2D menuMist;
+    float landscapeMotion;
 
     void StartFrontend() {
         if(!FindAnyObjectByType<AudioListener>()){var host=Camera.main?Camera.main.gameObject:gameObject;host.AddComponent<AudioListener>();Debug.Log("CF_PC_AUDIO_LISTENER_RESTORED");}
@@ -25,25 +27,66 @@ public sealed partial class PcGame {
         menuAudio.volume=options.musicVolume;AudioListener.pause=false;menuAudio.Play();Debug.Log("CF_PC_MENU_MUSIC_PLAY state="+menuAudio.clip.loadState+" offset="+menuAudio.time);
     }
     void UpdateFrontend() {
+        landscapeMotion=Mathf.MoveTowards(landscapeMotion,page==Page.Main?1f:0f,Time.unscaledDeltaTime*1.8f);
         if(menuAudio) {
             bool inMenu=page==Page.Guide||aspectWaiting||page==Page.Progression||page==Page.Profile||page==Page.Main||page==Page.Setup||page==Page.Network||(page==Page.Settings&&settingsReturn!=Page.Pause);
             menuAudio.volume=Mathf.MoveTowards(menuAudio.volume,inMenu?options.musicVolume:0,Time.unscaledDeltaTime*.5f);
         }
         PollLobby();
         UpdateAccountHub();
+        UpdateSocialNotifications();
     }
     void DrawFrontendBleed() {
+        if(Event.current.type!=EventType.Repaint)return;
         bool atlas=page==Page.Main||page==Page.Setup||page==Page.Progression||
             page==Page.Profile||page==Page.Network||page==Page.Guide||page==Page.Settings&&settingsReturn==Page.Main;
         if(atlas)PrepareCampaignArtwork();
         var backdrop=atlas&&campaignMap?campaignMap:menuArtwork;
-        if(backdrop)GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),backdrop,ScaleMode.ScaleAndCrop);
+        if(atlas&&campaignMap&&landscapeMotion>0)DrawLivingLandscape();
+        else if(backdrop)GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),backdrop,ScaleMode.ScaleAndCrop);
         else {GUI.color=new Color(.015f,.025f,.03f);GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),Texture2D.whiteTexture);GUI.color=Color.white;}
+    }
+    static Rect LandscapeFrame(Vector2 viewport,Vector2 image,float time,float strength){
+        float scale=Mathf.Max(viewport.x/image.x,viewport.y/image.y);
+        var size=image*scale*(1+strength*(.040f+.008f*Mathf.Sin(time*.18f)));
+        var shift=new Vector2(viewport.x*.012f*Mathf.Sin(time*.24f),viewport.y*.008f*Mathf.Sin(time*.16f))*strength;
+        return new Rect((viewport-size)*.5f+shift,size);
+    }
+    void DrawLivingLandscape(){
+        float time=Time.realtimeSinceStartup;
+        var frame=LandscapeFrame(new Vector2(Screen.width,Screen.height),new Vector2(campaignMap.width,campaignMap.height),time,landscapeMotion);
+        GUI.DrawTexture(frame,campaignMap,ScaleMode.StretchToFill);
+        if(!menuMist)menuMist=CreateLandscapeMist();
+        var oldColor=GUI.color;
+        DrawLandscapeMist(frame,time,.14f,.27f,.43f,.13f,0f,.26f);
+        DrawLandscapeMist(frame,time,.72f,.23f,.44f,.11f,2.1f,.23f);
+        DrawLandscapeMist(frame,time,.57f,.43f,.32f,.09f,3.9f,.16f);
+        GUI.color=oldColor;
+    }
+    void DrawLandscapeMist(Rect frame,float time,float x,float y,float width,float height,float phase,float opacity){
+        float drift=Mathf.Sin(time*.115f+phase);
+        var rect=new Rect(frame.x+frame.width*(x-width*.5f+.045f*drift),
+            frame.y+frame.height*(y-height*.5f+.012f*Mathf.Cos(time*.14f+phase)),frame.width*width,frame.height*height);
+        GUI.color=new Color(.91f,.94f,1f,opacity*landscapeMotion*(.8f+.2f*Mathf.Cos(time*.19f+phase)));
+        GUI.DrawTexture(rect,menuMist,ScaleMode.StretchToFill);
+    }
+    static Texture2D CreateLandscapeMist(){
+        const int width=128,height=64;
+        var pixels=new Color32[width*height];
+        for(int y=0;y<height;y++)for(int x=0;x<width;x++){
+            float u=x/(width-1f),v=y/(height-1f);
+            float envelope=Mathf.Clamp01(1-4*((u-.5f)*(u-.5f)+(v-.5f)*(v-.5f)));
+            float noise=Mathf.PerlinNoise(u*5,v*3)*.65f+Mathf.PerlinNoise(u*11+7,v*7)*.35f;
+            pixels[y*width+x]=new Color32(255,255,255,(byte)(255*envelope*envelope*noise));
+        }
+        var texture=new Texture2D(width,height,TextureFormat.RGBA32,false){name="Campaign mist",wrapMode=TextureWrapMode.Clamp};
+        texture.SetPixels32(pixels);texture.Apply(false,true);
+        return texture;
     }
     void DrawMenuBackground() {
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.18f));
     }
-    void DisposeFrontend(){StopDirectory();DisposeAccountAvatars();DisposeStickers();DisposeCampaignArtwork();DisposeLoadingArt();if(menuAudio)Destroy(menuAudio);DisposeWinterArtwork();DisposeHordeArtwork();}
+    void DisposeFrontend(){StopDirectory();DisposeAccountAvatars();DisposeStickers();DisposeCampaignArtwork();ReleaseRaceArtwork();DisposeLoadingArt();if(menuAudio)Destroy(menuAudio);if(menuMist)Destroy(menuMist);if(notificationChime)Destroy(notificationChime);DisposeWinterArtwork();DisposeHordeArtwork();}
     // Only the current pair is decoded; fifteen source paintings stay on disk.
     static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
     static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};
@@ -62,7 +105,7 @@ public sealed partial class PcGame {
         versusSerial++;versusActive=false;versusPrepared=false;mobileRoundPrepared=false;
         if(MobileContent.Active)MobileContent.Current.VersusLoading=false;
         DisposeVersusArt();
-        versusWinter=choirVersus=hordeVersus=protocolVersus=abyssVersus=false;
+        versusWinter=choirVersus=hordeVersus=protocolVersus=abyssVersus=quackVersus=false;
     }
     void BeginVersus(int a,int b,bool online){
         DisposeVersusArt();versusSerial++;versusA=Mathf.Clamp(a,0,VersusKeys.Length-1);versusB=Mathf.Clamp(b,0,VersusKeys.Length-1);versusActive=true;versusPrepared=false;versusNetwork=online;versusAt=Time.realtimeSinceStartup;versusReadyVisible=0;versusReadyDrawFrame=-1;
@@ -71,9 +114,10 @@ public sealed partial class PcGame {
         hordeVersus=!online&&(string)activeChallenge?["id"]==HumanMatch.HordeTrial;
         protocolVersus=!online&&ActiveProtocolTrial;
         abyssVersus=!online&&ActiveAbyssTrial;
-        versusWinter=abyssVersus||protocolVersus||choirVersus||hordeVersus||!online&&(string)activeChallenge?["id"]==HumanMatch.WinterTrial;
+        quackVersus=!online&&(string)activeChallenge?["id"]==HumanMatch.QuackTrial;
+        versusWinter=quackVersus||abyssVersus||protocolVersus||choirVersus||hordeVersus||!online&&(string)activeChallenge?["id"]==HumanMatch.WinterTrial;
         winterVersusFrame=-1;winterVersusReveal=0;
-        if(versusWinter&&!choirVersus&&!hordeVersus&&!protocolVersus&&!abyssVersus)WinterArtwork();
+        if(versusWinter&&!quackVersus&&!choirVersus&&!hordeVersus&&!protocolVersus&&!abyssVersus)WinterArtwork();
         if(MobileContent.Active){
             MobileContent.Current.VersusLoading=true;
             PrepareVersusFallbacks();

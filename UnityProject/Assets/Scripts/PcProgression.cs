@@ -8,14 +8,14 @@ public sealed partial class PcGame {
     PcProgressionStore progression;bool progressShop,challengeSettled;Vector2 progressionScroll;string purchaseConfirm;
     JObject activeChallenge;int challengeReward;int[] savedChallengeSetup;
     GameObject builderCosmetic;Material builderCosmeticMaterial;
-    static readonly string[] ProgressRaces={"Human Alliance","Orcish Horde","Naga Faction","Nature Force","Chaos Legions","Northern Realms","Mech Coalition","Undead Forces","Corrupted Conglomerate","Elementals' Universe","Night Elfs","Elven Union","Ultimate Builder","Nerubian Swarm","Pandaren Order","Centaur Khanates"};
+    static readonly string[] ProgressRaces={"Human Alliance","Orcish Horde","Naga Faction","Nature Force","Chaos Legions","Northern Realms","Mech Coalition","Undead Forces","Corrupted Conglomerate","Elementals' Universe","Night Elfs","Elven Union","Ultimate Builder","Nerubian Swarm","Pandaren Order","Centaur Khanates","Pepe Brotherhood"};
     void LoadProgression(){
         var asset=ContentResources.Load<TextAsset>("PcProgression");
         if(!asset)throw new InvalidOperationException("Missing progression catalog");
         var data=JObject.Parse(asset.text);
         ChallengeCatalog034.Extend(data);
         ChallengeCampaign038.Extend(data);
-        data["mythic"]=new JArray(WinterTrialDefinition(),ChoirDefinition(),HordeDefinition(),ProtocolDefinition(),AbyssDefinition());
+        data["mythic"]=new JArray(WinterTrialDefinition(),ChoirDefinition(),HordeDefinition(),ProtocolDefinition(),AbyssDefinition(),QuackDefinition());
         var items=(JArray)data["items"];
         items.Add(new JObject{["id"]=MemePackId,["kind"]="stickers",["title"]="Рофлопак · местные легенды",["description"]="4 стикера: наги, гриб, вышки и Терминатор. Для личного чата и сетевого боя.",["cost"]=300});
         WorkshopCatalog038.Extend(items);
@@ -51,9 +51,11 @@ public sealed partial class PcGame {
     }
     Color CosmeticColor(JObject row){return row!=null&&ColorUtility.TryParseHtmlString("#"+(string)row["color"],out var color)?color:new Color(.38f,.45f,.43f);}
     Texture2D ProfileAvatar(){
-        var row=progression.Item(AccountEquipment("avatar"));
+        var identity=networkProfile??(HasEndpointToken?Avatars.ownIdentity:null);
+        string avatarItem=identity!=null&&!HasNetworkProfile?(string)identity["equipped"]??"":AccountEquipment("avatar");
+        var row=progression.Item(avatarItem);
         if(row!=null)return ContentResources.Load<Texture2D>("RaceIcon-"+(string)row["asset"]);
-        var image=AccountAvatar(networkProfile);
+        var image=AccountAvatar(identity);
         return image?image:unitIcons.FirstOrDefault();
     }
     void DrawProfileBadge(Rect rect){var frame=CosmeticColor(progression.Item(AccountEquipment("frame")));Fill(rect,new Color(.035f,.05f,.055f));var icon=ProfileAvatar();if(icon)GUI.DrawTexture(new Rect(rect.x+4,rect.y+4,rect.width-8,rect.height-8),icon,ScaleMode.ScaleToFit);Border(rect,frame,3);}
@@ -112,6 +114,7 @@ public sealed partial class PcGame {
     }
     void DrawChallengeHud(){
         if(activeChallenge==null)return;
+        if(match.QuackActive){DrawQuackHud();return;}
         if(match.LastProtocol){DrawProtocolHud();return;}
         if(match.AbyssTrialActive){DrawAbyssHud();return;}
         if(match.CursedHorde){DrawHordeHud();return;}

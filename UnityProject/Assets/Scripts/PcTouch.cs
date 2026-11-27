@@ -8,7 +8,9 @@ public sealed partial class PcGame {
     Vector2 GuiPoint(Vector2 screen)=>new Vector2((screen.x-guiOrigin.x)/guiScale,(Screen.height-screen.y-guiOrigin.y)/guiScale);
     bool TouchOverUi(Vector2 screen) {
         if(versusActive||showVoicePanel||showNetworkProfile||showUpdatePanel||showStickerPicker&&page!=Page.Match)return true;
-        var p=GuiPoint(screen);if(page==Page.Viewer)return p.y<80;
+        var p=GuiPoint(screen);
+        if(AccountOverlayOpen||SocialNotificationAt(p))return true;
+        if(page==Page.Viewer)return p.y<80;
         if(page!=Page.Match)return true;
         if(Application.isMobilePlatform&&(p.y<42||new Rect(5,46,52,52).Contains(p)||new Rect(960,482,320,238).Contains(p)))return true;
         if(onlineMatch&&(new Rect(68,Application.isMobilePlatform?48:33,160,48).Contains(p)||(Application.isMobilePlatform&&MobileTalkRect.Contains(p))))return true;

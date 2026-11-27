@@ -10,14 +10,14 @@ namespace CastleFight {
 public sealed partial class PcGame {
     enum GuideTab { Buildings, Units, Specials, Aspects }
 
-    int guideRace=-1,guideEntry=-1,guideActorIndex,guideArtworkRace=-1;
+    int guideRace=-1,guideEntry=-1,guideActorIndex,raceArtworkRace=-1;
     HumanMatch guideAuthority;
     Vector2 guideGridScroll,guideTextScroll;
     readonly Vector2[] guideAspectScroll=new Vector2[2];
     string guideQuery="",guideDescription="";
     bool guideUnit,guideLoading;
     GuideTab guideTab;
-    Texture2D guideArtwork;
+    Texture2D raceArtwork;
     GUIStyle guideCardName,guideCardInfo,guideLore;
     readonly Stack<int> guideHistory=new Stack<int>();
     readonly Dictionary<int,int[]> guideActors=new Dictionary<int,int[]>();
@@ -34,13 +34,13 @@ public sealed partial class PcGame {
     }
 
     void CloseGuide(){
-        if(guideArtwork)Destroy(guideArtwork);
-        guideArtwork=null;guideArtworkRace=-1;
+        ReleaseRaceArtwork();
         guideAuthority=null;guideRace=guideEntry=-1;guideLoading=false;guideActors.Clear();
     }
 
     void UpdateGuide(){
-        if(page!=Page.Guide&&(guideAuthority!=null||guideArtwork||guideLoading))CloseGuide();
+        if(page!=Page.Guide&&(guideAuthority!=null||guideLoading))CloseGuide();
+        if(page!=Page.Guide&&page!=Page.Setup&&raceArtworkRace>=0)ReleaseRaceArtwork();
     }
 
     IEnumerator OpenBlackHandGuide(){
@@ -188,28 +188,33 @@ public sealed partial class PcGame {
         Text(card.x+7,card.y+89,card.width-14,53,title,name);
     }
 
-    Texture2D GuideArtworkFor(int race){
-        if(guideArtworkRace==race)return guideArtwork;
-        if(guideArtwork)Destroy(guideArtwork);
-        guideArtwork=null;guideArtworkRace=race;
+    void ReleaseRaceArtwork(){
+        if(raceArtwork)Destroy(raceArtwork);
+        raceArtwork=null;raceArtworkRace=-1;
+    }
+
+    Texture2D RaceArtworkFor(int race){
+        if(raceArtworkRace==race)return raceArtwork;
+        if(raceArtwork)Destroy(raceArtwork);
+        raceArtwork=null;raceArtworkRace=race;
         string resource="GuidePortraits/"+VersusKeys[race];
-        if(!MobileContent.Active)FrontendTexture(ref guideArtwork,resource+".jpg");
-        if(!guideArtwork){
+        if(!MobileContent.Active)FrontendTexture(ref raceArtwork,resource+".jpg");
+        if(!raceArtwork){
             var encoded=Resources.Load<TextAsset>(resource);
             if(encoded){
                 var picture=new Texture2D(2,2,TextureFormat.RGB24,false){name=resource,wrapMode=TextureWrapMode.Clamp};
-                if(picture.LoadImage(encoded.bytes,true))guideArtwork=picture;else Destroy(picture);
+                if(picture.LoadImage(encoded.bytes,true))raceArtwork=picture;else Destroy(picture);
                 Resources.UnloadAsset(encoded);
             }
         }
-        return guideArtwork;
+        return raceArtwork;
     }
 
     void DrawGuideRaceFeature(Rect rect,int race,bool openButton){
         AtlasSurface(rect);
         const float pictureWidth=366;
         var art=new Rect(rect.x+11,rect.y+11,pictureWidth,pictureWidth*2/3);
-        var painting=GuideArtworkFor(race);
+        var painting=RaceArtworkFor(race);
         Fill(art,AtlasInk);
         if(painting)GUI.DrawTexture(art,painting,ScaleMode.ScaleToFit);
         else AtlasScene(3,art);

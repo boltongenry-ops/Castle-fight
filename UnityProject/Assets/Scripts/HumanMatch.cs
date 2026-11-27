@@ -34,7 +34,7 @@ public sealed partial class HumanMatch {
         public readonly List<int> jobs=new List<int>();
     }
     public sealed class Effect {
-        public string id,group;public float left,lifetime,power,armor,haste,speed,strength,incoming,dotTick;public bool root,ground;public int sourceTeam;public JObject config;
+        public string id,group;public float left,lifetime,power,armor,haste,speed,strength,incoming,dotTick;public bool root,ground,rainRelay;public int sourceTeam;public JObject config;
         public float WeaponDamageModifier => id == PepeRules.PepeShieldId || (string)config?["kind"] == "regen" ? 0 : power;
         public Effect Copy()=>(Effect)MemberwiseClone();
     }
@@ -205,13 +205,16 @@ public sealed partial class HumanMatch {
         h.spawnLeft+=Interval(h);
         bool pair=HasPair033(h.kind);
         float lane=pair?Mathf.Max(1.1f,StatCollision033(h.kind)*1.1f):0;
+        bool replaced=TryQuackInfiltration(h);
         if(length>1) {
             var kinds=ProdKinds033(h.kind);
             for(int i=0;i<length;i++) {
                 int kind=kinds[i];
-                if(kind>=0)Spawn(h.team,kind,h.position+Vector2.up*((i-(length-1)*.5f)*2.2f),true,h);
+                if(kind<0)continue;
+                if(replaced){replaced=false;continue;}
+                Spawn(h.team,kind,h.position+Vector2.up*((i-(length-1)*.5f)*2.2f),true,h);
             }
-        }else Spawn(h.team,h.kind,h.position+Vector2.up*lane,true,h);
+        }else if(!replaced)Spawn(h.team,h.kind,h.position+Vector2.up*lane,true,h);
         if(pair&&(waveSlots>0||ArmyCount(h.team)<ArmyLimit))Spawn(h.team,h.kind,h.position-Vector2.up*lane,false,h);
     }
     public void PauseAll(int team,bool paused){if(Finished)return;foreach(var h in Huts.Where(h=>h.team==team&&h.paid&&h.hp>0&&Lines[h.kind].Producer))h.paused=paused;}
@@ -278,7 +281,7 @@ public sealed partial class HumanMatch {
     }
     void Bot(){if(!PlayerVersusPlayer)ThinkBot();}
     public void Step(float dt) {
-        if(Finished||dt<=0)return;AdvanceWinterPhase();SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
+        if(Finished||dt<=0||QuackRitualPending)return;AdvanceWinterPhase();SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
         while(incomeAge>=10){incomeAge-=10;for(int t=0;t<2;t++){incomeFraction[t]+=Income(t);int payment=(int)(incomeFraction[t]+.00001f);incomeFraction[t]-=payment;Gold[t]+=payment;}}
         float recovery=NaturalCastleRecovery*dt;
         for(int t=0;t<2;t++)RestoreCastleHealth(t,recovery);
@@ -293,7 +296,8 @@ public sealed partial class HumanMatch {
         SimulationPhase035.Mark("unit_statuses");auraAge-=dt;if(auraAge<=0){auraAge=.5f;UpdateAuras();}
         SimulationPhase035.Mark("auras");BlackHandZones(dt);TickShots(dt);SimulationPhase035.Mark("projectiles");BeginUnitBatch033();using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_4)if(u.hp>0){TickUnit(u,dt);UnitMoved033(u);}EndUnitBatch033();SimulationPhase035.Mark("unit_decisions_movement");FlushUndeadBirths();FlushFinalBirths();
         Units.RemoveAll(u=>u.hp<=0&&u.deadAge>3);Shots.RemoveAll(s=>s.age>s.duration+(s.kind==2||s.kind==3?.35f:0));
-        if(CastleHp[0]<=0||CastleHp[1]<=0)Winner=CastleHp[0]<=0&&CastleHp[1]<=0?-1:CastleHp[0]<=0?1:0;
+        bool enemyDefeated=CastleHp[1]<=0&&!QuackRitualPending;
+        if(CastleHp[0]<=0||enemyDefeated)Winner=CastleHp[0]<=0&&enemyDefeated?-1:CastleHp[0]<=0?1:0;
         ResolveChallengeClock(dt);
         FlushWinterDefections();
     }

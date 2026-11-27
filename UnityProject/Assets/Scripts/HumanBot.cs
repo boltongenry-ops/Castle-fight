@@ -120,7 +120,7 @@ public sealed partial class HumanMatch {
         }else score=BotSupportScore(k);
         score*=200/(price+100);score+=line.cost*line.incomeRate/price*(botDanger>2?15:90)/(1+copies*.35f);
         if(line.slots>0&&botProducers<3)score*=.25f;
-        return Mathf.Max(0,score)*botTaste[botRoots[k]>=0?botRoots[k]:k];
+        return Mathf.Max(0,score)*botTaste[botRoots[k]>=0?botRoots[k]:k]+QuackBotPriority(k,replacing,copies);
     }
     void ThinkBot(){
         if(Finished||NetworkReplica)return;InitBotPolicy();ObserveBot();
@@ -133,7 +133,8 @@ public sealed partial class HumanMatch {
         var ranked=botOptions.Where(o=>o.score>0).OrderByDescending(o=>o.score).ThenBy(o=>o.kind).ToArray();if(ranked.Length==0){botPlan="Нет доступных построек";return;}
         float gold=BotGold();var best=ranked[0];var affordable=ranked.FirstOrDefault(o=>o.price<=gold+.001f);
         float wait=(best.price-gold)/Mathf.Max(.5f,Income(1)/10);
-        if(best.price>gold&&botDanger<3&&botProducers>=2&&wait<(difficulty==0?90:200)&&(affordable==null||best.score>affordable.score*1.08f)){botPlan="Копит на "+Lines[best.kind].name;return;}
+        float patience=QuackOpening?(botProducers<4?18:42):difficulty==0?90:200;
+        if(best.price>gold&&botDanger<3&&botProducers>=2&&wait<patience&&(affordable==null||best.score>affordable.score*1.08f)){botPlan="Копит на "+Lines[best.kind].name;return;}
         if(TryBotShop(gold))return;
         if(affordable==null){botPlan="Копит на "+Lines[best.kind].name;return;}
         if(difficulty==0){var top=ranked.Where(o=>o.price<=gold+.001f&&o.score>=affordable.score*.8f).Take(3).ToArray();affordable=top[(int)(BotRandom()*top.Length)];}

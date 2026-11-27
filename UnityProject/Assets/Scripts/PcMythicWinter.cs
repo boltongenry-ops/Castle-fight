@@ -82,7 +82,8 @@ public sealed partial class PcGame {
         bool horde=(string)mythicSelection["id"]==HumanMatch.HordeTrial;
         bool protocol=(string)mythicSelection["id"]==HumanMatch.ProtocolTrial;
         bool abyssTrial=(string)mythicSelection["id"]==HumanMatch.AbyssTrial;
-        if(abyssTrial)DrawAbyssPainting(card);else if(protocol)DrawProtocolPainting(card);else if(horde)DrawHordePainting(card);else if(choir)DrawChoirPainting(card);else DrawWinterPainting(card,true);
+        bool quackTrial=(string)mythicSelection["id"]==HumanMatch.QuackTrial;
+        if(quackTrial)DrawQuackPainting(card);else if(abyssTrial)DrawAbyssPainting(card);else if(protocol)DrawProtocolPainting(card);else if(horde)DrawHordePainting(card);else if(choir)DrawChoirPainting(card);else DrawWinterPainting(card,true);
         AtlasSurface(MythicRacePanel);
         WinterGradient(new Rect(683,176,282,500),true,new Color(.070f,.104f,.076f,.98f));
         WinterGradient(new Rect(682,337,556,339),false,new Color(.019f,.035f,.052f,.99f));
@@ -116,6 +117,9 @@ public sealed partial class PcGame {
                 string selected=protocolAspect<0?"Без аспекта":AspectField(mythicRace,protocolAspect,"title");
                 if(LobbyButton("protocol.aspect",new Rect(x,553,width,38),selected+"  ›"))protocolAspect=protocolAspect==1?-1:protocolAspect+1;
             }
+        }else if(quackTrial){
+            Text(x,389,width,41,"Великий Квак",heading);
+            DrawRaceDescription(new Rect(x,436,width,155),(string)mythicSelection["description"],label,ref mythicRulesScroll);
         }else if(abyssTrial){
             Text(x,389,width,41,"Королева глубин",heading);
             DrawRaceDescription(new Rect(x,436,width,155),(string)mythicSelection["description"],label,ref mythicRulesScroll);

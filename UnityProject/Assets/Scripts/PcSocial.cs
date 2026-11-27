@@ -13,6 +13,236 @@ public sealed partial class PcGame {
     static readonly int[] RankThresholds={0,3,10,25,50,100};
     static readonly string[] RankNames={"Ополченец","Защитник","Страж","Воевода","Хранитель цитадели","Владыка замков"};
     bool HasNetworkProfile=>networkProfile!=null&&networkProfile.HasValues;
+    sealed class SocialNotification {
+        public JToken Sender;
+        public long Id;
+        public string Text,Room,Preview;
+        public bool Invitation=>!string.IsNullOrEmpty(Room);
+    }
+    sealed class NotificationHistory {
+        public string Peer;
+        public long Last;
+        public int Unread;
+    }
+    readonly Queue<SocialNotification> socialNotifications=new Queue<SocialNotification>();
+    readonly Dictionary<string,long> notificationSeen=new Dictionary<string,long>();
+    readonly Dictionary<string,long> notificationScanned=new Dictionary<string,long>();
+    readonly Queue<NotificationHistory> notificationHistory=new Queue<NotificationHistory>();
+    readonly HashSet<long> declinedInvitations=new HashSet<long>();
+    SocialNotification activeNotification;
+    NotificationHistory notificationReading;
+    float nextNotificationState,notificationAge;
+    bool notificationDecision;
+    AudioSource notificationSource;
+    AudioClip notificationChime;
+    GUIStyle notificationName,notificationPreview,notificationKind;
+
+    void ResetSocialNotifications(){
+        socialNotifications.Clear();
+        notificationSeen.Clear();
+        notificationScanned.Clear();
+        notificationHistory.Clear();
+        declinedInvitations.Clear();
+        notificationReading=null;
+        activeNotification=null;
+        notificationDecision=false;
+        nextNotificationState=0;
+    }
+
+    long NotificationSeen(string peer){
+        if(!notificationSeen.TryGetValue(peer,out long id)){
+            if(!testing)long.TryParse(PlayerPrefs.GetString(NotificationKey(peer),"0"),out id);
+            notificationSeen[peer]=id;
+        }
+        return id;
+    }
+    string NotificationKey(string peer)=>"cf-notification-"+(string)networkProfile["id"]+"-"+peer;
+
+    void ObserveSocialNotifications(JArray conversations){
+        if(conversations==null||!HasNetworkProfile)return;
+        foreach(var row in conversations){
+            var sender=row["player"];
+            string peer=(string)sender?["id"]??"";
+            var last=row["last"];
+            long id=(long?)last?["id"]??0;
+            int unread=(int?)row["unread"]??0;
+            if(peer.Length==0||unread==0||id<=NotificationSeen(peer))continue;
+            if(unread==1&&(string)last["from"]==peer){
+                QueueSocialNotification(sender,last);
+            }else if((!notificationScanned.TryGetValue(peer,out long scanned)||scanned<id)&&
+                     !notificationHistory.Any(request=>request.Peer==peer)){
+                notificationHistory.Enqueue(new NotificationHistory{Peer=peer,Last=id,Unread=unread});
+            }
+        }
+    }
+
+    bool RequestNotificationHistory(){
+        if(notificationHistory.Count==0)return false;
+        notificationReading=notificationHistory.Dequeue();
+        SocialRequest("history",new JObject{["peer"]=notificationReading.Peer});
+        return true;
+    }
+
+    void FinishNotificationHistory(NotificationHistory request,JObject packet){
+        var sender=packet["peer"];
+        if((bool?)packet["ok"]!=true||(string)sender?["id"]!=request.Peer||!(packet["messages"] is JArray messages))return;
+        notificationScanned[request.Peer]=request.Last;
+        string recipient=(string)networkProfile?["id"];
+        var incoming=messages.Reverse().Where(message=>(long?)message["id"]<=request.Last&&
+            (string)message["from"]==request.Peer&&(string)message["to"]==recipient).Take(request.Unread).Reverse();
+        foreach(var message in incoming)QueueSocialNotification(sender,message);
+    }
+
+    void QueueSocialNotification(JToken sender,JToken message){
+        if(!HasNetworkProfile)return;
+        string peer=(string)sender?["id"]??"";
+        long id=(long?)message?["id"]??0;
+        if(peer.Length==0||(string)message?["from"]!=peer||(string)message?["to"]!=(string)networkProfile["id"]||
+          id<=NotificationSeen(peer))return;
+        notificationSeen[peer]=id;
+        if(!testing)PlayerPrefs.SetString(NotificationKey(peer),id.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        bool invite=(string)message["kind"]=="invite";
+        bool reading=socialTab==2&&socialPeer==peer&&(AccountHub.overlay==AccountOverlay.Messages||page==Page.Network);
+        long age=DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()-((long?)message["at"]??0);
+        if(age>(invite?900000L:86400000L)||(!invite&&reading))return;
+        string room=invite?(string)message["text"]:null;
+        if(invite&&string.IsNullOrWhiteSpace(room))return;
+        if(socialNotifications.Count>=8)socialNotifications.Dequeue();
+        socialNotifications.Enqueue(new SocialNotification{Sender=sender,Id=id,Room=room,
+            Text=invite?"Комната "+room:MessageSummary(message)});
+    }
+
+    bool SocialNotificationVisible=>activeNotification!=null&&HasNetworkProfile&&!showNetworkProfile&&
+        !Avatars.open&&!showUpdatePanel&&!showVoicePanel&&!showNetworkRacePicker&&!showStickerPicker&&
+        !versusActive&&!winterIntro&&!hordeIntro&&!protocolIntro&&!protocolMarchIntro&&!choirIntro&&!abyssIntro&&
+        quackScene==QuackScene.None&&!mythicGuestPrompt;
+    Rect SocialNotificationRect=>new Rect(895,
+        (page==Page.Match||page==Page.Teams||page==Page.Pause)?(scoreExpanded?153:69):58,
+        358,notificationDecision?162:111);
+    bool SocialNotificationAt(Vector2 position)=>SocialNotificationVisible&&SocialNotificationRect.Contains(position);
+    bool CanAcceptSocialInvitation=>!onlineMatch&&networkSlot<0&&directoryReady;
+    string DeclinedInvitationKey(long id)=>"cf-invite-declined-"+(string)networkProfile?["id"]+"-"+id;
+
+    bool InvitationDeclined(JToken message){
+        long id=(long?)message["id"]??0;
+        return declinedInvitations.Contains(id)||!testing&&PlayerPrefs.GetInt(DeclinedInvitationKey(id),0)==1;
+    }
+
+    void UpdateSocialNotifications(){
+        if(!HasNetworkProfile)return;
+        if(activeNotification==null&&socialNotifications.Count>0){
+            activeNotification=socialNotifications.Dequeue();
+            notificationAge=-1;
+            notificationDecision=false;
+        }
+        if(!SocialNotificationVisible)return;
+        if(notificationAge<0){notificationAge=0;PlaySocialNotification();}
+        notificationAge+=Time.unscaledDeltaTime;
+        if(notificationAge>(notificationDecision?22:activeNotification.Invitation?12:6.5f))activeNotification=null;
+    }
+
+    void PlaySocialNotification(){
+        if(options.volume<=0)return;
+        if(!notificationChime){
+            const int rate=22050;
+            var samples=new float[rate*24/100];
+            for(int i=0;i<samples.Length;i++){
+                float t=i/(float)rate, noteTime=t<.075f?t:t-.075f;
+                float frequency=t<.075f?587.33f:783.99f;
+                float envelope=Mathf.Clamp01(noteTime*190)*Mathf.Exp(-noteTime*22)*Mathf.Clamp01((.24f-t)*30);
+                samples[i]=.38f*envelope*Mathf.Sin(2*Mathf.PI*frequency*noteTime);
+            }
+            notificationChime=AudioClip.Create("Личное уведомление",samples.Length,1,rate,false);
+            notificationChime.SetData(samples,0);
+        }
+        if(!notificationSource){
+            notificationSource=gameObject.AddComponent<AudioSource>();
+            notificationSource.playOnAwake=false;
+            notificationSource.ignoreListenerPause=true;
+        }
+        notificationSource.PlayOneShot(notificationChime,options.volume*.56f);
+    }
+
+    void DrawSocialNotification(){
+        if(!SocialNotificationVisible)return;
+        EnsureCampaignStyles();
+        if(notificationName==null){
+            notificationName=new GUIStyle(atlasProfileName){fontSize=19};
+            notificationPreview=new GUIStyle(label){alignment=TextAnchor.UpperLeft,padding=new RectOffset(),
+                fontSize=16,wordWrap=true,richText=false,clipping=TextClipping.Clip,normal={textColor=AtlasIvory}};
+            notificationKind=new GUIStyle(atlasProfileName){fontSize=13,normal={textColor=AtlasGold}};
+        }
+        var item=activeNotification;
+        var box=SocialNotificationRect;
+        AtlasSurface(box,true);
+        var avatarBox=new Rect(box.x+14,box.y+14,51,51);
+        Fill(avatarBox,AtlasWell);
+        var avatar=AccountAvatar(item.Sender);
+        if(avatar)GUI.DrawTexture(avatarBox,avatar,ScaleMode.ScaleAndCrop);
+        Border(avatarBox,AtlasGold,1);
+        float left=box.x+77,width=box.width-98;
+        Text(left,box.y+9,width-32,19,item.Invitation?"Приглашение в матч":"Личное сообщение",notificationKind);
+        string name=(string)item.Sender["name"]??"Игрок";
+        Text(left,box.y+27,width-30,25,FitAtlasLabel(name,width-30,notificationName),notificationName);
+        var preview=new Rect(left,box.y+54,width,45);
+        if(item.Preview==null)item.Preview=FitNotificationPreview(item.Text,preview);
+        string text=item.Preview;
+        if(notificationDecision&&!CanAcceptSocialInvitation)
+            text=directoryReady?"Выйдите из текущей комнаты.":"Нет связи с сервером.";
+        GUI.Label(preview,text,notificationPreview);
+        Fill(new Rect(box.x+13,box.yMax-5,(box.width-26)*Mathf.Clamp01(1-notificationAge/(notificationDecision?22:item.Invitation?12:6.5f)),2),AtlasGold);
+        var close=new Rect(box.xMax-49,box.y+9,40,30);
+        if(AtlasControl("social.toast.close",close,"×")){activeNotification=null;return;}
+        if(notificationDecision){
+            float top=box.yMax-50;
+            if(AtlasControl("social.toast.decline",new Rect(box.x+14,top,151,38),"Отклонить")){
+                declinedInvitations.Add(item.Id);
+                if(!testing)PlayerPrefs.SetInt(DeclinedInvitationKey(item.Id),1);
+                activeNotification=null;
+                return;
+            }
+            bool enabled=GUI.enabled;
+            GUI.enabled=enabled&&CanAcceptSocialInvitation;
+            bool accepted=AtlasControl("social.toast.accept",new Rect(box.x+174,top,170,38),
+                match!=null?"Принять и выйти":"Принять",true);
+            GUI.enabled=enabled;
+            if(accepted)AcceptSocialInvitation(item.Room);
+            return;
+        }
+        var body=new Rect(box.x,box.y,box.width,box.height);
+        if(Button("social.toast.open",body,"",false,GUIStyle.none)){
+            if(item.Invitation){
+                notificationDecision=true;
+                notificationAge=0;
+            }else{
+                activeNotification=null;
+                OpenOverlayConversation(item.Sender);
+            }
+        }
+    }
+
+    string FitNotificationPreview(string text,Rect area){
+        int length=Mathf.Min(text.Length,140);
+        while(length>0){
+            int count=length;
+            if(count<text.Length&&char.IsHighSurrogate(text[count-1]))count--;
+            string preview=count==text.Length?text:text.Substring(0,count).TrimEnd()+"…";
+            if(notificationPreview.CalcHeight(new GUIContent(preview),area.width)<=area.height)return preview;
+            length--;
+        }
+        return "…";
+    }
+
+    void AcceptSocialInvitation(string room){
+        if(!CanAcceptSocialInvitation)return;
+        activeNotification=null;
+        CloseAccountOverlay();
+        if(match!=null)MainMenu();
+        page=Page.Network;
+        showNetworkProfile=networkEntryAccount=false;
+        socialTab=0;
+        EnterRoom("join",room);
+    }
     static int RankIndex(int wins){int i=0;while(i<5&&wins>=RankThresholds[i+1])i++;return i;}
     Texture2D FrontendTexture(ref Texture2D texture,string name){if(!texture){string file=Path.Combine(MobileContent.MediaRoot,"Frontend",name);if(File.Exists(file)){texture=new Texture2D(2,2,TextureFormat.RGBA32,false);texture.LoadImage(File.ReadAllBytes(file));texture.filterMode=FilterMode.Bilinear;}}return texture;}
     System.Collections.IEnumerator LoadMobileFrontendArt(){
@@ -30,26 +260,44 @@ public sealed partial class PcGame {
     void DrawCastleLogo(Rect r){var texture=FrontendTexture(ref castleLogo,"castle-fight-logo.png");if(texture)GUI.DrawTexture(r,texture,ScaleMode.ScaleToFit);else Text(r.x,r.y+50,r.width,r.height,"CASTLE\nFIGHT",title);}
     void RankImage(Rect r,int wins){var texture=FrontendTexture(ref rankSheet,"rank-emblems.png");if(!texture)return;int i=RankIndex(wins);float split=462f/1024f;GUI.DrawTextureWithTexCoords(r,texture,new Rect((i%3)/3f,i<3?1-split:0,1/3f,i<3?split:1-split),true);}
     static string PeerStatus(JToken player){if((bool?)player?["online"]==true)return (string)player["activity"]=="playing"?"В бою":(string)player["activity"]=="room"?"В комнате":"Онлайн";long stamp=(long?)player?["last_seen"]??0;if(stamp<=0)return "Офлайн";var date=DateTimeOffset.FromUnixTimeMilliseconds(stamp).LocalDateTime;return "Офлайн · был(а) "+(date.Date==DateTime.Today?"сегодня "+date.ToString("HH:mm"):date.ToString("dd.MM HH:mm"));}
-    void ResetSocial(){socialQueued=null;socialPending=false;socialSupported=false;socialTab=0;socialPeer=socialViewed=socialDraft=socialStickerPeer=socialConfirm="";socialState=new JObject();socialFound=new JArray();socialMessages=new JArray();socialMatches=new JArray();socialPlayer=null;socialRead=0;}
+    void ResetSocial(){socialQueued=null;socialPending=false;socialSupported=false;socialTab=0;socialPeer=socialViewed=socialDraft=socialStickerPeer=socialConfirm="";socialState=new JObject();socialFound=new JArray();socialMessages=new JArray();socialMatches=new JArray();socialPlayer=null;socialRead=0;ResetSocialNotifications();}
+    float SocialPollInterval=>AccountOverlayOpen||page==Page.Network?3:5;
     void SocialRequest(string action,JObject fields=null){
         if(!HasNetworkProfile){showNetworkProfile=true;directoryStatus="Войдите в аккаунт, чтобы пользоваться друзьями и сообщениями";return;}
         if(!socialSupported){directoryStatus="Социальные функции недоступны на этом сервере";return;}
         var packet=fields??new JObject();packet["type"]="profile_social";packet["action"]=action;if(socialPending||profilePending||Time.realtimeSinceStartup<socialNext){socialQueued=packet;return;}socialRequest=action;socialPending=true;socialDeadline=Time.realtimeSinceStartup+15;socialNext=Time.realtimeSinceStartup+.65f;SendNetwork(packet);
     }
     void UpdateSocial(){
-        if(socialPending&&Time.realtimeSinceStartup>socialDeadline){socialPending=false;directoryStatus="Сервис профилей не ответил. Повторите запрос";}
+        if(socialPending&&Time.realtimeSinceStartup>socialDeadline){socialPending=false;notificationReading=null;directoryStatus="Сервис профилей не ответил. Повторите запрос";}
         if(socialQueued!=null&&!socialPending&&!profilePending&&Time.realtimeSinceStartup>=socialNext){var next=socialQueued;socialQueued=null;SocialRequest((string)next["action"],next);return;}
         if(!directoryReady||!HasNetworkProfile||!socialSupported||socialPending||profilePending||showNetworkProfile||showStickerPicker||Time.realtimeSinceStartup<socialDue||Time.realtimeSinceStartup<socialNext)return;
         if(RequestAccountAvatar())return;
-        socialDue=Time.realtimeSinceStartup+(AccountOverlayOpen||page==Page.Network?4:12);
+        float now=Time.realtimeSinceStartup;
+        socialDue=now+SocialPollInterval;
+        if(RequestNotificationHistory())return;
+        if(now>=nextNotificationState){
+            nextNotificationState=now+8;
+            SocialRequest("state");
+            return;
+        }
         if(!string.IsNullOrEmpty(socialViewed)){SocialRequest("player",new JObject{["peer"]=socialViewed});return;}
         if(socialTab==2&&string.IsNullOrEmpty(socialViewed)&&!string.IsNullOrEmpty(socialPeer))SocialRequest("history",new JObject{["peer"]=socialPeer,["read"]=socialRead});else SocialRequest("state");
     }
     void ReceiveSocial(JObject packet){
-        socialPending=false;socialDue=Time.realtimeSinceStartup+(AccountOverlayOpen||page==Page.Network?4:12);string action=(string)packet["action"]??socialRequest;
+        socialPending=false;socialDue=Time.realtimeSinceStartup+SocialPollInterval;string action=(string)packet["action"]??socialRequest;
+        if(notificationReading!=null&&action=="history"){
+            var request=notificationReading;
+            notificationReading=null;
+            FinishNotificationHistory(request,packet);
+            socialDue=0;
+            return;
+        }
         if((bool?)packet["ok"]!=true){AccountHub.result=directoryStatus=(string)packet["message"]??"Не удалось выполнить запрос";if(action=="send"&&!AccountOverlayOpen)Notice(directoryStatus);return;}
         if(action=="avatar"){ReceiveAccountAvatar(packet);socialDue=0;return;}
-        if(packet["friends"] is JArray)socialState=(JObject)packet.DeepClone();
+        if(packet["friends"] is JArray){
+            socialState=(JObject)packet.DeepClone();
+            ObserveSocialNotifications(packet["conversations"] as JArray);
+        }
         if(packet["found"] is JArray found){socialFound=found;directoryStatus="Найдено игроков: "+found.Count;}
         if(packet["player"] is JObject player&&(string)player["id"]==socialViewed){socialPlayer=player;socialViewed=(string)player["id"]??"";socialMatches=packet["matches"] as JArray??new JArray();}
         else if(packet["matches"] is JArray matches&&socialTab==3&&string.IsNullOrEmpty(socialViewed))socialMatches=matches;
@@ -61,6 +309,8 @@ public sealed partial class PcGame {
             else{var all=new JArray(socialMessages.Concat(messages).GroupBy(m=>(long)m["id"]).Select(g=>g.First()).OrderBy(m=>(long)m["id"]));socialMessages=all;}
             if(older||socialMessages.Count<=50)socialMore=(bool?)packet["has_more"]??false;if(newer){LoadStickerCatalog();foreach(var m in messages.Where(m=>(long)m["id"]>socialRead&&(string)m["from"]!=(string)networkProfile["id"]&&(string)m["kind"]=="sticker")){var item=stickerPacks.SelectMany(p=>p.items).FirstOrDefault(it=>it.id==(string)m["sticker"]);if(item!=null)PreviewSticker(item);}}if(messages.Count>0)socialRead=Math.Max(socialRead,(long)messages.Last["id"]);if(newer)messageScroll.y=100000;
             if(packet["peer"] is JObject remote)socialPlayer=remote;
+            if(socialPlayer!=null&&newer)
+                foreach(var message in messages.Where(row=>(string)row["kind"]=="invite"))QueueSocialNotification(socialPlayer,message);
         }
         if(action=="send"){
             if((string)packet["sent"]?["kind"]=="text"&&(string)packet["sent"]?["to"]==socialPeer&&
@@ -123,7 +373,15 @@ public sealed partial class PcGame {
             Text(x+18,top+11,width-36,25,own?"Вы":name,new GUIStyle(small){fontSize=13,fontStyle=FontStyle.Bold,wordWrap=false});
             Text(x+18,top+11,width-36,25,stamp,new GUIStyle(small){fontSize=13,wordWrap=false,alignment=TextAnchor.MiddleRight});
             if(kind=="sticker"){LoadStickerCatalog();var sticker=stickerPacks.SelectMany(p=>p.items).FirstOrDefault(it=>it.id==(string)message["sticker"]);if(sticker!=null)StickerImage(new Rect(x+(width-196)*.5f,top+44,196,196),sticker);}
-            else if(kind=="invite"){Text(x+18,top+42,width-36,31,"Комната "+message["text"],ChatBodyStyle);GUI.enabled=networkSlot<0;if(LobbyButton("dm.join."+message["id"],new Rect(x+18,top+80,width-36,46),"Войти в комнату →")){socialTab=0;EnterRoom("join",(string)message["text"]);}GUI.enabled=true;}
+            else if(kind=="invite"){
+                bool declined=!own&&InvitationDeclined(message);
+                Text(x+18,top+42,width-36,31,declined?"Приглашение отклонено":"Комната "+message["text"],ChatBodyStyle);
+                bool enabled=GUI.enabled;
+                GUI.enabled=enabled&&!own&&!declined&&CanAcceptSocialInvitation;
+                if(LobbyButton("dm.join."+message["id"],new Rect(x+18,top+80,width-36,46),"Войти в комнату →"))
+                    AcceptSocialInvitation((string)message["text"]);
+                GUI.enabled=enabled;
+            }
             else Text(x+18,top+43,width-36,height-57,(string)message["text"]??"",ChatBodyStyle);
             top+=height+16;
         }if(socialMessages.Count==0)Text(20,40,1000,70,"Начните разговор. Личные сообщения видны только вам и этому другу.",label);GUI.EndScrollView();
