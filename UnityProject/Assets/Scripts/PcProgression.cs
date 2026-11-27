@@ -52,10 +52,13 @@ public sealed partial class PcGame {
     Color CosmeticColor(JObject row){return row!=null&&ColorUtility.TryParseHtmlString("#"+(string)row["color"],out var color)?color:new Color(.38f,.45f,.43f);}
     Texture2D ProfileAvatar(){
         var identity=networkProfile??(HasEndpointToken?Avatars.ownIdentity:null);
-        string avatarItem=identity!=null&&!HasNetworkProfile?(string)identity["equipped"]??"":AccountEquipment("avatar");
+        if(identity==null&&HasEndpointToken)return null;
+        string avatarItem=identity==null?AccountEquipment("avatar"):
+            HasNetworkProfile?(string)identity["equipped"]?["avatar"]??"":(string)identity["equipped"]??"";
         var row=progression.Item(avatarItem);
         if(row!=null)return ContentResources.Load<Texture2D>("RaceIcon-"+(string)row["asset"]);
         var image=AccountAvatar(identity);
+        if(!string.IsNullOrEmpty((string)identity?["avatar_ref"]))return image;
         return image?image:unitIcons.FirstOrDefault();
     }
     void DrawProfileBadge(Rect rect){var frame=CosmeticColor(progression.Item(AccountEquipment("frame")));Fill(rect,new Color(.035f,.05f,.055f));var icon=ProfileAvatar();if(icon)GUI.DrawTexture(new Rect(rect.x+4,rect.y+4,rect.width-8,rect.height-8),icon,ScaleMode.ScaleToFit);Border(rect,frame,3);}

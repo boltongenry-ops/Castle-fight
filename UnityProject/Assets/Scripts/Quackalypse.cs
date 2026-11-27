@@ -6,7 +6,8 @@ public sealed partial class HumanMatch {
     public const string QuackTrial="mythic_quackalypse";
     public const int QuackCastleHealth=14000;
     internal const int QuackRainLimit=30;
-    const float QuackOpeningBell=60, QuackBellInterval=40, QuackRainInterval=37, QuackBellShield=105;
+    internal const float QuackWaveInterval=180;
+    const float QuackRainWarning=3, QuackBellShield=105;
     static readonly string[] QuackBellRoster={"pB12","pB12","pB14","pB05","pB03"};
     static readonly Vector2[] QuackPools={
         new Vector2(84,-14),new Vector2(46,13),new Vector2(-12,-16),new Vector2(-77,15),new Vector2(-131,-15)
@@ -30,7 +31,7 @@ public sealed partial class HumanMatch {
         quackActive=(string)ChallengeRules?["id"]==QuackTrial&&teamBaseBuildings[1].Contains("pB31");
         if(!quackActive)return;
         quackStage=0;
-        quackBellAt=Elapsed+QuackOpeningBell;
+        quackBellAt=Elapsed+QuackWaveInterval;
         quackRainKind=Kind("pB06");
         quackBellKinds=Array.ConvertAll(QuackBellRoster,Kind);
         LegendaryLimit[1]=2;
@@ -134,7 +135,7 @@ public sealed partial class HumanMatch {
         quackNextPool=0;
         quackRainLeft=QuackPools.Length;
         quackNextHatch=Elapsed+.8f;
-        quackRainAt=Elapsed+QuackRainInterval;
+        quackRainAt=Elapsed+QuackWaveInterval;
         foreach(var pool in QuackPools)QuackShowPool(pool,3.5f);
         return true;
     }
@@ -164,7 +165,7 @@ public sealed partial class HumanMatch {
         if(!quackActive||QuackRitualPending)return;
         if(!QuackDownpour){
             if(Elapsed<quackBellAt)return;
-            quackBellAt+=QuackBellInterval;
+            quackBellAt+=QuackWaveInterval;
             QuackBellCount++;
             var point=CastlePosition(1)+new Vector2(-22,0);
             PulseAt(point,9,PepeRules.ReedGreen,"Болотный колокол",2,"pepe:PBll");
@@ -178,11 +179,11 @@ public sealed partial class HumanMatch {
         }
 
         if(quackRainKind<0)return;
-        if(quackRainLeft==0&&Elapsed>=quackRainAt){
+        if(quackRainLeft==0&&Elapsed>=quackRainAt-QuackRainWarning){
             quackRainLeft=2;
-            quackNextHatch=Elapsed+3;
-            quackRainAt=Elapsed+QuackRainInterval;
-            for(int i=0;i<quackRainLeft;i++)QuackShowPool(QuackPools[(quackNextPool+i)%QuackPools.Length],3);
+            quackNextHatch=quackRainAt;
+            quackRainAt+=QuackWaveInterval;
+            for(int i=0;i<quackRainLeft;i++)QuackShowPool(QuackPools[(quackNextPool+i)%QuackPools.Length],QuackRainWarning);
         }
         if(quackRainLeft==0||Elapsed<quackNextHatch)return;
         quackNextHatch=Elapsed+.42f;

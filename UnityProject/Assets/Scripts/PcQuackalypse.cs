@@ -20,7 +20,7 @@ public sealed partial class PcGame {
     QuackScene quackScene;
     float quackSceneAge,quackEmojiAt=-100;
     int quackEmojiSeen,quackSpeechCue,quackGlassCue;
-    bool quackLighting,quackCast,quackVersus,quackSkip;
+    bool quackLighting,quackCast,quackVersus,quackSkip,quackEyePose;
     Color quackDay;
     Light quackSun;
     float quackSunIntensity;
@@ -54,6 +54,7 @@ public sealed partial class PcGame {
 
     void BeginQuackPresentation(){
         quackScene=QuackScene.Opening;quackSceneAge=0;quackCast=quackSkip=false;quackEmojiSeen=quackSpeechCue=0;quackEmojiAt=-100;
+        quackEyePose=false;
         quackDay=RenderSettings.ambientLight;quackLighting=true;
         quackSun=RenderSettings.sun;
         if(!quackSun){
@@ -130,7 +131,8 @@ public sealed partial class PcGame {
         }
         if(quackKing){
             bool speaking=opening?time>=1.15f&&time<4.9f:quackCast;
-            quackKing.Play(speaking?"Attack":"Stand",.85f,opening?quackSpeechCue:1);
+            if(QuackEyeShot)HoldQuackEyePose();
+            else quackKing.Play(speaking?"Attack":"Stand",.85f,opening?quackSpeechCue:1);
         }
         bool jump=(quackSkip||Input.GetKeyDown(KeyCode.Escape))&&(opening||match.QuackDownpour);
         float end=opening?8.65f:QuackReversalEnd;
@@ -181,12 +183,37 @@ public sealed partial class PcGame {
 
     bool QuackEyeShot=>quackScene==QuackScene.Opening&&quackSceneAge>=QuackEyeShotStart&&quackSceneAge<QuackEyeShotEnd;
 
+    void HoldQuackEyePose(){
+        if(quackEyePose)return;
+        quackEyePose=true;
+        var clip=quackKing.StandClip();
+        var animation=quackKing.animatedRoot.GetComponent<Animation>();
+        if(!clip||!animation)return;
+        animation.Play(clip.name);
+        var state=animation[clip.name];
+        state.normalizedTime=.25f;
+        state.speed=0;
+        animation.Sample();
+    }
+
     void FrameQuackScene(bool opening,float time,float end){
         if(QuackEyeShot){
             float shot=Mathf.InverseLerp(QuackEyeShotStart,QuackEyeShotEnd,time);
-            Vector3 gaze=quackKingHead+Vector3.up*1.17f+Vector3.left*.88f+Vector3.forward*.35f;
-            FrameWinterCamera(gaze,Mathf.Lerp(4.25f,3.95f,shot),93f,6f);
+            Vector3 gaze=quackKingHead+Vector3.up*1.15f+Vector3.left*.88f+Vector3.forward*.35f;
+            FrameWinterCamera(gaze,Mathf.Lerp(4.65f,4.35f,shot),93f,9f);
+            var camera=Camera.main;
+            if(camera){
+                camera.ResetProjectionMatrix();
+                var projection=camera.projectionMatrix;
+                float bandCenter=guiOrigin.y+(QuackEyeBandTop+QuackEyeBandBottom)*.5f*guiScale;
+                projection[1,2]=2*bandCenter/Screen.height-1;
+                camera.projectionMatrix=projection;
+            }
             return;
+        }
+        if(quackEyePose){
+            quackEyePose=false;
+            if(Camera.main)Camera.main.ResetProjectionMatrix();
         }
         var king=World(QuackKingPoint)+Vector3.up*2.3f;
         float pan=Mathf.SmoothStep(0,1,Mathf.InverseLerp(end-1.5f,end,time));
@@ -301,7 +328,7 @@ public sealed partial class PcGame {
         if(quackScene==QuackScene.Opening){
             if(quackSceneAge>=1.15f&&quackSceneAge<4.85f)DrawQuackSpeech();
             float transition=Mathf.Max(0,1-Mathf.Abs(quackSceneAge-7.12f)/.28f);
-            if(transition>0)Fill(new Rect(screen.x,65,screen.width,546),new Color(.67f,.83f,.62f,transition*.75f));
+            if(!QuackEyeShot&&transition>0)Fill(new Rect(screen.x,65,screen.width,546),new Color(.67f,.83f,.62f,transition*.75f));
         }
         float bandTop=QuackEyeShot?QuackEyeBandTop:65;
         float bandBottom=QuackEyeShot?QuackEyeBandBottom:611;
@@ -466,6 +493,8 @@ public sealed partial class PcGame {
     }
 
     void ClearQuackActors(){
+        if(quackEyePose&&Camera.main)Camera.main.ResetProjectionMatrix();
+        quackEyePose=false;
         if(quackRitualEffect)Destroy(quackRitualEffect);
         quackRitualEffect=null;
         if(quackKing)Destroy(quackKing.gameObject);

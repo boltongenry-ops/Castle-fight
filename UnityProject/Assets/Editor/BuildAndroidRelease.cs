@@ -71,6 +71,7 @@ public static class BuildAndroidRelease {
     public static void BuildQuack0493()=>BuildSigned("0.49.3",66);
     public static void BuildQuack0494()=>BuildSigned("0.49.4",67);
     public static void BuildSocial0495()=>BuildSigned("0.49.5",68);
+    public static void BuildQuack0496()=>BuildSigned("0.49.6",69);
     public static void BuildWinterFront0462()=>BuildSigned("0.46.2",46);
     public static void BuildWinterBoss0461()=>BuildSigned("0.46.1",45);
     public static void BuildSquad0442()=>BuildSigned("0.44.2",41);

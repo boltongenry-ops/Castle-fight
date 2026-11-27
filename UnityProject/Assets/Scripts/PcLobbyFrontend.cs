@@ -104,7 +104,16 @@ public sealed partial class PcGame {
         if(!testing)NetworkAccountStore.Clear(networkGuest);
     }
 
-    async void SendNetwork(JObject packet){if(profilePending&&((string)packet["type"]??"").StartsWith("profile_")&&(string)packet["type"]!="profile_activity")profileDeadline=Time.realtimeSinceStartup+18;try{if(network!=null)await network.SendAsync(packet);}catch(Exception e){directoryStatus="Ошибка отправки: "+e.GetBaseException().Message;}}
+    async void SendNetwork(JObject packet){
+        string type=(string)packet["type"]??"";
+        if(type.StartsWith("profile_",StringComparison.Ordinal)&&type!="profile_activity"){
+            float now=Time.realtimeSinceStartup;
+            socialNext=Mathf.Max(socialNext,now+.65f);
+            if(profilePending)profileDeadline=now+18;
+        }
+        try{if(network!=null)await network.SendAsync(packet);}
+        catch(Exception e){directoryStatus="Ошибка отправки: "+e.GetBaseException().Message;}
+    }
     void StopDirectory() {
         CloseVersus();showNetworkRacePicker=false;networkLoadError="";failedNetworkLoad=null;networkSight.Clear();networkUnitCards.Clear();networkBuildingCards.Clear();RestoreOfflineNetworkSetup();
         ResetRecovery();ResetSocial();var previous=network;network=null;connectedEndpoint="";directoryLoading=false;directoryReady=false;directoryCanCreate=false;networkSlot=-1;networkRoom=null;networkProfile=null;profilePending=false;showNetworkProfile=false;showStickerPicker=false;profilePassword="";directoryRooms=new JArray();roomMessages=new JArray();

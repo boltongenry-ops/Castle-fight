@@ -260,7 +260,7 @@ public sealed partial class PcGame {
     void DrawCastleLogo(Rect r){var texture=FrontendTexture(ref castleLogo,"castle-fight-logo.png");if(texture)GUI.DrawTexture(r,texture,ScaleMode.ScaleToFit);else Text(r.x,r.y+50,r.width,r.height,"CASTLE\nFIGHT",title);}
     void RankImage(Rect r,int wins){var texture=FrontendTexture(ref rankSheet,"rank-emblems.png");if(!texture)return;int i=RankIndex(wins);float split=462f/1024f;GUI.DrawTextureWithTexCoords(r,texture,new Rect((i%3)/3f,i<3?1-split:0,1/3f,i<3?split:1-split),true);}
     static string PeerStatus(JToken player){if((bool?)player?["online"]==true)return (string)player["activity"]=="playing"?"В бою":(string)player["activity"]=="room"?"В комнате":"Онлайн";long stamp=(long?)player?["last_seen"]??0;if(stamp<=0)return "Офлайн";var date=DateTimeOffset.FromUnixTimeMilliseconds(stamp).LocalDateTime;return "Офлайн · был(а) "+(date.Date==DateTime.Today?"сегодня "+date.ToString("HH:mm"):date.ToString("dd.MM HH:mm"));}
-    void ResetSocial(){socialQueued=null;socialPending=false;socialSupported=false;socialTab=0;socialPeer=socialViewed=socialDraft=socialStickerPeer=socialConfirm="";socialState=new JObject();socialFound=new JArray();socialMessages=new JArray();socialMatches=new JArray();socialPlayer=null;socialRead=0;ResetSocialNotifications();}
+    void ResetSocial(){socialQueued=null;socialPending=false;socialSupported=false;socialTab=0;socialPeer=socialViewed=socialDraft=socialStickerPeer=socialConfirm="";socialState=new JObject();socialFound=new JArray();socialMessages=new JArray();socialMatches=new JArray();socialPlayer=null;socialRead=0;ResetSocialNotifications();ResetAccountAvatarRequests();}
     float SocialPollInterval=>AccountOverlayOpen||page==Page.Network?3:5;
     void SocialRequest(string action,JObject fields=null){
         if(!HasNetworkProfile){showNetworkProfile=true;directoryStatus="Войдите в аккаунт, чтобы пользоваться друзьями и сообщениями";return;}
@@ -292,8 +292,12 @@ public sealed partial class PcGame {
             socialDue=0;
             return;
         }
+        if(action=="avatar"){
+            ReceiveAccountAvatar(packet);
+            socialDue=Mathf.Max(Time.realtimeSinceStartup,socialNext);
+            return;
+        }
         if((bool?)packet["ok"]!=true){AccountHub.result=directoryStatus=(string)packet["message"]??"Не удалось выполнить запрос";if(action=="send"&&!AccountOverlayOpen)Notice(directoryStatus);return;}
-        if(action=="avatar"){ReceiveAccountAvatar(packet);socialDue=0;return;}
         if(packet["friends"] is JArray){
             socialState=(JObject)packet.DeepClone();
             ObserveSocialNotifications(packet["conversations"] as JArray);

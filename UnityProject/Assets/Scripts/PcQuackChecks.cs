@@ -58,10 +58,16 @@ public sealed partial class PcGame {
         quackSceneAge=4.3f;
         yield return null;
         yield return Shot(folder,"02-opening-orders");
+        quackSceneAge=6.1f;
+        yield return null;
+        yield return Shot(folder,"03a-eyes-start");
         quackSceneAge=6.65f;
         yield return null;
-        Check(QuackEyeShot&&QuackEyeBandBottom-QuackEyeBandTop<=125,"The opening cuts to the narrow eyes-only shot");
+        Check(QuackEyeShot&&quackEyePose&&QuackEyeBandBottom-QuackEyeBandTop<=125,"The opening holds a stable pose for the narrow eyes-only shot");
         yield return Shot(folder,"03-king-close");
+        quackSceneAge=6.95f;
+        yield return null;
+        yield return Shot(folder,"03c-eyes-end");
         quackSceneAge=7.75f;
         yield return null;
         yield return Shot(folder,"03b-swamp-transition");
@@ -217,8 +223,6 @@ public sealed partial class HumanMatch {
         }
         check(queuedBot&&paidBot&&playerReleased&&QuackBellCount==0,
             "The bot queues and pays for producers normally; a standard player opening releases troops before the bell");
-        while(Elapsed<60.2f&&!Finished)Step(.05f);
-        check(QuackBellCount==1,"The first bonus wave triggers at one minute");
     }
 
     internal void CheckQuackRules(JObject rules,Action<bool,string> check){
@@ -233,10 +237,19 @@ public sealed partial class HumanMatch {
         check(PepeShield(guard)==null&&PepeShield(ally)?.power==40,"Expired rain shield transfers half of its remaining protection");
         TickEffects(ally,3.05f);
         check(PepeShield(guard)==null,"A relayed shield expires without bouncing back");
-        Elapsed=60.01f;
+        Elapsed=179.99f;
+        TickQuackTrial();
+        check(QuackBellCount==0,"The bell stays silent before minute three");
+        Elapsed=180.01f;
         TickQuackTrial();
         check(QuackBellCount==1&&Units.Count==7&&Units.Count(unit=>PepeShield(unit)!=null)==2,
-            "The first bell sends five mixed reinforcements with two protected guards");
+            "The first bell at minute three sends five mixed reinforcements with two protected guards");
+        Elapsed=359.99f;
+        TickQuackTrial();
+        bool stayedAtOne=QuackBellCount==1;
+        Elapsed=360.01f;
+        TickQuackTrial();
+        check(stayedAtOne&&QuackBellCount==2,"Repeating bell waves stay three minutes apart");
         DebugQuackProducer(0,out var tavern);
         DebugQuackInfiltrate(tavern);
         var invader=Units.Last();
@@ -260,8 +273,14 @@ public sealed partial class HumanMatch {
         check(QuackRainAlive()==0,"Opening downpour queues the groups without spawning them");
         for(int i=0;i<12;i++){Elapsed+=.65f;TickQuackTrial();}
         check(QuackRainAlive()==QuackRainLimit,"The initial downpour reaches 30 live tadpoles");
-        Elapsed+=80;TickQuackTrial();Elapsed+=5;TickQuackTrial();
-        check(QuackRainAlive()==QuackRainLimit,"Repeat waves respect the live tadpole cap");
+        float rain=quackRainAt;
+        Elapsed=rain-QuackRainWarning-.01f;TickQuackTrial();
+        bool waited=quackRainLeft==0;
+        Elapsed=rain-QuackRainWarning+.01f;TickQuackTrial();
+        bool warned=quackRainLeft==2&&Mathf.Approximately(quackNextHatch,rain);
+        Elapsed=rain+.01f;TickQuackTrial();
+        check(waited&&warned&&quackRainLeft==1&&QuackRainAlive()==QuackRainLimit&&Mathf.Approximately(quackRainAt,rain+180),
+            "Downpour repeats every three minutes, with a short warning and the same live cap");
         DebugQuackHitCastle();Step(.05f);
         check(Winner==0&&ChallengeVictoryEligible,"Only the rebuilt castle's defeat is eligible for the leaderboard");
     }

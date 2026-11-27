@@ -63,13 +63,15 @@ public sealed partial class PcGame {
             hub.operation=null;
             hub.result="Сервис профилей не ответил.";
         }
-        if(!CloudProgression||hub.operation!=null||profilePending||socialPending||now<socialNext)return;
+        if(hub.operation!=null||profilePending||socialPending||now<socialNext)return;
         JObject change=null;
         while(hub.changes.Count>0&&change==null){
             var queued=hub.changes.Dequeue();
-            if((string)queued["owner"]==hub.owner){queued.Remove("owner");change=queued;}
+            if((string)queued["owner"]==hub.owner&&(CloudProgression||(string)queued["type"]=="profile_update")){
+                queued.Remove("owner");change=queued;
+            }
         }
-        if(change==null&&now>=hub.resultRetryAt){
+        if(change==null&&CloudProgression&&now>=hub.resultRetryAt){
             var next=ReadAccountResults(hub.owner).Properties().FirstOrDefault();
             if(next!=null)change=new JObject{["type"]="profile_challenge",["challenge"]=next.Name,["time_ms"]=next.Value.DeepClone()};
         }
@@ -114,6 +116,10 @@ public sealed partial class PcGame {
         hub.operation=null;
         bool ok=(bool?)packet["ok"]==true;
         hub.result=!ok?directoryStatus:type=="profile_cosmetic"?"Коллекция обновлена":type=="profile_update"?"Аватар сохранён":"";
+        if(ok&&type=="profile_update"&&operation["avatar_image"]!=null){
+            string revision=(string)packet["profile"]?["avatar_ref"];
+            if(!CacheAccountAvatar(revision,(string)operation["avatar_image"]))socialDue=0;
+        }
         if(type=="profile_challenge"){
             string id=(string)operation["challenge"];
             if(ok&&id==(string)activeChallenge?["id"])challengeReward=(int?)packet["awarded"]??0;
@@ -417,6 +423,36 @@ public sealed partial class PcGame {
         ClearAccountIdentity();
         Check(ProfileAvatar()!=uploaded&&Avatars.ownIdentity==null,"Signing out clears the remembered avatar");
         networkSessionToken="qa-fixture";networkSessionEndpoint=NetworkAccountStore.UnityEndpoint;
+        var photo=new Texture2D(128,128,TextureFormat.RGB24,false);
+        var pixels=Enumerable.Repeat(new Color32(28,170,120,255),128*128).ToArray();
+        photo.SetPixels32(pixels);photo.Apply();
+        byte[] jpeg=photo.EncodeToJPG(85);
+        Destroy(photo);
+        string revision;
+        using(var hash=System.Security.Cryptography.SHA256.Create())
+            revision=BitConverter.ToString(hash.ComputeHash(jpeg)).Replace("-","").ToLowerInvariant();
+        string encoded=Convert.ToBase64String(jpeg);
+        var confirmed=(JObject)template.DeepClone();
+        confirmed["avatar"]="hfoo";
+        confirmed["avatar_ref"]=revision;
+        ApplyAccountProfile(confirmed);
+        Check(ProfileAvatar()==null,"An authoritative custom avatar never shows the soldier while pending");
+        AccountHub.operation=new JObject{["type"]="profile_update",["avatar_image"]=encoded};
+        ReceiveAccountOperation("profile_update",new JObject{["ok"]=true,["profile"]=confirmed});
+        Check(ProfileAvatar()&&ProfileAvatar().width==128,"The confirmed upload displays its actual JPEG immediately");
+        var displayed=ProfileAvatar();
+        Destroy(displayed);
+        Avatars.images.Remove(revision);
+        ResetAccountAvatarRequests();
+        networkProfile=null;
+        ApplyAccountProfile(confirmed);
+        Check(ProfileAvatar()==null&&!CacheAccountAvatar(new string('0',64),encoded),
+            "A cold login does not display a default or accept the wrong revision");
+        ReceiveSocial(new JObject{["ok"]=true,["action"]="avatar",["avatar_owner"]="qa-main",["avatar_ref"]=revision,["avatar_image"]=encoded});
+        var downloaded=ProfileAvatar();
+        Check(downloaded&&downloaded.width==128,"The downloaded custom avatar reappears after a cold login");
+        StopDirectory();
+        Check(ProfileAvatar()==downloaded,"A cached remote avatar survives reconnecting");
         ApplyAccountProfile(fixture);
         Check(!IntroAlreadyShown(0,0)&&IntroAlreadyShown(1,0)&&IntroAlreadyShown(0,1),"Startup video plays on new installs and is skipped after an attempt or legacy completion");
         var viewport=new Vector2(2400,1080);

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -13,13 +14,25 @@ public sealed partial class PcGame {
     static readonly int[] AvatarTemplateRaces={0,5,1,4,10,8,3,7};
     sealed class AccountAvatarState {
         public bool open,picking;
-        public string error="";
+        public string error="",requestedRevision="";
+        public JObject ownIdentity;
         public readonly Dictionary<string,Texture2D> images=new Dictionary<string,Texture2D>();
         public readonly Dictionary<string,float> nextRequest=new Dictionary<string,float>();
         public readonly Queue<JToken> pending=new Queue<JToken>();
     }
     static readonly ConditionalWeakTable<PcGame,AccountAvatarState> AvatarStates=new ConditionalWeakTable<PcGame,AccountAvatarState>();
     AccountAvatarState Avatars=>AvatarStates.GetValue(this,_=>new AccountAvatarState());
+
+    void RememberOwnAvatar(JObject profile){
+        var prior=(string)Avatars.ownIdentity?["avatar_ref"];
+        Avatars.ownIdentity=new JObject{
+            ["id"]=(string)profile["id"],
+            ["avatar"]=(string)profile["avatar"],
+            ["avatar_ref"]=(string)profile["avatar_ref"],
+            ["equipped"]=(int?)profile["account_progression"]==1?profile["equipped"]?["avatar"]?.DeepClone():null
+        };
+        if(prior!=(string)profile["avatar_ref"])socialDue=0;
+    }
 
     Texture2D AccountAvatar(JToken profile){
         if(profile==null)return null;
@@ -28,9 +41,11 @@ public sealed partial class PcGame {
         if(revision!=""){
             if(state.images.TryGetValue(revision,out var known))return known;
             float now=Time.realtimeSinceStartup;
-            if((!state.nextRequest.TryGetValue(revision,out float next)||now>=next)&&state.pending.Count<12){
+            if(HasNetworkProfile&&(string)profile["id"]!=(string)networkProfile["id"]&&
+               (!state.nextRequest.TryGetValue(revision,out float next)||now>=next)&&state.pending.Count<12){
                 state.pending.Enqueue(profile);state.nextRequest[revision]=now+12;
             }
+            return null;
         }
         return TemplateAvatar((string)profile["avatar"]);
     }
@@ -42,29 +57,63 @@ public sealed partial class PcGame {
 
     bool RequestAccountAvatar(){
         var state=Avatars;
-        if(state.pending.Count==0)return false;
-        var profile=state.pending.Dequeue();
-        SocialRequest("avatar",new JObject{["peer"]=(string)profile["id"]});
-        return true;
+        string ownRevision=(string)networkProfile?["avatar_ref"]??"";
+        float now=Time.realtimeSinceStartup;
+        if(ownRevision!=""&&!state.images.ContainsKey(ownRevision)&&
+           (!state.nextRequest.TryGetValue(ownRevision,out float retry)||now>=retry)){
+            state.nextRequest[ownRevision]=now+12;
+            state.requestedRevision=ownRevision;
+            SocialRequest("avatar",new JObject{["peer"]=(string)networkProfile["id"]});
+            return true;
+        }
+        while(state.pending.Count>0){
+            var profile=state.pending.Dequeue();
+            string revision=(string)profile["avatar_ref"];
+            if(string.IsNullOrEmpty(revision)||state.images.ContainsKey(revision))continue;
+            state.requestedRevision=revision;
+            SocialRequest("avatar",new JObject{["peer"]=(string)profile["id"]});
+            return true;
+        }
+        return false;
     }
 
     void ReceiveAccountAvatar(JObject reply){
-        string revision=(string)reply["avatar_ref"]??"";
-        string image=(string)reply["avatar_image"]??"";
         var state=Avatars;
-        if(revision==""||image==""||image.Length>21848||state.images.ContainsKey(revision))return;
+        if((bool?)reply["ok"]==true)
+            CacheAccountAvatar((string)reply["avatar_ref"],(string)reply["avatar_image"]);
+        else if((string)reply["message"]=="Подождите перед следующим запросом.")
+            state.nextRequest.Remove(state.requestedRevision);
+        state.requestedRevision="";
+    }
+
+    bool CacheAccountAvatar(string revision,string image){
+        var state=Avatars;
+        if(string.IsNullOrEmpty(revision)||string.IsNullOrEmpty(image)||image.Length>21848)return false;
+        if(state.images.ContainsKey(revision))return true;
         byte[] bytes;
-        try{bytes=Convert.FromBase64String(image);}catch(FormatException){return;}
-        if(!AvatarDimensions(bytes,out int width,out int height)||width!=128||height!=128)return;
+        try{bytes=Convert.FromBase64String(image);}catch(FormatException){return false;}
+        if(!AvatarDimensions(bytes,out int width,out int height)||width!=128||height!=128)return false;
+        using(var hash=SHA256.Create()){
+            string digest=BitConverter.ToString(hash.ComputeHash(bytes)).Replace("-","");
+            if(!string.Equals(revision,digest,StringComparison.OrdinalIgnoreCase))return false;
+        }
         var texture=new Texture2D(2,2,TextureFormat.RGB24,false);
-        if(!texture.LoadImage(bytes,true)){Destroy(texture);return;}
+        if(!texture.LoadImage(bytes,true)){Destroy(texture);return false;}
         if(state.images.Count>=24){
-            using(var entries=state.images.GetEnumerator()){
-                entries.MoveNext();var previous=entries.Current;
-                Destroy(previous.Value);state.images.Remove(previous.Key);state.nextRequest.Remove(previous.Key);
-            }
+            string own=(string)state.ownIdentity?["avatar_ref"];
+            string oldest=null;
+            foreach(var key in state.images.Keys)if(key!=own){oldest=key;break;}
+            Destroy(state.images[oldest]);state.images.Remove(oldest);state.nextRequest.Remove(oldest);
         }
         state.images.Add(revision,texture);
+        state.nextRequest.Remove(revision);
+        return true;
+    }
+
+    void ResetAccountAvatarRequests(){
+        Avatars.pending.Clear();
+        Avatars.nextRequest.Clear();
+        Avatars.requestedRevision="";
     }
 
     void DisposeAccountAvatars(){
