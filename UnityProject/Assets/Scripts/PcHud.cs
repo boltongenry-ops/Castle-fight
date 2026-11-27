@@ -86,32 +86,35 @@ public sealed partial class PcGame {
         GUI.DrawTexture(new Rect(619,5,42,42),timeIndicator);
         }
         var topButton=theme?.Top(button)??new GUIStyle(button){fontSize=Application.isMobilePlatform?15:13,alignment=TextAnchor.MiddleCenter,padding=new RectOffset(3,3,0,0)};float topHeight=Application.isMobilePlatform?40:24;
-        if(Button("match.help",new Rect(5,1,132,topHeight),Application.isMobilePlatform?"Справка":"Справка (F9)",false,topButton))OpenBattleHelp();
-        float builderTop=Application.isMobilePlatform?46:31;var builderFrame=new Rect(5,builderTop,52,52);StoneFrame(builderFrame);
-        if(Icon("hud.builder",new Rect(9,builderTop+4,44,44),0,"F1","Строитель (F1)\nВыделить и перейти к строителю",builderSelected))FocusBuilder();
-        if(Button("match.pause",new Rect(142,1,131,topHeight),Application.isMobilePlatform?"Меню":"Меню (F10)",false,topButton))page=Page.Pause;
-        if(Button("match.teams",new Rect(278,1,131,topHeight),Application.isMobilePlatform?"Стороны":"Стороны (F11)",false,topButton))page=Page.Teams;
-        bool inputEnabled=GUI.enabled;GUI.enabled=inputEnabled&&onlineMatch;
-        if(Button("match.chat",new Rect(414,1,131,topHeight),Application.isMobilePlatform?"Чат":"Чат (F12)",false,topButton))ToggleBattleChat();GUI.enabled=inputEnabled;
+        if(!SpectatorSceneReady){
+            if(Button("match.help",new Rect(5,1,132,topHeight),Application.isMobilePlatform?"Справка":"Справка (F9)",false,topButton))OpenBattleHelp();
+            float builderTop=Application.isMobilePlatform?46:31;var builderFrame=new Rect(5,builderTop,52,52);StoneFrame(builderFrame);
+            if(Icon("hud.builder",new Rect(9,builderTop+4,44,44),0,"F1","Строитель (F1)\nВыделить и перейти к строителю",builderSelected))FocusBuilder();
+            if(Button("match.pause",new Rect(142,1,131,topHeight),Application.isMobilePlatform?"Меню":"Меню (F10)",false,topButton))page=Page.Pause;
+            if(Button("match.teams",new Rect(278,1,131,topHeight),Application.isMobilePlatform?"Стороны":"Стороны (F11)",false,topButton))page=Page.Teams;
+            bool inputEnabled=GUI.enabled;GUI.enabled=inputEnabled&&onlineMatch;
+            if(Button("match.chat",new Rect(414,1,131,topHeight),Application.isMobilePlatform?"Чат":"Чат (F12)",false,topButton))ToggleBattleChat();GUI.enabled=inputEnabled;
+        }
         GUI.DrawTexture(new Rect(741,2,24,24),HdIcon(goldIcon));
         GUI.Label(new Rect(774,0,78,28),Mathf.FloorToInt(match.AvailableGold(0)).ToString(),new GUIStyle(hudText){alignment=TextAnchor.MiddleRight});
         GUI.DrawTexture(new Rect(878,2,24,24),HdIcon(woodIcon));
         GUI.Label(new Rect(913,0,75,28),match.AvailableWood(0).ToString(),new GUIStyle(hudText){alignment=TextAnchor.MiddleRight});
         GUI.DrawTexture(new Rect(1015,2,24,24),HdIcon(armyIcon));
         GUI.Label(new Rect(1047,0,81,28),match.LegendaryUsed(0)+" / "+match.LegendaryLimit[0],new GUIStyle(hudText){alignment=TextAnchor.MiddleRight});
-        GUI.Label(new Rect(1156,0,117,28),"Castle Fight 1×1",new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter});
+        GUI.Label(new Rect(1156,0,117,28),SpectatorSceneReady?"Просмотр":"Castle Fight 1×1",new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter});
         if(new Rect(738,0,125,28).Contains(Event.current.mousePosition))hudTip=GoldTooltip();
         if(new Rect(875,0,125,28).Contains(Event.current.mousePosition))hudTip="Древесина: "+match.Wood[0]+"\nРезерв очереди: "+match.ReservedWood(0)+"\nДоступно: "+match.AvailableWood(0);
         if(new Rect(1012,0,125,28).Contains(Event.current.mousePosition))hudTip="Легендарные места: "+match.LegendaryUsed(0)+" / "+match.LegendaryLimit[0]+"\nГотовые здания: "+(match.LegendaryUsed(0)-match.ReservedLegendary(0))+"\nРезерв очереди: "+match.ReservedLegendary(0);
         StoneFrame(new Rect(948,31,327,scoreExpanded?112:29));
-        GUI.Label(new Rect(966,37,270,18),RaceName+" · Раунд "+series.Round+"/"+series.Rounds+" · "+series.Wins[0]+":"+series.Wins[1],hudSmall);
+        string scoreTitle=SpectatorSceneReady?RaceName+" · "+BotRaceName:RaceName+" · Раунд "+series.Round+"/"+series.Rounds+" · "+series.Wins[0]+":"+series.Wins[1];
+        GUI.Label(new Rect(966,37,270,18),scoreTitle,hudSmall);
         if(Button("hud.score-toggle",new Rect(1243,34,27,22),scoreExpanded?"−":"+",false,topButton))scoreExpanded=!scoreExpanded;
         if(scoreExpanded){
         GUI.Label(new Rect(966,60,65,18),"Сторона",hudSmall);
         GUI.Label(new Rect(1035,60,45,18),"Постр.",hudSmall);GUI.Label(new Rect(1080,60,48,18),"Армия",hudSmall);
         GUI.Label(new Rect(1133,60,48,18),"Доход",hudSmall);GUI.Label(new Rect(1190,60,65,18),"Замок",hudSmall);
         DrawTeamRow(0,78,"Запад");DrawTeamRow(1,96,"Восток");
-        float incomeIn=onlineMatch?onlineIncomeIn??(10-match.Elapsed%10):match.IncomeIn;
+        float incomeIn=ReplicaCardTelemetry?onlineIncomeIn??(10-match.Elapsed%10):match.IncomeIn;
         GUI.Label(new Rect(966,116,290,18),"Время: "+TimeSpan.FromSeconds(match.Elapsed).ToString(@"mm\:ss")+" · Доход через "+Mathf.CeilToInt(incomeIn)+" с",new GUIStyle(hudSmall){fontSize=11});}
         DrawMinimap();
         if(MinimapButton("hud.worker",0,"Показать рабочего (F1)"))FocusBuilder();
@@ -171,10 +174,11 @@ public sealed partial class PcGame {
 
     (string buildings,string army,string income,string castle) TeamOverview(int team){
         string castle=Mathf.Max(0,match.CastleHp[team]).ToString("F0");
-        if(onlineMatch){
-            if(onlineTeamOverview?.Count!=2||networkSlot<0||networkSlot>1)
+        if(ReplicaCardTelemetry){
+            int slot=SpectatorSceneReady?0:networkSlot;
+            if(onlineTeamOverview?.Count!=2||slot<0||slot>1)
                 return ("—","—","—",castle);
-            var row=onlineTeamOverview[team==0?networkSlot:1-networkSlot];
+            var row=onlineTeamOverview[team==0?slot:1-slot];
             return (((int?)row["buildings"]??0).ToString(),((int?)row["army"]??0).ToString(),
                 ((float?)row["income"]??0).ToString("F1"),castle);
         }
@@ -348,7 +352,7 @@ public sealed partial class PcGame {
         var rect=HudMap;Fill(rect,new Color(.025f,.035f,.025f));if(minimapTerrain)Source(hordeMinimap?hordeMinimap:winterMinimap?winterMinimap:minimapTexture,new Rect(0,52,256,153),rect);
         DrawMinimapFog(rect);
         Func<Vector2,Vector2> point=p=>new Vector2(rect.x+(p.x+204.8f)/409.6f*rect.width,rect.y+(p.y+3584f/30)/(7168f/30)*rect.height);
-        foreach(var hut in match.Huts.Where(h=>!FogActive||h.team==0||fogKnownHuts.Contains(h.id))){var p=point(hut.position);Fill(new Rect(p.x-2,p.y-2,4,4),hut.team==0?new Color(.25f,.55f,1):Color.red);}
+        foreach(var hut in match.Huts.Where(h=>SpectatorSceneReady||!FogActive||h.team==0||fogKnownHuts.Contains(h.id))){var p=point(hut.position);Fill(new Rect(p.x-2,p.y-2,4,4),hut.team==0?new Color(.25f,.55f,1):Color.red);}
         foreach(var unit in match.Units)if(unit.hp>0&&!match.Hidden(unit)&&CanSeeUnit(unit)){var p=point(unit.position);Fill(new Rect(p.x-1,p.y-1,3,3),unit.team==0?(minimapTeamColors?new Color(.35f,.65f,1):Color.green):new Color(1,.2f,.1f));}
         var worker=point(match.Builders[0].position);Border(new Rect(worker.x-3,worker.y-3,7,7),Color.green,1);
         var camera=Camera.main;var plane=new Plane(Vector3.up,new Vector3(0,12,0));var ray=camera.ScreenPointToRay(new Vector3(guiOrigin.x+640*guiScale,Screen.height-guiOrigin.y-274*guiScale));

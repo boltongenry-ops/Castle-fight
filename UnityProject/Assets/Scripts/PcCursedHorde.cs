@@ -629,10 +629,13 @@ public sealed partial class PcGame {
         Fill(new Rect(HordeHud.x+1,HordeHud.y+1,HordeHud.width-2,HordeHud.height-2),new Color(.10f,.026f,.02f,.96f));
         var icon=HordeStatusArt(HumanMatch.HordeRageId);
         if(icon)GUI.DrawTexture(new Rect(HordeHud.x+7,HordeHud.y+8,45,45),icon,ScaleMode.ScaleToFit);
-        Text(HordeHud.x+59,HordeHud.y+4,190,27,match.HordeSecondStage?"Разбитый котёл":"Проклятая Орда",hudText);
-        int seconds=Mathf.CeilToInt(match.HordeNextWaveIn);
-        string state=match.HordeShamansAlive>0?"Шаманы с эликсиром · "+match.HordeShamansAlive+" из 3":
-            match.HordeAnyRage?"Ярость эликсира": "До выхода шаманов · "+(seconds/60)+":"+(seconds%60).ToString("00");
+        bool second=SpectatorSceneReady?(bool?)spectatorBoss?["second"]==true:match.HordeSecondStage;
+        Text(HordeHud.x+59,HordeHud.y+4,190,27,second?"Разбитый котёл":"Проклятая Орда",hudText);
+        float? left=SpectatorSceneReady?(float?)spectatorBoss?["left"]:match.HordeNextWaveIn;
+        int seconds=Mathf.CeilToInt(left??0),shamans=SpectatorSceneReady?(int?)spectatorBoss?["shamans"]??0:match.HordeShamansAlive;
+        bool raging=SpectatorSceneReady?(bool?)spectatorBoss?["rage"]==true:match.HordeAnyRage;
+        string state=shamans>0?"Шаманы с эликсиром · "+shamans+" из 3":
+            raging?"Ярость эликсира":left.HasValue?"До выхода шаманов · "+(seconds/60)+":"+(seconds%60).ToString("00"):"Эликсир ярости";
         Text(HordeHud.x+59,HordeHud.y+29,213,24,state,hudSmall);
     }
 

@@ -427,7 +427,7 @@ public sealed partial class PcGame {
     }
 
     void DrawAbyssHud(){
-        if(abyss.hudFrame)GUI.DrawTexture(AbyssHud,abyss.hudFrame,ScaleMode.StretchToFill,true);
+        if(abyss!=null&&abyss.hudFrame)GUI.DrawTexture(AbyssHud,abyss.hudFrame,ScaleMode.StretchToFill,true);
         else{Fill(AbyssHud,new Color(.014f,.071f,.085f,.96f));Border(AbyssHud,AbyssAccent);}
         if(abyssHudTitle==null){
             abyssHudTitle=new GUIStyle(label){fontSize=17,fontStyle=FontStyle.Bold,alignment=TextAnchor.MiddleLeft,padding=new RectOffset(),normal={textColor=AbyssAccent}};
@@ -436,8 +436,11 @@ public sealed partial class PcGame {
         float x=AbyssHud.x+29,y=AbyssHud.y,w=AbyssHud.width-44;
         GUI.Label(new Rect(x,y+9,w,23),"Дыхание Бездны",abyssHudTitle);
         GUI.Label(new Rect(x,y+32,w,19),"−25% движения  ·  10% промаха",abyssHudCopy);
-        string raid=match.AbyssRaidWarning?"Водоворот у замка!":(match.AbyssSecondPhase?"Гидра через ":"Вылазка через ")+
-            TimeSpan.FromSeconds(Mathf.CeilToInt(match.AbyssRaidIn)).ToString(@"mm\:ss");
+        bool warning=SpectatorSceneReady?(bool?)spectatorBoss?["warning"]==true:match.AbyssRaidWarning;
+        bool second=SpectatorSceneReady?(bool?)spectatorBoss?["second"]==true:match.AbyssSecondPhase;
+        float? left=SpectatorSceneReady?(float?)spectatorBoss?["left"]:match.AbyssRaidIn;
+        string raid=warning?"Водоворот у замка!":!left.HasValue?"Глубинные наги":(second?"Гидра через ":"Вылазка через ")+
+            TimeSpan.FromSeconds(Mathf.CeilToInt(Mathf.Max(0,left.Value))).ToString(@"mm\:ss");
         GUI.Label(new Rect(x,y+50,w,22),raid,abyssHudCopy);
     }
 

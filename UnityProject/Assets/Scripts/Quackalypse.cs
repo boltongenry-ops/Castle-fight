@@ -4,6 +4,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class HumanMatch {
     public const string QuackTrial="mythic_quackalypse";
+    internal const string QuackKingBuilding="pB13";
     public const int QuackCastleHealth=14000;
     internal const int QuackRainLimit=30;
     internal const float QuackWaveInterval=180;
@@ -39,7 +40,7 @@ public sealed partial class HumanMatch {
         if(!quackActive)return;
         quackStage=0;
         quackBellAt=Elapsed+QuackWaveInterval;
-        quackRainKind=Kind("pB06");
+        quackRainKind=Kind(QuackKingBuilding);
         quackBellKinds=Array.ConvertAll(QuackBellRoster,Kind);
         LegendaryLimit[1]=2;
         quackInfiltratorKind=Kind("pB31");

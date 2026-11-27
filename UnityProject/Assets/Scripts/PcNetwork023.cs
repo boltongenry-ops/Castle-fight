@@ -15,16 +15,18 @@ public sealed partial class PcGame {
     readonly List<NetworkSight> networkSight=new List<NetworkSight>();
     readonly Dictionary<int,JObject> networkUnitCards=new Dictionary<int,JObject>(),networkBuildingCards=new Dictionary<int,JObject>();
     readonly float[] networkDamageBoost=new float[2];
-    void ApplyNetworkCards(JObject packet){
+    bool ReplicaCardTelemetry=>onlineMatch||SpectatorSceneReady;
+    void ApplyNetworkCards(JObject packet,int slot){
         networkSpellStamp=Time.unscaledTime;
         networkUnitCards.Clear();networkBuildingCards.Clear();
-        if(packet["banks"] is JArray banks&&banks.Count==2)for(int team=0;team<2;team++)networkDamageBoost[team]=(float?)banks[team==0?networkSlot:1-networkSlot]?["boost"]??0;
+        if(packet["banks"] is JArray banks&&banks.Count==2)for(int team=0;team<2;team++)networkDamageBoost[team]=(float?)banks[team==0?slot:1-slot]?["boost"]??0;
         if(packet["units"] is JArray actors)foreach(var row in actors.OfType<JObject>())networkUnitCards[(int?)row["id"]??0]=row;
         if(packet["huts"] is JArray buildings)foreach(var row in buildings.OfType<JObject>())networkBuildingCards[(int?)row["id"]??0]=row;
     }
     static float NetworkStatusValue(JObject row,string key)=>HumanMatch.F(row["aura_stats"],key)+HumanMatch.F(row["aura_stats"],key+"_negative")+HumanMatch.F(row["stats"],key)+HumanMatch.F(row["passive"],key);
     float NetworkCardStat(int id,string key,float fallback,bool building=false){
-        var table=building?networkBuildingCards:networkUnitCards;if(!onlineMatch||!table.TryGetValue(id,out var row))return fallback;
+        var table=building?networkBuildingCards:networkUnitCards;if(!ReplicaCardTelemetry||!table.TryGetValue(id,out var row))return fallback;
+        if(SpectatorSceneReady)return HumanMatch.F(row,key,fallback);
         var state=row["state"];if(building)return HumanMatch.F(row,key,fallback);
         if(key=="armor")return HumanMatch.F(row,"armor",fallback)+HumanMatch.F(state,"buff_armor")+HumanMatch.F(state,"item_armor")+NetworkStatusValue(row,"armor");
         if(key=="damage"){

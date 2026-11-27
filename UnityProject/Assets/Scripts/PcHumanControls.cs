@@ -10,18 +10,26 @@ public sealed partial class PcGame {
     HumanMatch.Hut SelectedHut=>match?.Huts.FirstOrDefault(h=>h.id==selectedHut&&CanInspectHut(h));
     HumanMatch.Unit SelectedUnit=>match?.Units.FirstOrDefault(u=>u.id==selectedUnit&&u.hp>0&&CanSeeUnit(u));
     static string Clean(string s)=>Regex.Replace(s??"",@"\|c[0-9a-fA-F]{8}|\|r","").Replace("|n","\n");
+    Vector3 UnitViewPosition(HumanMatch.Unit unit)=>SpectatorSceneReady&&units.TryGetValue(unit.id,out var view)&&view
+        ?view.transform.position:World(unit.position)+Vector3.up*match.Height(unit);
     void SelectAtCursor() {
+        SelectAtScreenPoint(ActivePointer);
+    }
+    void SelectAtScreenPoint(Vector2 pointer) {
         ClearGroupSelection();
-        float scale=guiScale;Vector2 pointer=ActivePointer;
+        float scale=guiScale;
         var worker=Camera.main.WorldToScreenPoint(World(match.Builders[0].position)+Vector3.up*1.4f);
         selectedCastle=false;selectedItem=-1;builderSelected=worker.z>0&&Vector2.Distance(pointer,worker)<25*scale;selectedHut=selectedUnit=-1;showRange=false;buildMenu=false;chosen=-1;moveOrder=false;targetedSpell=null;
         if(builderSelected)return;
-        var castlePoint=Camera.main.WorldToScreenPoint(World(HumanMatch.CastlePosition(0))+Vector3.up*6);if(castlePoint.z>0&&Vector2.Distance(pointer,castlePoint)<65*scale){SelectCastle(false);return;}
+        var castlePoint=Camera.main.WorldToScreenPoint(World(HumanMatch.CastlePosition(0))+Vector3.up*6);
+        bool overCastle=castlePoint.z>0&&Vector2.Distance(pointer,castlePoint)<65*scale;
+        if(overCastle&&!SpectatorSceneReady){SelectCastle(false);return;}
         float best=32*scale;
-        foreach(var u in match.Units.Where(u=>u.hp>0&&!match.Hidden(u)&&CanSeeUnit(u)&&match.Lines[u.kind].unit!="n02E")){float center=units.TryGetValue(u.id,out var actor)&&actor.godotHeight>0?actor.godotHeight*.5f:1.3f;var p=Camera.main.WorldToScreenPoint(World(u.position)+Vector3.up*(match.Height(u)+center));float d=Vector2.Distance(pointer,p);if(p.z>0&&d<best){best=d;selectedUnit=u.id;}}
+        foreach(var u in match.Units.Where(u=>u.hp>0&&!match.Hidden(u)&&CanSeeUnit(u)&&match.Lines[u.kind].unit!="n02E")){float center=units.TryGetValue(u.id,out var actor)&&actor.godotHeight>0?actor.godotHeight*.5f:1.3f;var p=Camera.main.WorldToScreenPoint(UnitViewPosition(u)+Vector3.up*center);float d=Vector2.Distance(pointer,p);if(p.z>0&&d<best){best=d;selectedUnit=u.id;}}
         if(selectedUnit>=0)return;
         best=55*scale;
         foreach(var h in match.Huts.Where(CanInspectHut)){var p=Camera.main.WorldToScreenPoint(World(h.position)+Vector3.up*2.5f);float d=Vector2.Distance(pointer,p);if(p.z>0&&d<best){best=d;selectedHut=h.id;}}
+        if(overCastle&&selectedHut<0)SelectCastle(false);
     }
     void HandleCommandKeys() {
         for(int slot=0;slot<6;slot++)if(Input.GetKeyDown((KeyCode)((int)KeyCode.Keypad1+slot)))BeginItem(slot);
@@ -87,7 +95,7 @@ public sealed partial class PcGame {
     void UpdateSelectionRing() {
         UpdateGroupRings();
         var h=SelectedHut;var u=SelectedUnit;bool active=builderSelected||selectedCastle||h!=null||u!=null;
-        selectedRing.SetActive(active&&page==Page.Match);if(active){selectedRing.transform.position=builderSelected?builders[0].transform.position+Vector3.up*.12f:World(selectedCastle?HumanMatch.CastlePosition(0):h!=null?h.position:u.position)+Vector3.up*.12f;selectedRing.transform.localScale=Vector3.one*(selectedCastle?5.8f:h!=null?2.2f:1);}
+        selectedRing.SetActive(active&&(page==Page.Match||SpectatorSceneReady));if(active){selectedRing.transform.position=builderSelected?builders[0].transform.position+Vector3.up*.12f:World(selectedCastle?HumanMatch.CastlePosition(0):h!=null?h.position:u.position)+Vector3.up*.12f;selectedRing.transform.localScale=Vector3.one*(selectedCastle?5.8f:h!=null?2.2f:1);}
         if(!rangeRing){rangeRing=Ring("Selected ability radius",visuals.transform);}
         bool targeting=(!string.IsNullOrEmpty(targetedSpell)||selectedItem>=0)&&page==Page.Match&&!MouseOverHud()&&PointerOnTerrain(out _);
         rangeRing.SetActive((showRange&&h!=null||targeting)&&page==Page.Match);
@@ -109,7 +117,7 @@ public sealed partial class PcGame {
     void ClearHumanEffects(){ClearGroupSelection();humanEffects.Clear();netViews.Clear();netSizes.Clear();reforgedNets.Clear();reforgedAirNets.Clear();wispBursts.Clear();orcDecorModels.Clear();orcDecorAnchors.Clear();effectAnchors.Clear();rangeRing=null;selectedHut=selectedUnit=-1;targetedSpell=null;showRange=false;}
     Texture2D Extra(string name){int i=Array.IndexOf(extraCommandIds,name);return i>=0?HdIcon(extraCommandIcons[i]):CommandIcon(8);}
     // Native A03Y has an empty aart; share the original Bfro frost-attack icon.
-    Texture2D AbilityArt(string id){if(HumanMatch.IsUndeadPlagueAura(id))id="A05R";var clan=BlackHandUi.Ability(id);if(clan)return clan;var hd=HdModels.Icon(ReforgedModelPack.IconAddress("Ability-"+id));if(hd)return hd;var ultimateArt=UltimateAbility034(id);if(ultimateArt)return HdIcon(ultimateArt);if(id=="ANDB")return ContentResources.Load<Texture2D>("CombatType/attack-piercing");if(id=="A064")id="A03C";if(id=="A03Y")id="A03C";foreach(var pack in new[]{pepePack,centaurPack,ultimatePack,nerubianPack,pandarenPack,elvenPack,nightPack,elementalPack,corruptedPack,undeadPack,mechPack,northernPack,chaosPack,naturePack,nagaPack,orcPack}){if(!pack)continue;int index=Array.IndexOf(pack.abilityIds,id);if(index>=0&&pack.abilityIcons[index])return HdIcon(pack.abilityIcons[index]);}int i=Array.IndexOf(abilityIds,id);return i>=0?HdIcon(abilityIcons[i]):null;}
+    Texture2D AbilityArt(string id){if(id==HumanMatch.WinterQueenFreeze)id="A0AK";if(id==HumanMatch.WinterQueenStorm)id="A080";if(HumanMatch.IsUndeadPlagueAura(id))id="A05R";var clan=BlackHandUi.Ability(id);if(clan)return clan;var hd=HdModels.Icon(ReforgedModelPack.IconAddress("Ability-"+id));if(hd)return hd;var ultimateArt=UltimateAbility034(id);if(ultimateArt)return HdIcon(ultimateArt);if(id=="ANDB")return ContentResources.Load<Texture2D>("CombatType/attack-piercing");if(id=="A064")id="A03C";if(id=="A03Y")id="A03C";foreach(var pack in new[]{pepePack,centaurPack,ultimatePack,nerubianPack,pandarenPack,elvenPack,nightPack,elementalPack,corruptedPack,undeadPack,mechPack,northernPack,chaosPack,naturePack,nagaPack,orcPack}){if(!pack)continue;int index=Array.IndexOf(pack.abilityIds,id);if(index>=0&&pack.abilityIcons[index])return HdIcon(pack.abilityIcons[index]);}int i=Array.IndexOf(abilityIds,id);return i>=0?HdIcon(abilityIcons[i]):null;}
     bool ArtButton(string id,Rect r,Texture2D art,string key,string tip,bool selected=false) {
         bool hover=r.Contains(HudPointer)&&GUI.enabled;
         GUI.BeginGroup(r);var local=new Rect(0,0,r.width,r.height);
@@ -145,7 +153,7 @@ public sealed partial class PcGame {
         if(builderSelected||h!=null||u!=null) {
             if(portraitTexture)GUI.DrawTexture(BattlePortraitRect,portraitTexture);
             DrawPortraitCameraButton(builderSelected?match.Builders[0].position:h!=null?h.position:u.position,
-                !builderSelected&&h==null?match.Height(u):0);
+                !builderSelected&&h==null?UnitViewPosition(u).y-World(u.position).y:0);
             float hp=builderSelected?220:h!=null?h.hp:u.hp,maxHp=builderSelected?220:h!=null?h.maxHp:u.maxHp;
             if(CommandDeskHud)DrawDeskHealth(hp,maxHp);
             else{
@@ -158,7 +166,7 @@ public sealed partial class PcGame {
         if(CommandDeskHud)DrawDeskTitle(title);
         else GUI.Label(new Rect(491,578,306,31),title,new GUIStyle(hudText){fontSize=title.Length>24?13:15,alignment=TextAnchor.MiddleCenter});
 
-        if(selectedGroup.Count>1)DrawGroupCard();else if(builderSelected)DrawBuilderCard();else if(h!=null)DrawBuildingCard(h);else if(u!=null)DrawUnitCard(u);else GUI.Label(new Rect(504,630,285,55),Application.isMobilePlatform?"Коснитесь бойца или здания\nВыберите рабочего значком слева":"ЛКМ — выбрать бойца или здание\nF1 — вернуться к рабочему",hudSmall);
+        if(selectedGroup.Count>1)DrawGroupCard();else if(builderSelected)DrawBuilderCard();else if(h!=null)DrawBuildingCard(h);else if(u!=null)DrawUnitCard(u);else GUI.Label(new Rect(504,630,285,55),SpectatorSceneReady?"Выберите бойца или здание":"ЛКМ — выбрать бойца или здание\nF1 — вернуться к рабочему",hudSmall);
     }
     Rect BattlePortraitRect=>CommandDeskHud?new Rect(311,552,151,151):new Rect(348,590,109,93);
     void DrawPortraitCameraButton(Vector2 position,float height=0){
@@ -171,8 +179,9 @@ public sealed partial class PcGame {
         GUI.DrawTexture(new Rect(504,623,36,36),CombatIcon(true,"divine"),ScaleMode.ScaleToFit);GUI.Label(new Rect(550,622,245,42),"Броня: неуязвимость\nРабочий · "+RaceName,hudSmall);
         var b=match.Builders[0];var hut=b.jobs.Count>0?match.Huts.FirstOrDefault(v=>v.id==b.jobs[0]):null;
         if(hut!=null){GUI.Label(new Rect(504,665,286,21),match.Lines[hut.kind].name+" · очередь: "+b.jobs.Count,hudSmall);Fill(new Rect(504,685,279,5),new Color(.08f,.07f,.04f));Fill(new Rect(504,685,279*(1-hut.buildLeft/match.Lines[hut.kind].buildSeconds),5),new Color(.74f,.57f,.2f));}
-        else GUI.Label(new Rect(504,665,286,23),Application.isMobilePlatform?"Коснитесь поля — идти":"ПКМ — идти · B — строительство",hudSmall);
+        else if(!SpectatorSceneReady)GUI.Label(new Rect(504,665,286,23),Application.isMobilePlatform?"Коснитесь поля — идти":"ПКМ — идти · B — строительство",hudSmall);
         GUI.Label(new Rect(504,690,286,22),b.repairing?(b.repairBuilding>0?"Ремонт здания":"Ремонт замка")+" · +15 HP/с":b.pose=="Walk"?"Выполняет приказ движения":b.pose=="Stand Work"?"Строит здание":"Ожидает приказа",hudSmall);
+        if(SpectatorSceneReady)return;
         if(buildMenu) {
             int slot=0;foreach(int i in ConstructionPageKinds()){var l=match.Lines[i];string tip=l.name+" ("+l.hotkey+")\n"+Cost(l)+"\n"+(l.Producer?l.unitName+" · выпуск "+l.interval.ToString("F1")+" сек.":BuildingSummary(l.building));
                 if(ArtButton("build."+i,Slot(slot%4,slot/4),HdIcon(MatchBuildingIcon(i)),l.hotkey,tip,chosen==i))Select(i);slot++;}
@@ -214,7 +223,7 @@ public sealed partial class PcGame {
         GUI.Label(new Rect(504+inset,665,286-inset,22),info,hudSmall);GUI.Label(new Rect(504,690,286,22),"Вложено: "+h.spent+" · Доход: "+h.income.ToString("F2")+" / 10 с",new GUIStyle(hudSmall){fontSize=11});
         if(h.paid&&l.Producer){Fill(new Rect(504+inset,686,279-inset,4),new Color(.1f,.1f,.05f));Fill(new Rect(504+inset,686,(279-inset)*Mathf.Clamp01(1-h.spawnLeft/match.Interval(h)),4),new Color(.75f,.6f,.2f));}
         int skill=0;foreach(var id in BuildingCardAbilities(h)){DrawSpellIcon("building.ability."+id,Slot(2+skill%2,skill/2),id,RaceSkillTip(id,match.Abilities[id]),null,h);if(++skill>=4)break;}
-        if(h.team!=0)return;
+        if(h.team!=0||SpectatorSceneReady)return;
         if(!h.paid){if(ArtButton("building.resume",Slot(0,0),Extra("repair"),"","Продолжить незавершённое строительство")){match.ResumeBuilding(0,h.id);FocusBuilder();}if(ArtButton("building.cancel",Slot(3,2),CommandIcon(8),"Del","Отменить строительство\nОсвободить клетку и резерв золота, дерева и легендарного места"))SellSelected();return;}
         for(int i=0;i<l.upgrades.Length;i++){int k=match.Kind(l.upgrades[i]);var next=match.Lines[k];string tip="Улучшить: "+next.name+"\n"+Cost(next,h.team)+(next.Producer?"\nВыпуск после улучшения: "+(15+(h.spent+next.cost)/20f).ToString("F1")+" сек.":"\n"+BuildingSummary(next.building)+"\nМана: +"+HumanMatch.F(next.buildingStats,"mana_regen").ToString("F2")+" / с");if(ArtButton("upgrade."+next.building,Slot(i,0),HdIcon(MatchBuildingIcon(k)),i==0?"U":"",tip))UpgradeSelected(k);}
         if(l.Producer&&ArtButton("building.pause",Slot(0,1),Extra(h.paused?"resume_all":"pause"),"P",h.paused?"Возобновить производство":"Приостановить производство",h.paused))ToggleProduction(h);

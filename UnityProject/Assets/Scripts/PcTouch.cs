@@ -11,7 +11,9 @@ public sealed partial class PcGame {
         var p=GuiPoint(screen);
         if(AccountOverlayOpen||SocialNotificationAt(p))return true;
         if(page==Page.Viewer)return p.y<80;
-        if(page==Page.Spectator)return SpectatorStrip.Contains(p);
+        if(page==Page.Spectator)return spectatorFog==null||SpectatorStrip.Contains(p)||HudContains(p)||
+            Application.isMobilePlatform&&HudThemeIndex==0&&new Rect(960,482,320,238).Contains(p)||
+            SpectatorBossContains(p)||!string.IsNullOrEmpty(spellDetailsId)&&new Rect(700,148,410,326).Contains(p);
         if(page!=Page.Match)return true;
         if(Application.isMobilePlatform&&(p.y<42||new Rect(5,46,52,52).Contains(p)||new Rect(960,482,320,238).Contains(p)))return true;
         if(onlineMatch&&(new Rect(68,Application.isMobilePlatform?48:33,160,48).Contains(p)||(Application.isMobilePlatform&&MobileTalkRect.Contains(p))))return true;
@@ -44,6 +46,7 @@ public sealed partial class PcGame {
         }
     }
     void HandleWorldTap() {
+        if(SpectatorSceneReady){SelectAtCursor();return;}
         if(!PointerOnTerrain(out Vector3 hit))return;Vector2 point=new Vector2(hit.x,-hit.z);
         if(chosen>=0){float wx=hit.x*30,wy=-hit.z*30;int x=Mathf.FloorToInt((wx+6144)/128),y=HumanMatch.BuildRow(wy,true);Place(x,y);return;}
         if(selectedItem>=0){ExecuteItem(point);return;}if(!string.IsNullOrEmpty(targetedSpell)){ExecuteBuilderSpell(point);return;}if(moveOrder){OrderBuilder(point);moveOrder=false;return;}

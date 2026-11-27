@@ -25,8 +25,14 @@ public sealed partial class PcGame {
         var wanted=new HashSet<string>();
         if(winterIntro&&winterCast&&winterQueen&&winterIntroAge<4.8f)
             PlaceNorthernFx(wanted,"winter-cast","fx_b6599866d740",winterQueen.transform.position+Vector3.up*3.6f);
+        int judgmentBudget=Application.isMobilePlatform?26:48;
         foreach(var unit in match.Units)if(unit.hp>0&&units.TryGetValue(unit.id,out var view)&&ShowUnitArt036(unit,view)) {
-            if(unit.effects.Any(e=>e.left>0&&(e.group=="northern_ice_chains"||e.group==HumanMatch.WinterChain)))PlaceNorthernFx(wanted,"ice-unit-"+unit.id,"fx_759aa9a57831",view.transform.position);
+            bool frozen=unit.effects.Any(e=>e.left>0&&(e.group=="northern_ice_chains"||e.group==HumanMatch.WinterChain||e.group==HumanMatch.WinterQueenFreeze));
+            if(winterFinale&&judgmentBudget>0&&unit.effects.Any(e=>e.id==HumanMatch.WinterJudgment&&e.left>0)){
+                var p=Camera.main.WorldToViewportPoint(view.transform.position);
+                if(p.z>0&&p.x>=-.15f&&p.x<=1.15f&&p.y>=-.15f&&p.y<=1.15f){frozen=true;judgmentBudget--;}
+            }
+            if(frozen)PlaceNorthernFx(wanted,"ice-unit-"+unit.id,"fx_759aa9a57831",view.transform.position);
             if(unit.effects.Any(e=>e.left>0&&(bool?)e.config?["frost_armor"]==true))PlaceNorthernFx(wanted,"armor-"+unit.id,"fx_96b9f2d40527",view.transform.position+Vector3.up*Mathf.Max(.7f,view.ClassicHeight*.55f));
         }
         foreach(var hut in match.Huts)if(CanInspectHut(hut)&&match.FrostDisabled(hut)>0)PlaceNorthernFx(wanted,"ice-hut-"+hut.id,"fx_759aa9a57831",World(hut.position));

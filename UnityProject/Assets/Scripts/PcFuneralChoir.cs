@@ -256,25 +256,31 @@ public sealed partial class PcGame {
     }
     void DrawChoirHud(){
         DrawBellFlash();
-        float t=match.MovementAge-HumanMatch.ChoirLead;
-        bool chorus=match.Movement==HumanMatch.ChoirMovement.First||match.Movement==HumanMatch.ChoirMovement.Second;
+        var movement=SpectatorSceneReady?SpectatorChoirMovement:match.Movement;
+        float age=SpectatorSceneReady?(float?)spectatorBoss?["age"]??0:match.MovementAge;
+        float t=age-HumanMatch.ChoirLead;
+        bool chorus=movement==HumanMatch.ChoirMovement.First||movement==HumanMatch.ChoirMovement.Second;
         string caption="Могильная десятина",signal="До удара колокола";
-        float left=match.TollIn,span=8*HumanMatch.ChoirBar;
-        if(match.Movement==HumanMatch.ChoirMovement.Verse){
+        float left=SpectatorSceneReady?(float?)spectatorBoss?["left"]??0:match.TollIn,span=8*HumanMatch.ChoirBar;
+        if(SpectatorSceneReady&&spectatorBoss==null){
+            DrawBossMeter(false,"Погребальный хор","Могильная десятина",0,0);
+            return;
+        }
+        if(movement==HumanMatch.ChoirMovement.Verse){
             caption="Подготовка";signal="До восстания";span=HumanMatch.ChoirPreparation;left=span-match.Elapsed;
         }else if(chorus){
-            bool heavy=match.Movement==HumanMatch.ChoirMovement.Second;
+            bool heavy=movement==HumanMatch.ChoirMovement.Second;
             caption=t<0?"Шёпот под землёй":heavy?"Прорыв у замка":"Открытые могилы";
             signal=t<0?(heavy?"Трещины у трона":"Трещины у передовой"):"До конца восстания";
-            left=t<0?-t:HumanMatch.ChoirPass-match.MovementAge;
+            left=t<0?-t:HumanMatch.ChoirPass-age;
             span=t<0?HumanMatch.ChoirLead:HumanMatch.ChoirPass-HumanMatch.ChoirLead;
-        }else if(match.Movement==HumanMatch.ChoirMovement.Wail){
-            caption="Плач банши";signal="До погребения";span=12;left=span-match.MovementAge;
+        }else if(movement==HumanMatch.ChoirMovement.Wail){
+            caption="Плач банши";signal="До погребения";span=12;left=span-age;
         }
         DrawBossMeter(false,caption,signal,left,span);
         if(chorus){
-            bool second=match.Movement==HumanMatch.ChoirMovement.Second;
-            float clock=choirMusic&&choirMusic.clip==choirClips[second?2:1] ? choirMusic.time : match.MovementAge;
+            bool second=movement==HumanMatch.ChoirMovement.Second;
+            float clock=choirMusic&&choirMusic.clip==choirClips[second?2:1] ? choirMusic.time : age;
             DrawChoirWhisper(second,clock);
         }
     }

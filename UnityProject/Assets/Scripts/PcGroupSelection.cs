@@ -8,10 +8,10 @@ public sealed partial class PcGame {
     readonly List<int> selectedGroup=new List<int>();
     readonly Dictionary<int,GameObject> groupRings=new Dictionary<int,GameObject>();
     bool selectionPending,selectionDragging;Vector2 selectionStart,selectionEnd;
-    bool CanMarquee=>page==Page.Match&&!aspectWaiting&&chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder&&!showVoicePanel;
+    bool CanMarquee=>(page==Page.Match&&!aspectWaiting||SpectatorSceneReady&&spectatorFog!=null)&&chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder&&!showVoicePanel;
     static Rect SelectionRect(Vector2 a,Vector2 b)=>Rect.MinMaxRect(Mathf.Min(a.x,b.x),Mathf.Min(a.y,b.y),Mathf.Max(a.x,b.x),Mathf.Max(a.y,b.y));
     void ClearGroupSelection(){selectedGroup.Clear();selectionPending=selectionDragging=false;foreach(var ring in groupRings.Values)if(ring)Destroy(ring);groupRings.Clear();}
-    Vector3 UnitSelectionPoint(HumanMatch.Unit unit)=>Camera.main.WorldToScreenPoint(World(unit.position)+Vector3.up*(match.Height(unit)+1.3f));
+    Vector3 UnitSelectionPoint(HumanMatch.Unit unit)=>Camera.main.WorldToScreenPoint(UnitViewPosition(unit)+Vector3.up*1.3f);
     void HandleSelectionGesture(){
         if(!CanMarquee){selectionPending=selectionDragging=false;return;}
         if(Input.GetMouseButtonDown(1)){selectionPending=selectionDragging=false;return;}
@@ -44,7 +44,7 @@ public sealed partial class PcGame {
         if(match==null)return;
         selectedGroup.RemoveAll(id=>!match.Units.Any(u=>u.id==id&&u.hp>0&&CanSeeUnit(u)));
         if(selectedGroup.Count>0&&!selectedGroup.Contains(selectedUnit))selectedUnit=selectedGroup[0];
-        foreach(var id in selectedGroup){var actor=match.Units.First(u=>u.id==id);if(!groupRings.TryGetValue(id,out var ring)||!ring){ring=Ring("Group selection "+id,visuals.transform);groupRings[id]=ring;}ring.SetActive(page==Page.Match&&id!=selectedUnit);ring.transform.position=World(actor.position)+Vector3.up*.13f;}
+        foreach(var id in selectedGroup){var actor=match.Units.First(u=>u.id==id);if(!groupRings.TryGetValue(id,out var ring)||!ring){ring=Ring("Group selection "+id,visuals.transform);groupRings[id]=ring;}ring.SetActive((page==Page.Match||SpectatorSceneReady)&&id!=selectedUnit);ring.transform.position=World(actor.position)+Vector3.up*.13f;}
         foreach(int id in groupRings.Keys.Where(id=>!selectedGroup.Contains(id)).ToArray()){if(groupRings[id])Destroy(groupRings[id]);groupRings.Remove(id);}
     }
     void DrawSelectionMarquee(){if(!selectionDragging||!selectionPending)return;var rect=SelectionRect(GuiPoint(selectionStart),GuiPoint(selectionEnd));Fill(rect,new Color(.15f,.8f,.22f,.10f));Border(rect,new Color(.25f,1,.3f),1);}

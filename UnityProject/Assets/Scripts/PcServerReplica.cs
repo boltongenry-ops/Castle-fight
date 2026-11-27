@@ -42,10 +42,14 @@ public sealed class PcServerReplica {
             if((bool?)row["builder"]==true) {
                 var builder=world.Builders[local];builder.previous=builder.position;builder.position=point;builder.direction=direction;builder.pose=pose;builder.repairing=(bool?)row["repair"]??false;
                 builder.repairBuilding=(int?)row["repair_building"]??-1;
+                if(row["jobs"] is JArray jobs){builder.jobs.Clear();builder.jobs.AddRange(jobs.Values<int>());}
                 if(local==0)SupportsBuildingRepair=row["repair_building"]!=null;
                 continue;
             }
-            int kind=unitKind(local,(string)row["r"]??"");if(kind<0||kind>=world.Lines.Length){unknownUnits++;continue;}
+            string raw=(string)row["r"]??"";
+            int kind=row["line_raw"]?.Type==JTokenType.String?world.Kind((string)row["line_raw"]):-1;
+            if(kind<0||world.Lines[kind].unit!=raw)kind=unitKind(local,raw);
+            if(kind<0||kind>=world.Lines.Length){unknownUnits++;continue;}
             int id=(int?)row["id"]??0;if(id<=0)continue;
             var unit=new HumanMatch.Unit { id=id,team=local,kind=kind,position=point,previous=previous.TryGetValue(id,out var old)?old.position:point,direction=direction,pose=pose,attackSerial=Serial(row),hp=Part(row,"hp",0),maxHp=Part(row,"hp",1,1),mana=Part(row,"m",0),maxMana=Part(row,"m",1),armor=Number(row["armor"]),stun=Number(row["stun"]) };
             if(row["abilities"] is JArray abilities)foreach(var ability in abilities)if(ability.Type==JTokenType.String)unit.abilities.Add((string)ability);

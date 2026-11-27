@@ -16,10 +16,10 @@ public sealed partial class PcGame
     AudioSource bossSoundtrack;
     bool ownsBossSoundtrackClip;
 
-    IEnumerator PrepareBossSoundtrack(int generation)
+    IEnumerator PrepareBossSoundtrack(int generation,bool? protocolTrack=null)
     {
         AudioClip clip;
-        bool protocol=match.LastProtocol;
+        bool protocol=protocolTrack??match.LastProtocol;
         string track=protocol?ProtocolBossTrack:EpochalBossTrack;
         string path = Path.Combine(Application.streamingAssetsPath, "Frontend", track+(protocol?".ogg":".mp3"));
         bool localFile = !Application.isMobilePlatform && File.Exists(path);

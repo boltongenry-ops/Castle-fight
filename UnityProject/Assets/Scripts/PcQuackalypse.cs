@@ -75,7 +75,7 @@ public sealed partial class PcGame {
         controls.InputBlocked=true;
         controls.GameplayViewport(false);
         PrepareQuackSwamp();
-        quackKing=CreateQuackActor("pB13",QuackKingPoint,1.8f);
+        quackKing=CreateQuackActor(HumanMatch.QuackKingBuilding,QuackKingPoint,1.8f);
         CacheQuackKingHead();
         quackGuards[0]=CreateQuackActor("pB31",QuackGuardPoint(0),1);
         quackGuards[1]=CreateQuackActor("pB12",QuackGuardPoint(1),1);
@@ -120,7 +120,7 @@ public sealed partial class PcGame {
             targetedSpell=null;CloseBattleHelp();
             RenderSettings.ambientLight=Color.Lerp(quackDay,new Color(.14f,.22f,.26f),.76f);
             if(quackSun)quackSun.intensity=quackSunIntensity*.36f;
-            quackKing=CreateQuackActor("pB13",QuackKingPoint,1.8f);
+            quackKing=CreateQuackActor(HumanMatch.QuackKingBuilding,QuackKingPoint,1.8f);
             CacheQuackKingHead();
         }
         if(opening)UpdateQuackGuards(time);
@@ -461,7 +461,7 @@ public sealed partial class PcGame {
         else AtlasPanel(QuackHud,new Color(.027f,.077f,.041f,.98f),new Color(.49f,.65f,.27f));
         var caption=new Rect(QuackHud.x+82,QuackHud.y+31,174,31);
         var captionStyle=new GUIStyle(heading){alignment=TextAnchor.MiddleCenter,normal={textColor=new Color(.91f,.95f,.75f)}};
-        FitBossText(caption,match.QuackDownpour?"КВАА!":"Ква-ква??",captionStyle,23);
+        FitBossText(caption,(SpectatorSceneReady?spectatorStorm:match.QuackDownpour)?"КВАА!":"Ква-ква??",captionStyle,23);
         float age=Time.unscaledTime-quackEmojiAt;
         if(age>=2f||!quackEmoji)return;
         float scale=Mathf.Lerp(.76f,1,Mathf.SmoothStep(0,1,Mathf.Clamp01(age*5)));
@@ -521,6 +521,7 @@ public sealed partial class PcGame {
 
     void DisposeQuack(){
         ClearQuack();
+        ClearGreatQuackArt();
         if(quackReveal)Destroy(quackReveal);
         if(quackEmoji)Destroy(quackEmoji);
         if(quackDrizzle)Destroy(quackDrizzle);

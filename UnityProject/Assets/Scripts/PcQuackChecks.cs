@@ -62,6 +62,9 @@ public sealed partial class PcGame {
             yield break;
         }
         Check(quackKing&&quackGuards.Count(guard=>guard)==3&&quackEmoji&&quackReveal,"Opening has the Great Quack, guards and both generated textures");
+        Check(greatQuackTemplate&&quackKing&&quackKing.clips.Length==4&&
+            greatQuackMaterials.Any(material=>material.name=="Royal hammered brass"),
+            "The opening loads the remodeled Great Quack with its crown and all four animations");
         Check(quackCroak&&quackCroak.frequency==24000&&quackCroak.length>.5f,"Speech has the recorded croak");
         Check(quackHudFrame&&quackHudFrame.width>quackHudFrame.height*3,"The frog-medallion banner is loaded");
         Check(bossSoundtrack&&bossSoundtrack.isPlaying&&bossSoundtrack.loop&&bossSoundtrack.clip.name==EpochalBossTrack&&
@@ -145,7 +148,7 @@ public sealed partial class PcGame {
         yield return Shot(folder,"07b-night-pools");
         Check(match.QuackDownpour&&match.CastleHp[1]==match.CastleHealthLimit(1)&&match.Units.All(unit=>unit.team==1),
             "Second cinematic restores 100 percent boss HP and removes the player's field army");
-        Check(match.QuackRainAlive()==0,"Tadpoles stay offscreen until after the cinematic");
+        Check(match.QuackRainAlive()==0,"The Great Quacks arrive after the cinematic");
         quackSceneAge=QuackReversalEnd+.2f;
         yield return null;
         match.RescueCharges[0]=1;
@@ -157,6 +160,14 @@ public sealed partial class PcGame {
         for(int step=0;step<19;step++)Tick(.05f);
         Check(target.hp<=0,"The frog blast kills the player's nearby creature in the actual game");
         yield return Shot(folder,"09-counterblast");
+        for(int step=0;step<48;step++)Tick(.05f);
+        match.Builders[0].position=match.Builders[0].previous=HumanMatch.QuackPoolPoint(4)+Vector2.up*3;
+        controls.FocusWorld(World(match.Builders[0].position),34);
+        UpdateFog(true);RenderMatch();
+        Check(match.QuackRainAlive()==HumanMatch.QuackRainLimit&&match.Units.Exists(u=>u.team==1&&u.noBounty&&u.noCorpse&&
+            match.Lines[u.kind].unit=="pU13"&&units.TryGetValue(u.id,out var view)&&view.name.StartsWith("Great Quack",StringComparison.Ordinal)),
+            "The original thirty-slot wave uses the updated Great Quack model");
+        yield return Shot(folder,"09b-great-quack-wave");
         match.DebugQuackHitCastle();
         Tick(.05f);
         Check(match.Winner==0&&page==Page.Result,"Second lethal hit gives the actual victory");
@@ -331,7 +342,9 @@ public sealed partial class HumanMatch {
             "Intermission resets the boss castle, removes player units and preserves production buildings");
         check(QuackRainAlive()==0,"Opening downpour queues the groups without spawning them");
         for(int i=0;i<12;i++){Elapsed+=.65f;TickQuackTrial();}
-        check(QuackRainAlive()==QuackRainLimit,"The initial downpour reaches 30 live tadpoles");
+        check(QuackRainAlive()==QuackRainLimit&&Units.Count(unit=>unit.hp>0&&unit.team==1&&
+            unit.noBounty&&unit.noCorpse&&Lines[unit.kind].unit=="pU13")==QuackRainLimit,
+            "The initial downpour spawns thirty Great Quacks in the original pool groups");
         float rain=quackRainAt;
         Elapsed=rain-QuackRainWarning-.01f;TickQuackTrial();
         bool waited=quackRainLeft==0;

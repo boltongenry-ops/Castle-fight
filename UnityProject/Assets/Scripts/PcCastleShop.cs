@@ -8,20 +8,22 @@ public sealed partial class PcGame {
     void SelectCastle(bool focus=true){ClearGroupSelection();selectedCastle=true;builderSelected=false;selectedHut=selectedUnit=-1;selectedItem=chosen=-1;targetedSpell=null;moveOrder=buildMenu=showRange=false;if(focus)controls.FocusWorld(World(HumanMatch.CastlePosition(0)),48);Notice("Замок · магазин предметов. F1 — строитель");}
     void DrawCastleCard() {
         if(castleIcon)GUI.DrawTexture(BattlePortraitRect,HdIcon(castleIcon));
-        float healthLimit=match.CastleHealthLimit(0);
+        float healthLimit=SpectatorSceneReady?Mathf.Max(match.CastleHp[0],HumanMatch.F(spectatorChallenge,"player_castle_hp",HumanMatch.F(spectatorChallenge,"castle_hp",HumanMatch.CastleMax))):match.CastleHealthLimit(0);
+        string title=SpectatorSceneReady?"Замок игрока":"Замок · магазин";
         if(CommandDeskHud){
-            DrawDeskTitle("Замок · магазин");
+            DrawDeskTitle(title);
             DrawDeskHealth(match.CastleHp[0],healthLimit);
         }else{
             Fill(new Rect(348,685,109,16),new Color(.07f,.14f,.03f));
             Fill(new Rect(350,687,105*Mathf.Clamp01(match.CastleHp[0]/healthLimit),12),new Color(.2f,.75f,.08f));
             GUI.Label(new Rect(348,684,109,18),Mathf.CeilToInt(match.CastleHp[0])+" / "+Mathf.CeilToInt(healthLimit),new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter,fontSize=13});
-            GUI.Label(new Rect(491,578,306,31),"Замок · магазин",new GUIStyle(hudText){alignment=TextAnchor.MiddleCenter});
+            GUI.Label(new Rect(491,578,306,31),title,new GUIStyle(hudText){alignment=TextAnchor.MiddleCenter});
         }
         GUI.DrawTexture(new Rect(504,623,36,36),CombatIcon(true,match.CastleArmorType),ScaleMode.ScaleToFit);
         string recovery=match.NaturalCastleRecovery>0?"Восстановление: "+match.NaturalCastleRecovery.ToString("0.##")+" HP/с":"Без естественного восстановления";
         GUI.Label(new Rect(550,622,245,44),"Броня: "+match.CastleArmorFor(0)+" · "+ArmorLabel(match.CastleArmorType)+"\n"+recovery,hudSmall);
         if(new Rect(504,623,36,36).Contains(HudPointer)){hudTip=ArmorTable(match.CastleArmorType);hudTipTable=true;}
+        if(SpectatorSceneReady)return;
         GUI.Label(new Rect(504,669,286,20),"Предметы получает ваш рабочий",hudSmall);GUI.Label(new Rect(504,691,286,20),"Запасы магазина пополняются со временем",new GUIStyle(hudSmall){fontSize=11});
         for(int i=0;i<match.ShopItems.Count;i++) {
             var item=match.ShopItems[i];string id=(string)item["id"];var stock=match.Stock(0,i);int col=i%3,row=i/3;var rect=Slot(col,row);string error=match.ItemPurchaseError(0,i);
@@ -41,7 +43,7 @@ public sealed partial class PcGame {
         int cell=0;foreach(var slot in bag.slots) {
             var item=match.ItemCatalog[slot.id];var rect=InventorySlot(cell);float cooldown=Mathf.Max(slot.cooldown,bag.cooldowns.TryGetValue(slot.id,out var shared)?shared:0);
             string tip=item["name"]+"\n"+item["desc"]+(cooldown>0?"\nПерезарядка: "+Mathf.CeilToInt(cooldown)+" с":"")+"\nNum "+(cell+1)+" · зарядов / предметов: "+slot.count;
-            if(ArtButton("inventory."+cell,rect,ItemArt(slot.id),slot.count>1?slot.count.ToString():"",tip,selectedItem==cell))BeginItem(cell);
+            if(ArtButton("inventory."+cell,rect,ItemArt(slot.id),slot.count>1?slot.count.ToString():"",tip,selectedItem==cell)&&!SpectatorSceneReady)BeginItem(cell);
             if(cooldown>0){Fill(rect,new Color(0,0,0,.55f));GUI.Label(rect,Mathf.CeilToInt(cooldown).ToString(),new GUIStyle(hudSmall){alignment=TextAnchor.MiddleCenter});}cell++;
         }
     }

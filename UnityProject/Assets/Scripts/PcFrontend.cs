@@ -159,6 +159,10 @@ public sealed partial class PcGame {
         if(generation!=versusSerial){mobileRoundPrepared=false;yield break;}
         if(next)StartRound();else NewMatch();
         if(matchRace!=versusA||matchBotRace!=versusB){DisposeVersusArt();versusA=matchRace;versusB=matchBotRace;if(MobileContent.Active)PrepareVersusFallbacks();yield return LoadVersusArt(generation);}
+        if(matchRace==PepeContent.Race||matchBotRace==PepeContent.Race){
+            yield return LoadGreatQuackArt(generation);
+            if(generation!=versusSerial)yield break;
+        }
         if(match.FuneralChoir){yield return PrepareRitualGround(generation,true);if(generation!=versusSerial)yield break;yield return PrepareChoirMusic(generation);if(generation!=versusSerial)yield break;}
         if(match.CursedHorde){
             yield return PrepareHordeGround(generation);
@@ -201,7 +205,12 @@ public sealed partial class PcGame {
         if(MobileContent.Active){yield return PrepareMobileMatch(a,b);yield return PrepareUltimateDraw034(a,b,packet["ultimate_loadouts"] as JArray);MobileContent.Current.Ready();}
         else yield return PrepareDesktopMatch(a,b,generation);
         if(generation!=versusSerial)yield break;
-        NetworkLoadCore(packet);if(!onlineMatch){CloseVersus();yield break;}RenderMatch();versusPrepared=true;
+        NetworkLoadCore(packet);if(!onlineMatch){CloseVersus();yield break;}
+        if(a==PepeContent.Race||b==PepeContent.Race){
+            yield return LoadGreatQuackArt(generation);
+            if(generation!=versusSerial)yield break;
+        }
+        RenderMatch();versusPrepared=true;
     }
     void DrawVersus(){
         if(versusPrepared&&Event.current.type==EventType.Repaint&&versusReadyDrawFrame!=Time.frameCount){

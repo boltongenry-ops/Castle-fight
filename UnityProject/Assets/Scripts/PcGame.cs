@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.49.8";
+    string Version=>MobileContent.Active?Application.version:"0.49.9";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -55,7 +55,7 @@ public sealed partial class PcGame : MonoBehaviour {
 #endif
         LoadSettings();if(MapArt.Preferred)yield return MapArt.Apply(controls);if(HdModels.Preferred)StartCoroutine(HdModels.OpenCached());LoadMatchRules();Apply(options,false);controls.HideToolbar=true;controls.TouchOverUi=TouchOverUi;controls.TouchPanAllowed=()=>chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder;
         controls.AllowGridToggle=false;controls.buildGrid.SetActive(false);
-        if(testing&&!MobileContent.Active&&testMode!="hud-themes"&&testMode!="workshop038"&&testMode!="models039"&&testMode!="art040"&&testMode!="pepe"&&testMode!="battle-help"&&testMode!="battle-social"&&testMode!="mythic-winter"&&testMode!="castle-themes"&&testMode!="cursed-horde"&&testMode!="ground-march")PreserveAssetAuditForHistoricalTests();
+        if(testing&&!MobileContent.Active&&testMode!="spectator"&&testMode!="hud-themes"&&testMode!="workshop038"&&testMode!="models039"&&testMode!="art040"&&testMode!="pepe"&&testMode!="battle-help"&&testMode!="battle-social"&&testMode!="mythic-winter"&&testMode!="castle-themes"&&testMode!="cursed-horde"&&testMode!="ground-march")PreserveAssetAuditForHistoricalTests();
         yield return LoadClassicProjectiles();
         yield return LoadSpellArt036();
         bool showIntro=IntroAllowed();
@@ -148,6 +148,8 @@ public sealed partial class PcGame : MonoBehaviour {
         PrepareRaceIndices();
         var first=JObject.Parse(RaceCatalog(matchRace));var second=matchRace==matchBotRace?first:JObject.Parse(RaceCatalog(matchBotRace));
         ApplyUltimateRound(ref first,ref second);
+        bool winter=(string)activeChallenge?["id"]==HumanMatch.WinterTrial;
+        if(winter)second=HumanMatch.WinterBossCatalog(second);
         bool aspectRound=aspectsOn&&AspectCount(matchRace)==2&&AspectCount(matchBotRace)==2;
         match=new HumanMatch(first,startGold,difficulty,-1,-1,second);
         if(activeChallenge!=null)match.BeginChallengeRules(activeChallenge);
@@ -172,7 +174,7 @@ public sealed partial class PcGame : MonoBehaviour {
 
     void ClearMatch() {
         ClearChoirCastle();castleThemes.Clear();
-        ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();ClearAbyss();ClearQuack();
+        ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();ClearAbyss();ClearQuack();ClearGreatQuackArt();
         ClearWorkshopBattle();
         ClearOnlineProjectiles();
         aspectInfoOpen=false;skillCardUnit=-1;skillCardPage=0;
@@ -206,7 +208,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(localGrid)localGrid.SetActive(false);
         return true;
     }
-    void Tick(float dt) {match.Step(dt);if(match.QuackRitualPending&&!match.Finished){BeginQuackReversal();return;}if(match.ProtocolMarch&&!protocolMarchSeen&&!match.Finished)BeginProtocolMarchIntro();if(match.Finished&&(page==Page.Match||page==Page.Teams)){series.FinishRound(match.Winner);SettleChallenge();page=Page.Result;chosen=-1;controls.buildGrid.SetActive(false);Debug.Log("CF_PC_MATCH_END winner="+match.Winner+" time="+match.Elapsed);}}
+    void Tick(float dt) {match.Step(dt);if(match.QuackRitualPending&&!match.Finished){BeginQuackReversal();return;}if(match.WinterAwakeningPending&&!match.Finished){BeginWinterFinale();return;}if(match.ProtocolMarch&&!protocolMarchSeen&&!match.Finished)BeginProtocolMarchIntro();if(match.Finished&&(page==Page.Match||page==Page.Teams)){series.FinishRound(match.Winner);SettleChallenge();page=Page.Result;chosen=-1;controls.buildGrid.SetActive(false);Debug.Log("CF_PC_MATCH_END winner="+match.Winner+" time="+match.Elapsed);}}
     void Update() {
         if(MobileContent.Active&&MobileContent.Current.Busy){controls.InputBlocked=true;if(network!=null)PollLobby();UpdateVoiceControls();return;}
         if(terrain==null)return;
@@ -226,6 +228,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(choirIntro){UpdateChoirIntro();return;}
         if(match!=null&&match.FuneralChoir)UpdateChoirBattle();
         if(winterIntro){UpdateWinterIntro();return;}
+        if(winterFinale){UpdateWinterFinale();return;}
         UpdateBossSoundtrack();
         controls.GameplayViewport(match!=null&&page!=Page.Viewer);
         if(helpMatch!=null&&!HelpOpen)CloseBattleHelp();
@@ -280,8 +283,8 @@ public sealed partial class PcGame : MonoBehaviour {
         if(page!=Page.Match){aspectWaiting=false;selectionPending=selectionDragging=false;}
         if((page==Page.Match||page==Page.Teams)&&!aspectWaiting&&!NetworkBlocked) {
             if(!onlineMatch){if(!testing||!testHoldAuthority)accumulator+=Mathf.Min(Time.unscaledDeltaTime,.2f);
-            while(accumulator>=.05f&&!protocolMarchIntro&&quackScene==QuackScene.None&&(page==Page.Match||page==Page.Teams)){Tick(.05f);accumulator-=.05f;}}
-            if(protocolMarchIntro||quackScene!=QuackScene.None)return;
+            while(accumulator>=.05f&&!winterFinale&&!protocolMarchIntro&&quackScene==QuackScene.None&&(page==Page.Match||page==Page.Teams)){Tick(.05f);accumulator-=.05f;}}
+            if(winterFinale||protocolMarchIntro||quackScene!=QuackScene.None)return;
             if(HelpOpen){
                 if(preview)preview.SetActive(false);if(localGrid)localGrid.SetActive(false);
                 if(Application.isMobilePlatform)foreach(var finger in Input.touches)
@@ -369,7 +372,8 @@ public sealed partial class PcGame : MonoBehaviour {
             if(match.Hidden(u)&&!match.MechMine(u)){if(units.TryGetValue(u.id,out var hidden))hidden.gameObject.SetActive(false);continue;}
             if(units.TryGetValue(u.id,out var oldView)&&(!art036.unitKinds.TryGetValue(u.id,out int oldKind)||oldKind!=u.kind||unitViewTeams.TryGetValue(u.id,out int oldTeam)&&oldTeam!=u.team)){if(match.CursedHorde)ForgetHordeView(oldView);oldView.gameObject.SetActive(false);Destroy(oldView.gameObject);units.Remove(u.id);unitViewTeams.Remove(u.id);effectAnchors.Remove(u.id);}
             bool born=!units.TryGetValue(u.id,out var view);if(born){var prefab=RaceModel(u.team,u.kind,false);if(!prefab)continue;view=Instantiate(prefab,visuals.transform).GetComponent<PcModel>();units.Add(u.id,view);unitViewTeams[u.id]=u.team;art036.unitKinds[u.id]=u.kind;if(match.AbyssTrialActive)StyleAbyssActor(view,u);}
-            view.transform.position=World(Vector2.Lerp(u.previous,u.position,alpha))+Vector3.up*match.Height(u);
+            float height=SpectatorSceneReady?SpectatorUnitHeight(u):match.Height(u);
+            view.transform.position=World(Vector2.Lerp(u.previous,u.position,alpha))+Vector3.up*height;
             if(match.FuneralChoir){
                 if(born&&match.IsCrawler(u)){
                     foreach(var bone in view.GetComponentsInChildren<Transform>())
@@ -404,6 +408,7 @@ public sealed partial class PcGame : MonoBehaviour {
         RenderProtocol(alpha);
         RenderAbyssTide();
         RenderWinterCastle();
+        if(match.EternalWinter||SpectatorChallengeId==HumanMatch.WinterTrial)RenderWinterFinale();
         if(match.FuneralChoir)RenderChoirCastle();
         SweepHdEffects040();
         foreach(int id in projectiles.Keys.Where(id=>!match.Shots.Any(s=>s.id==id)).ToArray()){projectiles[id].Finish();Destroy(projectiles[id].gameObject);projectiles.Remove(id);}
@@ -549,6 +554,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(protocolMarchIntro){DrawProtocolMarchIntro();GUI.matrix=previous;return;}
         if(choirIntro){DrawChoirIntro();GUI.matrix=previous;return;}
         if(winterIntro){DrawWinterIntro();GUI.matrix=previous;return;}
+        if(winterFinale){DrawWinterFinale();GUI.matrix=previous;return;}
         if(mythicGuestPrompt&&pendingMythicScore!=null&&(page==Page.Result||page==Page.Progression)){
             DrawMythicStandingPrompt();GUI.matrix=previous;return;
         }

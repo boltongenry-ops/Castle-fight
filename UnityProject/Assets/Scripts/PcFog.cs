@@ -10,10 +10,12 @@ public sealed partial class PcGame {
     readonly Vector3[] fogProjectionNodes=new Vector3[FogMeshWidth*FogMeshHeight];
     Vector3 fogCameraPosition;Quaternion fogCameraRotation;Matrix4x4 fogProjection;Rect fogViewport;int fogWidth,fogHeight;bool fogSoft;double fogProjectionMs,fogMaskMs;
     readonly HashSet<int> fogKnownHuts=new HashSet<int>();
-    bool FogActive=>SpectatorSceneReady?spectatorFog!=null:match!=null&&!winterIntro&&!choirIntro&&!hordeIntro&&!protocolIntro&&!protocolMarchIntro&&!abyssIntro&&quackScene==QuackScene.None&&(onlineMatch?onlineFog:(activeChallenge!=null||options.fogOfWar));
+    bool FogActive=>SpectatorSceneReady?spectatorFog!=null:match!=null&&!winterIntro&&!winterFinale&&!choirIntro&&!hordeIntro&&!protocolIntro&&!protocolMarchIntro&&!abyssIntro&&quackScene==QuackScene.None&&(onlineMatch?onlineFog:(activeChallenge!=null||options.fogOfWar));
     bool FogVisible(Vector2 point)=>!FogActive||fog!=null&&fog.Visible(point);
-    bool CanSeeUnit(HumanMatch.Unit unit)=>unit!=null&&match.NightCanDetect(0,unit)&&(unit.team==0||FogVisible(unit.position));
-    bool CanInspectHut(HumanMatch.Hut hut)=>hut!=null&&(hut.team==0||FogVisible(hut.position));
+    // Spectator entities come from a snapshot already filtered by the host's vision.
+    bool CanSeeUnit(HumanMatch.Unit unit)=>unit!=null&&(SpectatorSceneReady?!unit.pandaSplit:
+        match.NightCanDetect(0,unit)&&(unit.team==0||FogVisible(unit.position)));
+    bool CanInspectHut(HumanMatch.Hut hut)=>hut!=null&&(SpectatorSceneReady||hut.team==0||FogVisible(hut.position));
     void UpdateFog(bool force=false){
         if(match==null)return;
         if(fogMatch!=match){fogMatch=match;fog=new FogGrid();fogKnownHuts.Clear();fogNext=screenFogNext=0;match.VisionTest=(team,point)=>team!=0||FogVisible(point);}
@@ -50,7 +52,7 @@ public sealed partial class PcGame {
     void ApplyFogViews(){
         if(match==null)return;
         foreach(var unit in match.Units)if(units.TryGetValue(unit.id,out var view)&&unit.hp>0)view.gameObject.SetActive(CanSeeUnit(unit)&&(match.MechMine(unit)?unit.team==0||unit.mechMineAge<2:!match.Hidden(unit)));
-        foreach(var hut in match.Huts)if(huts.TryGetValue(hut.id,out var view))view.gameObject.SetActive(!FogActive||hut.team==0||fogKnownHuts.Contains(hut.id));
+        foreach(var hut in match.Huts)if(huts.TryGetValue(hut.id,out var view))view.gameObject.SetActive(SpectatorSceneReady||!FogActive||hut.team==0||fogKnownHuts.Contains(hut.id));
         var enemyCastle=match.BattleCastlePosition(1);
         bool castleKnown=!FogActive||(match.ProtocolMarch?fog.Visible(enemyCastle):fog.Known(enemyCastle));castleObjects[1].SetActive(castleKnown&&!castleViews[1]);if(castleViews[1])castleViews[1].gameObject.SetActive(castleKnown);
         if(builders[1])builders[1].gameObject.SetActive(SpectatorSceneReady?spectatorEnemyBuilder:FogVisible(match.Builders[1].position));

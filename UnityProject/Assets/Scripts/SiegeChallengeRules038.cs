@@ -27,7 +27,7 @@ public sealed partial class HumanMatch {
     }
 
     public float RestoreCastleHealth(int team,float amount){
-        if(amount<=0||CastleHp[team]<=0)return 0;
+        if(amount<=0||CastleHp[team]<=0||team==WinterBossTeam&&WinterCastleFrozen)return 0;
         float before=CastleHp[team];
         CastleHp[team]=Mathf.Min(CastleHealthLimit(team),before+amount);
         return Mathf.Max(0,CastleHp[team]-before);
@@ -44,7 +44,7 @@ public sealed partial class HumanMatch {
 
     void ResolveChallengeClock(float dt){
         if(ChallengeRules==null||Finished)return;
-        TickEternalWinter();TickChoir();TickCursedHorde();TickLastProtocol(dt);TickAbyssTide();TickQuackTrial();
+        TickEternalWinter();TickWinterQueenStorm();TickChoir();TickCursedHorde();TickLastProtocol(dt);TickAbyssTide();TickQuackTrial();
         float survive=ChallengeSurvivalTime;
         if(survive>0&&Elapsed>=survive){
             Winner=ChallengeFinalConditions()?0:1;

@@ -88,7 +88,7 @@ public sealed partial class HumanMatch {
             u.strikeLeft=-1;u.cooldown=0;u.attackPoseLeft=0;
         }
         if(u.strikeLeft>=0){u.strikeLeft-=dt;if(u.strikeLeft<=0){Release(u);u.strikeLeft=-1;}u.pose=u.attackPoseLeft>0?"Attack":"Stand";return;}
-        if(BlackHandCast(u)||PepeTryHeal(u)||TryAutocast(u))return;if(TickNightHunt(u,dt))return;
+        if(TryWinterQueenCast(u)||BlackHandCast(u)||PepeTryHeal(u)||TryAutocast(u))return;if(TickNightHunt(u,dt))return;
         if(Ethereal(u)||Disarmed(u)){u.strikeLeft=-1;var etherealGoal=BuilderWaypoint(u.position,BattleCastlePosition(1-u.team));u.direction=(etherealGoal-u.position).normalized;u.position=Vector2.MoveTowards(u.position,etherealGoal,MoveSpeed(u)*dt);u.pose="Walk";return;}
         u.onRoad=true; // Eligible for attack-move acquisition from the first combat step.
         var target=FindUnit(u.combatTarget);
@@ -237,7 +237,7 @@ public sealed partial class HumanMatch {
         if(!execute&&!pandaDebt)amount=PandaDefer(victim,amount,team,killer);
         victim.hp=Mathf.Max(Mathf.Min(before,minimumHp),victim.hp-amount);if(!pandaDebt&&victim.hp>0){NatureOnDamage(victim);if(before>victim.hp){TriggerBerserk(victim,before);if(team!=victim.team)TriggerHandIron(victim,before);NorthernRage(victim);if(victim.nightStealth>0){NightReveal(victim);if(killer!=null&&killer.team!=victim.team)victim.combatTarget=killer.id;}}}
         if(!pandaDebt){ElementalAfterDamage(killer,victim,Mathf.Max(0,before-victim.hp),suppressElemental);NerubAfterDamage(victim,amount,spell);PandaAfterDamage(victim,amount);}
-        if(victim.hp<=0&&!victim.deathProcessed){victim.deathProcessed=true;ForgetAbyssHunter(victim);bool winterDefection=QueueWinterDefection(victim);BattleAudio.For(this)?.Death(Lines[victim.kind].unit,victim.position);victim.pose="Death";victim.pendingSpell=null;victim.strikeLeft=-1;Kills++;if(team>=0&&team<2&&team!=victim.team){TeamKills[team]++;if(!victim.noBounty)Gold[team]+=Mathf.Max(1,(int)(victim.maxHp/50));}
+        if(victim.hp<=0&&!victim.deathProcessed){victim.deathProcessed=true;WinterQueenDeath(victim);ForgetAbyssHunter(victim);bool winterDefection=QueueWinterDefection(victim);BattleAudio.For(this)?.Death(Lines[victim.kind].unit,victim.position);victim.pose="Death";victim.pendingSpell=null;victim.strikeLeft=-1;Kills++;if(team>=0&&team<2&&team!=victim.team){TeamKills[team]++;if(!victim.noBounty)Gold[team]+=Mathf.Max(1,(int)(victim.maxHp/50));}
             NerubDied(victim);ElvenDied(victim,team);NightKilled(killer,victim);NightDeathAspect(victim);ElementalDied(victim,killer,team);CorruptedDied(victim);UndeadDied(victim,killer);MechDied(victim);OrcKilled(killer,victim);NagaOnDeath(victim);ChaosDeath(victim);
             if(winterDefection)victim.deadAge=4;
             else if(!victim.noCorpse&&!ElementalIllusion(victim)&&((int?)Lines[victim.kind].stats["death_type"]??0)%2==1&&Organic(victim))Corpses.Add(new Corpse {unit=victim,left=F(Lines[victim.kind].stats,"corpse_duration",90)});

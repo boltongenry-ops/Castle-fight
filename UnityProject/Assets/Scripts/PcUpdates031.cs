@@ -27,10 +27,9 @@ public static class Release031 {
 public sealed partial class PcGame {
     bool showUpdatePanel,checkingRelease,downloadingUpdate,updateCancelled,awaitInstallPermission;float updateProgress;string updateStatus="Проверка доступна через интернет",downloadedUpdate;JObject availableRelease;
     static readonly string[] InstalledChangeNotes={
-        "Меню, лобби и испытания в стиле карты кампании.",
-        "Новые настройки карты, моделей и HUD.",
-        "Поправлены профиль и выбор расы.",
-        "Плавный дым и свет в окнах замка на загрузке."
+        "В «Вечной зиме» появился финальный бой с Джайной и ледяной крепостью.",
+        "В финальном ливне «Великого Квакалипсиса» выходят 30 Великих Кваков с обновлённой моделью.",
+        "В просмотре испытаний друзей доступны боевой интерфейс, выбор бойцов, музыка и плашка босса.",
     };
     static readonly Rect UpdateNotesArea=new Rect(248,293,784,180);
     string[] publishedChangeNotes=Array.Empty<string>();

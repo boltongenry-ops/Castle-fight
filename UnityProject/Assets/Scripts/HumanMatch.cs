@@ -281,7 +281,7 @@ public sealed partial class HumanMatch {
     }
     void Bot(){if(!PlayerVersusPlayer)ThinkBot();}
     public void Step(float dt) {
-        if(Finished||dt<=0||QuackRitualPending)return;AdvanceWinterPhase();SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
+        if(Finished||dt<=0||QuackRitualPending||WinterAwakeningPending)return;AdvanceWinterPhase();SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
         while(incomeAge>=10){incomeAge-=10;for(int t=0;t<2;t++){incomeFraction[t]+=Income(t);int payment=(int)(incomeFraction[t]+.00001f);incomeFraction[t]-=payment;Gold[t]+=payment;}}
         float recovery=NaturalCastleRecovery*dt;
         for(int t=0;t<2;t++)RestoreCastleHealth(t,recovery);
@@ -296,9 +296,9 @@ public sealed partial class HumanMatch {
         SimulationPhase035.Mark("unit_statuses");auraAge-=dt;if(auraAge<=0){auraAge=.5f;UpdateAuras();}
         SimulationPhase035.Mark("auras");BlackHandZones(dt);TickShots(dt);SimulationPhase035.Mark("projectiles");BeginUnitBatch033();using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_4)if(u.hp>0){TickUnit(u,dt);UnitMoved033(u);}EndUnitBatch033();SimulationPhase035.Mark("unit_decisions_movement");FlushUndeadBirths();FlushFinalBirths();
         Units.RemoveAll(u=>u.hp<=0&&u.deadAge>3);Shots.RemoveAll(s=>s.age>s.duration+(s.kind==2||s.kind==3?.35f:0));
-        bool enemyDefeated=CastleHp[1]<=0&&!QuackRitualPending;
+        bool enemyDefeated=CastleHp[1]<=0&&!QuackRitualPending&&!WinterCastleHit(1,0);
         if(CastleHp[0]<=0||enemyDefeated)Winner=CastleHp[0]<=0&&enemyDefeated?-1:CastleHp[0]<=0?1:0;
-        ResolveChallengeClock(dt);
+        if(!WinterAwakeningPending)ResolveChallengeClock(dt);
         FlushWinterDefections();
     }
     public void Surrender(int team){if(!Finished&&team>=0&&team<2)Winner=1-team;}

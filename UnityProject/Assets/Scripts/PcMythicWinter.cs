@@ -41,7 +41,7 @@ public sealed partial class PcGame {
     static JObject WinterTrialDefinition()=>new JObject{
         ["id"]=HumanMatch.WinterTrial,["title"]="Вечная зима",["opponent"]="Northern Realms",
         ["summary"]="Метель замедляет армию. Лёд сковывает бойцов.",
-        ["description"]="Ледяная королева накрывает поле боя метелью. Ваши бойцы замедлены, а каждые 10 секунд одного сковывает лёд. При 2500 HP замка босса павшие в оковах переходят к Северянам.",
+        ["description"]="Метель замедляет ваших бойцов, а каждые 10 секунд одного сковывает лёд. При первом падении замок вмерзает в лёд, и Джайна уничтожает вашу армию. Остановите королеву, чтобы снова атаковать замок.",
         ["start_gold"]=500,["difficulty"]=2,["reward"]=0,["xp"]=0
     };
 
@@ -133,8 +133,7 @@ public sealed partial class PcGame {
         Text(x,389,width,41,"Ледяная королева",heading);
         Text(x,431,width,32,"Движение −50%  •  Скорость атаки −30%",label);
         Text(x,468,width,28,"Оковы одного бойца каждые 10 с",label);
-        Text(x,501,width,28,"Стадия II · "+HumanMatch.WinterPhaseTwoHp+" HP замка босса",label);
-        Text(x,534,width,57,"Павшие в оковах переходят к боссу.\nМетель и оковы действуют на вашу расу.",small);
+        DrawRaceDescription(new Rect(x,500,width,94),(string)mythicSelection["description"],small,ref mythicRulesScroll);
         }
         if(LobbyButton("mythic.begin",new Rect(x,609,285,49),"Начать испытание",true)){
             var trial=(JObject)mythicSelection.DeepClone();
@@ -182,6 +181,9 @@ public sealed partial class PcGame {
     }
 
     IEnumerator PrepareWinterPresentation(int generation){
+        yield return LoadWinterQueenArt(generation);
+        if(generation!=versusSerial)yield break;
+        ReplaceWinterOpeningQueen();
         yield return PrepareRitualGround(generation,false);
         if(generation!=versusSerial)yield break;
         yield return PrepareWinterStorm(generation);
@@ -324,8 +326,20 @@ public sealed partial class PcGame {
     }
 
     void DrawWinterHud(){
-        DrawBossMeter(true,match.WinterPhaseTwo?"Вечная зима · II":"Вечная зима",
-            "До ледяных оков",match.WinterChainIn,10);
+        if(WinterIceVisible){
+            float health=SpectatorSceneReady?(float?)spectatorBoss?["queen_hp"]??HumanMatch.WinterQueenHealth:
+                match.WinterBoss?.hp??HumanMatch.WinterQueenHealth;
+            DrawBossMeter(true,"Ледяная королева","Замок во льду · "+Mathf.CeilToInt(health)+" / "+HumanMatch.WinterQueenHealth+" HP",0,0);
+            return;
+        }
+        if(WinterBossDefeated){
+            DrawBossMeter(true,"Замок разморожен","Уничтожьте замок Северян",0,0);
+            return;
+        }
+        bool second=SpectatorSceneReady?(bool?)spectatorBoss?["second"]==true:match.WinterPhaseTwo;
+        float? left=SpectatorSceneReady?(float?)spectatorBoss?["left"]:match.WinterChainIn;
+        DrawBossMeter(true,second?"Вечная зима · II":"Вечная зима",
+            left.HasValue?"До ледяных оков":"Метель",left??0,left.HasValue?10:0);
 
     }
 
@@ -523,6 +537,7 @@ public sealed partial class PcGame {
     }
 
     void ClearWinterTrial(){
+        ClearWinterFinale();
         ReleaseWinterFront();
         ClearWinterAudio();
         RestoreWinterCastle();
@@ -569,6 +584,8 @@ public sealed partial class PcGame {
         Check(winterQueen&&winterQueen.gameObject.activeInHierarchy&&!winterCast&&
             queenOnScreen.z>0&&queenOnScreen.x>.2f&&queenOnScreen.x<.8f&&queenOnScreen.y>.2f&&queenOnScreen.y<.8f,
             "Jaina stands in the opening frame before casting");
+        Check(winterQueen&&winterQueen.raw==HumanMatch.WinterQueenRaw&&winterQueen.clips.Length==10&&winterQueenMaterials.Length==6,
+            "Opening uses the upgraded GLB and its six materials and ten animations");
         yield return Shot(folder,"01c-jaina-opening");
         var atlasReferences=winterAtlases.Values.ToArray();
         var preparedMinimap=winterMinimap;
@@ -719,7 +736,40 @@ public sealed partial class PcGame {
         Check(mirror.Units.Count(u=>u.team==1&&u.kind==northAlly.kind&&u.hp>0)==2&&
             !mirror.Corpses.Any(c=>c.unit==northAlly),"A Northern fighter killed in ice joins the boss once");
         int coins=progression.Coins,xp=progression.Experience;
-        match.Surrender(1);SettleChallenge();
+        var defender=match.Spawn(0,match.Kind("h000"),HumanMatch.CastlePosition(1)+Vector2.left*16);
+        var castleBefore=match.CastleHp[0];
+        match.DebugWinterCastleHit();
+        Tick(.05f);
+        Check(winterFinale&&match.WinterAwakeningPending&&match.CastleHp[1]==1&&!match.Finished,
+            "The first lethal hit locks the castle and opens the second cinematic");
+        yield return RecoveryWait(()=>winterFinaleCast,"The queen freezes the army on screen",4);
+        Check(defender.effects.Any(e=>e.id==HumanMatch.WinterJudgment)&&defender.hp>0&&winterIceCastle.activeSelf,
+            "The fortress and army turn to ice before the army shatters");
+        match.DebugWinterCastleHit();
+        yield return Shot(folder,"05a-frozen-castle-and-jaina");
+        yield return RecoveryWait(()=>!winterFinale,"Frozen-army cinematic returns control",7);
+        var queen=match.WinterBoss;
+        Check(match.Units.All(u=>u.team!=0||u.hp<=0)&&queen.hp==9000&&queen.maxHp==9000&&queen.armor==10&&
+            match.Lines[queen.kind].armorType=="light"&&match.Lines[queen.kind].weapons[0].damage==200&&
+            match.Lines[queen.kind].weapons[0].attack=="magic"&&match.CastleHp[0]==castleBefore,
+            "Every player fighter shatters and the marching queen has the requested combat stats");
+        var start=queen.position;
+        for(int i=0;i<5;i++)Tick(.05f);
+        Check(queen.position.x<start.x&&match.WinterCastleFrozen&&!match.Finished,"Jaina advances towards the player's castle");
+        match.CheckWinterQueenSpells(Check);
+        UpdateFog(true);
+        RenderMatch();
+        Check(winterQueenStorm&&winterQueenStorm.isPlaying,"The moving storm has a visible in-game effect");
+        controls.FocusWorld(World(queen.position),28);
+        yield return Shot(folder,"05b-jaina-and-blizzard");
+        match.DamageUnit(queen,queen.hp,0,execute:true);
+        RenderMatch();
+        Check(!match.WinterCastleFrozen&&match.WinterQueenFelled&&!match.Finished&&!winterIceCastle.activeSelf,
+            "Killing the queen melts the fortress ice without granting victory");
+        yield return Shot(folder,"05c-thawed-castle");
+        match.DebugWinterCastleHit();
+        Tick(.05f);
+        Check(match.Winner==0&&page==Page.Result,"Victory requires a separate hit on the thawed castle");
         Check(soundtrack&&!soundtrack.isPlaying,"Ending combat stops the boss soundtrack");
         if(MythicLeaderboardUrl().Length>0){
             page=Page.Result;

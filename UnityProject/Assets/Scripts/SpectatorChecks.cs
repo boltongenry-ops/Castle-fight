@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 
@@ -22,9 +23,17 @@ public sealed partial class PcGame {
         yield return WaitSpectatorQa(()=>spectatorCount==1,"Python guest subscribes to the running challenge");
         int west=Array.FindIndex(match.Lines,line=>line.Producer&&raceIndices[matchRace].ContainsKey(line.building));
         int east=Array.FindIndex(match.Lines,line=>line.Producer&&raceIndices[matchBotRace].ContainsKey(line.building));
-        var visible=match.Spawn(0,west,new Vector2(-141,0));
+        int flyer=Array.FindIndex(match.Lines,line=>line.flyHeight>0&&line.Producer&&raceIndices[matchRace].ContainsKey(line.building));
+        var visible=match.Spawn(0,flyer,new Vector2(-141,0));
+        var enemy=match.Spawn(1,east,new Vector2(-128,0));
+        visible.attackTarget=enemy.id;visible.attackPoseLeft=1;visible.pose="Attack";
         match.Spawn(1,east,new Vector2(146,0));
-        match.Elapsed=38;
+        var completed=new HumanMatch.Hut{id=510,kind=west,team=0,paid=true,started=true,position=new Vector2(-144,26),hp=700,maxHp=700,spawnLeft=4};
+        var construction=new HumanMatch.Hut{id=511,kind=west,team=0,started=true,position=new Vector2(-165,23),hp=700,maxHp=700,buildLeft=2};
+        var enemyHut=new HumanMatch.Hut{id=512,kind=east,team=1,paid=true,started=true,position=new Vector2(-125,-2),hp=700,maxHp=700};
+        match.Huts.AddRange(new[]{completed,construction,enemyHut});
+        match.Builders[0].jobs.Add(construction.id);
+        match.Elapsed=185;
         yield return new WaitForSecondsRealtime(1);
         Check(spectatorBroadcast.Length==32&&spectatorCount==1&&CanSeeUnit(visible),"Real game broadcasts while a friend is connected");
         page=Page.Pause;OpenSettings();
@@ -43,19 +52,44 @@ public sealed partial class PcGame {
         yield return Action("hub.peer.Друзьяfriend");
         yield return Shot(folder,"02-watch-friend");
         yield return Action("hub.action.watch");
-        yield return WaitSpectatorQa(()=>SpectatorSceneReady&&spectatorFog!=null&&match.Elapsed>=38,
+        yield return WaitSpectatorQa(()=>SpectatorSceneReady&&spectatorFog!=null&&match.Elapsed>=185,
             "The guest stream loads a live rendering replica");
         Check(match.NetworkReplica&&page==Page.Spectator&&!onlineMatch&&networkSlot<0,"The viewer has no playable slot");
-        Check(match.Units.Count==1&&match.Units[0].team==0&&!FogVisible(new Vector2(146,0)),
+        Check(match.Units.Count==2&&match.Units.Exists(u=>u.team==1)&&!FogVisible(new Vector2(146,0)),
             "The live stream excludes enemies behind the player's fog");
-        Check(Mathf.Approximately(match.Elapsed,38),"Spectator does not run the local match simulation");
+        yield return null;
+        Check(match.Huts.Count==3&&new[]{510,511,512}.All(id=>huts.TryGetValue(id,out var view)&&view.gameObject.activeSelf),
+            "Late join renders a completed producer, an active construction and the visible enemy building");
+        Check(match.Builders[0].jobs.SequenceEqual(new[]{511})&&match.Huts.Find(h=>h.id==510).spawnLeft==4,
+            "Initial frame restores the construction queue and producer timer");
+        Check(units.TryGetValue(visible.id,out var flyerView)&&flyerView.gameObject.activeSelf&&
+            flyerView.transform.position.y>World(match.Units[0].position).y+.1f&&units[enemy.id].gameObject.activeSelf,
+            "Both combatants render and the flyer keeps its height");
+        Check(Mathf.Approximately(match.Elapsed,185),"Spectator does not run the local match simulation");
+        SelectAtScreenPoint(UnitSelectionPoint(match.Units.Find(u=>u.id==visible.id)));
+        Check(SelectedUnit?.id==visible.id&&SpectatorAttackTarget(SelectedUnit)==match.Lines[east].unitName,
+            "Picking the flyer opens its card and identifies the visible target");
+        Check(bossSoundtrack&&bossSoundtrack.clip&&bossSoundtrack.isPlaying&&SpectatorBossRect==HordeHud&&
+            (float?)spectatorBoss?["left"]==21,"Boss soundtrack and the host's wave timer are active on late join");
+        yield return Action("hud.score-toggle");
+        yield return Action("hud.score-toggle");
+        yield return Action("portrait.focus");
         yield return Shot(folder,"03-live-view");
+        var hutPoint=Camera.main.WorldToScreenPoint(World(completed.position)+Vector3.up*2.5f);
+        touchPointer=hutPoint;explicitTouchPointer=true;
+        try{HandleWorldTap();}finally{explicitTouchPointer=false;}
+        Check(SelectedHut?.id==completed.id&&!buildMenu,"A completed producer can be inspected without entering build mode");
+        pendingTestAction="building.sell";
+        yield return null;
+        Check(pendingTestAction=="building.sell"&&SelectedHut?.id==completed.id,"The spectator card does not expose orders");
+        pendingTestAction=null;
+        yield return Shot(folder,"03b-spectator-building");
         yield return Action("spectator.focus");
         yield return Action("spectator.exit");
         Check(page==Page.Main&&match==null&&HasNetworkProfile,"Leaving watch returns to the main menu with the account intact");
         RequestSpectator("friend");
         yield return WaitSpectatorQa(()=>SpectatorSceneReady&&spectatorFog!=null,"Viewer reconnects to the same active challenge after exiting");
-        Check(match.Elapsed==38&&!onlineMatch,"Rejoining shows the current replica without creating a playable session");
+        Check(match.Elapsed==185&&!onlineMatch&&match.Huts.Count==3,"Rejoining restores the current replica without a playable session");
         yield return Action("spectator.exit");
         socialDue=0;nextNotificationState=0;
         yield return WaitSpectatorQa(()=>activeNotification?.FriendRequest==true,"A new incoming friend request appears in the same notification area");

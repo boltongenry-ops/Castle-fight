@@ -303,8 +303,10 @@ public sealed partial class PcGame {
             Border(ProtocolHud,ProtocolGold,1);
         }
         var previous=GUI.color;
+        int stationMask=SpectatorSceneReady?(int?)spectatorBoss?["mask"]??0:
+            (match.ProtocolStationAlive(0)?1:0)|(match.ProtocolStationAlive(1)?2:0);
         for(int i=0;i<2;i++){
-            if(!match.ProtocolStationAlive(i))continue;
+            if((stationMask&(1<<i))==0)continue;
             var lamp=new Rect(ProtocolHud.x+29+i*16,ProtocolHud.y+53,14,14);
             GUI.color=ProtocolCyan;
             if(protocolHudLight)GUI.DrawTexture(lamp,protocolHudLight);
@@ -312,20 +314,28 @@ public sealed partial class PcGame {
         GUI.color=previous;
         float x=ProtocolHud.x+83,y=ProtocolHud.y;
         FitBossText(new Rect(x,y+21,181,23),"Последний протокол",protocolHudTitle,17);
-        if(!match.ProtocolMarch){
-            int seconds=Mathf.CeilToInt(match.ProtocolTimeLeft);
+        bool march=SpectatorSceneReady?(bool?)spectatorBoss?["march"]==true:match.ProtocolMarch;
+        bool second=SpectatorSceneReady?(bool?)spectatorBoss?["second"]==true:match.ProtocolSecondStage;
+        bool open=SpectatorSceneReady?(bool?)spectatorBoss?["open"]==true:match.ProtocolGatesOpen;
+        bool warning=SpectatorSceneReady?(bool?)spectatorBoss?["warning"]==true:match.ProtocolWarningActive;
+        float? left=SpectatorSceneReady?(float?)spectatorBoss?["left"]:match.ProtocolTimeLeft;
+        float openFor=SpectatorSceneReady?(float?)spectatorBoss?["open_for"]??0:match.ProtocolOpenFor;
+        float shot=SpectatorSceneReady?(float?)spectatorBoss?["shot"]??0:match.ProtocolShotIn;
+        int stations=(stationMask&1)+(stationMask>>1&1);
+        if(!march&&left.HasValue){
+            int seconds=Mathf.CeilToInt(Mathf.Max(0,left.Value));
             FitBossText(new Rect(x+184,y+21,43,23),(seconds/60)+":"+(seconds%60).ToString("00"),protocolHudDetail,16);
         }
-        string signal=match.ProtocolMarch?"Терминатор наступает":!match.ProtocolSecondStage?
-            "Электростанции "+match.ProtocolStationsUp+"/2 · "+(match.ProtocolStationsUp*35)+"% защиты":
-            match.ProtocolGatesOpen?"Ворота открыты · "+Mathf.CeilToInt(match.ProtocolOpenFor)+" с":
-            (match.ProtocolWarningActive?"Залп через ":"Орудие заряжается · ")+Mathf.CeilToInt(match.ProtocolShotIn)+" с";
+        string signal=march?"Терминатор наступает":!left.HasValue?"Оборона технодрома":!second?
+            "Электростанции "+stations+"/2 · "+(stations*35)+"% защиты":
+            open?"Ворота открыты · "+Mathf.CeilToInt(openFor)+" с":
+            (warning?"Залп через ":"Орудие заряжается · ")+Mathf.CeilToInt(shot)+" с";
         FitBossText(new Rect(x,y+42,228,21),signal,protocolHudDetail,14);
-        float meter=match.ProtocolMarch?match.CastleHp[1]/match.CastleHealthLimit(1):
-            match.ProtocolGatesOpen?match.ProtocolOpenFor/HumanMatch.ProtocolVulnerable:
-            match.ProtocolSecondStage?1-match.ProtocolShotIn/(match.ProtocolWarningActive?HumanMatch.ProtocolWarning:HumanMatch.ProtocolCycle):
-            (2-match.ProtocolStationsUp)*.5f;
-        var glow=match.ProtocolWarningActive?ProtocolGold:ProtocolCyan;
+        float maxHp=SpectatorSceneReady?HumanMatch.F(spectatorChallenge,"opponent_castle_hp",HumanMatch.CastleMax):match.CastleHealthLimit(1);
+        float meter=march?match.CastleHp[1]/maxHp:!left.HasValue?0:
+            open?openFor/HumanMatch.ProtocolVulnerable:
+            second?1-shot/(warning?HumanMatch.ProtocolWarning:HumanMatch.ProtocolCycle):(2-stations)*.5f;
+        var glow=warning?ProtocolGold:ProtocolCyan;
         Fill(new Rect(ProtocolHud.x+94,y+71,206*Mathf.Clamp01(meter),3),glow);
     }
 

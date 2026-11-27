@@ -13,18 +13,21 @@ namespace CastleFight {
         };
 
         public static JObject Capture(HumanMatch match,int viewer,Func<Vector2,bool> visible,
-            Func<HumanMatch.Hut,bool> rememberHut,bool aspects=false,float aspectTime=0){
+            Func<HumanMatch.Hut,bool> rememberHut,bool aspects=false,float aspectTime=0,bool spectator=false){
             if(viewer<0||viewer>1)throw new ArgumentOutOfRangeException(nameof(viewer));
             var units=new JArray();
-            foreach(var b in match.Builders)
-                if(b.team==viewer||visible(b.position))
-                    units.Add(new JObject{["t"]=b.team,["builder"]=true,["p"]=Point(b.position),
+            foreach(var b in match.Builders){
+                if(b.team!=viewer&&!visible(b.position))continue;
+                var builder=new JObject{["t"]=b.team,["builder"]=true,["p"]=Point(b.position),
                         ["yaw"]=Yaw(b.direction),["a"]=new JArray(b.pose),["repair"]=b.repairing,
-                        ["repair_building"]=b.repairing?b.repairBuilding:-1});
+                        ["repair_building"]=b.repairing?b.repairBuilding:-1};
+                if(spectator&&b.team==viewer)builder["jobs"]=new JArray(b.jobs);
+                units.Add(builder);
+            }
             foreach(var u in match.Units){
                 if(u.team!=viewer&&(!visible(u.position)||!match.NightCanDetect(viewer,u)))continue;
-                units.Add(new JObject{
-                    ["id"]=u.id,["r"]=match.Lines[u.kind].unit,["t"]=u.team,["p"]=Point(u.position),["yaw"]=Yaw(u.direction),
+                var actor=new JObject{
+                    ["id"]=u.id,["r"]=match.Lines[u.kind].unit,["t"]=u.team,["p"]=Point(u.position,spectator?match.Height(u):0),["yaw"]=Yaw(u.direction),
                     ["hp"]=new JArray(u.hp,u.maxHp),["m"]=new JArray(u.mana,u.maxMana),
                     ["stun"]=u.stun,["armor"]=u.armor+match.Stat(u,"armor"),
                     ["a"]=new JArray(u.pose,0,0,u.attackSerial),["auras"]=new JArray(u.auraIds),["abilities"]=new JArray(u.abilities),
@@ -39,7 +42,12 @@ namespace CastleFight {
                         ["name"]=(string)e.config?["name"],["kind"]=(string)e.config?["kind"],
                         ["slow"]=-e.speed,["root"]=e.root,["ground"]=e.ground
                     }))
-                });
+                };
+                if(spectator){
+                    actor["line_raw"]=match.Lines[u.kind].building;
+                    if(u.attackPoseLeft>0||u.strikeLeft>=0)actor["attack_target"]=u.attackTarget;
+                }
+                units.Add(actor);
             }
             var huts=new JArray(match.Huts.Where(h=>h.team==viewer||visible(h.position)||rememberHut(h))
                 .Select(h=>new JObject{["id"]=h.id,["team"]=h.team,["line_raw"]=match.Lines[h.kind].building,["p"]=Point(h.position),

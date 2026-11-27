@@ -66,7 +66,7 @@ public sealed partial class PcGame {
     void NetworkSnapshot(JObject packet) {
         if(!onlineMatch||onlineReplica==null||match==null)return;
         try {
-            onlineReplica.Apply(packet);ApplyNetworkCards(packet);ApplyNetworkSight(packet);onlineSnapshotAt=Time.unscaledTime;RecoverySnapshotReceived();onlineBattleStats=packet["battle_stats"] as JArray??new JArray();AspectOnlineApply(packet["aspects"] as JObject);DrawOnlineProjectiles(packet["projectiles"] as JArray,(float?)packet["elapsed"]??match.Elapsed,packet["effects"] as JArray);
+            onlineReplica.Apply(packet);ApplyNetworkCards(packet,networkSlot);ApplyNetworkSight(packet);onlineSnapshotAt=Time.unscaledTime;RecoverySnapshotReceived();onlineBattleStats=packet["battle_stats"] as JArray??new JArray();AspectOnlineApply(packet["aspects"] as JObject);DrawOnlineProjectiles(packet["projectiles"] as JArray,(float?)packet["elapsed"]??match.Elapsed,packet["effects"] as JArray);
             onlineTeamOverview=packet["team_overview"] as JArray;onlineIncomeIn=(float?)packet["income_in"];
             if(onlineReplica.UnknownUnits+onlineReplica.UnknownBuildings>0)Debug.LogWarning("CF_NETWORK_UNKNOWN units="+onlineReplica.UnknownUnits+" buildings="+onlineReplica.UnknownBuildings);
             if(match.Finished&&!series.RoundFinished){if(packet["wins"] is JArray score&&score.Count==2)series.ApplyNetworkResult((int?)packet["round"]??1,(int?)score[networkSlot]??0,(int?)score[1-networkSlot]??0,(bool?)packet["series_finished"]??false,match.Winner<0);else series.FinishRound(match.Winner);page=Page.Result;chosen=-1;controls.buildGrid.SetActive(false);onlineDecision=false;}
