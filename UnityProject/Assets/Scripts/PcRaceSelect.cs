@@ -184,10 +184,13 @@ public sealed partial class PcGame {
         if(Button("setup.start",new Rect(892,616,336,46),"Начать битву  →",true))BeginOfflineVersus();
     }
     void DrawRaceDescription(Rect viewport,string text,GUIStyle style,ref Vector2 scroll) {
-        var wrapped=new GUIStyle(style){wordWrap=true,clipping=TextClipping.Clip};
-        float height=Mathf.Max(viewport.height,wrapped.CalcHeight(new GUIContent(text),viewport.width-22));
-        scroll=GUI.BeginScrollView(viewport,scroll,new Rect(0,0,viewport.width-22,height),false,height>viewport.height);
-        GUI.Label(new Rect(0,0,viewport.width-22,height),text,wrapped);GUI.EndScrollView();
+        var wrapped=new GUIStyle(style){wordWrap=true,clipping=TextClipping.Clip,padding=new RectOffset(),
+            alignment=TextAnchor.UpperLeft};
+        float width=viewport.width-20;
+        float height=Mathf.Max(viewport.height,wrapped.CalcHeight(new GUIContent(text),width)+5);
+        ScrollTextByTouch(viewport,ref scroll,height-viewport.height);
+        scroll=GUI.BeginScrollView(viewport,scroll,new Rect(0,0,width,height),false,height>viewport.height);
+        GUI.Label(new Rect(0,0,width,height),text,wrapped);GUI.EndScrollView();
     }
     bool OptionRow(string id,float y,string caption,string value,bool enabled=true) {
         GUI.Label(new Rect(892,y+7,104,24),caption,raceOptionStyle);

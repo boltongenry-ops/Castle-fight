@@ -48,7 +48,10 @@ public sealed partial class PcGame {
             if(issuer!=NetworkAccountStore.LegacyEndpoint&&issuer!=NetworkAccountStore.UnityEndpoint)return;
             networkSessionToken=(string)data["token"]??"";
             networkSessionEndpoint=issuer;
-            networkGuest=(bool?)data["guest"]==true;
+            if((bool?)data["guest"]==true){
+                RestoreAccountMode(true);NetworkAccountStore.SelectMode(true);return;
+            }
+            networkGuest=false;NetworkAccountStore.SelectMode(false);
             networkName=(string)data["nickname"]??networkName;
             rememberedAccountName=networkGuest||string.IsNullOrEmpty(networkSessionToken)?"":(string)data["nickname"]??"";
         }catch(Exception){Debug.LogWarning("CF_LAUNCHER_SESSION_UNAVAILABLE");}

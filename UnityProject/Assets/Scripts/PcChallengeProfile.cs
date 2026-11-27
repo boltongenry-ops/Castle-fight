@@ -19,7 +19,7 @@ public sealed partial class PcGame {
     static readonly Rect ProfileAccountButton=new Rect(787,44,250,48);
     static readonly Rect ProfileBackButton=new Rect(1054,44,181,48);
 
-    string AchievementToken=>!networkGuest&&NetworkAccountStore.SameService(networkSessionEndpoint,NetworkAccountStore.UnityEndpoint)
+    string AchievementToken=>NetworkAccountStore.SameService(networkSessionEndpoint,NetworkAccountStore.UnityEndpoint)
         ?networkSessionToken:"";
     string AccountMedalOwner=>(string)networkProfile?["id"]??"";
     JObject[] ProfileChallenges=>profileChallenges??(profileChallenges=
@@ -28,15 +28,22 @@ public sealed partial class PcGame {
 
     void OpenAccountProfile(){
         page=Page.Profile;profileMedalPage=0;showAllProfileChallenges=false;medalSyncStatus="";
+        socialViewed="";
         if(HasNetworkProfile)StartCoroutine(SyncProfileMedals(Array.Empty<string>()));
         else if(!string.IsNullOrEmpty(AchievementToken))BeginDirectory();
+    }
+    void OpenAccountSignIn(){
+        showNetworkProfile=true;profileName=HasEndpointToken?networkName:"";
+        socialNickname=(string)networkProfile?["name"]??"";
+        networkEntryAccount=false;
+        if(!directoryReady)BeginDirectory();
     }
 
     void ProfileAuthChanged(){
         ownMedals.Clear();medalOwner="";medalSyncStatus="";
+        if(HasNetworkProfile)StartCoroutine(SyncProfileMedals(Array.Empty<string>()));
         if(page==Page.Profile&&HasNetworkProfile){
             showNetworkProfile=false;CloseAccountKeyboard();
-            StartCoroutine(SyncProfileMedals(Array.Empty<string>()));
         }
     }
 
@@ -95,18 +102,26 @@ public sealed partial class PcGame {
         DrawMenuBackground();EnsureRaceStyles();
         if(showNetworkProfile){DrawNetworkProfile();return;}
         LobbyPanel(new Rect(20,18,1240,684));
+        if(!string.IsNullOrEmpty(socialViewed)){
+            Text(45,38,560,48,"Профиль игрока",atlasTitle);
+            DrawSocialPlayer(false);
+            return;
+        }
         DrawProfileBadge(new Rect(45,39,72,72));
-        Text(137,32,590,49,FitAtlasLabel(HasNetworkProfile?(string)networkProfile["name"]??"Профиль":"Профиль игрока",590,atlasTitle),atlasTitle);
-        int shared=medalOwner==AccountMedalOwner?ownMedals.Count:0;
+        float nameWidth=HasNetworkProfile?396:590;
+        Text(137,32,nameWidth,49,FitAtlasLabel(HasNetworkProfile?(string)networkProfile["name"]??"Профиль":"Профиль игрока",nameWidth,atlasTitle),atlasTitle);
         int complete=ProfileChallenges.Count(row=>IsProfileChallengeComplete((string)row["id"]));
         string rank=HasNetworkProfile?RankNames[RankIndex((int?)networkProfile["wins"]??0)]+" · ":"";
-        Text(139,81,586,31,rank+complete+" / "+ProfileChallenges.Length+" пройдено"+(HasNetworkProfile?" · "+shared+" опубликовано":""),label);
+        string summary=rank+complete+" / "+ProfileChallenges.Length+" пройдено"+(HasNetworkProfile?" · "+AccountCoins+" жетонов":"");
+        Text(139,81,nameWidth,31,FitAtlasLabel(summary,nameWidth,label),label);
         if(LobbyButton("account-profile.login",ProfileAccountButton,HasNetworkProfile?"Аккаунт":"Войти в аккаунт")){
-            showNetworkProfile=true;profileName=HasEndpointToken?networkName:"";
-            networkGuest=false;networkEntryAccount=false;
-            if(!directoryReady)BeginDirectory();
+            OpenAccountSignIn();
         }
         if(LobbyButton("account-profile.back",ProfileBackButton,"← В меню")){MainMenu();return;}
+        if(HasNetworkProfile)DrawFriendsShortcut(new Rect(726,44,49,48));
+        if(HasNetworkProfile&&LobbyButton("account-profile.avatar",new Rect(552,44,160,48),"Аватар")){
+            Avatars.error="";AccountHub.result="";Avatars.open=true;
+        }
         Accent(45,122,1190);
 
         if(LobbyButton("account-profile.earned",new Rect(45,135,235,46),"Достижения",!showAllProfileChallenges)){
@@ -117,8 +132,9 @@ public sealed partial class PcGame {
         }
         if(HasNetworkProfile){
             GUI.enabled=!medalSyncBusy;
-            if(LobbyButton("account-profile.sync",new Rect(929,135,306,46),medalSyncBusy?"Синхронизация…":"Опубликовать с устройства")){
+            if(LobbyButton("account-profile.sync",new Rect(929,135,306,46),medalSyncBusy?"Синхронизация…":"Перенести с устройства")){
                 var earned=ProfileChallenges.Select(row=>(string)row["id"]).Where(progression.Completed).ToArray();
+                MigrateLocalChallengeResults(earned);
                 StartCoroutine(SyncProfileMedals(earned));
             }
             GUI.enabled=true;
@@ -146,7 +162,7 @@ public sealed partial class PcGame {
             OpenProgression(false);
     }
 
-    bool IsProfileChallengeComplete(string id)=>progression.Completed(id)||IsPublishedMedal(id);
+    bool IsProfileChallengeComplete(string id)=>AccountCompleted(id);
     bool IsPublishedMedal(string id)=>HasNetworkProfile&&medalOwner==AccountMedalOwner&&ownMedals.Contains(id);
 
     void DrawMedalGrid(JObject[] rows,float top,float height,ref int currentPage,bool own){
@@ -174,8 +190,8 @@ public sealed partial class PcGame {
             if(emblem){var old=GUI.color;if(!earned)GUI.color=new Color(.58f,.61f,.63f,.72f);GUI.DrawTexture(new Rect(sign.x+3,sign.y+3,sign.width-6,sign.height-6),emblem,ScaleMode.ScaleToFit);GUI.color=old;}
             Text(x+height+9,y+5,560-height,height-33,(string)row["title"],titleStyle);
             string type=mythic?"Эпохальное":siege?"Осадное":"Кампания";
-            string state=earned?!own||IsPublishedMedal(id)?"Получено":"На устройстве":"Не пройдено";
-            float best=own?progression.Best(id):0;
+            string state=earned?!own||CloudProgression||IsPublishedMedal(id)?"Получено":"На устройстве":"Не пройдено";
+            float best=own?AccountBest(id):((int?)socialPlayer?["best_ms"]?[id]??0)/1000f;
             Text(x+height+9,y+height-33,560-height,26,type+" · "+state+(best>0?" · "+TimeSpan.FromSeconds(best).ToString(best>=3600?@"h\:mm\:ss":@"mm\:ss"):""),detailStyle);
         }
         if(pages<=1)return;

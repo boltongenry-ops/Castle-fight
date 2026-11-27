@@ -47,7 +47,66 @@ public sealed partial class PcGame {
         bool hadBuilder=builderSelected;SelectAtCursor();
         if(hadBuilder&&!builderSelected&&!selectedCastle&&selectedHut<0&&selectedUnit<0){builderSelected=true;OrderBuilder(point);}
     }
+    int textTouch=-1,textTouchFrame=-1;
+    Rect textTouchArea;
+    void ScrollTextByTouch(Rect viewport,ref Vector2 scroll,float max){
+        if(!Application.isMobilePlatform||!GUI.enabled||Event.current.type!=EventType.Repaint||max<=0)return;
+        for(int i=0;i<Input.touchCount;i++){
+            var touch=Input.GetTouch(i);
+            if(textTouch<0&&touch.phase==TouchPhase.Began&&viewport.Contains(GuiPoint(touch.position))){
+                textTouch=touch.fingerId;textTouchArea=viewport;
+            }
+            if(textTouch!=touch.fingerId||textTouchArea!=viewport||textTouchFrame==Time.frameCount)continue;
+            textTouchFrame=Time.frameCount;
+            if(touch.phase==TouchPhase.Moved)scroll.y=Mathf.Clamp(scroll.y+touch.deltaPosition.y/guiScale,0,max);
+            if(touch.phase==TouchPhase.Ended||touch.phase==TouchPhase.Canceled)textTouch=-1;
+        }
+    }
     void UpdateTouchScroll(){
+        if(Input.touchCount==0)textTouch=-1;
+        if(page==Page.Guide&&!AccountOverlayOpen&&guideRace>=0){
+            for(int i=0;i<Input.touchCount;i++){
+                var touch=Input.GetTouch(i);
+                if(touch.phase==TouchPhase.Began){
+                    socialTouchMoved=false;
+                    var pointer=GuiPoint(touch.position);
+                    if(GuideListArea.Contains(pointer)){
+                        scrollFinger=touch.fingerId;socialTouchOrigin=touch.position;
+                    }
+                }
+                if(touch.fingerId!=scrollFinger)continue;
+                if(touch.phase==TouchPhase.Moved&&Vector2.Distance(touch.position,socialTouchOrigin)>14){
+                    socialTouchMoved=true;
+                    float delta=touch.deltaPosition.y/guiScale;
+                    guideGridScroll.y=Mathf.Max(0,guideGridScroll.y+delta);
+                }
+                if(touch.phase==TouchPhase.Ended||touch.phase==TouchPhase.Canceled){
+                    if(socialTouchMoved)guideGridScroll.y=Mathf.Round(guideGridScroll.y/GuideRowStep)*GuideRowStep;
+                    scrollFinger=-1;
+                }
+            }
+            return;
+        }
+        if(AccountOverlayOpen){
+            for(int i=0;i<Input.touchCount;i++){
+                var touch=Input.GetTouch(i);
+                if(touch.phase==TouchPhase.Began){
+                    socialTouchMoved=false;
+                    if(scrollFinger<0&&AccountHub.selected==null&&AccountOverlayScroll.Contains(GuiPoint(touch.position))){
+                        scrollFinger=touch.fingerId;socialTouchOrigin=touch.position;
+                    }
+                }
+                if(touch.fingerId!=scrollFinger)continue;
+                if(touch.phase==TouchPhase.Moved&&Vector2.Distance(touch.position,socialTouchOrigin)>14){
+                    socialTouchMoved=true;
+                    float delta=touch.deltaPosition.y/guiScale;
+                    if(AccountHub.overlay==AccountOverlay.Messages)messageScroll.y=Mathf.Max(0,messageScroll.y+delta);
+                    else AccountHub.listScroll.y=Mathf.Max(0,AccountHub.listScroll.y+delta);
+                }
+                if(touch.phase==TouchPhase.Ended||touch.phase==TouchPhase.Canceled)scrollFinger=-1;
+            }
+            return;
+        }
         UpdateNotesTouch();
         UpdateProgressionTouch();
         UpdatePassiveAspectTouch();UpdateSpellScroll();

@@ -11,12 +11,13 @@ public sealed partial class PcGame {
     sealed class MythicScore {
         public int race, timeMs;
         public string token,challenge;
+        public bool guest;
     }
 
     const string MythicLeaderboardPath="/mythic-leaderboard";
     const string MythicGuestName="cf-mythic-guest-name";
     const string MythicGuestId="cf-mythic-guest-id";
-    const int MythicRowsPerPage=8;
+    const int MythicRowsPerPage=4;
     MythicScore pendingMythicScore;
     JArray mythicLeaderboard=new JArray();
     GUIStyle mythicNicknameStyle,mythicRaceStyle,mythicBoardHeading;
@@ -34,13 +35,13 @@ public sealed partial class PcGame {
 
     void CaptureMythicScore(){
         if(!CurrentMythic||!match.ChallengeVictoryEligible||MythicLeaderboardUrl().Length==0)return;
-        string token=!networkGuest&&NetworkAccountStore.SameService(networkSessionEndpoint,NetworkAccountStore.UnityEndpoint)?
+        string token=NetworkAccountStore.SameService(networkSessionEndpoint,NetworkAccountStore.UnityEndpoint)?
             networkSessionToken:"";
-        pendingMythicScore=new MythicScore{challenge=(string)activeChallenge["id"],race=matchRace,timeMs=Mathf.Max(1000,Mathf.RoundToInt(match.Elapsed*1000)),token=token};
+        pendingMythicScore=new MythicScore{challenge=(string)activeChallenge["id"],race=matchRace,timeMs=Mathf.Max(1000,Mathf.RoundToInt(match.Elapsed*1000)),token=token,guest=networkGuest};
         mythicPlace=0;mythicScoreError="";
-        mythicNickname=testing?"":PlayerPrefs.GetString(MythicGuestName,"");
-        if(string.IsNullOrEmpty(token))mythicGuestPrompt=true;
-        else StartCoroutine(SendMythicScore(pendingMythicScore));
+        mythicNickname=networkGuest&&!string.IsNullOrEmpty(token)?rememberedAccountName:testing?"":PlayerPrefs.GetString(MythicGuestName,"");
+        AccountHub.mythicComment="";
+        mythicGuestPrompt=true;
     }
 
     static JObject MythicReply(UnityWebRequest request){
@@ -85,9 +86,15 @@ public sealed partial class PcGame {
         if(string.IsNullOrEmpty(url))yield break;
         mythicScoreError="";
         JObject payload=new JObject{["challenge"]=score.challenge,["race"]=score.race,["time_ms"]=score.timeMs};
+        string note=AccountHub.mythicComment.Trim();
+        if(note.Any(c=>char.IsControl(c)||c=='<'||c=='>')){
+            mythicScoreError="Сообщение должно быть одной строкой без угловых скобок.";
+            yield break;
+        }
+        payload["comment"]=note;
         if(score.challenge==HumanMatch.WinterTrial)payload["rules_revision"]=HumanMatch.WinterRulesRevision;
         if(!string.IsNullOrEmpty(score.token))payload["token"]=score.token;
-        else{
+        if(string.IsNullOrEmpty(score.token)||score.guest){
             string name=string.Join(" ",mythicNickname.Trim().Split((char[])null,StringSplitOptions.RemoveEmptyEntries));
             if(name.Length<2||name.Length>24||name.Any(c=>char.IsControl(c)||c=='<'||c=='>')){
                 mythicScoreError="Введите ник длиной от 2 до 24 символов.";
@@ -101,9 +108,11 @@ public sealed partial class PcGame {
                 PlayerPrefs.SetString(MythicGuestName,name);
                 PlayerPrefs.Save();
             }
-            payload["guest"]=guest;payload["nickname"]=name;
+            if(string.IsNullOrEmpty(score.token))payload["guest"]=guest;
+            payload["nickname"]=name;
             CloseAccountKeyboard();
         }
+        CloseAccountKeyboard();
         mythicScoreSending=true;
         using(var request=new UnityWebRequest(url,"POST")){
             request.uploadHandler=new UploadHandlerRaw(Encoding.UTF8.GetBytes(payload.ToString(Newtonsoft.Json.Formatting.None)));
@@ -128,7 +137,8 @@ public sealed partial class PcGame {
                 }else if(error=="outdated_winter_rules"){
                     mythicScoreError="Обновите игру и пройдите испытание заново, чтобы записать результат.";
                 }else{
-                    mythicScoreError=error=="invalid_nickname"?"Проверьте ник и повторите запись.":"Сервер не ответил. Повторите запись.";
+                    mythicScoreError=error=="invalid_nickname"?"Проверьте ник и повторите запись.":
+                        error=="invalid_comment"?"Проверьте сообщение. Допустимо до 120 символов.":"Сервер не ответил. Повторите запись.";
                 }
             }
         }
@@ -137,8 +147,7 @@ public sealed partial class PcGame {
 
     void SubmitPendingMythicScore(){
         if(pendingMythicScore==null||mythicScoreSending)return;
-        if(string.IsNullOrEmpty(pendingMythicScore.token))mythicGuestPrompt=true;
-        else StartCoroutine(SendMythicScore(pendingMythicScore));
+        mythicGuestPrompt=true;
     }
 
     static string MythicTime(int milliseconds){
@@ -148,12 +157,17 @@ public sealed partial class PcGame {
 
     void DrawMythicStandingPrompt(){
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.78f));
-        LobbyPanel(new Rect(338,178,604,388));
-        Text(370,203,540,47,"Запись в таблицу лидеров",heading);
-        Text(370,258,540,35,RaceTitle(pendingMythicScore.race)+" · "+MythicTime(pendingMythicScore.timeMs),label);
-        mythicNickname=AccountText("mythic.nickname",new Rect(370,310,540,57),mythicNickname,24,false,"Ник для таблицы");
+        AtlasSurface(new Rect(318,146,644,428),true);
+        Text(350,168,580,47,"Запись в таблицу лидеров",atlasTitle);
+        Text(350,224,580,35,RaceTitle(pendingMythicScore.race)+" · "+MythicTime(pendingMythicScore.timeMs),label);
+        if(string.IsNullOrEmpty(pendingMythicScore.token)||pendingMythicScore.guest)
+            mythicNickname=AccountText("mythic.nickname",new Rect(350,271,580,43),mythicNickname,24,false,"Ник для таблицы");
+        else Text(350,270,580,50,FitAtlasLabel(rememberedAccountName,574,label),label);
+        Text(350,313,580,24,"Сообщение (по желанию)",small);
+        AccountHub.mythicComment=AccountText("mythic.comment",new Rect(350,338,580,48),AccountHub.mythicComment,120,false,"Сообщение");
+        Text(350,391,580,30,"В таблице видно сообщение к вашему лучшему результату.",small);
         if(mythicScoreError.Length>0)
-            Text(370,378,540,55,mythicScoreError,new GUIStyle(small){wordWrap=true});
+            Text(350,425,580,39,mythicScoreError,new GUIStyle(small){wordWrap=true});
         bool enabled=GUI.enabled;GUI.enabled=enabled&&!mythicScoreSending;
         if(LobbyButton("mythic.score.save",new Rect(660,476,250,57),mythicScoreSending?"Сохраняем…":"Записать"))StartCoroutine(SendMythicScore(pendingMythicScore));
         if(LobbyButton("mythic.score.later",new Rect(370,476,235,57),"Позже")){
@@ -198,8 +212,8 @@ public sealed partial class PcGame {
             int position=mythicBoardPage*MythicRowsPerPage+i;
             if(position>=mythicLeaderboard.Count)break;
             var row=mythicLeaderboard[position];
-            float y=252+i*44;
-            Fill(new Rect(688,y,528,44),new Color(.14f,.17f,.11f,i%2==0?.76f:.38f));
+            float y=251+i*86;
+            Fill(new Rect(688,y,528,83),new Color(.14f,.17f,.11f,i%2==0?.76f:.38f));
             int place=(int?)row["place"]??position+1;
             Text(695,y+3,43,31,place.ToString(),small);
             if(place==1){
@@ -208,8 +222,11 @@ public sealed partial class PcGame {
             }
             Text(742,y+1,304,26,(string)row["nickname"]??"",mythicNicknameStyle);
             int race=(int?)row["race"]??-1;
-            Text(742,y+24,304,18,RaceTitle(race),mythicRaceStyle);
-            Text(1052,y+4,153,30,MythicTime((int?)row["time_ms"]??0),label);
+            Text(742,y+22,456,16,RaceTitle(race),mythicRaceStyle);
+            var note=new GUIStyle(mythicRaceStyle){wordWrap=true,alignment=TextAnchor.UpperLeft};
+            Text(742,y+38,456,43,(string)row["comment"]??"",note);
+            var clock=new GUIStyle(mythicNicknameStyle){alignment=TextAnchor.MiddleRight};
+            Text(1052,y,147,30,MythicTime((int?)row["time_ms"]??0),clock);
         }
         if(pages>1){
             if(mythicBoardPage>0&&LobbyButton("mythic.board.prev",new Rect(689,610,118,30),"Назад"))mythicBoardPage--;

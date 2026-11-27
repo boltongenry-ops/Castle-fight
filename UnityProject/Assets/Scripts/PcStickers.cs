@@ -38,7 +38,7 @@ public sealed partial class PcGame {
     }
     const string MemePackId="stickers_local_legends";
     readonly HashSet<string> memeLoading=new HashSet<string>();
-    bool CanSendSticker(string id)=>!id.StartsWith("local_meme_",StringComparison.Ordinal)||progression!=null&&progression.Owned(MemePackId);
+    bool CanSendSticker(string id)=>!id.StartsWith("local_meme_",StringComparison.Ordinal)||progression!=null&&(AccountOwns(MemePackId)||progression.Owned(MemePackId));
     Texture2D StickerTexture(string resource){
         if(stickerTextures.TryGetValue(resource,out var result)&&result)return result;
         if(!resource.StartsWith("@meme/",StringComparison.Ordinal)){result=ContentResources.Load<Texture2D>(resource);stickerTextures[resource]=result;return result;}
@@ -72,7 +72,7 @@ public sealed partial class PcGame {
             StickerImage(new Rect(r.x+13,r.y+8,119,108),items[i]);Text(r.x+5,r.y+118,135,24,items[i].label,small);
         }
         if(items.Count>0){StickerImage(new Rect(768,207,230,230),items[Mathf.Clamp(stickerSelected,0,items.Count-1)]);Text(765,445,235,50,items[stickerSelected].label,label);}
-        Text(255,557,730,32,stickerPacks[stickerPack].paid&&!progression.Owned(MemePackId)?"Предпросмотр · весь набор: 300 жетонов в магазине.":(onlineMatch||!string.IsNullOrEmpty(socialStickerPeer))?"Нажмите стикер, чтобы отправить сопернику.":"Предпросмотр. Отправка доступна во время сетевого боя.",small);
+        Text(255,557,730,32,stickerPacks[stickerPack].paid&&!CanSendSticker("local_meme_naga")?"Предпросмотр · весь набор: 300 жетонов в магазине.":(onlineMatch||!string.IsNullOrEmpty(socialStickerPeer))?"Нажмите стикер, чтобы отправить сопернику.":"Предпросмотр. Отправка доступна во время сетевого боя.",small);
         if(Button("sticker.close",new Rect(255,598,250,40),"← Назад")){showStickerPicker=false;socialStickerPeer="";}
     }
     void DisposeStickers(){foreach(var clip in memeAudio.Values)if(clip)Destroy(clip);memeAudio.Clear();if(stickerAudio)Destroy(stickerAudio);foreach(var entry in stickerTextures.Where(k=>k.Key.StartsWith("@meme/")))if(entry.Value)Destroy(entry.Value);}

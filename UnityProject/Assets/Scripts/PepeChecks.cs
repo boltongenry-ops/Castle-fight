@@ -291,10 +291,9 @@ public sealed partial class PcGame {
             && swamp.GetComponent<Renderer>().sharedMaterial.shader.isSupported,"Swamp skills share one supported mesh renderer");
         yield return Shot(folder,"07-pepe-skills");
         MainMenu();OpenGuide();GuideChooseRace(PepeContent.Race);GuideSelectEntry(3);
-        Check(guideModel&&guideModel.raw=="pU04"&&guideDescription.Contains("Вираж"),"Guide uses live model and personal ability description");
+        Check(guideAuthority.Lines[GuideActorKind].unit=="pU04"&&GuideUnitIcon(GuideActorKind)&&guideDescription.Contains("Вираж"),"Guide uses the unit portrait and personal ability description");
         yield return Shot(folder,"04-pepe-guide");
         GuideSelectEntry(1);
-        guideSpin=false;
         yield return Shot(folder,"05-archer-guide");
         GuideSelectEntry(0);
         yield return Shot(folder,"06-guard-guide");

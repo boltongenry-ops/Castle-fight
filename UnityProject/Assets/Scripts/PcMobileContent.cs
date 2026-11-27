@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame {
-    
+
     IEnumerator PrepareMobileRoom(string action,string code){MobileContent.Current.Begin();yield return MobileContent.Current.EnsureRace(networkRace);MobileContent.Current.Ready();EnterRoomCore(action,code);}
     void SetNetworkReady(bool ready){if(MobileContent.Active&&ready){StartCoroutine(PrepareMobileReady());return;}SendNetwork(new Newtonsoft.Json.Linq.JObject{["type"]="ready",["ready"]=ready});}
     IEnumerator PrepareMobileReady(){
@@ -50,7 +50,8 @@ public sealed partial class PcGame {
         MobileContent.Current.Begin();
         if(DiscardRaceAssets(race)){ClearRacePrefabCaches();yield return Resources.UnloadUnusedAssets();}
         yield return PrepareMobileRace(race);
-        if(page==Page.Guide)GuideChooseRace(race);
+        guideLoading=false;
+        if(page==Page.Guide&&Pack(race))GuideChooseRace(race);
         MobileContent.Current.Ready();
     }
     GameObject MenuBuilder(int race)=>race==BlackHand.Race?ClassicMenuBuilder(race):OptionalModel(ClassicMenuBuilder(race),0);

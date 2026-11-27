@@ -74,6 +74,8 @@ public sealed partial class PcGame {
         return height;
     }
 
+    Vector2 mythicRulesScroll;
+    string mythicRulesId="";
     void DrawMythicRacePicker(){
         var card=new Rect(42,176,1196,500);
         bool choir=(string)mythicSelection["id"]==HumanMatch.ChoirTrial;
@@ -104,23 +106,25 @@ public sealed partial class PcGame {
             GUI.enabled=enabled;
         }
         const float x=718,width=493;
+        string id=(string)mythicSelection["id"];
+        if(mythicRulesId!=id){mythicRulesId=id;mythicRulesScroll=Vector2.zero;}
         Fill(new Rect(x-12,389,width+22,217),new Color(.023f,.042f,.061f,.91f));
         if(protocol){
             Text(x,389,width,41,"Терминатор",heading);
-            FitBossText(new Rect(x,434,width,109),(string)mythicSelection["description"],new GUIStyle(small),18,true);
+            DrawRaceDescription(new Rect(x,434,width,109),(string)mythicSelection["description"],label,ref mythicRulesScroll);
             if(AspectCount(mythicRace)==2){
                 string selected=protocolAspect<0?"Без аспекта":AspectField(mythicRace,protocolAspect,"title");
                 if(LobbyButton("protocol.aspect",new Rect(x,553,width,38),selected+"  ›"))protocolAspect=protocolAspect==1?-1:protocolAspect+1;
             }
         }else if(abyssTrial){
             Text(x,389,width,41,"Королева глубин",heading);
-            FitBossText(new Rect(x,436,width,155),(string)mythicSelection["description"],new GUIStyle(small),18,true);
+            DrawRaceDescription(new Rect(x,436,width,155),(string)mythicSelection["description"],label,ref mythicRulesScroll);
         }else if(horde){
             Text(x,389,width,41,"Алый вождь",heading);
-            FitBossText(new Rect(x,436,width,155),(string)mythicSelection["description"],new GUIStyle(small),18,true);
+            DrawRaceDescription(new Rect(x,436,width,155),(string)mythicSelection["description"],label,ref mythicRulesScroll);
         }else if(choir){
             Text(x,389,width,41,"Верховный некромант",heading);
-            FitBossText(new Rect(x,436,width,155),(string)mythicSelection["description"],new GUIStyle(small),18,true);
+            DrawRaceDescription(new Rect(x,436,width,155),(string)mythicSelection["description"],label,ref mythicRulesScroll);
         }else{
         Text(x,389,width,41,"Ледяная королева",heading);
         Text(x,431,width,32,"Движение −50%  •  Скорость атаки −30%",label);

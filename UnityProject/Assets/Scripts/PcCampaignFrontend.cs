@@ -263,7 +263,7 @@ public sealed partial class PcGame {
         return Button(id,rect,"",false,GUIStyle.none);
     }
 
-    string AtlasAccountName=>networkGuest||!HasEndpointToken?"":rememberedAccountName;
+    string AtlasAccountName=>!HasEndpointToken?"":rememberedAccountName;
 
     string FitAtlasAccountName(string name,float width)=>FitAtlasLabel(name,width,atlasProfileName);
 
@@ -282,8 +282,8 @@ public sealed partial class PcGame {
     bool DrawAtlasAccount(){
         string name=AtlasAccountName;
         if(string.IsNullOrEmpty(name))
-            return AtlasButton("main.profile",new Rect(1069,6,185,44),"Профиль",icon:3);
-        var rect=AtlasSignedInButton;
+            return AtlasButton("main.profile",new Rect(1069,6,185,44),"Войти",icon:3);
+        var rect=new Rect(AtlasSignedInButton.x,AtlasSignedInButton.y,262,AtlasSignedInButton.height);
         if(campaignChrome)DrawAtlasBar(3,rect);
         else AtlasPanel(rect,AtlasInk,AtlasGold);
         DrawProfileBadge(new Rect(rect.x+12,rect.y+5,34,34));
@@ -309,7 +309,11 @@ public sealed partial class PcGame {
         }
         bool enabled=GUI.enabled;
         GUI.enabled=enabled&&!confirmDisplay;
-        if(DrawAtlasAccount())OpenAccountProfile();
+        if(DrawAtlasAccount()){
+            OpenAccountProfile();
+            if(!HasNetworkProfile&&!HasEndpointToken)OpenAccountSignIn();
+        }
+        if(HasNetworkProfile)DrawFriendsShortcut(new Rect(1203,6,51,44));
         GUI.enabled=enabled;
     }
 

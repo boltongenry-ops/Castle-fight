@@ -16,26 +16,30 @@ namespace CastleFight {
             first==second||(first==UnityEndpoint||first==LegacyEndpoint)&&(second==UnityEndpoint||second==LegacyEndpoint);
 
         const string Preference="cf-network-account-v1";
+        const string GuestPreference="cf-network-guest-v1";
+        const string ModePreference="cf-network-guest-mode";
+        public static bool GuestMode=>PlayerPrefs.GetInt(ModePreference,0)==1;
+        public static void SelectMode(bool guest){PlayerPrefs.SetInt(ModePreference,guest?1:0);PlayerPrefs.Save();}
 
-        public static JObject Read(){
-            string memory=PlayerPrefs.GetString(Preference,"");
+        public static JObject Read(bool guest=false){
+            string memory=PlayerPrefs.GetString(guest?GuestPreference:Preference,"");
             if(memory.Length==0)return null;
             try {
                 var clear=Decrypt(Convert.FromBase64String(memory));
                 return clear==null?null:JObject.Parse(Encoding.UTF8.GetString(clear));
             }catch(Exception){
-                Clear();
+                Clear(guest);
                 return null;
             }
         }
 
-        public static void Save(string endpoint,string token,string nickname){
+        public static void Save(string endpoint,string token,string nickname,bool guest=false){
             if(string.IsNullOrEmpty(token)||!Uri.TryCreate(endpoint,UriKind.Absolute,out var target)||target.Scheme!="wss")return;
             try{
                 var data=new JObject{["endpoint"]=endpoint,["token"]=token,["nickname"]=nickname};
                 byte[] encrypted=Encrypt(Encoding.UTF8.GetBytes(data.ToString(Newtonsoft.Json.Formatting.None)));
                 if(encrypted!=null){
-                    PlayerPrefs.SetString(Preference,Convert.ToBase64String(encrypted));
+                    PlayerPrefs.SetString(guest?GuestPreference:Preference,Convert.ToBase64String(encrypted));
                     PlayerPrefs.Save();
                 }
             }catch(Exception){
@@ -43,8 +47,8 @@ namespace CastleFight {
             }
         }
 
-        public static void Clear(){
-            PlayerPrefs.DeleteKey(Preference);
+        public static void Clear(bool guest=false){
+            PlayerPrefs.DeleteKey(guest?GuestPreference:Preference);
             PlayerPrefs.Save();
         }
 

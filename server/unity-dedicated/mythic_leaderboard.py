@@ -3,6 +3,7 @@ import json
 import os
 import re
 import sqlite3
+import unicodedata
 from contextlib import closing
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -63,6 +64,8 @@ def initialize():
         fields = {column["name"] for column in connection.execute("PRAGMA table_info(times)")}
         if "rules_revision" not in fields:
             connection.execute("ALTER TABLE times ADD COLUMN rules_revision INTEGER NOT NULL DEFAULT 1")
+        if "comment" not in fields:
+            connection.execute("ALTER TABLE times ADD COLUMN comment TEXT NOT NULL DEFAULT ''")
         return connection.execute(
             "DELETE FROM times WHERE challenge=? AND race=? AND rules_revision<?",
             (CHALLENGE, NORTHERN_RACE, WINTER_RULES_REVISION),
@@ -101,14 +104,22 @@ def nickname(value):
     return value
 
 
+def score_comment(value):
+    if not isinstance(value, str) or len(value) > 120 or any(
+        unicodedata.category(c) in {"Cc", "Cf", "Cs", "Zl", "Zp"} or c in "<>" for c in value
+    ):
+        raise RequestError(400, "invalid_comment")
+    return " ".join(value.split())
+
+
 RANKED_PLAYERS = """WITH attempts AS (
-    SELECT player, nickname, race, time_ms, achieved_at,
+    SELECT player, nickname, race, time_ms, achieved_at, comment,
            ROW_NUMBER() OVER (
                PARTITION BY player ORDER BY time_ms, achieved_at, race
            ) AS attempt
     FROM times WHERE challenge=?
 ), ranked AS (
-    SELECT player, nickname, race, time_ms,
+    SELECT player, nickname, race, time_ms, comment,
            ROW_NUMBER() OVER (ORDER BY time_ms, achieved_at, player) AS place
     FROM attempts WHERE attempt=1
 )"""
@@ -116,7 +127,7 @@ RANKED_PLAYERS = """WITH attempts AS (
 
 def ranking(connection, challenge=CHALLENGE):
     rows = connection.execute(
-        RANKED_PLAYERS + " SELECT nickname, race, time_ms, place FROM ranked ORDER BY place LIMIT 30",
+        RANKED_PLAYERS + " SELECT nickname, race, time_ms, comment, place FROM ranked ORDER BY place LIMIT 30",
         (challenge,),
     )
     return [dict(row) for row in rows]
@@ -126,6 +137,7 @@ def store(payload):
     race = payload.get("race")
     elapsed = payload.get("time_ms")
     challenge = payload.get("challenge")
+    comment = score_comment(payload.get("comment", ""))
     if challenge not in CHALLENGES:
         raise RequestError(400, "unknown_challenge")
     if type(race) is not int or not 0 <= race < 18 or type(elapsed) is not int or not 1000 <= elapsed <= 86400000:
@@ -143,7 +155,7 @@ def store(payload):
     if token:
         profile = public_profile(token)
         player = "account:" + str(profile["id"])
-        name = nickname(profile["name"])
+        name = nickname(payload.get("nickname", profile["name"]) if profile.get("guest") else profile["name"])
     else:
         guest = payload.get("guest")
         if not isinstance(guest, str) or not re.fullmatch("[0-9a-f]{32}", guest):
@@ -153,11 +165,13 @@ def store(payload):
 
     with closing(connect()) as connection, connection:
         connection.execute(
-            """INSERT INTO times(challenge,player,race,nickname,time_ms,achieved_at,rules_revision)
-               VALUES(?,?,?,?,?,strftime('%Y-%m-%dT%H:%M:%fZ','now'),?)
+            """INSERT INTO times(challenge,player,race,nickname,time_ms,achieved_at,rules_revision,comment)
+               VALUES(?,?,?,?,?,strftime('%Y-%m-%dT%H:%M:%fZ','now'),?,?)
                ON CONFLICT(challenge,player,race) DO UPDATE SET nickname=excluded.nickname,
+                 comment=CASE WHEN excluded.time_ms<times.time_ms THEN excluded.comment ELSE times.comment END,
                  achieved_at=CASE WHEN excluded.time_ms<times.time_ms THEN excluded.achieved_at ELSE times.achieved_at END,
-                 time_ms=MIN(times.time_ms,excluded.time_ms)""", (challenge, player, race, name, elapsed, revision)
+                 rules_revision=CASE WHEN excluded.time_ms<times.time_ms THEN excluded.rules_revision ELSE times.rules_revision END,
+                 time_ms=MIN(times.time_ms,excluded.time_ms)""", (challenge, player, race, name, elapsed, revision, comment)
         )
         position = connection.execute(
             RANKED_PLAYERS + " SELECT place FROM ranked WHERE player=?", (challenge, player)

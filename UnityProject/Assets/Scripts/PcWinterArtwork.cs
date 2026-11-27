@@ -77,8 +77,10 @@ public sealed partial class PcGame {
         else if(id==HumanMatch.AbyssTrial)DrawAbyssPainting(tile);else Fill(tile,WinterInk);
         WinterGradient(tile,true,new Color(.01f,.02f,.03f,.99f));
         Border(tile,id==selectedMythicId?WinterBlue:WinterLine,id==selectedMythicId?2:1);
-        Text(tile.x+14,tile.y+3,tile.width-125,32,(string)row["title"],raceTitleStyle);
-        FitBossText(new Rect(tile.x+15,tile.y+36,tile.width-125,24),(string)(row["summary"]??row["description"]),new GUIStyle(small),16);
+        var titleStyle=new GUIStyle(raceTitleStyle){padding=new RectOffset(),alignment=TextAnchor.MiddleLeft};
+        var summaryStyle=new GUIStyle(small){padding=new RectOffset(),alignment=TextAnchor.MiddleLeft};
+        Text(tile.x+14,tile.y+1,tile.width-128,35,(string)row["title"],titleStyle);
+        FitBossText(new Rect(tile.x+15,tile.y+34,tile.width-128,30),(string)(row["summary"]??row["description"]),summaryStyle,16);
         var play=new Rect(tile.xMax-103,tile.y+12,92,tile.height-24);
         if(Button("challenge."+id,new Rect(tile.x,tile.y,play.x-tile.x,tile.height),"",false,GUIStyle.none))
             SelectMythicTrial(id);

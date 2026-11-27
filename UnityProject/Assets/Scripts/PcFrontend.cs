@@ -15,11 +15,7 @@ public sealed partial class PcGame {
         var clip=ContentResources.Load<AudioClip>("PcMenuMusic");
         if(clip) { menuAudio=gameObject.AddComponent<AudioSource>(); menuAudio.clip=clip; menuAudio.loop=true; menuAudio.playOnAwake=false; menuAudio.volume=0;menuAudio.spatialBlend=0;menuAudio.ignoreListenerPause=true;clip.LoadAudioData(); }
         networkName=PlayerPrefs.GetString("cf-network-name","");if(networkName=="Игрок")networkName="";
-        if(!testing&&BattleLab.Arg("--pc-test")==""&&NetworkAccountStore.Read() is JObject saved){
-            networkSessionEndpoint=(string)saved["endpoint"]??"";
-            networkSessionToken=(string)saved["token"]??"";
-            rememberedAccountName=(string)saved["nickname"]??"";
-        }
+        if(!testing&&BattleLab.Arg("--pc-test")=="")RestoreAccountMode(NetworkAccountStore.GuestMode);
     }
     // Godot MenuMusic.continue_after_intro: the soundtrack resumes at the frame the
     // intro movie stopped at instead of restarting from the beginning.
@@ -34,10 +30,11 @@ public sealed partial class PcGame {
             menuAudio.volume=Mathf.MoveTowards(menuAudio.volume,inMenu?options.musicVolume:0,Time.unscaledDeltaTime*.5f);
         }
         PollLobby();
+        UpdateAccountHub();
     }
     void DrawFrontendBleed() {
         bool atlas=page==Page.Main||page==Page.Setup||page==Page.Progression||
-            page==Page.Profile||page==Page.Network||page==Page.Settings&&settingsReturn==Page.Main;
+            page==Page.Profile||page==Page.Network||page==Page.Guide||page==Page.Settings&&settingsReturn==Page.Main;
         if(atlas)PrepareCampaignArtwork();
         var backdrop=atlas&&campaignMap?campaignMap:menuArtwork;
         if(backdrop)GUI.DrawTexture(new Rect(0,0,Screen.width,Screen.height),backdrop,ScaleMode.ScaleAndCrop);
@@ -46,7 +43,7 @@ public sealed partial class PcGame {
     void DrawMenuBackground() {
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.18f));
     }
-    void DisposeFrontend(){StopDirectory();DisposeStickers();DisposeCampaignArtwork();DisposeLoadingArt();if(menuAudio)Destroy(menuAudio);DisposeWinterArtwork();DisposeHordeArtwork();}
+    void DisposeFrontend(){StopDirectory();DisposeAccountAvatars();DisposeStickers();DisposeCampaignArtwork();DisposeLoadingArt();if(menuAudio)Destroy(menuAudio);DisposeWinterArtwork();DisposeHordeArtwork();}
     // Only the current pair is decoded; fifteen source paintings stay on disk.
     static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
     static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};

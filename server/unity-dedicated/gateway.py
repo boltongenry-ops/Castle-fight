@@ -76,6 +76,8 @@ class Peer:
     slot: int = -1
     profile: dict = field(default_factory=dict)
     token: str = ""
+    activity: str = ""
+    challenge: str = ""
     next_profile: float = 0.0
     recent: list = field(default_factory=list)
 
@@ -172,9 +174,19 @@ class Gateway:
         peer.next_profile=time.monotonic()+.5
         if peer.room and kind in ("profile_auth","profile_logout"):
             return dict(ok=False, message="Сначала выйдите из комнаты.")
+        if kind=="profile_auth" and action=="guest" and peer.token:
+            if peer.profile.get("guest"):
+                return dict(ok=True, profile=peer.profile, token=peer.token)
+            return dict(ok=False, message="Сначала выйдите из аккаунта.")
         payload = dict(packet)
         if kind!="profile_auth":
             payload["token"]=peer.token
+        if kind=="profile_social" and action=="send" and payload.get("kind")=="invite":
+            if not peer.room or peer.room.phase!="waiting" or all(peer.room.players):
+                return dict(ok=False, message="Для приглашения нужна открытая комната со свободным местом.")
+            payload["text"]=peer.room.code
+        if kind=="profile_logout" and peer.token:
+            await self.mark_last_seen(peer)
         try:
             result=await profiles(PROFILE_ROUTES[kind],payload)
         except (OSError, ValueError):
@@ -189,11 +201,49 @@ class Gateway:
                 if peer.room:
                     await self.lobby(peer.room)
             if kind=="profile_auth" and peer.token:
-                try:await profiles("/social",dict(token=peer.token,action="presence"))
-                except OSError:pass
+                await self.mark_last_seen(peer)
+            if kind=="profile_social":
+                self.attach_presence(peer, result)
         if packet.get("older") is True:
             result["older"]=True
         return result
+
+    async def mark_last_seen(self, peer):
+        try:
+            await profiles("/social", dict(token=peer.token, action="presence"))
+        except (OSError, ValueError):
+            pass
+
+    def attach_presence(self, viewer, result):
+        online = {}
+        priority = {"menu": 0, "solo": 1, "challenge": 2, "room": 3, "playing": 4}
+        for peer in self.peers:
+            identity = peer.profile.get("id")
+            if not identity:
+                continue
+            activity = ("playing" if peer.room.phase != "waiting" else "room") if peer.room else peer.activity or "menu"
+            if identity in online and priority[online[identity]["activity"]] >= priority[activity]:
+                continue
+            public = {key: peer.profile[key] for key in ("id", "name", "avatar", "avatar_ref", "wins") if key in peer.profile}
+            online[identity] = dict(public, online=True, activity=activity,
+                                    challenge=peer.challenge if activity=="challenge" else "")
+
+        def decorate(player):
+            if isinstance(player, dict):
+                player.update(online.get(player.get("id"), {"online": False}))
+
+        for field in ("player", "peer"):
+            decorate(result.get(field))
+        for field in ("friends", "found", "requests", "conversations"):
+            for row in result.get(field, []):
+                decorate(row.get("player", row))
+        if "friends" in result:
+            friends = {row["id"] for row in result["friends"]}
+            friends.add(viewer.profile.get("id"))
+            result["playing_now"] = sorted(
+                (player for identity, player in online.items() if identity not in friends),
+                key=lambda p: p.get("name", "").casefold(),
+            )
 
     async def enter_room(self, peer, packet):
         if peer.room:
@@ -338,6 +388,13 @@ class Gateway:
         if kind in ("browse","create","join","resume") and (p.get("protocol")!=1 or p.get("build")!=BUILD or p.get("authority")!=1):
             return await self.error(peer,"Обновите Castle Fight для подключения к Unity-серверу.")
         if kind=="ping":return await self.send(peer,dict(type="pong"))
+        if kind=="profile_activity":
+            activity=p.get("activity")
+            if peer.token and activity in ("menu","solo","challenge"):
+                peer.activity=activity
+                challenge=text(p.get("challenge"),48)
+                peer.challenge=challenge if activity=="challenge" and challenge.replace("_","").isalnum() else ""
+            return
         if kind=="browse":
             peer.browse=True
             return await self.directory(peer)
@@ -428,6 +485,8 @@ class Gateway:
         finally:
             async with self.lock:
                 self.peers.discard(peer)
+                if peer.token:
+                    await self.mark_last_seen(peer)
                 try:await self.leave(peer)
                 except OSError:print("authority unavailable during disconnect",flush=True)
 

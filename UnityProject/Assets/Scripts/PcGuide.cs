@@ -1,82 +1,131 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
+
 namespace CastleFight {
 public sealed partial class PcGame {
-    GameObject guideGarden,guideStage;readonly List<PcModel> guideBuilders=new List<PcModel>();
-    int guideRace=-1,guideEntry=-1,guideActorIndex;HumanMatch guideAuthority;JObject guideCatalog;Vector2 guideGridScroll,guideTextScroll;string guideQuery="",guideDescription="";bool guideUnit=true,guideSpin=true;float guideOpened,guideAngle;
-    readonly Stack<int> guideHistory=new Stack<int>();PcModel guideModel;Camera guideCamera;RenderTexture guideTexture;int guideMainMask;bool guideLayerReserved;
-    readonly Vector2 guideClearing=new Vector2(-4600f/30,1450f/30);
-    string GuideRaceName(int race)=>AllRaceNames[RaceOfUnity(race)];
+    enum GuideTab { Buildings, Units, Specials, Aspects }
+
+    int guideRace=-1,guideEntry=-1,guideActorIndex,guideArtworkRace=-1;
+    HumanMatch guideAuthority;
+    Vector2 guideGridScroll,guideTextScroll;
+    readonly Vector2[] guideAspectScroll=new Vector2[2];
+    string guideQuery="",guideDescription="";
+    bool guideUnit,guideLoading;
+    GuideTab guideTab;
+    Texture2D guideArtwork;
+    GUIStyle guideCardName,guideCardInfo,guideLore;
+    readonly Stack<int> guideHistory=new Stack<int>();
+    readonly Dictionary<int,int[]> guideActors=new Dictionary<int,int[]>();
+    static readonly Rect GuideListArea=new Rect(62,233,497,420);
+    static readonly Rect GuideTextArea=new Rect(612,351,572,236);
+    const int GuideRowStep=80;
+
+    string GuideRaceName(int race)=>RaceTitle(race);
+
     void OpenGuide(){
-        MainMenu();page=Page.Guide;guideRace=guideEntry=-1;guideOpened=0;guideQuery="";guideHistory.Clear();
-        if(!guideGarden){guideGarden=new GameObject("Guide clearing — classic builders");
-            for(int race=0;race<MobileContent.RaceResources.Length;race++){
-                if(!RaceStaged(race))continue;
-                var prefab=MenuBuilder(race);var model=Instantiate(prefab?prefab:FirstModel(builderModels),guideGarden.transform).GetComponent<PcModel>();
-                int column=race%5,row=race/5;if(race==15){column=3;row=-1;}if(race==PepeContent.Race){column=0;row=3;}if(column==4){column=row;row=-1;}Vector2 p=guideClearing+new Vector2((column-2)*20,(row-1)*13);var ground=World(p);model.transform.position=ground;model.Face(Vector2.up,true);model.Play("Stand");model.SamplePose();
-                var bounds=model.BodyBounds();float scale=4.6f/Mathf.Max(.1f,bounds.size.y);model.transform.localScale*=scale;model.transform.position=ground+Vector3.up*(ground.y-bounds.min.y)*scale;guideBuilders.Add(model);
-            }
-        }
-        guideGarden.SetActive(true);if(guideStage)guideStage.SetActive(false);if(guideCamera)guideCamera.enabled=false;guideOpened=0;controls.FocusWorld(World(guideClearing)+Vector3.up*75,155);Debug.Log("CF_GUIDE_OPEN builders="+guideBuilders.Count);
+        MainMenu();page=Page.Guide;
+        guideRace=guideEntry=-1;
+        guideQuery="";guideHistory.Clear();
     }
+
     void CloseGuide(){
-        if(guideCamera)guideCamera.enabled=false;
-        if(guideGarden){guideGarden.SetActive(false);Destroy(guideGarden);}
-        if(guideStage){guideStage.SetActive(false);Destroy(guideStage);}
-        if(guideTexture){guideTexture.Release();Destroy(guideTexture);}
-        if(guideLayerReserved&&Camera.main)Camera.main.cullingMask=guideMainMask;
-        guideGarden=guideStage=null;guideCamera=null;guideModel=null;guideTexture=null;guideLayerReserved=false;
-        guideBuilders.Clear();guideCatalog=null;guideAuthority=null;
+        if(guideArtwork)Destroy(guideArtwork);
+        guideArtwork=null;guideArtworkRace=-1;
+        guideAuthority=null;guideRace=guideEntry=-1;guideLoading=false;guideActors.Clear();
     }
+
     void UpdateGuide(){
-        if(page!=Page.Guide){CloseGuide();return;}if(guideRace<0){guideOpened=Mathf.Min(1.25f,guideOpened+Mathf.Min(Time.unscaledDeltaTime,.05f));float t=guideOpened/1.25f;float ease=t*t*(3-2*t);controls.FocusWorld(World(guideClearing)+Vector3.up*Mathf.Lerp(75,0,ease),Mathf.Lerp(155,80,ease));}
-        if(guideModel&&guideEntry>=0){if(guideSpin)guideAngle+=Time.unscaledDeltaTime*18;guideModel.transform.localRotation=Quaternion.Euler(0,guideAngle,0);}
+        if(page!=Page.Guide&&(guideAuthority!=null||guideArtwork||guideLoading))CloseGuide();
     }
-    System.Collections.IEnumerator OpenBlackHandGuide(){yield return BlackHandArt.Open();if(page==Page.Guide)GuideChooseRace(BlackHand.Race);}
+
+    IEnumerator OpenBlackHandGuide(){
+        yield return BlackHandArt.Open();
+        guideLoading=false;
+        if(page==Page.Guide&&BlackHandArt.Ready)GuideChooseRace(BlackHand.Race);
+        else if(page==Page.Guide)Notice("Не удалось открыть материалы Клана Чёрной Руки");
+    }
+
     void GuideChooseRace(int race){
-        if(race==BlackHand.Race&&!BlackHandArt.Ready){StartCoroutine(OpenBlackHandGuide());return;}
-        if(MobileContent.Active&&race!=0&&race!=BlackHand.Race&&!Pack(race)){StartCoroutine(PrepareMobileGuide(race));return;}
+        if(!RaceStaged(race)||guideLoading)return;
+        if(race==BlackHand.Race&&!BlackHandArt.Ready){
+            guideLoading=true;StartCoroutine(OpenBlackHandGuide());return;
+        }
+        if(MobileContent.Active&&race!=0&&race!=BlackHand.Race&&!Pack(race)){
+            guideLoading=true;StartCoroutine(PrepareMobileGuide(race));return;
+        }
         if(!MobileContent.Active){
             if(DiscardRaceAssets(race)){ClearRacePrefabCaches();SweepRaceAssets();}
             LoadDesktopRace(race);
         }
-        guideRace=race;guideEntry=-1;guideGridScroll=guideTextScroll=Vector2.zero;guideQuery="";guideHistory.Clear();guideGarden.SetActive(false);
-        guideCatalog=JObject.Parse(RaceCatalog(race));guideAuthority=new HumanMatch(guideCatalog);if(guideCamera)guideCamera.enabled=false;if(guideStage)guideStage.SetActive(false);
+        guideRace=race;guideEntry=-1;guideTab=GuideTab.Buildings;
+        guideGridScroll=guideTextScroll=Vector2.zero;guideQuery="";guideHistory.Clear();
+        guideActors.Clear();
+        guideAuthority=new HumanMatch(JObject.Parse(RaceCatalog(race)));
     }
-    IEnumerable<int> GuideEntries()=>Enumerable.Range(0,guideAuthority.Lines.Length).Where(i=>guideAuthority.Lines[i].category!="summon"&&guideAuthority.Lines[i].category!="helper"&&guideAuthority.Lines[i].cost>0&&((guideAuthority.Lines[i].name+" "+guideAuthority.Lines[i].unitName).IndexOf(guideQuery,StringComparison.OrdinalIgnoreCase)>=0));
-    GameObject GuidePrefab(int kind,bool unit)=>CatalogModel(guideRace,0,kind,guideAuthority.Lines[kind].building,!unit);
-    int[] GuideUnitKinds(int kind){if(GuidePrefab(kind,true))return new[]{kind};if(guideAuthority.Lines[kind].unit=="e00E")return Enumerable.Range(0,guideAuthority.Lines.Length).Where(k=>new[]{"n02K","n02L"}.Contains(guideAuthority.Lines[k].unit)&&GuidePrefab(k,true)).ToArray();return new int[0];}
+
+    IEnumerable<int> GuideEntries(){
+        for(int i=0;i<guideAuthority.Lines.Length;i++){
+            var line=guideAuthority.Lines[i];
+            if(line.category=="summon"||line.category=="helper"||line.cost<=0)continue;
+            if(guideTab==GuideTab.Units&&GuideUnitKinds(i).Length==0)continue;
+            if(guideTab==GuideTab.Specials&&line.Producer&&line.slots==0)continue;
+            if((line.name+" "+line.unitName).IndexOf(guideQuery,StringComparison.OrdinalIgnoreCase)<0)continue;
+            yield return i;
+        }
+    }
+
+    int[] GuideUnitKinds(int kind){
+        if(kind<0||kind>=guideAuthority.Lines.Length)return Array.Empty<int>();
+        if(guideActors.TryGetValue(kind,out var actors))return actors;
+        var line=guideAuthority.Lines[kind];
+        actors=line.unit=="e00E"?Enumerable.Range(0,guideAuthority.Lines.Length)
+            .Where(k=>guideAuthority.Lines[k].unit=="n02K"||guideAuthority.Lines[k].unit=="n02L").ToArray():
+            !line.Producer||line.hp<=0?Array.Empty<int>():new[]{kind};
+        guideActors[kind]=actors;
+        return actors;
+    }
+
     int GuideActorKind=>guideUnit?GuideUnitKinds(guideEntry)[guideActorIndex]:guideEntry;
     Texture2D GuideIcon(int kind)=>HdIcon(CatalogBuildingIcon(guideRace,kind,guideAuthority.Lines[kind].building));
-    void GuideSelectEntry(int kind,bool remember=false){if(remember&&guideEntry>=0)guideHistory.Push(guideEntry);guideEntry=kind;guideTextScroll=Vector2.zero;guideActorIndex=0;guideUnit=GuideUnitKinds(kind).Length>0;GuideRefreshPreview();}
-    void GuideBack(){
-        if(guideEntry>=0&&guideHistory.Count>0){int previous=guideHistory.Pop();GuideSelectEntry(previous);return;}
-        if(guideEntry>=0){guideEntry=-1;if(guideCamera)guideCamera.enabled=false;if(guideStage)guideStage.SetActive(false);return;}
-        if(guideRace>=0){guideRace=-1;guideOpened=1.25f;if(guideModel){Destroy(guideModel.gameObject);guideModel=null;}guideCatalog=null;guideAuthority=null;guideGarden.SetActive(true);ReleaseIdleRaceAssets(true);return;}MainMenu();
+    Texture2D GuideUnitIcon(int kind){
+        var actor=guideAuthority.Lines[kind].unit;
+        var icon=HdModels.Icon(ReforgedModelPack.IconAddress("Unit-"+actor));
+        if(icon)return icon;
+        icon=ContentResources.Load<Texture2D>("NerubianUnitIcon/"+actor);
+        if(icon)return icon;
+        if(guideRace==0&&kind<unitIcons.Length)icon=unitIcons[kind];
+        if(guideRace==PepeContent.Race)icon=PepeContent.FighterIcon(actor);
+        if(guideRace==15)icon=CentaurUnitIcon(actor);
+        if(guideRace==BlackHand.Race)icon=BlackHandUi.Fighter(actor);
+        return icon?icon:GuideIcon(kind);
     }
-    void GuideRefreshPreview(){
-        if(guideModel){guideModel.gameObject.SetActive(false);Destroy(guideModel.gameObject);}if(!guideStage)guideStage=new GameObject("Guide isolated preview");guideStage.SetActive(true);guideStage.transform.position=new Vector3(0,-5000,0);
-        if(!guideTexture){guideTexture=new RenderTexture(640,560,16,RenderTextureFormat.ARGB32){name="Guide live classic model",antiAliasing=1};guideTexture.Create();}
-        if(!guideCamera){var obj=new GameObject("Guide preview camera");obj.transform.SetParent(guideStage.transform,false);guideCamera=obj.AddComponent<Camera>();guideCamera.clearFlags=CameraClearFlags.SolidColor;guideCamera.backgroundColor=new Color(.035f,.052f,.06f);guideCamera.targetTexture=guideTexture;guideCamera.cullingMask=1<<30;guideCamera.fieldOfView=32;guideCamera.nearClipPlane=.05f;guideCamera.farClipPlane=2000;guideCamera.allowHDR=false;guideCamera.allowMSAA=false;
-            var lightObj=new GameObject("Guide soft key light");lightObj.transform.SetParent(guideStage.transform,false);var light=lightObj.AddComponent<Light>();light.type=LightType.Directional;light.intensity=.8f;light.shadows=LightShadows.None;light.cullingMask=1<<30;lightObj.transform.rotation=Quaternion.Euler(35,-35,0);
-            if(!guideLayerReserved){guideMainMask=Camera.main.cullingMask;Camera.main.cullingMask&=~(1<<30);guideLayerReserved=true;}
-        }
-        guideModel=Instantiate(GuidePrefab(GuideActorKind,guideUnit),guideStage.transform).GetComponent<PcModel>();guideModel.transform.localPosition=Vector3.zero;guideModel.transform.localRotation=Quaternion.identity;guideModel.Play("Stand");guideModel.SamplePose();
-        guideAngle=guideRace==PepeContent.Race?142:guideRace==15?180:0;
-        guideModel.transform.localRotation=Quaternion.Euler(0,guideAngle,0);guideModel.SamplePose();
-        foreach(var t in guideModel.GetComponentsInChildren<Transform>(true))t.gameObject.layer=30;
-        var bounds=guideModel.BodyBounds();Vector3 anchor=guideStage.transform.position;guideModel.transform.position-=bounds.center-anchor;
-        float radius=Mathf.Max(.4f,bounds.extents.magnitude);
-        bool wingedRider=guideRace==PepeContent.Race&&(guideModel.raw=="pU04"||guideModel.raw=="pU17");
-        float distance=radius/Mathf.Sin(guideCamera.fieldOfView*Mathf.Deg2Rad*.5f)*(wingedRider?1.75f:guideRace==PepeContent.Race?1.45f:1.12f);
-        guideCamera.transform.position=anchor+new Vector3(0,wingedRider?distance*.38f:radius*.14f,-distance);
-        guideCamera.transform.LookAt(anchor);guideCamera.farClipPlane=Mathf.Max(50,distance+radius*4);guideCamera.enabled=true;
+
+    void GuideSelectEntry(int kind,bool remember=false){
+        if(kind<0||kind>=guideAuthority.Lines.Length)return;
+        if(remember&&guideEntry>=0)guideHistory.Push(guideEntry);
+        else if(!remember)guideHistory.Clear();
+        guideEntry=kind;guideTextScroll=Vector2.zero;guideActorIndex=0;
+        guideUnit=guideTab!=GuideTab.Specials&&GuideUnitKinds(kind).Length>0;
         guideDescription=GuideEntryText();
     }
+
+    void GuideBack(){
+        CloseAccountKeyboard();
+        if(guideEntry>=0&&guideHistory.Count>0){
+            int previous=guideHistory.Pop();guideEntry=previous;guideActorIndex=0;
+            guideUnit=guideTab!=GuideTab.Specials&&GuideUnitKinds(previous).Length>0;
+            guideTextScroll=Vector2.zero;guideDescription=GuideEntryText();return;
+        }
+        if(guideEntry>=0){guideEntry=-1;return;}
+        if(guideRace>=0){CloseGuide();ReleaseIdleRaceAssets(true);return;}
+        MainMenu();
+    }
+
     int GuideInvestment(int kind,HashSet<int> seen=null){seen=seen??new HashSet<int>();if(!seen.Add(kind))return 0;var line=guideAuthority.Lines[kind];int parent=Array.FindIndex(guideAuthority.Lines,l=>l.upgrades.Contains(line.building));return line.cost+(parent>=0?GuideInvestment(parent,seen):0);}
     JToken GuideSkillConfig(int kind,string id,JToken cfg){
         var ranks=cfg?["ranks"] as JArray;if(ranks==null||ranks.Count==0)return cfg;
@@ -85,7 +134,7 @@ public sealed partial class PcGame {
     }
     string GuideEntryText(){
         var line=guideAuthority.Lines[guideEntry];var actor=guideAuthority.Lines[GuideActorKind];var stats=guideUnit?actor.stats:line.buildingStats;var text=new StringBuilder();
-        text.Append(guideUnit?actor.unitName:line.name).Append("\n\n");
+        text.Append("Характеристики\n");
         text.Append("Здоровье: ").Append(HumanMatch.F(stats,"hp").ToString("F0"));float mana=HumanMatch.F(stats,"max_mana");if(mana>0)text.Append("  ·  Мана: ").Append(mana.ToString("F0"));
         text.Append("\nБроня: ").Append(HumanMatch.F(stats,"armor").ToString("F0")).Append(" · ").Append(ArmorLabel((string)stats["armor_type"]??"fortified"));
         float speed=HumanMatch.F(stats,"speed");if(speed>0)text.Append("\nСкорость: ").Append((speed*30).ToString("F0"));
@@ -98,44 +147,186 @@ public sealed partial class PcGame {
         return text.ToString();
     }
     void DrawGuide(){
-        EnsureRaceStyles();AtlasSurface(new Rect(16,18,1248,76));
-        if(Button("guide.back",new Rect(30,34,202,43),guideRace<0?"← В меню":guideEntry<0?"← К строителям":"← Назад"))GuideBack();
-        Text(260,28,760,51,guideRace<0?"Учебник Castle Fight":GuideRaceName(guideRace),atlasTitle);
-        if(Button("guide.menu",new Rect(1088,34,162,43),"Главное меню"))MainMenu();
-        if(guideRace<0){
-            Text(280,108,780,32,"Выберите строителя — откроется книга его расы",label);
-            for(int race=0;race<guideBuilders.Count;race++){var model=guideBuilders[race];var p=Camera.main.WorldToScreenPoint(model.transform.position+Vector3.up*.2f);if(p.z<0)continue;Vector2 at=GuiPoint(new Vector2(p.x,p.y));
-                if(Button("guide.race."+race,new Rect(at.x-89,at.y+12,178,39),GuideRaceName(race),false,new GUIStyle(menuButton){fontSize=14,wordWrap=true,alignment=TextAnchor.MiddleCenter,padding=new RectOffset(4,4,2,2)})){GuideChooseRace(race);break;}
-                var screen=Camera.main.WorldToScreenPoint(model.transform.position+Vector3.up*2.3f);var hit=GuiPoint(new Vector2(screen.x,screen.y));if(Event.current.type==EventType.MouseDown&&Event.current.button==0&&new Rect(hit.x-32,hit.y-44,64,88).Contains(Event.current.mousePosition)){GuideChooseRace(race);Event.current.Use();break;}
+        PrepareCampaignArtwork();EnsureCampaignStyles();EnsureRaceStyles();DrawMenuBackground();DrawAtlasHeader();
+        if(page!=Page.Guide)return;
+        if(guideCardName==null){
+            guideCardName=new GUIStyle(label){fontSize=17,alignment=TextAnchor.MiddleLeft,wordWrap=true,padding=new RectOffset()};
+            guideCardInfo=new GUIStyle(small){fontSize=14,alignment=TextAnchor.MiddleLeft,padding=new RectOffset()};
+            guideLore=new GUIStyle(label){fontSize=18,wordWrap=true,padding=new RectOffset(),alignment=TextAnchor.UpperLeft};
+        }
+        AtlasSurface(new Rect(35,73,1210,623),true);
+        Text(63,87,860,56,guideRace<0?"Учебник рас":GuideRaceName(guideRace),atlasTitle);
+        if(Button("guide.back",new Rect(1019,93,194,43),guideRace<0?"← В меню":guideEntry<0?"← К расам":"← Назад")){GuideBack();return;}
+        Accent(65,148,1145);
+        if(guideRace<0)DrawGuideRaces();else DrawGuideBook();
+    }
+
+    void DrawGuideRaces(){
+        int featured=RaceStaged(raceChoice)?raceChoice:0;
+        for(int i=0;i<AllRaceUnity.Length;i++){
+            int race=AllRaceUnity[i];
+            var card=new Rect(63+i%6*125,173+i/6*163,114,150);
+            bool hovered=GUI.enabled&&card.Contains(Event.current.mousePosition);
+            DrawGuideRaceCard(card,i,hovered);
+            bool enabled=GUI.enabled;
+            GUI.enabled=enabled&&!guideLoading&&RaceStaged(race);
+            if(Button("guide.race."+race,card,"",false,GUIStyle.none)){GuideChooseRace(race);GUI.enabled=enabled;return;}
+            GUI.enabled=enabled;
+        }
+        DrawGuideRaceFeature(new Rect(826,173,388,477),featured,true);
+    }
+
+    void DrawGuideRaceCard(Rect card,int index,bool hovered){
+        AtlasTile(card,false,hovered);
+        var emblem=RaceEmblemAt(index);
+        if(emblem)GUI.DrawTexture(new Rect(card.center.x-38,card.y+10,76,76),emblem,ScaleMode.ScaleToFit);
+        var name=new GUIStyle(guideCardName){fontSize=15,alignment=TextAnchor.MiddleCenter};
+        var measure=new GUIStyle(name){wordWrap=false};
+        string title=AllRaceNames[index];
+        while(name.fontSize>12&&title.Split(' ').Any(word=>measure.CalcSize(new GUIContent(word)).x>card.width-14))
+            measure.fontSize=--name.fontSize;
+        Text(card.x+7,card.y+89,card.width-14,53,title,name);
+    }
+
+    Texture2D GuideArtworkFor(int race){
+        if(guideArtworkRace==race)return guideArtwork;
+        if(guideArtwork)Destroy(guideArtwork);
+        guideArtwork=null;guideArtworkRace=race;
+        string resource="GuidePortraits/"+VersusKeys[race];
+        if(!MobileContent.Active)FrontendTexture(ref guideArtwork,resource+".jpg");
+        if(!guideArtwork){
+            var encoded=Resources.Load<TextAsset>(resource);
+            if(encoded){
+                var picture=new Texture2D(2,2,TextureFormat.RGB24,false){name=resource,wrapMode=TextureWrapMode.Clamp};
+                if(picture.LoadImage(encoded.bytes,true))guideArtwork=picture;else Destroy(picture);
+                Resources.UnloadAsset(encoded);
             }
-            Fill(new Rect(300,655,680,38),new Color(.025f,.04f,.045f,.85f));Text(320,659,640,28,guideBuilders.Count+" рас · классические модели · характеристики и улучшения",small);return;
         }
-        if(guideEntry<0){DrawGuideGrid();return;}
-        DrawGuideEntry();
+        return guideArtwork;
     }
-    void DrawGuideGrid(){
-        AtlasSurface(new Rect(24,112,1232,584));Text(42,124,400,36,"Постройки и башни",raceTitleStyle);
-        Text(680,128,100,30,"Поиск",small);guideQuery=GUI.TextField(new Rect(780,125,452,34),guideQuery,new GUIStyle(GUI.skin.textField){font=label.font,fontSize=18});
-        var entries=GuideEntries().ToArray();guideGridScroll=GUI.BeginScrollView(new Rect(40,176,1200,504),guideGridScroll,new Rect(0,0,1176,Mathf.Ceil(entries.Length/6f)*153));
-        for(int i=0;i<entries.Length;i++){int kind=entries[i];var line=guideAuthority.Lines[kind];float x=i%6*196,y=i/6*153;var card=new Rect(x,y,184,141);
-            bool click=Button("guide.entry."+line.building,card,"");var icon=GuideIcon(kind);if(icon)GUI.DrawTexture(new Rect(x+62,y+9,60,60),icon,ScaleMode.ScaleToFit);
-            GUI.Label(new Rect(x+8,y+73,168,41),line.name,new GUIStyle(small){alignment=TextAnchor.UpperCenter,wordWrap=true});GUI.Label(new Rect(x+8,y+117,168,20),line.cost+" зол."+(line.woodCost>0?" · "+line.woodCost+" дер.":""),new GUIStyle(small){alignment=TextAnchor.MiddleCenter});if(click){GuideSelectEntry(kind);break;}
+
+    void DrawGuideRaceFeature(Rect rect,int race,bool openButton){
+        AtlasSurface(rect);
+        const float pictureWidth=366;
+        var art=new Rect(rect.x+11,rect.y+11,pictureWidth,pictureWidth*2/3);
+        var painting=GuideArtworkFor(race);
+        Fill(art,AtlasInk);
+        if(painting)GUI.DrawTexture(art,painting,ScaleMode.ScaleToFit);
+        else AtlasScene(3,art);
+        Border(art,AtlasEdge);
+        var emblem=RaceEmblem(race);
+        var details=openButton?new Rect(rect.x+23,art.yMax+8,rect.width-46,rect.yMax-art.yMax-73):
+            new Rect(art.xMax+19,rect.y+22,rect.xMax-art.xMax-33,rect.height-45);
+        float nameX=openButton?details.x+78:details.x;
+        float nameY=openButton?details.y:details.y+77;
+        if(emblem)GUI.DrawTexture(new Rect(details.x,details.y,69,69),emblem,ScaleMode.ScaleToFit);
+        Text(nameX,nameY,details.xMax-nameX,71,GuideRaceName(race),raceTitleStyle);
+        float summary=nameY+73;
+        DrawRaceDescription(new Rect(details.x,summary,details.width,details.yMax-summary),
+            AllRaceLore[RaceOfUnity(race)],guideLore,ref guideTextScroll);
+        if(openButton&&Button("guide.feature",new Rect(rect.x+23,rect.yMax-55,rect.width-46,42),"Открыть записи",true))
+            GuideChooseRace(race);
+    }
+
+    void DrawGuideBook(){
+        string[] tabs={"Постройки","Существа","Особые","Аспекты"};
+        float[] cuts={62,207,329,451,573};
+        for(int i=0;i<tabs.Length;i++){
+            if(!Button("guide.tab."+i,new Rect(cuts[i],169,cuts[i+1]-cuts[i]-9,44),tabs[i],(int)guideTab==i)||(int)guideTab==i)continue;
+            CloseAccountKeyboard();guideTab=(GuideTab)i;guideEntry=-1;
+            guideHistory.Clear();guideGridScroll=Vector2.zero;guideQuery="";Array.Clear(guideAspectScroll,0,guideAspectScroll.Length);
         }
-        GUI.EndScrollView();if(entries.Length==0)Text(64,230,1000,40,"По этому запросу ничего не найдено.",label);
+        if(guideTab==GuideTab.Aspects){DrawGuideAspects();return;}
+        string before=guideQuery;
+        guideQuery=AccountText("guide.search",new Rect(583,169,629,44),guideQuery,48,false,"Поиск по названиям");
+        if(!Application.isMobilePlatform&&guideQuery==""&&GUI.GetNameOfFocusedControl()!="guide.search")
+            Text(600,170,595,41,"Поиск по названиям",small);
+        if(before!=guideQuery)guideGridScroll=Vector2.zero;
+        DrawGuideList();
+        if(guideEntry<0)DrawGuideRaceFeature(new Rect(584,233,628,420),guideRace,false);
+        else DrawGuideEntry();
     }
+
+    void DrawGuideList(){
+        var entries=GuideEntries().ToArray();
+        var area=GuideListArea;
+        AtlasSurface(area);
+        if(entries.Length==0){Text(77,248,450,41,"Ничего не найдено",label);return;}
+        var viewport=new Rect(area.x+9,area.y+10,area.width-18,area.height-20);
+        guideGridScroll=GUI.BeginScrollView(viewport,guideGridScroll,new Rect(0,0,viewport.width-20,Mathf.Ceil(entries.Length/2f)*GuideRowStep));
+        bool enabled=GUI.enabled;
+        GUI.enabled=enabled&&!(Application.isMobilePlatform&&socialTouchMoved);
+        for(int i=0;i<entries.Length;i++){
+            int kind=entries[i];
+            var line=guideAuthority.Lines[kind];
+            bool units=guideTab==GuideTab.Units;
+            int actor=units?GuideUnitKinds(kind)[0]:kind;
+            var card=new Rect(i%2*230,i/2*GuideRowStep,222,73);
+            AtlasTile(card,guideEntry==kind,GUI.enabled&&card.Contains(Event.current.mousePosition));
+            var icon=units?GuideUnitIcon(actor):GuideIcon(kind);
+            if(icon)GUI.DrawTexture(new Rect(card.x+8,card.y+14,44,44),icon,ScaleMode.ScaleToFit);
+            var nameBox=new Rect(card.x+59,card.y+4,155,45);
+            string name=units?guideAuthority.Lines[actor].unitName:line.name;
+            var cardName=new GUIStyle(guideCardName);
+            while(cardName.fontSize>12&&cardName.CalcHeight(new GUIContent(name),nameBox.width)>nameBox.height)cardName.fontSize--;
+            Text(nameBox.x,nameBox.y,nameBox.width,nameBox.height,name,cardName);
+            string detail=units?GuideRaceName(guideRace):line.cost+" зол."+(line.woodCost>0?" · "+line.woodCost+" дер.":"");
+            Text(card.x+59,card.y+48,155,22,FitAtlasLabel(detail,150,guideCardInfo),guideCardInfo);
+            if(Button("guide.entry."+line.building,card,"",false,GUIStyle.none)){CloseAccountKeyboard();GuideSelectEntry(kind);}
+        }
+        GUI.enabled=enabled;
+        GUI.EndScrollView();
+    }
+
     void DrawGuideEntry(){
-        var line=guideAuthority.Lines[guideEntry];AtlasSurface(new Rect(24,112,604,584));Text(44,128,564,42,line.name,raceTitleStyle);Text(44,173,564,27,guideUnit?"БОЕЦ  /  "+guideAuthority.Lines[GuideActorKind].unitName:"ПОСТРОЙКА",small);
-        var descStyle=new GUIStyle(label){wordWrap=true,fontSize=18};float height=descStyle.CalcHeight(new GUIContent(guideDescription),536)+24;
-        guideTextScroll=GUI.BeginScrollView(new Rect(44,212,564,390),guideTextScroll,new Rect(0,0,536,height));GUI.Label(new Rect(0,0,536,height),guideDescription,descStyle);GUI.EndScrollView();
-        int n=0;foreach(string raw in line.upgrades){int kind=guideAuthority.Kind(raw);if(kind<0)continue;if(Button("guide.upgrade."+raw,new Rect(44+n*188,626,178,46),"Улучшить → "+(n+1),true))GuideSelectEntry(kind,true);n++;}
-        if(n==0)Text(44,632,540,30,"Последняя ступень этой ветки",small);
-        var view=new Rect(648,112,608,500);GUI.DrawTexture(view,guideTexture,ScaleMode.StretchToFill);Border(view,new Color(.36f,.31f,.22f));
-        Text(674,124,560,32,guideUnit?guideAuthority.Lines[GuideActorKind].unitName:line.name,label);Text(674,570,560,28,"Потяните мышью, чтобы повернуть модель",small);
-        if(Event.current.type==EventType.MouseDrag&&view.Contains(Event.current.mousePosition)){guideSpin=false;guideAngle+=Event.current.delta.x*.6f;Event.current.Use();}
-        var actors=GuideUnitKinds(guideEntry);GUI.enabled=actors.Length>0;if(Button("guide.unit",new Rect(648,626,190,46),actors.Length>1?"Боец "+(guideActorIndex+1)+" / "+actors.Length:"Боец",guideUnit)){guideActorIndex=guideUnit?(guideActorIndex+1)%actors.Length:0;guideUnit=true;GuideRefreshPreview();}GUI.enabled=true;
-        if(Button("guide.building",new Rect(848,626,190,46),"Постройка",!guideUnit)){guideUnit=false;GuideRefreshPreview();}
-        if(Button("guide.spin",new Rect(1048,626,208,46),guideSpin?"Пауза вращения":"Вращать модель"))guideSpin=!guideSpin;
+        var line=guideAuthority.Lines[guideEntry];
+        AtlasSurface(new Rect(583,233,629,420));
+        var card=new Rect(606,249,82,82);
+        AtlasTile(card,false,false);
+        var icon=guideUnit?GuideUnitIcon(GuideActorKind):GuideIcon(guideEntry);
+        if(icon)GUI.DrawTexture(new Rect(card.x+6,card.y+6,70,70),icon,ScaleMode.ScaleToFit);
+        Text(705,245,475,58,guideUnit?guideAuthority.Lines[GuideActorKind].unitName:line.name,raceTitleStyle);
+        var actors=GuideUnitKinds(guideEntry);
+        bool enabled=GUI.enabled;
+        GUI.enabled=enabled&&actors.Length>0;
+        if(Button("guide.unit",new Rect(706,301,206,39),
+            actors.Length>1?"Боец "+(guideActorIndex+1)+" / "+actors.Length:"Боец",guideUnit)){
+            guideActorIndex=guideUnit?(guideActorIndex+1)%actors.Length:0;guideUnit=true;
+            guideTextScroll=Vector2.zero;guideDescription=GuideEntryText();
+        }
+        GUI.enabled=enabled;
+        if(Button("guide.building",new Rect(925,301,259,39),"Постройка",!guideUnit)){
+            guideUnit=false;guideTextScroll=Vector2.zero;guideDescription=GuideEntryText();
+        }
+        var area=GuideTextArea;
+        DrawRaceDescription(area,guideDescription,guideLore,ref guideTextScroll);
+        var upgrades=line.upgrades.Select(guideAuthority.Kind).Where(kind=>kind>=0).ToArray();
+        if(upgrades.Length==0)return;
+        float buttonWidth=(area.width-(upgrades.Length-1)*8)/upgrades.Length;
+        for(int i=0;i<upgrades.Length;i++){
+            int kind=upgrades[i];
+            var upgrade=guideAuthority.Lines[kind];
+            string title=FitAtlasLabel(upgrade.name,buttonWidth-29,atlasCompact);
+            if(LobbyButton("guide.upgrade."+upgrade.building,new Rect(area.x+i*(buttonWidth+8),600,buttonWidth,42),"↑ "+title,true))
+                GuideSelectEntry(kind,true);
+        }
     }
+
+    void DrawGuideAspects(){
+        int count=AspectCount(guideRace);
+        if(count==0){Text(65,233,900,48,"У этой расы пока нет аспектов.",label);return;}
+        for(int i=0;i<count;i++){
+            var card=new Rect(61+i*579,233,561,399);
+            AtlasSurface(card,true);
+            var aspect=AspectIcon(guideRace,i);
+            if(aspect)GUI.DrawTexture(new Rect(card.x+22,card.y+30,74,74),aspect,ScaleMode.ScaleToFit);
+            Text(card.x+113,card.y+26,card.width-136,83,AspectField(guideRace,i,"title"),raceTitleStyle);
+            var data=AspectOptions(guideRace)[i];
+            string description=(string)(data["description"]??data["text"])??"";
+            DrawRaceDescription(new Rect(card.x+26,card.y+125,card.width-52,247),description,guideLore,ref guideAspectScroll[i]);
+        }
+    }
+
     void DisposeGuide(){CloseGuide();}
 }
 }

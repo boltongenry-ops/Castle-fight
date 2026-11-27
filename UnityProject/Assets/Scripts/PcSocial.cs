@@ -39,15 +39,17 @@ public sealed partial class PcGame {
     void UpdateSocial(){
         if(socialPending&&Time.realtimeSinceStartup>socialDeadline){socialPending=false;directoryStatus="Сервис профилей не ответил. Повторите запрос";}
         if(socialQueued!=null&&!socialPending&&!profilePending&&Time.realtimeSinceStartup>=socialNext){var next=socialQueued;socialQueued=null;SocialRequest((string)next["action"],next);return;}
-        if(page!=Page.Network||!directoryReady||!HasNetworkProfile||!socialSupported||socialPending||profilePending||showNetworkProfile||showStickerPicker||Time.realtimeSinceStartup<socialDue||Time.realtimeSinceStartup<socialNext)return;
-        socialDue=Time.realtimeSinceStartup+4;
+        if(!directoryReady||!HasNetworkProfile||!socialSupported||socialPending||profilePending||showNetworkProfile||showStickerPicker||Time.realtimeSinceStartup<socialDue||Time.realtimeSinceStartup<socialNext)return;
+        if(RequestAccountAvatar())return;
+        socialDue=Time.realtimeSinceStartup+(AccountOverlayOpen||page==Page.Network?4:12);
         if(!string.IsNullOrEmpty(socialViewed)){SocialRequest("player",new JObject{["peer"]=socialViewed});return;}
         if(socialTab==2&&string.IsNullOrEmpty(socialViewed)&&!string.IsNullOrEmpty(socialPeer))SocialRequest("history",new JObject{["peer"]=socialPeer,["read"]=socialRead});else SocialRequest("state");
     }
     void ReceiveSocial(JObject packet){
-        socialPending=false;socialDue=Time.realtimeSinceStartup+4;string action=(string)packet["action"]??socialRequest;
-        if((bool?)packet["ok"]!=true){directoryStatus=(string)packet["message"]??"Не удалось выполнить запрос";return;}
-        if(packet["friends"] is JArray){socialState=(JObject)packet.DeepClone();directoryStatus="Список друзей обновлён";}
+        socialPending=false;socialDue=Time.realtimeSinceStartup+(AccountOverlayOpen||page==Page.Network?4:12);string action=(string)packet["action"]??socialRequest;
+        if((bool?)packet["ok"]!=true){AccountHub.result=directoryStatus=(string)packet["message"]??"Не удалось выполнить запрос";if(action=="send"&&!AccountOverlayOpen)Notice(directoryStatus);return;}
+        if(action=="avatar"){ReceiveAccountAvatar(packet);socialDue=0;return;}
+        if(packet["friends"] is JArray)socialState=(JObject)packet.DeepClone();
         if(packet["found"] is JArray found){socialFound=found;directoryStatus="Найдено игроков: "+found.Count;}
         if(packet["player"] is JObject player&&(string)player["id"]==socialViewed){socialPlayer=player;socialViewed=(string)player["id"]??"";socialMatches=packet["matches"] as JArray??new JArray();}
         else if(packet["matches"] is JArray matches&&socialTab==3&&string.IsNullOrEmpty(socialViewed))socialMatches=matches;
@@ -60,8 +62,13 @@ public sealed partial class PcGame {
             if(older||socialMessages.Count<=50)socialMore=(bool?)packet["has_more"]??false;if(newer){LoadStickerCatalog();foreach(var m in messages.Where(m=>(long)m["id"]>socialRead&&(string)m["from"]!=(string)networkProfile["id"]&&(string)m["kind"]=="sticker")){var item=stickerPacks.SelectMany(p=>p.items).FirstOrDefault(it=>it.id==(string)m["sticker"]);if(item!=null)PreviewSticker(item);}}if(messages.Count>0)socialRead=Math.Max(socialRead,(long)messages.Last["id"]);if(newer)messageScroll.y=100000;
             if(packet["peer"] is JObject remote)socialPlayer=remote;
         }
-        if(action=="send"){socialDraft="";socialDue=0;directoryStatus="Сообщение доставлено на сервер";}
-        if(new[]{"request","accept","decline","cancel","remove"}.Contains(action)){socialConfirm="";directoryStatus=action=="request"?"Заявка отправлена":action=="accept"?"Игрок добавлен в друзья":"Список обновлён";}
+        if(action=="send"){
+            if((string)packet["sent"]?["kind"]=="text"&&(string)packet["sent"]?["to"]==socialPeer&&
+                (string)packet["sent"]?["text"]==socialDraft.Trim())socialDraft="";
+            socialDue=0;AccountHub.result=directoryStatus=(string)packet["sent"]?["kind"]=="invite"?"Приглашение отправлено":"Сообщение отправлено";
+            if((string)packet["sent"]?["kind"]=="invite"&&!AccountOverlayOpen)Notice(directoryStatus);
+        }
+        if(new[]{"request","accept","decline","cancel","remove"}.Contains(action)){socialConfirm="";socialDue=0;AccountHub.result=directoryStatus=action=="request"?"Заявка отправлена":action=="accept"?"Игрок добавлен в друзья":"Список обновлён";}
     }
     void OpenSocialTab(int tab){socialTab=tab;showNetworkProfile=false;showStickerPicker=false;socialViewed="";socialConfirm="";socialScroll=Vector2.zero;socialDue=0;showPeerMedals=false;if(tab==3&&HasNetworkProfile){socialMatches=new JArray();socialNickname=(string)networkProfile["name"]??"";SocialRequest("matches");}}
     void OpenPlayer(string id){if(string.IsNullOrEmpty(id))return;if(id==(string)networkProfile?["id"]){OpenSocialTab(3);return;}socialViewed=id;socialPlayer=null;showPeerMedals=false;socialMatches=new JArray();matchScroll=Vector2.zero;SocialRequest("player",new JObject{["peer"]=id});}
@@ -147,10 +154,21 @@ public sealed partial class PcGame {
     static string MessageSummary(JToken message)=>message==null?"":(string)message["kind"]=="sticker"?"Стикер":(string)message["kind"]=="invite"?"Приглашение в комнату":((string)message["text"]??"").Replace("\n"," ");
     void DrawSocialPlayer(bool own){
         JObject player=own?networkProfile:socialPlayer;if(player==null){Text(70,230,1050,70,socialPending?"Загружаем профиль…":"Профиль не найден. Повторите запрос.",label);if(LobbyButton("player.retry",new Rect(42,145,300,48),"← Назад"))socialViewed="";return;}
-        LobbyPanel(new Rect(42,145,1196,214));int wins=(int?)player["wins"]??0,rank=RankIndex(wins);RankImage(new Rect(55,157,158,170),wins);
+        LobbyPanel(new Rect(42,145,1196,214));int wins=(int?)player["wins"]??0,rank=RankIndex(wins);
+        var image=AccountAvatar(player);
+        if(image){GUI.DrawTexture(new Rect(66,170,130,130),image,ScaleMode.ScaleToFit);RankImage(new Rect(147,258,59,70),wins);}
+        else RankImage(new Rect(55,157,158,170),wins);
         Text(230,162,650,40,(string)player["name"]??"Игрок",heading);Text(232,211,650,31,RankNames[rank]+" · "+wins+" побед / "+((int?)player["games"]??0)+" игр",label);
-        Text(232,250,650,29,own?"Ваш сетевой ранг общий с Godot-версией":PeerStatus(player),small);Text(232,283,650,23,rank<5?"Следующий ранг: "+RankNames[rank+1]+" · ещё "+Mathf.Max(0,RankThresholds[rank+1]-wins)+" побед":"Достигнут высший ранг",small);
-        if(!own){if(LobbyButton("player.back",new Rect(954,159,264,46),"← Назад")){socialViewed="";socialDue=0;}bool friend=((socialState["friends"] as JArray)??new JArray()).Any(f=>(string)f["id"]==socialViewed);if(LobbyButton("player.message",new Rect(954,217,264,48),friend?"Написать":"Добавить в друзья",true)){if(friend)OpenConversation(socialViewed);else SocialRequest("request",new JObject{["peer"]=socialViewed});}if(friend&&LobbyButton("player.remove",new Rect(954,277,264,48),socialConfirm==socialViewed?"Подтвердить удаление":"Удалить из друзей")){if(socialConfirm==socialViewed)SocialRequest("remove",new JObject{["peer"]=socialViewed});else socialConfirm=socialViewed;}}
+        Text(232,250,650,29,own?"Ваш сетевой ранг общий с Godot-версией":AccountPeerStatus(player),small);Text(232,283,650,27,rank<5?"Следующий ранг: "+RankNames[rank+1]+" · ещё "+Mathf.Max(0,RankThresholds[rank+1]-wins)+" побед":"Достигнут высший ранг",small);
+        if(!own){
+            if(LobbyButton("player.back",new Rect(954,159,264,46),"← Назад")){socialViewed="";socialDue=0;return;}
+            bool friend=((socialState["friends"] as JArray)??new JArray()).Any(f=>(string)f["id"]==socialViewed);
+            if(LobbyButton("player.message",new Rect(954,217,264,48),"Написать",true)){OpenOverlayConversation(player);return;}
+            if(!friend&&LobbyButton("player.add",new Rect(954,277,264,48),"Добавить в друзья"))SocialRequest("request",new JObject{["peer"]=socialViewed});
+            if(friend&&LobbyButton("player.remove",new Rect(954,277,264,48),socialConfirm==socialViewed?"Подтвердить удаление":"Удалить из друзей")){
+                if(socialConfirm==socialViewed)SocialRequest("remove",new JObject{["peer"]=socialViewed});else socialConfirm=socialViewed;
+            }
+        }
         else{if(LobbyButton("player.account",new Rect(954,161,264,48),"Управление аккаунтом"))showNetworkProfile=true;}
         string playerId=(string)player["id"]??"";
         if(LobbyButton("player.medals",new Rect(620,305,310,42),showPeerMedals?"История матчей":"Достижения",showPeerMedals)){

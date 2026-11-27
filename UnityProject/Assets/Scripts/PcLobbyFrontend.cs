@@ -38,7 +38,7 @@ public sealed partial class PcGame {
                     networkProductionSync=(int?)packet["production_sync"]==1;
                     socialSupported=(int?)packet["social_supported"]==1;directoryRooms=packet["rooms"] as JArray??new JArray();directoryReady=true;directoryLoading=false;directoryCanCreate=(bool?)packet["can_create"]??false;
                     networkServerRaces=packet["races"] is JArray roster?roster.Select(row=>(string)row).Where(name=>!string.IsNullOrEmpty(name)).ToArray():null;
-                    if(!HasNetworkProfile&&!profilePending&&!string.IsNullOrEmpty(networkSessionToken)&&NetworkAccountStore.SameService(networkSessionEndpoint,connectedEndpoint)&&(!networkGuest||showNetworkProfile)){profilePending=true;SendNetwork(new JObject{["type"]="profile_auth",["action"]="token",["token"]=networkSessionToken});}
+                    TryAccountAuthentication();
                     directoryStatus=profilePending?"Проверяем сохранённый вход…":"Подключено · открытых игр: "+directoryRooms.Count;break;
                 case "joined":ResetBattleSocial();networkProductionSync=(int?)packet["production_sync"]==1;recoveryToken=(string)packet["resume_token"]??"";networkSlot=(int?)packet["slot"]??-1;directoryStatus="Вы в комнате";break;
                 case "lobby":networkRoom=packet;roomMessages=(JArray)(packet["messages"]?.DeepClone()??new JArray());break;
@@ -56,15 +56,18 @@ public sealed partial class PcGame {
                         networkSessionEndpoint=connectedEndpoint;
                         rememberedAccountName="";
                     }
-                    if(signedOut||request=="profile_auth"&&!succeeded&&(string)packet["action"]=="token")ClearAccountIdentity();
+                    bool tokenRejected=request=="profile_auth"&&!succeeded&&(string)packet["action"]=="token"&&directoryStatus.StartsWith("Сессия истекла",StringComparison.Ordinal);
+                    if(signedOut||tokenRejected)ClearAccountIdentity();
                     if(succeeded){
                         if(!signedOut&&packet["profile"] is JObject updated)ApplyAccountProfile(updated);
                         if(signedIn||signedOut)ProfileAuthChanged();
                         if(networkEntryAccount&&HasNetworkProfile){
-                            networkEntryAccount=false;showNetworkProfile=false;networkGuest=false;
+                            networkEntryAccount=false;showNetworkProfile=false;
                         }
                         socialDue=0;
-                    }break;
+                    }
+                    ReceiveAccountOperation(request,packet);
+                    break;
                 case "error":directoryStatus=(string)packet["message"]??"Ошибка сервера";Debug.LogWarning("CF_NETWORK_SERVER_ERROR "+directoryStatus);if(onlineMatch)Notice(directoryStatus);break;
                 case "room_closed":directoryStatus=(string)packet["message"]??"Комната закрыта";if(onlineMatch){string reason=directoryStatus;NetworkReturnToMenu();Notice(reason);}else{networkSlot=-1;networkRoom=null;}break;
                 case "resumed":case "connection_hold":case "connection_restored":case "resume_rejected":RecoveryPacket(packet);break;
@@ -84,17 +87,22 @@ public sealed partial class PcGame {
         if(!HasNetworkProfile)return;
         rememberedAccountName=(string)profile["name"]??"";
         if(rememberedAccountName.Length>0)networkName=rememberedAccountName;
-        networkGuest=false;
-        if(!testing)NetworkAccountStore.Save(networkSessionEndpoint,networkSessionToken,rememberedAccountName);
+        networkGuest=(bool?)profile["guest"]==true;
+        if((string)profile["id"]!=AccountHub.owner){AccountHub.owner=(string)profile["id"]??"";AccountHub.activity="";}
+        if(!testing){
+            if(NetworkAccountStore.GuestMode!=networkGuest)NetworkAccountStore.SelectMode(networkGuest);
+            NetworkAccountStore.Save(networkSessionEndpoint,networkSessionToken,rememberedAccountName,networkGuest);
+        }
     }
 
     void ClearAccountIdentity(){
         networkProfile=null;
+        AccountHub.owner="";AccountHub.activity="";CloseAccountOverlay();
         networkSessionToken=rememberedAccountName="";
-        if(!testing)NetworkAccountStore.Clear();
+        if(!testing)NetworkAccountStore.Clear(networkGuest);
     }
 
-    async void SendNetwork(JObject packet){if(((string)packet["type"]??"").StartsWith("profile_")&&(string)packet["type"]!="profile_social")profileDeadline=Time.realtimeSinceStartup+18;try{if(network!=null)await network.SendAsync(packet);}catch(Exception e){directoryStatus="Ошибка отправки: "+e.GetBaseException().Message;}}
+    async void SendNetwork(JObject packet){if(profilePending&&((string)packet["type"]??"").StartsWith("profile_")&&(string)packet["type"]!="profile_activity")profileDeadline=Time.realtimeSinceStartup+18;try{if(network!=null)await network.SendAsync(packet);}catch(Exception e){directoryStatus="Ошибка отправки: "+e.GetBaseException().Message;}}
     void StopDirectory() {
         CloseVersus();showNetworkRacePicker=false;networkLoadError="";failedNetworkLoad=null;networkSight.Clear();networkUnitCards.Clear();networkBuildingCards.Clear();RestoreOfflineNetworkSetup();
         ResetRecovery();ResetSocial();var previous=network;network=null;connectedEndpoint="";directoryLoading=false;directoryReady=false;directoryCanCreate=false;networkSlot=-1;networkRoom=null;networkProfile=null;profilePending=false;showNetworkProfile=false;showStickerPicker=false;profilePassword="";directoryRooms=new JArray();roomMessages=new JArray();
@@ -104,7 +112,7 @@ public sealed partial class PcGame {
         if(directoryLoading)return;
         if(network!=null&&network.Connected&&connectedEndpoint==directoryEndpoint.Trim()){SendNetwork(PcNetworkClient.Handshake("browse","",networkName,networkRaceNames[networkRace]));return;}
         if(!Uri.TryCreate(directoryEndpoint.Trim(),UriKind.Absolute,out var uri)){directoryStatus="Введите адрес сервера wss:// или локальный ws://";return;}
-        networkProfile=null;ResetSocial();network?.Dispose();network=new PcNetworkClient();connectedEndpoint=directoryEndpoint.Trim();directoryLoading=true;directoryDeadline=Time.realtimeSinceStartup+15;directoryReady=false;directoryStatus="Подключение к серверу…";directoryRooms=new JArray();
+        networkProfile=null;ResetSocial();AccountHub.guestAttempted=false;network?.Dispose();network=new PcNetworkClient();connectedEndpoint=directoryEndpoint.Trim();directoryLoading=true;directoryDeadline=Time.realtimeSinceStartup+15;directoryReady=false;directoryStatus="Подключение к серверу…";directoryRooms=new JArray();
         _=network.ConnectAsync(uri);
     }
     void OpenNetwork(){
@@ -132,12 +140,13 @@ public sealed partial class PcGame {
 
     void ContinueNetworkAsGuest(){
         CloseAccountKeyboard();
+        StopDirectory();
         profilePassword="";
-        networkGuest=true;
+        RestoreAccountMode(true);
+        if(!testing)NetworkAccountStore.SelectMode(true);
         networkEntryAccount=false;
         showNetworkProfile=false;
-        if(profilePending)StopDirectory();
-        if(!directoryReady)BeginDirectory();
+        BeginDirectory();
     }
     void EnterRoom(string action,string code) {
         if(MobileContent.Active){StartCoroutine(PrepareMobileRoom(action,code));return;}
@@ -171,12 +180,13 @@ public sealed partial class PcGame {
         bool joined=networkSlot>=0&&networkRoom!=null;
         Text(42,23,580,47,joined?"Игровая комната":"Сетевая игра",atlasTitle);
         if(showNetworkProfile){DrawNetworkProfile();return;}
+        if(HasNetworkProfile)DrawFriendsShortcut(new Rect(627,24,49,44));
         if((joined||socialTab>0)&&LobbyButton("network.profile",new Rect(690,24,184,44),"Профиль")){
             if(HasNetworkProfile)OpenSocialTab(3);
             else{profileName="";showNetworkProfile=true;}
         }
         if(joined&&LobbyButton("network.leave",new Rect(887,24,184,44),"К списку игр")){StopDirectory();BeginDirectory();}
-        if(LobbyButton("network.back",new Rect(1084,24,154,44),"В меню")){StopDirectory();page=Page.Main;}
+        if(LobbyButton("network.back",new Rect(1084,24,154,44),"В меню"))ExitNetworkToMenu();
         DrawSocialTabs();
         Fill(new Rect(20,684,1240,30),AtlasInk);Text(44,684,1160,28,directoryStatus,small);
         if(showStickerPicker){DrawStickerPicker();return;}
@@ -298,16 +308,26 @@ public sealed partial class PcGame {
             if(Button("profile.login",new Rect(380,416,235,43),"Войти",true))AuthenticateProfile("login");
             if(Button("profile.register",new Rect(630,416,250,43),"Создать аккаунт"))AuthenticateProfile("register");GUI.enabled=true;
         } else {
-            Text(380,246,500,36,(string)networkProfile["name"]??"Игрок",heading);Text(380,282,500,25,"Логин: "+((string)networkProfile["login"]??(string)networkProfile["name"]),small);
-            Text(380,307,500,70,"Сеть: "+((int?)networkProfile["wins"]??0)+" побед / "+((int?)networkProfile["games"]??0)+" игр\nЖетоны: "+((int?)networkProfile["coins"]??0),label);
-            GUI.enabled=!profilePending&&!socialPending&&Time.realtimeSinceStartup>=socialNext;if(Button("profile.logout",new Rect(380,416,500,43),"Выйти из аккаунта")){profilePending=true;SendNetwork(new JObject { ["type"]="profile_logout" });}GUI.enabled=true;
+            Text(380,232,500,34,networkGuest?"Гостевой аккаунт · ключ хранится на устройстве":"Логин · "+((string)networkProfile["login"]??(string)networkProfile["name"]),label);
+            Text(380,271,500,30,"Победы в сети · "+((int?)networkProfile["wins"]??0)+" / "+((int?)networkProfile["games"]??0)+"   |   Жетоны · "+AccountCoins,small);
+            Text(380,319,110,41,"Ник",label);
+            if(string.IsNullOrEmpty(socialNickname))socialNickname=(string)networkProfile["name"]??"";
+            socialNickname=AccountText("account.nickname",new Rect(487,319,393,43),socialNickname,24,false,"Ник");
+            GUI.enabled=!profilePending&&!socialPending&&Time.realtimeSinceStartup>=socialNext&&networkSlot<0;
+            if(Button("profile.logout",new Rect(380,415,241,43),networkGuest?"Войти в аккаунт":"Выйти из аккаунта")){
+                if(networkGuest){SwitchFromGuest();GUI.enabled=true;return;}
+                profilePending=true;SendNetwork(new JObject{["type"]="profile_logout"});
+            }
+            if(Button("profile.rename",new Rect(635,415,245,43),"Сохранить ник",true)){CloseAccountKeyboard();profilePending=true;SendNetwork(new JObject{["type"]="profile_update",["nickname"]=socialNickname.Trim()});}
+            GUI.enabled=true;
         }
         Text(380,478,500,38,directoryStatus,small);
         if(!HasNetworkProfile&&!directoryReady&&!directoryLoading&&!profilePending&&
             LobbyButton("profile.retry",new Rect(380,263,500,30),"Подключиться снова"))BeginDirectory();
         bool entry=WaitingForNetworkAccount;
-        if(entry&&Button("profile.guest",new Rect(380,542,318,40),"Играть гостем"))ContinueNetworkAsGuest();
-        if(Button("profile.close",new Rect(entry?716:380,542,entry?164:500,40),entry?"В меню":"Закрыть"))CloseNetworkAccount();
+        bool offerGuest=!HasNetworkProfile&&!networkGuest;
+        if(offerGuest&&Button("profile.guest",new Rect(380,542,318,40),"Играть гостем"))ContinueNetworkAsGuest();
+        if(Button("profile.close",new Rect(offerGuest?716:380,542,offerGuest?164:500,40),entry?"В меню":"Закрыть"))CloseNetworkAccount();
     }
     IEnumerator ExerciseNetworkLobby(string folder) {
         yield return Action("network.create");float until=Time.realtimeSinceStartup+12;

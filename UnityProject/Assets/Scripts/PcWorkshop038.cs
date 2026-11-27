@@ -81,7 +81,7 @@ public sealed partial class PcGame {
     List<JObject> WorkshopItems(){
         var state=Workshop;
         return ((JArray)progression.Catalog["items"]).OfType<JObject>()
-            .Where(row=>WorkshopInCategory(row,state.category)&&(!state.collection||progression.Owned((string)row["id"]))).ToList();
+            .Where(row=>WorkshopInCategory(row,state.category)&&(!state.collection||AccountOwns((string)row["id"]))).ToList();
     }
 
     void DrawWorkshopBleed(){
@@ -105,7 +105,7 @@ public sealed partial class PcGame {
         AtlasSurface(new Rect(19,14,1233,74));
         Text(38,15,590,52,"Мастерская",state.title);
         WorkshopCoin(new Rect(681,26,38,38));
-        Text(731,24,189,42,progression.Coins+" жетонов",state.details);
+        Text(731,24,189,42,AccountCoins+" жетонов",state.details);
         if(Button("progress.challenges",new Rect(925,21,148,48),"Испытания"))OpenProgression(false);
         if(Button("progress.back",new Rect(1084,21,157,48),"В меню"))MainMenu();
 
@@ -141,7 +141,7 @@ public sealed partial class PcGame {
     void DrawWorkshopCard(Rect card,JObject item){
         var state=Workshop;
         string id=(string)item["id"],kind=(string)item["kind"];
-        bool selected=state.item==id,owned=progression.Owned(id),equipped=owned&&progression.Equipped(kind)==id;
+        bool selected=state.item==id,owned=AccountOwns(id),equipped=owned&&AccountEquipment(kind)==id;
         var tint=CosmeticColor(item);
         AtlasTile(card,selected,false);
         Fill(new Rect(card.x+1,card.y+1,card.width-2,73),new Color(tint.r*.16f,tint.g*.16f,tint.b*.19f,.93f));
@@ -178,7 +178,7 @@ public sealed partial class PcGame {
         AtlasSurface(detail);
         if(row==null){Text(790,503,425,49,"Выбери товар в этой категории",state.details);return;}
         string id=(string)row["id"],kind=(string)row["kind"];
-        bool owned=progression.Owned(id),equipped=owned&&progression.Equipped(kind)==id;
+        bool owned=AccountOwns(id),equipped=owned&&AccountEquipment(kind)==id;
         Text(791,489,430,40,(string)row["title"],state.details);
         Text(791,536,429,71,(string)row["description"],state.description);
         if(fitting)Text(791,599,432,31,"Оформление для боёв с ботом",state.caption);
@@ -187,13 +187,26 @@ public sealed partial class PcGame {
         else Text(791,643,227,37,equipped?"Надето":owned?"В коллекции":row["cost"]+" жетонов",state.description);
         string action=owned?kind=="stickers"?"Открыть набор":equipped?"Снять":"Надеть":
             purchaseConfirm==id?"Подтвердить":"Купить";
-        bool enabled=GUI.enabled;GUI.enabled=enabled&&(owned||progression.Coins>=(int)row["cost"]);
+        if(HasNetworkProfile&&AccountHub.result!="")Text(791,633,227,58,AccountHub.result,state.description);
+        bool enabled=GUI.enabled;
+        bool cloudBusy=(HasEndpointToken&&!HasNetworkProfile)||AccountHub.operation!=null||AccountHub.changes.Count>0;
+        GUI.enabled=enabled&&!cloudBusy&&(owned||AccountCoins>=(int)row["cost"]);
         if(Button("progress.item."+id,new Rect(1026,637,204,47),action,true))WorkshopPurchase(row,equipped);
         GUI.enabled=enabled;
     }
 
     void WorkshopPurchase(JObject row,bool equipped){
         var state=Workshop;string id=(string)row["id"],kind=(string)row["kind"];
+        if(CloudProgression){
+            bool owned=AccountOwns(id);
+            if(owned&&kind=="stickers"){OpenWorkshopStickers();return;}
+            if(!owned&&purchaseConfirm!=id){purchaseConfirm=id;return;}
+            purchaseConfirm=null;
+            AccountHub.result="Сохраняем в аккаунте…";
+            QueueAccountChange(new JObject{["type"]="profile_cosmetic",["item"]=id,
+                ["action"]=!owned?"buy":equipped?"unequip":"equip"});
+            return;
+        }
         try{
             if(progression.Owned(id)){
                 if(kind=="stickers")OpenWorkshopStickers();
@@ -271,9 +284,9 @@ public sealed partial class PcGame {
         }
         if(!state.mannequin)return;
         var selected=WorkshopCatalog038.Find(state.item);
-        var dye=WorkshopCatalog038.Find(state.category==2?state.item:progression.Equipped("skin"));
-        var aura=WorkshopCatalog038.Find(state.category==0?state.item:progression.Equipped("aura"));
-        var effect=WorkshopCatalog038.Find(state.category==1?state.item:progression.Equipped("effect"));
+        var dye=WorkshopCatalog038.Find(state.category==2?state.item:AccountEquipment("skin"));
+        var aura=WorkshopCatalog038.Find(state.category==0?state.item:AccountEquipment("aura"));
+        var effect=WorkshopCatalog038.Find(state.category==1?state.item:AccountEquipment("effect"));
         bool walking=state.category==1&&selected!=null&&selected.pattern<3;
         state.fittingDye.Apply(state.mannequin,dye);
         state.mannequin.transform.localRotation=Quaternion.Euler(0,167+Mathf.Sin(Time.unscaledTime*.8f)*29,0);
@@ -322,7 +335,7 @@ public sealed partial class PcGame {
     }
 
     void UpdateWorkshopBattle(PcModel worker,string auraId){
-        string dye=progression.Equipped("skin"),effect=progression.Equipped("effect");
+        string dye=AccountEquipment("skin"),effect=AccountEquipment("effect");
         bool legacyAura=auraId=="aura_jade"||auraId=="aura_flame";
         string customAura=legacyAura?"":auraId;
         if(dye.Length==0&&effect.Length==0&&customAura.Length==0){ClearWorkshopBattle();return;}
@@ -343,7 +356,7 @@ public sealed partial class PcGame {
 
     void WorkshopBuildingPlaced(Vector2 point){
         if(onlineMatch||!workshops038.TryGetValue(this,out var state)||state.battleEffects==null)return;
-        state.battleEffects.BuildFlash(World(point),WorkshopCatalog038.Find(progression.Equipped("effect")));
+        state.battleEffects.BuildFlash(World(point),WorkshopCatalog038.Find(AccountEquipment("effect")));
     }
 
     void ClearWorkshopBattle(){

@@ -34,6 +34,7 @@ public sealed partial class PcGame {
         if(!RaceStaged(player)||!RaceStaged(enemy)){Notice("Раса пока недоступна");return;}
         savedChallengeSetup=new[]{raceChoice,botRaceChoice,matchMode,roundsChoice,startGold,difficulty,aspectsOn?1:0};
         activeChallenge=(JObject)row.DeepClone();raceChoice=player;botRaceChoice=enemy;matchMode=0;roundsChoice=1;startGold=(int?)row["start_gold"]??500;difficulty=Mathf.Clamp((int?)row["difficulty"]??1,0,2);aspectsOn=false;
+        AccountHub.challengeOwner=CloudProgression?AccountHub.owner:"";
         BeginOfflineVersus();Debug.Log("CF_PC_CHALLENGE_START id="+row["id"]+" rules="+row.ToString(Newtonsoft.Json.Formatting.None));
     }
     void EndChallenge(){if(savedChallengeSetup!=null){raceChoice=savedChallengeSetup[0];botRaceChoice=savedChallengeSetup[1];matchMode=savedChallengeSetup[2];roundsChoice=savedChallengeSetup[3];startGold=savedChallengeSetup[4];difficulty=savedChallengeSetup[5];aspectsOn=savedChallengeSetup[6]==1;savedChallengeSetup=null;}activeChallenge=null;challengeSettled=false;challengeReward=0;}
@@ -42,24 +43,33 @@ public sealed partial class PcGame {
         StopBossSoundtrack();
         if(match.ChallengeVictoryEligible)try{
             string id=(string)activeChallenge["id"];
-            challengeReward=progression.Complete(id,match.Elapsed);
+            if(string.IsNullOrEmpty(AccountHub.challengeOwner))challengeReward=progression.Complete(id,match.Elapsed);
+            else AccountChallengeVictory(id,match.Elapsed);
             ShareChallengeVictory(id);
         }catch(IOException error){Notice("Не удалось сохранить награду: "+error.Message);return;}
         challengeSettled=true;CaptureMythicScore();Debug.Log("CF_PC_CHALLENGE_RESULT id="+activeChallenge["id"]+" eligible="+match.ChallengeVictoryEligible+" reward="+challengeReward);
     }
     Color CosmeticColor(JObject row){return row!=null&&ColorUtility.TryParseHtmlString("#"+(string)row["color"],out var color)?color:new Color(.38f,.45f,.43f);}
-    Texture2D ProfileAvatar(){var row=progression.Item(progression.Equipped("avatar"));return row!=null?ContentResources.Load<Texture2D>("RaceIcon-"+(string)row["asset"]):unitIcons.FirstOrDefault();}
-    void DrawProfileBadge(Rect rect){var frame=CosmeticColor(progression.Item(progression.Equipped("frame")));Fill(rect,new Color(.035f,.05f,.055f));var icon=ProfileAvatar();if(icon)GUI.DrawTexture(new Rect(rect.x+4,rect.y+4,rect.width-8,rect.height-8),icon,ScaleMode.ScaleToFit);Border(rect,frame,3);}
+    Texture2D ProfileAvatar(){
+        var row=progression.Item(AccountEquipment("avatar"));
+        if(row!=null)return ContentResources.Load<Texture2D>("RaceIcon-"+(string)row["asset"]);
+        var image=AccountAvatar(networkProfile);
+        return image?image:unitIcons.FirstOrDefault();
+    }
+    void DrawProfileBadge(Rect rect){var frame=CosmeticColor(progression.Item(AccountEquipment("frame")));Fill(rect,new Color(.035f,.05f,.055f));var icon=ProfileAvatar();if(icon)GUI.DrawTexture(new Rect(rect.x+4,rect.y+4,rect.width-8,rect.height-8),icon,ScaleMode.ScaleToFit);Border(rect,frame,3);}
     void DrawProgression(){
         EnsureRaceStyles();if(progressShop){DrawWorkshop();return;}
         var all=(JArray)progression.Catalog["challenges"];
         var state=Workshop;
         AtlasSurface(new Rect(20,18,1240,684));
         DrawProfileBadge(new Rect(42,34,64,64));Text(126,30,740,49,"Испытания и награды",atlasTitle);
-        Text(128,77,895,27,"Ур. "+progression.MasteryLevel+" · "+progression.MasteryTitle+"  |  "+progression.Experience+" / "+progression.NextLevelExperience+" опыта  |  "+progression.CompletedCount+" / "+all.Count+" пройдено  |  "+progression.Coins+" жетонов",small);
+        int experience=all.OfType<JObject>().Where(row=>AccountCompleted((string)row["id"])).Sum(ChallengeCatalog034.Experience);
+        int level=ChallengeCatalog034.Level(experience);
+        Text(128,77,895,27,"Ур. "+level+" · "+ChallengeCatalog034.Title(level)+"  |  "+experience+" / "+ChallengeCatalog034.Threshold(level+1)+" опыта  |  "+all.Count(row=>AccountCompleted((string)row["id"]))+" / "+all.Count+" пройдено  |  "+AccountCoins+" жетонов",small);
         if(Button("progress.back",new Rect(1074,38,164,42),MythicRacePicker?"← Назад":"← В меню")){
             if(MythicRacePicker)mythicSelection=null;else MainMenu();
         }
+        if(HasNetworkProfile)DrawFriendsShortcut(new Rect(1011,38,49,42));
         if(Button("progress.challenges",new Rect(42,116,208,42),"Все испытания",!state.siegeOnly&&!mythicTab)){
             state.siegeOnly=mythicTab=false;mythicSelection=null;progressionScroll=Vector2.zero;
         }
@@ -87,8 +97,9 @@ public sealed partial class PcGame {
             if(first)GUI.DrawTexture(new Rect(18,y+30,52,52),first,ScaleMode.ScaleToFit);
             if(second)GUI.DrawTexture(new Rect(58,y+87,52,52),second,ScaleMode.ScaleToFit);
             Text(128,y+12,790,34,(string)row["title"],raceTitleStyle);Text(128,y+50,816,76,(string)row["description"],new GUIStyle(label){fontSize=18,wordWrap=true});
-            bool done=progression.Completed(id);
-            string summary=done?"Пройдено · лучший результат "+TimeSpan.FromSeconds(progression.Best(id)).ToString(@"mm\:ss"):
+            bool done=AccountCompleted(id);
+            float best=AccountBest(id);
+            string summary=done?"Пройдено"+(best>0?" · лучший результат "+TimeSpan.FromSeconds(best).ToString(@"mm\:ss"):""):
                 "Награда: "+row["reward"]+" жетонов · "+ChallengeCatalog034.Experience(row)+" опыта · "+((int?)row["difficulty"]==2?"сложный":"обычный")+" бот";
             Text(128,y+139,800,25,summary,small);
             if(Button("challenge."+id,new Rect(978,y+48,172,48),done?"Повторить":"Начать",!done)){
@@ -134,7 +145,7 @@ public sealed partial class PcGame {
         }
     }
     void RenderBuilderCosmetic(){
-        string id=progression?.Equipped("aura")??"";
+        string id=progression==null?"":AccountEquipment("aura");
         if(onlineMatch||match==null||!builders[0]){
             ClearWorkshopBattle();if(builderCosmetic)builderCosmetic.SetActive(false);return;
         }
