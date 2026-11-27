@@ -11,6 +11,7 @@ public sealed partial class PcGame {
         var p=GuiPoint(screen);
         if(AccountOverlayOpen||SocialNotificationAt(p))return true;
         if(page==Page.Viewer)return p.y<80;
+        if(page==Page.Spectator)return SpectatorStrip.Contains(p);
         if(page!=Page.Match)return true;
         if(Application.isMobilePlatform&&(p.y<42||new Rect(5,46,52,52).Contains(p)||new Rect(960,482,320,238).Contains(p)))return true;
         if(onlineMatch&&(new Rect(68,Application.isMobilePlatform?48:33,160,48).Contains(p)||(Application.isMobilePlatform&&MobileTalkRect.Contains(p))))return true;

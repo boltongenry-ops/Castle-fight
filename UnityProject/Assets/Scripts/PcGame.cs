@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.49.7";
+    string Version=>MobileContent.Active?Application.version:"0.49.8";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -21,9 +21,9 @@ public sealed partial class PcGame : MonoBehaviour {
     public Texture2D[] itemIcons;public string[] itemIds;public Texture2D[] buildingIcons,unitIcons,abilityIcons,extraCommandIcons;public string[] abilityIds,extraCommandIds;
     public Texture2D[] hudTiles,commandIcons,minimapIcons;public Texture2D goldIcon,woodIcon,armyIcon,timeIndicator,minimapTexture,buttonUp,buttonDown,buttonHighlight;
     public TextAsset catalog,terrainBytes,terrainMetadata,waterMetadata;public NativeMapCamera controls;
-    enum Page { Main,Settings,Setup,Match,Pause,Result,Viewer,Leave,Help,Teams,Network,Progression,Guide,Profile }
+    enum Page { Main,Settings,Setup,Match,Pause,Result,Viewer,Leave,Help,Teams,Network,Progression,Guide,Profile,Spectator }
     Page page=Page.Main,settingsReturn=Page.Main;
-    [Serializable] public sealed class Options {public int resolution=0,fps=60;public bool fullscreen,vsync;public bool hdTextures=false,fogOfWar=true;public bool softFog {get=>FogOption034.Get(this);set=>FogOption034.Set(this,value);}public float volume=.8f,musicVolume=.7f,cameraSpeed=1;public int quality=1;}
+    [Serializable] public sealed class Options {public int resolution=0,fps=60;public bool fullscreen,vsync,disableFriendViewing;public bool hdTextures=false,fogOfWar=true;public bool softFog {get=>FogOption034.Get(this);set=>FogOption034.Set(this,value);}public float volume=.8f,musicVolume=.7f,cameraSpeed=1;public int quality=1;}
     Options options=new Options(),draft;string settingsPath,notice="";float noticeLeft,accumulator,screenDeadline;
     int difficulty=1,startGold=250,chosen=-1,roundsChoice=1;PcSeries series;HumanMatch match;NativeMapTerrain terrain;
     readonly Dictionary<int,PcModel> units=new Dictionary<int,PcModel>(),huts=new Dictionary<int,PcModel>();
@@ -50,6 +50,9 @@ public sealed partial class PcGame : MonoBehaviour {
 #if CF_ACCOUNT_HUB_QA
         if(testMode=="account-hub")testing=true;
 #endif
+#if CF_SPECTATOR_QA
+        if(testMode=="spectator")testing=true;
+#endif
         LoadSettings();if(MapArt.Preferred)yield return MapArt.Apply(controls);if(HdModels.Preferred)StartCoroutine(HdModels.OpenCached());LoadMatchRules();Apply(options,false);controls.HideToolbar=true;controls.TouchOverUi=TouchOverUi;controls.TouchPanAllowed=()=>chosen<0&&selectedItem<0&&string.IsNullOrEmpty(targetedSpell)&&!moveOrder;
         controls.AllowGridToggle=false;controls.buildGrid.SetActive(false);
         if(testing&&!MobileContent.Active&&testMode!="hud-themes"&&testMode!="workshop038"&&testMode!="models039"&&testMode!="art040"&&testMode!="pepe"&&testMode!="battle-help"&&testMode!="battle-social"&&testMode!="mythic-winter"&&testMode!="castle-themes"&&testMode!="cursed-horde"&&testMode!="ground-march")PreserveAssetAuditForHistoricalTests();
@@ -60,7 +63,7 @@ public sealed partial class PcGame : MonoBehaviour {
             yield return LoadMobileFrontendArt();
             if(showIntro)yield return MobileContent.Current.EnsureMedia("Frontend/startup_intro.mp4");
         }
-        if(!showIntro||!StartIntro(BattleLab.Arg("--pc-intro-shot")))BeginMenuMusic(0);
+        if(showIntro)StartIntro(BattleLab.Arg("--pc-intro-shot"));
         if(BattleLab.Arg("--map-shot")!=""||BattleLab.Arg("--map-view")!="")page=Page.Viewer;
         else controls.Focus("castle");
         string mode=BattleLab.Arg("--pc-mode");
@@ -72,6 +75,9 @@ public sealed partial class PcGame : MonoBehaviour {
         StartCoroutine(CompleteStartupLoading());if(!MobileContent.Active)StartCoroutine(LoadMobileFrontendArt());
 #if CF_ACCOUNT_HUB_QA
         if(testMode=="account-hub"){StartCoroutine(ExerciseAccountHub());yield break;}
+#endif
+#if CF_SPECTATOR_QA
+        if(testMode=="spectator"){StartCoroutine(ExerciseSpectator());yield break;}
 #endif
         if(!testing){StartCoroutine(CheckGameRelease(true));if(!string.IsNullOrEmpty(networkSessionToken)||networkGuest)BeginDirectory();}
         if(testMode=="quackalypse"){StartCoroutine(ExerciseQuackalypse());yield break;}
@@ -207,6 +213,9 @@ public sealed partial class PcGame : MonoBehaviour {
         if(introPlaying){UpdateIntro();return;}
         UpdateGuiMetrics();UpdateFrontend();UpdateVoiceControls();UpdateFog();UpdateGuide();if(Application.isMobilePlatform){UpdateTouchScroll();}
         noticeLeft-=Time.unscaledDeltaTime;
+        UpdateChallengeBroadcast();
+        UpdateSpectator();
+        if(page==Page.Spectator)return;
         if(versusActive){controls.InputBlocked=true;controls.EdgePan=false;return;}
         if(hordeIntro){UpdateHordeIntro();return;}
         if(protocolIntro){UpdateProtocolIntro();return;}
@@ -333,7 +342,7 @@ public sealed partial class PcGame : MonoBehaviour {
             if (castleThemes.NeedsApply(castle, race, t))
                 castleThemes.Apply(castle, race, t, castleViews[t]);
         }
-        float alpha=onlineMatch?Mathf.Clamp01((Time.unscaledTime-onlineSnapshotAt)/.1f):page==Page.Match&&(!testing||!testHoldAuthority)?Mathf.Clamp01(accumulator/.05f):1;
+        float alpha=(onlineMatch||SpectatorSceneReady)?Mathf.Clamp01((Time.unscaledTime-onlineSnapshotAt)/(SpectatorSceneReady?SpectatorFrameInterval:.1f)):page==Page.Match&&(!testing||!testHoldAuthority)?Mathf.Clamp01(accumulator/.05f):1;
         for(int team=0;team<2;team++) {
             bool born=!builders[team];if(born)builders[team]=Instantiate(RaceBuilder(team),visuals.transform).GetComponent<PcModel>();
             var builder=match.Builders[team];var model=builders[team];model.transform.position=World(Vector2.Lerp(builder.previous,builder.position,alpha));
@@ -520,6 +529,18 @@ public sealed partial class PcGame : MonoBehaviour {
         if(!versusActive&&match!=null&&page!=Page.Viewer&&quackScene==QuackScene.None)DrawWorldFog();
         Matrix4x4 previous=GUI.matrix;GUI.matrix=Matrix4x4.TRS(new Vector3(guiOrigin.x,guiOrigin.y,0),Quaternion.identity,Vector3.one*guiScale);
         if(versusActive){DrawVersus();DrawNetworkRecovery();GUI.matrix=previous;return;}
+        if(page==Page.Spectator){
+            var kind=Event.current.type;
+            bool hideSpectatorInput=(AccountOverlayOpen||Event.current.isMouse&&SocialNotificationAt(Event.current.mousePosition))&&
+                kind!=EventType.Layout&&kind!=EventType.Repaint;
+            if(hideSpectatorInput)Event.current.type=EventType.Ignore;
+            DrawSpectator();
+            if(hideSpectatorInput)Event.current.type=kind;
+            if(AccountOverlayOpen)DrawAccountOverlay();
+            DrawSocialNotification();
+            GUI.matrix=previous;
+            return;
+        }
         if(hordeIntro){DrawHordeIntro();GUI.matrix=previous;return;}
         if(protocolIntro){DrawProtocolIntro();GUI.matrix=previous;return;}
         if(abyssIntro){DrawAbyssIntro();GUI.matrix=previous;return;}
@@ -621,7 +642,7 @@ public sealed partial class PcGame : MonoBehaviour {
     IEnumerator Exercise() {
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"pc-validation"));Directory.CreateDirectory(folder);
         yield return Shot(folder,"01-menu");
-        Check(menuArtwork!=null&&menuAudio!=null&&menuAudio.clip!=null,"PC menu artwork and Godot music are loaded");
+        Check(menuArtwork!=null,"PC menu artwork is loaded");
         yield return Action("main.network");Check(page==Page.Network,"network directory opens");yield return Shot(folder,"01b-network");
         string testDirectory=BattleLab.Arg("--pc-directory-url");
         if(testDirectory!="") {directoryEndpoint=testDirectory;BeginDirectory();float directoryDeadline=Time.realtimeSinceStartup+15;while(directoryLoading&&Time.realtimeSinceStartup<directoryDeadline)yield return null;Check(!directoryLoading&&directoryStatus.StartsWith("Сервер ответил"),"directory request succeeds against test server");if(directoryReady)yield return ExerciseNetworkLobby(folder);}

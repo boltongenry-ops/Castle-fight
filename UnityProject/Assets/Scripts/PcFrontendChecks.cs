@@ -9,8 +9,8 @@ public sealed partial class PcGame {
     IEnumerator ExerciseFrontend(){
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"frontend-validation"));Directory.CreateDirectory(folder);
         MainMenu();yield return new WaitForSecondsRealtime(2);Check(FindObjectsByType<AudioListener>(FindObjectsSortMode.None).Length==1,"Exactly one active audio listener in the actual player");
-        Check(menuAudio&&menuAudio.clip&&menuAudio.clip.loadState==AudioDataLoadState.Loaded&&menuAudio.isPlaying&&menuAudio.volume>0,"Godot menu music loaded, playing and audible by settings");
-        var samples=new float[512];bool audible=false;for(int attempt=0;attempt<40&&!audible;attempt++){menuAudio.GetOutputData(samples,0);audible=samples.Any(v=>Mathf.Abs(v)>.00001f);if(!audible){AudioListener.GetOutputData(samples,0);audible=samples.Any(v=>Mathf.Abs(v)>.00001f);}if(!audible)yield return new WaitForSecondsRealtime(.2f);}Debug.Log("CF_AUDIO_PROBE audible="+audible+" time="+menuAudio.time+" volume="+menuAudio.volume+" listener="+AudioListener.volume+" paused="+AudioListener.pause+" focused="+Application.isFocused+" dsp="+AudioSettings.dspTime);Check(audible,"Menu audio source emits nonzero PCM samples");
+        Check(!GetComponents<AudioSource>().Any(source=>source.isPlaying&&source.loop),
+            "The main menu has no looping music source");
         Check(loadingBackground&&loadingSiege,"Generated loading backdrop and castle animation packaged");
         Check(((JArray)progression.Catalog["challenges"]).Count==42&&((JArray)progression.Catalog["items"]).Count==27,"Forty-two challenges and the extended cosmetic shop");
         foreach(var row in (JArray)progression.Catalog["challenges"]){Check(RaceStaged(Array.IndexOf(ProgressRaces,(string)row["race"]))&&RaceStaged(Array.IndexOf(ProgressRaces,(string)row["opponent"])),"Both playable challenge races: "+row["id"]);}

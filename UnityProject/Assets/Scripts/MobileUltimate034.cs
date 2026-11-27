@@ -23,12 +23,13 @@ public sealed partial class PcGame {
         yield return MobileContent.Current.LoadNamedAsync<Texture2D>(MobileUltimate034.Path(this,"builderIcon"),v=>p.builderIcon=v);
         yield return MobileContent.Current.LoadNamedAsync<Texture2D>(MobileUltimate034.Path(this,"buildIcon"),v=>p.buildIcon=v);
     }
-    IEnumerator PrepareUltimateDraw034(int a,int b,JArray server=null){
+    IEnumerator PrepareUltimateDraw034(int a,int b,JArray server=null,int viewerSlot=-1){
+        if(viewerSlot<0)viewerSlot=networkSlot;
         var s=MobileUltimate034.For(this);s.draw=null;if(a!=12&&b!=12)yield break;
         var canonical=JObject.Parse(RaceCatalog(12));var draw=new UltimateLoadout((JArray)canonical["ultimateSlots"],n=>UnityEngine.Random.Range(0,n));
         s.draw=new[]{Array.Empty<string>(),Array.Empty<string>()};
         for(int t=0;t<2;t++){if((t==0?a:b)!=12)continue;
-            var ids=server!=null?HumanMatch.Strings(server[t==0?networkSlot:1-networkSlot]):draw.Draw();
+            var ids=server!=null?HumanMatch.Strings(server[t==0?viewerSlot:1-viewerSlot]):draw.Draw();
             if(!draw.Valid(new JArray(ids)))throw new InvalidOperationException("Invalid Ultimate round assets");s.draw[t]=ids;
             var playable=draw.Playable(canonical,ids);int row=0;
             foreach(JObject line in (JArray)playable["lines"]){int i=row++;if((bool?)line["allowed"]!=true)continue;int index=t*(ultimatePack.units.Length/2)+i;

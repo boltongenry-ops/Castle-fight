@@ -7,31 +7,17 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame {
     Texture2D menuArtwork;
-    AudioSource menuAudio;
     Texture2D menuMist;
     float landscapeMotion;
 
     void StartFrontend() {
         if(!FindAnyObjectByType<AudioListener>()){var host=Camera.main?Camera.main.gameObject:gameObject;host.AddComponent<AudioListener>();Debug.Log("CF_PC_AUDIO_LISTENER_RESTORED");}
         menuArtwork=ContentResources.Load<Texture2D>("PcMenuArtwork");
-        var clip=ContentResources.Load<AudioClip>("PcMenuMusic");
-        if(clip) { menuAudio=gameObject.AddComponent<AudioSource>(); menuAudio.clip=clip; menuAudio.loop=true; menuAudio.playOnAwake=false; menuAudio.volume=0;menuAudio.spatialBlend=0;menuAudio.ignoreListenerPause=true;clip.LoadAudioData(); }
         networkName=PlayerPrefs.GetString("cf-network-name","");if(networkName=="Игрок")networkName="";
         if(!testing&&BattleLab.Arg("--pc-test")=="")RestoreAccountMode(NetworkAccountStore.GuestMode);
     }
-    // Godot MenuMusic.continue_after_intro: the soundtrack resumes at the frame the
-    // intro movie stopped at instead of restarting from the beginning.
-    void BeginMenuMusic(float offset) {
-        if(!menuAudio||!menuAudio.clip)return;
-        menuAudio.time=Mathf.Repeat(Mathf.Max(0f,offset),Mathf.Max(.01f,menuAudio.clip.length));
-        menuAudio.volume=options.musicVolume;AudioListener.pause=false;menuAudio.Play();Debug.Log("CF_PC_MENU_MUSIC_PLAY state="+menuAudio.clip.loadState+" offset="+menuAudio.time);
-    }
     void UpdateFrontend() {
         landscapeMotion=Mathf.MoveTowards(landscapeMotion,page==Page.Main?1f:0f,Time.unscaledDeltaTime*1.8f);
-        if(menuAudio) {
-            bool inMenu=page==Page.Guide||aspectWaiting||page==Page.Progression||page==Page.Profile||page==Page.Main||page==Page.Setup||page==Page.Network||(page==Page.Settings&&settingsReturn!=Page.Pause);
-            menuAudio.volume=Mathf.MoveTowards(menuAudio.volume,inMenu?options.musicVolume:0,Time.unscaledDeltaTime*.5f);
-        }
         PollLobby();
         UpdateAccountHub();
         UpdateSocialNotifications();
@@ -86,7 +72,7 @@ public sealed partial class PcGame {
     void DrawMenuBackground() {
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.18f));
     }
-    void DisposeFrontend(){StopDirectory();DisposeAccountAvatars();DisposeStickers();DisposeCampaignArtwork();ReleaseRaceArtwork();DisposeLoadingArt();if(menuAudio)Destroy(menuAudio);if(menuMist)Destroy(menuMist);if(notificationChime)Destroy(notificationChime);DisposeWinterArtwork();DisposeHordeArtwork();}
+    void DisposeFrontend(){StopDirectory();DisposeAccountAvatars();DisposeStickers();DisposeCampaignArtwork();ReleaseRaceArtwork();DisposeLoadingArt();if(menuMist)Destroy(menuMist);if(notificationChime)Destroy(notificationChime);DisposeWinterArtwork();DisposeHordeArtwork();}
     // Only the current pair is decoded; fifteen source paintings stay on disk.
     static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
     static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};

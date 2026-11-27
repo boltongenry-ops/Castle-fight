@@ -252,6 +252,6 @@ public sealed partial class HumanMatch {
         BotDefend();
     }
     public bool BuyRescue(int team){if(!ChallengeShopAllowed(team)||!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||AvailableGold(team)<1000)return false;Gold[team]-=1000;RescueCharges[team]++;return true;}
-    public bool Rescue(int team,Vector2 p){if(!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||RescueCharges[team]<=0||RescueCooldown[team]>0||float.IsNaN(p.x)||float.IsNaN(p.y)||Mathf.Abs(p.x)>6144f/30||Mathf.Abs(p.y)>2048f/30)return false;RescueCharges[team]--;RescueCooldown[team]=60;using(var snapshot035_10=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_10)if(u.hp>0&&u.team!=team&&Vector2.Distance(p,u.position)<=1000f/30)DamageUnit(u,u.maxHp+1,team,"chaos",true,true);PulseAt(p,1000f/30,Color.cyan,"Спасительный удар",1.267f,"wisp");return true;}
+    public bool Rescue(int team,Vector2 p){if(!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||RescueCharges[team]<=0||RescueCooldown[team]>0||float.IsNaN(p.x)||float.IsNaN(p.y)||Mathf.Abs(p.x)>6144f/30||Mathf.Abs(p.y)>2048f/30)return false;RescueCharges[team]--;RescueCooldown[team]=60;if(team==0&&QuackDownpour){BeginQuackRescueBackfire(p);return true;}using(var snapshot035_10=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_10)if(u.hp>0&&u.team!=team&&Vector2.Distance(p,u.position)<=1000f/30)DamageUnit(u,u.maxHp+1,team,"chaos",true,true);PulseAt(p,1000f/30,Color.cyan,"Спасительный удар",1.267f,"wisp");return true;}
 }
 }

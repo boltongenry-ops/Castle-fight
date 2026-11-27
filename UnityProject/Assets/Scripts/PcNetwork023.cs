@@ -58,10 +58,11 @@ public sealed partial class PcGame {
             }finally{GUI.enabled=previous;}
         }
     }
-    bool ValidateNetworkLoadouts(int a,int b,JArray loadouts){
+    bool ValidateNetworkLoadouts(int a,int b,JArray loadouts,int viewerSlot=-1){
+        if(viewerSlot<0)viewerSlot=networkSlot;
         if(loadouts==null||loadouts.Count!=2||!ultimatePack)return false;
         var draw=new UltimateLoadout((JArray)JObject.Parse(ultimatePack.catalog.text)["ultimateSlots"],n=>0);
-        return (a!=12||draw.Valid(loadouts[networkSlot]))&&(b!=12||draw.Valid(loadouts[1-networkSlot]));
+        return (a!=12||draw.Valid(loadouts[viewerSlot]))&&(b!=12||draw.Valid(loadouts[1-viewerSlot]));
     }
     void FailNetworkLoad(string message){
         Debug.LogError("CF_NETWORK_LOAD_FAILED "+message);CloseVersus();onlineMatch=false;onlineStarted=false;onlineReplica=null;
@@ -76,13 +77,17 @@ public sealed partial class PcGame {
     }
     // Unity normally logs an iterator exception and silently abandons loading.
     // Own nested iterators so resource/scene errors remain visible and retryable.
-    IEnumerator GuardNetworkLoad(IEnumerator routine){
+    IEnumerator GuardNetworkLoad(IEnumerator routine,Action<string> failed=null){
         var pending=new Stack<IEnumerator>();pending.Push(routine);
         try{
             while(pending.Count>0){
                 object current=null;bool moved=false;Exception failure=null;
                 try{moved=pending.Peek().MoveNext();if(moved)current=pending.Peek().Current;}catch(Exception e){failure=e;}
-                if(failure!=null){FailNetworkLoad("Ошибка подготовки боя: "+failure.GetBaseException().Message);yield break;}
+                if(failure!=null){
+                    string message="Ошибка подготовки боя: "+failure.GetBaseException().Message;
+                    if(failed==null)FailNetworkLoad(message);else failed(message);
+                    yield break;
+                }
                 if(!moved){(pending.Pop() as IDisposable)?.Dispose();continue;}
                 if(current is IEnumerator child)pending.Push(child);else yield return current;
             }

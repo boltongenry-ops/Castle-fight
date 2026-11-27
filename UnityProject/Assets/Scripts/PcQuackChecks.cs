@@ -14,6 +14,8 @@ public sealed partial class PcGame {
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"quackalypse-validation"));
         Directory.CreateDirectory(folder);
         MainMenu();
+        Check(!GetComponents<AudioSource>().Any(source=>source.isPlaying&&source.loop),
+            "The main screen starts without a background track");
         yield return Action("main.challenges");
         yield return Action("progress.mythic");
         yield return Action("mythic.play."+HumanMatch.QuackTrial);
@@ -109,6 +111,7 @@ public sealed partial class PcGame {
         var humans=JObject.Parse(RaceCatalog(0));
         var pepe=JObject.Parse(RaceCatalog(PepeContent.Race));
         new HumanMatch(humans,500,2,-1,-1,pepe).CheckQuackRules(QuackDefinition(),Check);
+        new HumanMatch(humans,500,2,-1,-1,pepe).CheckQuackReplacementRate(QuackDefinition(),Check);
         var strategy=new HumanMatch(humans,500,2,-1,-1,pepe);
         strategy.BeginChallengeRules(QuackDefinition());
         strategy.CheckQuackOpeningEconomy(Check);
@@ -145,6 +148,15 @@ public sealed partial class PcGame {
         Check(match.QuackRainAlive()==0,"Tadpoles stay offscreen until after the cinematic");
         quackSceneAge=QuackReversalEnd+.2f;
         yield return null;
+        match.RescueCharges[0]=1;
+        var target=match.DebugQuackSpawnAlly(new Vector2(-82,0));
+        BeginBuilderSpell("rescue");
+        Check(targetedSpell==null&&match.QuackRescueBackfires==1&&match.RescueCharges[0]==0,
+            "Pressing rescue in phase two immediately spawns the hostile frog and consumes the charge");
+        yield return Shot(folder,"08-counterblast-frog");
+        for(int step=0;step<19;step++)Tick(.05f);
+        Check(target.hp<=0,"The frog blast kills the player's nearby creature in the actual game");
+        yield return Shot(folder,"09-counterblast");
         match.DebugQuackHitCastle();
         Tick(.05f);
         Check(match.Winner==0&&page==Page.Result,"Second lethal hit gives the actual victory");
@@ -216,8 +228,23 @@ public sealed partial class HumanMatch {
     }
 
     internal void DebugQuackInfiltrate(Hut producer){
-        Elapsed=quackInfiltrationAt+.05f;
+        quackInfiltrationRandom=new System.Random(1);
         Produce(producer);
+    }
+
+    internal Unit DebugQuackSpawnAlly(Vector2 point)=>Spawn(0,BaseKinds.First(k=>Lines[k].Producer),point);
+
+    internal void CheckQuackReplacementRate(JObject rules,Action<bool,string> check){
+        BeginChallengeRules(rules);
+        DebugQuackProducer(0,out var producer);
+        quackInfiltrationRandom=new System.Random(42);
+        const int releases=600;
+        for(int i=0;i<releases;i++){
+            Produce(producer);
+            Units.Clear();InvalidateArmyCounts035();RebuildIdCache033();
+        }
+        check(QuackInfiltrations>=releases*.45f&&QuackInfiltrations<=releases*.55f,
+            $"An independent 50 percent roll on every release at the same timestamp replaced {QuackInfiltrations} of {releases}");
     }
 
     internal void DebugQuackHitCastle()=>ApplyCastleDamage(1,CastleHealthLimit(1)*2);
@@ -241,6 +268,7 @@ public sealed partial class HumanMatch {
     }
 
     internal void CheckQuackOpeningEconomy(Action<bool,string> check){
+        quackInfiltrationRandom=new System.Random(0);
         int kind=BaseKinds.First(k=>Lines[k].Producer&&Lines[k].woodCost==0&&Lines[k].cost<=500);
         bool queued=TryBuild(0,kind,17,12,out _);
         check(queued&&Income(0)==Income(1)&&Gold[1]==Gold[0]&&Wood[1]==Wood[0],
@@ -287,7 +315,7 @@ public sealed partial class HumanMatch {
         check(QuackInfiltrations==1&&invader.team==1&&invader.attackTarget==HutTarget(tavern)&&invader.strikeLeft>=0,
             "A stolen production slot starts the hostile swordsman's attack on its tavern immediately");
         Produce(tavern);
-        check(QuackInfiltrations==1&&Units.Last().team==0,"Only one spawn is replaced in the current window");
+        check(QuackInfiltrations==2&&Units.Last().team==1,"Consecutive production events can both be replaced");
         InitBotPolicy();ObserveBot();
         check(QuackBotPriority(Kind("pB31"),null,0)>QuackBotPriority(Kind("pB06"),null,0),
             "Boss favours shield-capable infantry over early tadpole spam");
@@ -312,6 +340,17 @@ public sealed partial class HumanMatch {
         Elapsed=rain+.01f;TickQuackTrial();
         check(waited&&warned&&quackRainLeft==1&&QuackRainAlive()==QuackRainLimit&&Mathf.Approximately(quackRainAt,rain+180),
             "Downpour repeats every three minutes, with a short warning and the same live cap");
+        var near=DebugQuackSpawnAlly(new Vector2(-75,0));
+        var far=DebugQuackSpawnAlly(new Vector2(-155,0));
+        var opposite=Spawn(1,Kind("pB31"),near.position+Vector2.up*2);
+        RescueCharges[0]=2;
+        check(Rescue(0,near.position)&&QuackRescueBackfires==1&&RescueCharges[0]==1&&RescueCooldown[0]==60&&
+            quackBackfireFrog!=null&&quackBackfireFrog.team==1&&near.hp>0&&!Rescue(0,near.position),
+            "Phase two triggers one enemy frog with the normal charge and cooldown");
+        Elapsed+=QuackBackfireDelay+.01f;
+        TickQuackTrial();
+        check(near.hp<=0&&far.hp>0&&opposite.hp>0&&tavern.hp>0,
+            "Counterblast detonates within normal radius against player units only, preserving buildings");
         DebugQuackHitCastle();Step(.05f);
         check(Winner==0&&ChallengeVictoryEligible,"Only the rebuilt castle's defeat is eligible for the leaderboard");
     }

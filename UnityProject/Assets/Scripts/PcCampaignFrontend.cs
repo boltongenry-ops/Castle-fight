@@ -13,7 +13,7 @@ public sealed partial class PcGame {
     static readonly Color AtlasWell=new Color(.075f,.109f,.086f);
     static readonly Rect AtlasSignedInButton=new Rect(932,6,322,44);
     const float AtlasNamePadding=73;
-    static readonly string[] AtlasTabs={"Экран","Звук","Управление","Ресурсы"};
+    static readonly string[] AtlasTabs={"Экран","Звук","Управление","Ресурсы","Приватность"};
     static readonly string[] AtlasQuality={"Низкое","Среднее","Высокое"};
     Texture2D campaignMap,campaignCards,campaignChrome,campaignIcons,campaignPanel,campaignScenes;
     bool campaignArtAttempted,campaignArtOnDisk;
@@ -381,18 +381,23 @@ public sealed partial class PcGame {
         GUI.enabled=!confirmDisplay;
         for(int i=0;i<AtlasTabs.Length;i++)
             if(AtlasButton("settings.tab."+i,new Rect(140,164+i*58,208,46),AtlasTabs[i],campaignSettingsTab==i,
-                6+i,campaignSettingsTab==i))
+                i==4?3:6+i,campaignSettingsTab==i))
                 campaignSettingsTab=i;
 
         switch(campaignSettingsTab){
             case 0:DrawCampaignScreenOptions();break;
             case 1:
                 draft.volume=AtlasSlider(0,"Общая громкость",draft.volume,0,1,(draft.volume*100).ToString("F0")+"%");
-                draft.musicVolume=AtlasSlider(1,"Музыка в меню",draft.musicVolume,0,1,(draft.musicVolume*100).ToString("F0")+"%");
+                draft.musicVolume=AtlasSlider(1,"Звук вступительного ролика",draft.musicVolume,0,1,(draft.musicVolume*100).ToString("F0")+"%");
                 break;
             case 2:
                 draft.cameraSpeed=AtlasSlider(0,"Скорость камеры",draft.cameraSpeed,.5f,2,draft.cameraSpeed.ToString("F1")+"×");
                 Text(415,231,670,52,SettingsLayout035.Mobile?"Камера · проведите по полю одним пальцем":"Камера · подведите курсор к краю экрана",small);
+                break;
+            case 4:
+                if(AtlasToggle(0,"settings.friend-viewing","Друзья могут смотреть мои испытания",!draft.disableFriendViewing))
+                    draft.disableFriendViewing=!draft.disableFriendViewing;
+                Text(415,232,680,48,"Друзья подключаются из списка друзей. Выключение сразу завершает просмотр.",small);
                 break;
             case 3:
                 if(AtlasSetting(0,"settings.models","Модели бойцов",HdModels.Draft?"Reforged":"Классические")){

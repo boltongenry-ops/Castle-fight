@@ -13,6 +13,8 @@ from urllib import request
 from websockets.asyncio.server import serve
 from websockets.exceptions import ConnectionClosed
 
+from spectators import Spectators
+
 BUILD = "0.6.19"
 MAX_ROOMS = 4
 MAX_PEERS = 64
@@ -125,6 +127,7 @@ class Gateway:
         self.rooms = {}
         self.peers = set()
         self.lock = asyncio.Lock()
+        self.spectators = Spectators(self.send, profiles)
 
     async def send(self, peer, packet):
         if peer not in self.peers:
@@ -144,7 +147,8 @@ class Gateway:
                       capacity=2, state=room.phase, joinable=room.phase=="waiting" and not room.players[1])
                  for room in self.rooms.values()]
         folder = dict(type="directory", rooms=rooms, can_create=len(rooms)<MAX_ROOMS, build=BUILD,
-                      social_supported=int(bool(PROFILE_SECRET)), production_sync=1, races=self.races)
+                      social_supported=int(bool(PROFILE_SECRET)), production_sync=1, races=self.races,
+                      spectator_supported=bool(PROFILE_SECRET))
         await asyncio.gather(*(self.send(p,folder) for p in ([peer] if peer else self.peers) if p.browse and p.room is None))
 
     async def lobby(self, room):
@@ -193,9 +197,12 @@ class Gateway:
             return dict(ok=False,message="Сервис профилей временно недоступен.")
         if result.get("ok"):
             if kind=="profile_logout":
+                await self.spectators.disconnect(peer)
                 peer.profile={};peer.token=""
                 result.update(profile={},token="")
             elif isinstance(result.get("profile"),dict):
+                if peer.profile.get("id") != result["profile"].get("id"):
+                    await self.spectators.disconnect(peer)
                 peer.profile=result["profile"]
                 peer.token=result.get("token",peer.token)
                 if peer.room:
@@ -203,6 +210,9 @@ class Gateway:
             if kind=="profile_auth" and peer.token:
                 await self.mark_last_seen(peer)
             if kind=="profile_social":
+                if action=="remove":
+                    await self.spectators.friendship_removed(peer.profile.get("id"),packet.get("peer"))
+                await self.spectators.reconcile_friends(peer,result.get("friends"))
                 self.attach_presence(peer, result)
         if packet.get("older") is True:
             result["older"]=True
@@ -216,7 +226,7 @@ class Gateway:
 
     def attach_presence(self, viewer, result):
         online = {}
-        priority = {"menu": 0, "solo": 1, "challenge": 2, "room": 3, "playing": 4}
+        priority = {"menu": 0, "spectating": 1, "solo": 1, "challenge": 2, "room": 3, "playing": 4}
         for peer in self.peers:
             identity = peer.profile.get("id")
             if not identity:
@@ -240,6 +250,9 @@ class Gateway:
         if "friends" in result:
             friends = {row["id"] for row in result["friends"]}
             friends.add(viewer.profile.get("id"))
+            available={host.profile.get("id") for host in self.peers if self.spectators.available(host)}
+            for friend in result["friends"]:
+                friend["spectate"]=friend.get("id") in available
             result["playing_now"] = sorted(
                 (player for identity, player in online.items() if identity not in friends),
                 key=lambda p: p.get("name", "").casefold(),
@@ -388,9 +401,11 @@ class Gateway:
         if kind in ("browse","create","join","resume") and (p.get("protocol")!=1 or p.get("build")!=BUILD or p.get("authority")!=1):
             return await self.error(peer,"Обновите Castle Fight для подключения к Unity-серверу.")
         if kind=="ping":return await self.send(peer,dict(type="pong"))
+        if kind in ("spectate_open","spectate_close","spectate_join","spectate_leave"):
+            return await self.spectators.command(peer,p,self.peers)
         if kind=="profile_activity":
             activity=p.get("activity")
-            if peer.token and activity in ("menu","solo","challenge"):
+            if peer.token and activity in ("menu","solo","challenge","spectating"):
                 peer.activity=activity
                 challenge=text(p.get("challenge"),48)
                 peer.challenge=challenge if activity=="challenge" and challenge.replace("_","").isalnum() else ""
@@ -402,6 +417,10 @@ class Gateway:
             result=await self.profile(peer,p)
             return await self.send(peer,{**result,"type":"profile","request_type":kind,
                                          "action":p.get("action",""),"social_supported":int(bool(PROFILE_SECRET))})
+        if kind in ("create","join","resume") and peer in self.spectators.viewers:
+            return await self.error(peer,"Сначала выйдите из просмотра.")
+        if kind in ("create","join","resume"):
+            await self.spectators.close(peer,"Игрок перешёл в сетевой режим")
         if kind in ("create","join"):return await self.enter_room(peer,p)
         if kind=="resume":return await self.resume(peer,p)
         room,slot=peer.room,peer.slot
@@ -466,8 +485,19 @@ class Gateway:
         if len(self.peers)>=MAX_PEERS:return await socket.close(1013,"Server busy")
         self.peers.add(peer)
         try:
+            binary_count=0
+            binary_window=0
             async for raw in socket:
                 now=time.monotonic()
+                if isinstance(raw,bytes):
+                    if now>=binary_window:
+                        binary_window=now+1
+                        binary_count=0
+                    binary_count+=1
+                    if binary_count>110:
+                        await socket.close(1008,"Too many spectator chunks");break
+                    self.spectators.binary(peer,raw)
+                    continue
                 peer.recent=[t for t in peer.recent if t>now-1]
                 if len(peer.recent)>=28:
                     await socket.close(1008,"Too many messages");break
@@ -485,6 +515,7 @@ class Gateway:
         finally:
             async with self.lock:
                 self.peers.discard(peer)
+                await self.spectators.disconnect(peer)
                 if peer.token:
                     await self.mark_last_seen(peer)
                 try:await self.leave(peer)

@@ -59,12 +59,22 @@ public sealed partial class PcGame {
     void BeginAbyssIntro(){
         abyssIntro=true;
         abyssIntroTime=0;
-        abyss=new AbyssPresentation{root=new GameObject("Дыхание Бездны"),actors=new GameObject("Двор Королевы глубин")};
-        abyss.root.transform.SetParent(visuals.transform,false);
+        var shader=PrepareAbyssWaterPresentation();
+        abyss.actors=new GameObject("Двор Королевы глубин");
         abyss.actors.transform.SetParent(abyss.root.transform,false);
         abyss.queen=CreateAbyssActor(HumanMatch.AbyssQueenCode,AbyssQueenPosition,1.7f);
         for(int i=0;i<AbyssIntroGuards.Length;i++)
             CreateAbyssActor(AbyssIntroGuards[i],AbyssQueenPosition+new Vector2(-7-7*i,-7+i*6),1);
+        CreateAbyssPortal(shader);
+        abyss.audio=abyss.root.AddComponent<AudioSource>();
+        abyss.audio.playOnAwake=false;
+        abyss.surge=MakeAbyssSurge();
+        UpdateAbyssIntro(false);
+    }
+
+    Shader PrepareAbyssWaterPresentation(){
+        abyss=new AbyssPresentation{root=new GameObject("Дыхание Бездны")};
+        abyss.root.transform.SetParent(visuals.transform,false);
         var shader=Shader.Find("Sprites/Default")??shellMaterial.shader;
         abyss.ripples=MakeAbyssRipples();
         var waterShader=Shader.Find("CastleFight/ReforgedEffect");
@@ -83,11 +93,7 @@ public sealed partial class PcGame {
         abyss.raid.enabled=false;
         abyss.raidFoam.enabled=false;
         CreateAbyssWater();
-        CreateAbyssPortal(shader);
-        abyss.audio=abyss.root.AddComponent<AudioSource>();
-        abyss.audio.playOnAwake=false;
-        abyss.surge=MakeAbyssSurge();
-        UpdateAbyssIntro(false);
+        return shader;
     }
 
     PcModel CreateAbyssActor(string raw,Vector2 point,float size){

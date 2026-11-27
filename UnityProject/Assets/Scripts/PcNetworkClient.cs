@@ -14,14 +14,20 @@ namespace CastleFight {
 // One socket owns one connection. Incoming packets are handed to Unity on its main thread.
 public sealed class PcNetworkClient : IDisposable {
     const int MaxFrame=2*1024*1024,MaxInflated=8*1024*1024;
+    const int SpectatorChunk=30*1024,SpectatorCompressedLimit=512*1024;
     readonly ConcurrentQueue<JObject> incoming=new ConcurrentQueue<JObject>();
+    JObject latestSpectatorFrame;
     readonly SemaphoreSlim sendLock=new SemaphoreSlim(1,1);
     readonly CancellationTokenSource stop=new CancellationTokenSource();
     ClientWebSocket socket;readonly JObject opening;readonly Stopwatch receiveClock=Stopwatch.StartNew();
     public PcNetworkClient(JObject handshake=null){opening=handshake;}
     public double SecondsSinceReceive=>receiveClock.Elapsed.TotalSeconds;
     public bool Connected => socket!=null&&socket.State==WebSocketState.Open&&!stop.IsCancellationRequested;
-    public bool TryRead(out JObject packet)=>incoming.TryDequeue(out packet);
+    public bool TryRead(out JObject packet){
+        if(incoming.TryDequeue(out packet))return true;
+        packet=Interlocked.Exchange(ref latestSpectatorFrame,null);
+        return packet!=null;
+    }
     void Status(string message)=>incoming.Enqueue(new JObject { ["type"]="_status",["message"]=message });
     public async Task ConnectAsync(Uri endpoint) {
         try {
@@ -54,6 +60,31 @@ public sealed class PcNetworkClient : IDisposable {
         try { if(Connected)await socket.SendAsync(new ArraySegment<byte>(payload),WebSocketMessageType.Text,true,stop.Token); }
         finally {sendLock.Release();}
     }
+    internal static byte[] CompressSpectatorFrame(JObject frame){
+        using(var bytes=new MemoryStream()){
+            using(var gzip=new GZipStream(bytes,CompressionLevel.Fastest,true))
+            using(var writer=new StreamWriter(gzip,new UTF8Encoding(false)))
+            using(var json=new JsonTextWriter(writer))frame.WriteTo(json);
+            return bytes.Length<=SpectatorCompressedLimit?bytes.ToArray():null;
+        }
+    }
+
+    internal async Task SendSpectatorFrameAsync(byte[] frame){
+        if(frame==null||!Connected)return;
+        await sendLock.WaitAsync(stop.Token);
+        try{
+            if(!Connected)return;
+            var chunk=new byte[SpectatorChunk];
+            for(int offset=0;offset<frame.Length;){
+                int size=Math.Min(SpectatorChunk-1,frame.Length-offset);
+                chunk[0]=(byte)((offset==0?1:0)|(offset+size==frame.Length?2:0));
+                Buffer.BlockCopy(frame,offset,chunk,1,size);
+                await socket.SendAsync(new ArraySegment<byte>(chunk,0,size+1),WebSocketMessageType.Binary,true,stop.Token);
+                offset+=size;
+            }
+        }finally{sendLock.Release();}
+    }
+
     async Task HeartbeatAsync() {
         try {while(!stop.IsCancellationRequested){await Task.Delay(TimeSpan.FromSeconds(10),stop.Token);await SendAsync(new JObject { ["type"]="ping" });}}
         catch(OperationCanceledException) {} catch(Exception e) {if(!stop.IsCancellationRequested)Status("Потеря связи: "+e.GetBaseException().Message);}
@@ -77,7 +108,9 @@ public sealed class PcNetworkClient : IDisposable {
                     }
                 } else if(result.MessageType!=WebSocketMessageType.Text)throw new IOException("Неизвестный тип сообщения");
                 var packet=JObject.Parse(Encoding.UTF8.GetString(decoded));
-                if((string)packet["type"]!="pong")incoming.Enqueue(packet);
+                string type=(string)packet["type"];
+                if(type=="spectate_frame")Interlocked.Exchange(ref latestSpectatorFrame,packet);
+                else if(type!="pong")incoming.Enqueue(packet);
             }
         }
     }

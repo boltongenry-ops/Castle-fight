@@ -10,14 +10,23 @@ public sealed partial class PcGame {
     readonly Vector3[] fogProjectionNodes=new Vector3[FogMeshWidth*FogMeshHeight];
     Vector3 fogCameraPosition;Quaternion fogCameraRotation;Matrix4x4 fogProjection;Rect fogViewport;int fogWidth,fogHeight;bool fogSoft;double fogProjectionMs,fogMaskMs;
     readonly HashSet<int> fogKnownHuts=new HashSet<int>();
-    bool FogActive=>match!=null&&!winterIntro&&!choirIntro&&!hordeIntro&&!protocolIntro&&!protocolMarchIntro&&!abyssIntro&&quackScene==QuackScene.None&&(onlineMatch?onlineFog:(activeChallenge!=null||options.fogOfWar));
+    bool FogActive=>SpectatorSceneReady?spectatorFog!=null:match!=null&&!winterIntro&&!choirIntro&&!hordeIntro&&!protocolIntro&&!protocolMarchIntro&&!abyssIntro&&quackScene==QuackScene.None&&(onlineMatch?onlineFog:(activeChallenge!=null||options.fogOfWar));
     bool FogVisible(Vector2 point)=>!FogActive||fog!=null&&fog.Visible(point);
     bool CanSeeUnit(HumanMatch.Unit unit)=>unit!=null&&match.NightCanDetect(0,unit)&&(unit.team==0||FogVisible(unit.position));
     bool CanInspectHut(HumanMatch.Hut hut)=>hut!=null&&(hut.team==0||FogVisible(hut.position));
     void UpdateFog(bool force=false){
         if(match==null)return;
         if(fogMatch!=match){fogMatch=match;fog=new FogGrid();fogKnownHuts.Clear();fogNext=screenFogNext=0;match.VisionTest=(team,point)=>team!=0||FogVisible(point);}
-        if(!FogActive)return;if(!force&&Time.unscaledTime<fogNext)return;fogNext=Time.unscaledTime+.18f;fog.Clear();fog.RevealBase();
+        if(!FogActive)return;
+        if(SpectatorSceneReady){
+            if(force){
+                Array.Copy(spectatorFog,fog.Current,fog.Current.Length);
+                Array.Copy(spectatorExplored,fog.Explored,fog.Explored.Length);
+                RefreshFogPreview();
+            }
+            return;
+        }
+        if(!force&&Time.unscaledTime<fogNext)return;fogNext=Time.unscaledTime+.18f;fog.Clear();fog.RevealBase();
         fog.Reveal(match.Builders[0].position,800f/30);
         foreach(var unit in match.Units)if(unit.hp>0&&(unit.team==0||match.ElvenReveals(unit,0)))fog.Reveal(unit.position,HumanMatch.F(match.Lines[unit.kind].stats,"sight",800f/30));
         foreach(var hut in match.Huts)if(hut.team==0&&hut.hp>0)fog.Reveal(hut.position,HumanMatch.F(match.Lines[hut.kind].buildingStats,"sight",1000f/30));
@@ -25,6 +34,9 @@ public sealed partial class PcGame {
         foreach(var orb in match.NorthernOrbs)if(orb.team==0)fog.Reveal(orb.position,700f/30);
         foreach(var zone in match.NightZones)if(zone.team==0&&zone.age<8)fog.Reveal(zone.point,1100f/30);
         fog.Remember();foreach(var hut in match.Huts)if(hut.team==0||fog.Visible(hut.position))fogKnownHuts.Add(hut.id);
+        RefreshFogPreview();
+    }
+    void RefreshFogPreview(){
         if(!fogMini){fogMini=new Texture2D(FogGrid.Width,FogGrid.Height,TextureFormat.RGBA32,false){name="Exploration minimap",filterMode=FilterMode.Bilinear,wrapMode=TextureWrapMode.Clamp};miniFogColors=new Color32[FogGrid.Width*FogGrid.Height];}
         int shade=options.softFog?104:255;
         for(int y=0;y<FogGrid.Height;y++)for(int x=0;x<FogGrid.Width;x++){
@@ -41,9 +53,9 @@ public sealed partial class PcGame {
         foreach(var hut in match.Huts)if(huts.TryGetValue(hut.id,out var view))view.gameObject.SetActive(!FogActive||hut.team==0||fogKnownHuts.Contains(hut.id));
         var enemyCastle=match.BattleCastlePosition(1);
         bool castleKnown=!FogActive||(match.ProtocolMarch?fog.Visible(enemyCastle):fog.Known(enemyCastle));castleObjects[1].SetActive(castleKnown&&!castleViews[1]);if(castleViews[1])castleViews[1].gameObject.SetActive(castleKnown);
-        if(builders[1])builders[1].gameObject.SetActive(FogVisible(match.Builders[1].position));
+        if(builders[1])builders[1].gameObject.SetActive(SpectatorSceneReady?spectatorEnemyBuilder:FogVisible(match.Builders[1].position));
         foreach(var shot in match.Shots)if(projectiles.TryGetValue(shot.id,out var view))view.gameObject.SetActive(!elvenBeams.ContainsKey(shot.id)&&(shot.kind!=4||ShowBeam036(shot))&&FogVisible(new Vector2(view.transform.position.x,-view.transform.position.z)));
-        if(onlineMatch)foreach(var pair in onlineProjectiles)if(pair.Value)pair.Value.SetActive(ProjectileBorn(pair.Key)&&FogVisible(new Vector2(pair.Value.transform.position.x,-pair.Value.transform.position.z)));
+        if(onlineMatch||SpectatorSceneReady)foreach(var pair in onlineProjectiles)if(pair.Value)pair.Value.SetActive(ProjectileBorn(pair.Key)&&FogVisible(new Vector2(pair.Value.transform.position.x,-pair.Value.transform.position.z)));
         if(SelectedUnit==null)selectedUnit=-1;if(SelectedHut==null)selectedHut=-1;
     }
     void DrawWorldFog(){

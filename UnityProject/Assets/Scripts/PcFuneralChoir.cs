@@ -108,9 +108,7 @@ public sealed partial class PcGame {
         choirCast=choirDeath=false;
         var at=choirGolem?choirGolem.transform.position:World(keep+new Vector2(-15,4));
         GatherRitualGround(at);
-        choirSun=FindObjectsByType<Light>(FindObjectsSortMode.None).FirstOrDefault(l=>l.type==LightType.Directional&&l.isActiveAndEnabled&&(l.cullingMask&1)!=0);
-        dayAmbient=RenderSettings.ambientLight;choirHasLighting=true;
-        if(choirSun){daylight=choirSun.intensity;daySun=choirSun.color;}
+        PrepareChoirNightLighting();
         var missile=ClassicProjectile("fx_e67f4eb60198",1); // WC3 DeathCoilMissile
         if(missile){
             sacrificeOrb=Instantiate(missile,visuals.transform);
@@ -124,6 +122,11 @@ public sealed partial class PcGame {
         var prefab=kind>=0?RaceModel(1,kind,false):null;if(!prefab)return null;
         var actor=Instantiate(prefab,visuals.transform).GetComponent<PcModel>();
         actor.transform.position=World(point);actor.Face(look,true);actor.Play("Stand");return actor;
+    }
+    void PrepareChoirNightLighting(){
+        choirSun=FindObjectsByType<Light>(FindObjectsSortMode.None).FirstOrDefault(l=>l.type==LightType.Directional&&l.isActiveAndEnabled&&(l.cullingMask&1)!=0);
+        dayAmbient=RenderSettings.ambientLight;choirHasLighting=true;
+        if(choirSun){daylight=choirSun.intensity;daySun=choirSun.color;}
     }
     void ChoirNight(float night){
         RenderSettings.ambientLight=Color.Lerp(dayAmbient,new Color(.25f,.27f,.33f),night);

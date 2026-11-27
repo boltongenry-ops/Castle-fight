@@ -49,7 +49,18 @@ public sealed partial class PcGame {
         }
     }
     bool RescueVisible=>match!=null&&match.RescueCharges[0]>0;
-    void BeginBuilderSpell(string spell){if(spell=="rescue"&&!RescueVisible){Notice("Купите спасительный удар в магазине замка (F2)");return;}selectedItem=-1;chosen=-1;buildMenu=false;moveOrder=false;targetedSpell=spell;Notice(spell=="blink"?"Скачок: укажите точку ЛКМ":"Спасительный удар: укажите область ЛКМ");}
+    void BeginBuilderSpell(string spell){
+        if(spell=="rescue"&&!RescueVisible){Notice("Купите спасительный удар в магазине замка (F2)");return;}
+        selectedItem=-1;chosen=-1;buildMenu=false;moveOrder=false;
+        if(spell=="rescue"&&!onlineMatch&&match.QuackDownpour){
+            targetedSpell=null;
+            bool triggered=match.Rescue(0,match.QuackRescueAim());
+            Notice(triggered?"КВАА!":"Спасительный удар перезаряжается.");
+            return;
+        }
+        targetedSpell=spell;
+        Notice(spell=="blink"?"Скачок: укажите точку ЛКМ":"Спасительный удар: укажите область ЛКМ");
+    }
     void ExecuteBuilderSpell(Vector2 p){if(onlineMatch){try{NetworkCommand(PcServerReplica.BuilderSpell(targetedSpell,p));targetedSpell=null;}catch(ArgumentOutOfRangeException){Notice("Точка вне карты");}return;}bool ok=targetedSpell=="blink"?match.Blink(0,p):match.Rescue(0,p);Notice(ok?"Приказ выполнен":"Недоступно: проверьте область, заряд и перезарядку");if(ok)targetedSpell=null;}
     void RepairOrder(){if(onlineMatch){NetworkCommand(PcServerReplica.Command("repair"));selectedItem=chosen=-1;buildMenu=moveOrder=false;targetedSpell=null;return;}if(match.RepairCastle(0)){selectedItem=chosen=-1;buildMenu=moveOrder=false;targetedSpell=null;Notice("Рабочий отправляется ремонтировать замок");}else Notice(match.ChallengeBuilderRepairAllowed(0)?"Замок полностью восстановлен":"В испытании строитель не может ремонтировать замок");}
     bool BuildingRepairVisible(HumanMatch.Hut hut)=>HumanMatch.CanRepairBuilding(0,hut)&&

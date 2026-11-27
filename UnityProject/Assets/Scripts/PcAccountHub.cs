@@ -44,7 +44,7 @@ public sealed partial class PcGame {
             return;
         }
         string challenge=(string)activeChallenge?["id"]??"";
-        string activity=challenge!=""?"challenge":match!=null&&!onlineMatch&&page!=Page.Viewer?"solo":"menu";
+        string activity=SpectatorOpen?"spectating":challenge!=""?"challenge":match!=null&&!onlineMatch&&page!=Page.Viewer?"solo":"menu";
         string fingerprint=activity+":"+challenge;
         if(hub.activity!=fingerprint){
             hub.activity=fingerprint;
@@ -315,7 +315,9 @@ public sealed partial class PcGame {
 
     void DrawFriendActions(Rect box,JToken player,JArray friends,JArray requests){
         string id=(string)player["id"];
-        var pane=new Rect(box.x+26,box.y+165,box.width-52,286);
+        bool friend=friends.Any(f=>(string)f["id"]==id);
+        bool showWatch=friend&&(bool?)player["spectate"]==true;
+        var pane=new Rect(box.x+26,box.y+(showWatch?139:165),box.width-52,showWatch?339:286);
         Fill(new Rect(box.x,box.y+61,box.width,box.height-61),new Color(0,0,0,.66f));
         AtlasSurface(pane,true);
         Text(pane.x+19,pane.y+9,pane.width-90,41,FitAtlasLabel((string)player["name"],pane.width-95,label),label);
@@ -323,7 +325,6 @@ public sealed partial class PcGame {
         var action=new Rect(pane.x+19,pane.y+56,pane.width-38,46);
         if(LobbyButton("hub.action.message",action,"Написать")){OpenOverlayConversation(player);return;}
         action.y+=53;
-        bool friend=friends.Any(f=>(string)f["id"]==id);
         var request=requests.FirstOrDefault(r=>(string)r["player"]?["id"]==id);
         bool incoming=(bool?)request?["incoming"]==true;
         bool enabled=GUI.enabled;
@@ -335,6 +336,14 @@ public sealed partial class PcGame {
         GUI.enabled=enabled&&(bool?)player["online"]==true&&!onlineMatch;
         if(LobbyButton("hub.action.invite",action,"Пригласить в матч"))InvitePlayer(id);
         action.y+=53;GUI.enabled=enabled;
+        if(showWatch){
+            GUI.enabled=enabled&&CanStartSpectating;
+            if(LobbyButton("hub.action.watch",action,"Смотреть испытание",true)){
+                GUI.enabled=enabled;RequestSpectator(id);return;
+            }
+            GUI.enabled=enabled;
+            action.y+=53;
+        }
         if(LobbyButton("hub.action.profile",action,"Профиль")){
             CloseAccountOverlay();page=Page.Profile;OpenPlayer(id);
         }
@@ -360,7 +369,7 @@ public sealed partial class PcGame {
             SocialRequest("history",new JObject{["peer"]=socialPeer,["before"]=(long?)socialMessages.First?["id"]??0,["older"]=true});
         }
         if(socialMore)y+=48;
-        if(socialMessages.Count==0)Text(17,18,width-34,40,"Здесь появится ваша переписка",small);
+        if(socialMessages.Count==0)Text(17,18,width-34,40,ConversationEmptyText("Здесь появится ваша переписка"),small);
         foreach(var message in socialMessages){
             bool own=(string)message["from"]==(string)networkProfile?["id"];
             float x=own?width-bubble-10:10,h=Height(message);
@@ -395,6 +404,7 @@ public sealed partial class PcGame {
             return string.IsNullOrEmpty(name)?"В испытании":"Испытание · "+name;
         }
         if(activity=="solo")return "Бой с ботом";
+        if(activity=="spectating")return "Смотрит испытание";
         return activity=="menu"?"В меню":PeerStatus(player);
     }
 

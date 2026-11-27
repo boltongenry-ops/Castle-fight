@@ -36,6 +36,7 @@ public sealed partial class PcGame {
                     break;
                 case "directory":
                     networkProductionSync=(int?)packet["production_sync"]==1;
+                    spectatorSupported=(bool?)packet["spectator_supported"]==true;
                     socialSupported=(int?)packet["social_supported"]==1;directoryRooms=packet["rooms"] as JArray??new JArray();directoryReady=true;directoryLoading=false;directoryCanCreate=(bool?)packet["can_create"]??false;
                     networkServerRaces=packet["races"] is JArray roster?roster.Select(row=>(string)row).Where(name=>!string.IsNullOrEmpty(name)).ToArray():null;
                     TryAccountAuthentication();
@@ -73,6 +74,8 @@ public sealed partial class PcGame {
                 case "resumed":case "connection_hold":case "connection_restored":case "resume_rejected":RecoveryPacket(packet);break;
                 case "load":NetworkLoad(packet);break;
                 case "snapshot":NetworkSnapshot(packet);break;
+                case "spectate_start":case "spectate_error":case "spectate_count":case "spectate_frame":case "spectate_end":
+                    ReceiveSpectator(packet);break;
                 case "start":if(onlineMatch){onlineStarted=true;CloseVersus();Notice("Сетевой бой начался");}break;
                 case "voice_session":ReceiveVoiceSession(packet);break;
                 case "emote":if(onlineMatch)ReceiveEmote(packet);break;

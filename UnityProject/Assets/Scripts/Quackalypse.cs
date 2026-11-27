@@ -8,6 +8,12 @@ public sealed partial class HumanMatch {
     internal const int QuackRainLimit=30;
     internal const float QuackWaveInterval=180;
     const float QuackRainWarning=3, QuackBellShield=105;
+    const float QuackInfiltrationChance=.5f, QuackBackfireDelay=.72f;
+    const float QuackBackfireRadius=1000f/30;
+    System.Random quackInfiltrationRandom;
+    Unit quackBackfireFrog;
+    Vector2 quackBackfirePoint;
+    float quackBackfireAt;
     static readonly string[] QuackBellRoster={"pB12","pB12","pB14","pB05","pB03"};
     static readonly Vector2[] QuackPools={
         new Vector2(84,-14),new Vector2(46,13),new Vector2(-12,-16),new Vector2(-77,15),new Vector2(-131,-15)
@@ -18,7 +24,7 @@ public sealed partial class HumanMatch {
     int quackStage,quackRainKind=-1,quackNextPool,quackInfiltratorKind=-1;
     int[] quackBellKinds;
     int quackRainLeft;
-    float quackBellAt,quackRainAt,quackNextHatch,quackInfiltrationAt;
+    float quackBellAt,quackRainAt,quackNextHatch;
     public bool QuackActive=>quackActive;
     bool QuackOpening=>quackActive&&quackStage==0;
     public bool QuackRitualPending=>quackActive&&quackStage==1;
@@ -26,6 +32,7 @@ public sealed partial class HumanMatch {
     public float QuackNextWaveIn=>Mathf.Max(0,(QuackDownpour?quackRainAt:quackBellAt)-Elapsed);
     internal int QuackBellCount {get;private set;}
     public int QuackInfiltrations {get;private set;}
+    public int QuackRescueBackfires {get;private set;}
 
     void BeginQuackTrial(){
         quackActive=(string)ChallengeRules?["id"]==QuackTrial&&teamBaseBuildings[1].Contains("pB31");
@@ -36,7 +43,7 @@ public sealed partial class HumanMatch {
         quackBellKinds=Array.ConvertAll(QuackBellRoster,Kind);
         LegendaryLimit[1]=2;
         quackInfiltratorKind=Kind("pB31");
-        quackInfiltrationAt=Elapsed+Mathf.Lerp(43,57,BotRandom());
+        quackInfiltrationRandom=new System.Random(Guid.NewGuid().GetHashCode());
     }
 
     float QuackBotPriority(int kind,Hut replacing,int copies){
@@ -80,9 +87,8 @@ public sealed partial class HumanMatch {
     }
 
     bool TryQuackInfiltration(Hut producer){
-        if(!quackActive||quackStage!=0||producer.team!=0||Elapsed<quackInfiltrationAt
-            ||quackInfiltratorKind<0||ArmyCount(1)>=ArmyLimit)return false;
-        quackInfiltrationAt=Elapsed+Mathf.Lerp(24,36,BotRandom());
+        if(!QuackOpening||producer.team!=0||quackInfiltratorKind<0||
+           ArmyCount(1)>=ArmyLimit||quackInfiltrationRandom.NextDouble()>=QuackInfiltrationChance)return false;
         QuackInfiltrations++;
         var point=producer.position+Vector2.up*(producer.position.y>0?-2.4f:2.4f);
         var unit=Spawn(1,quackInfiltratorKind,point);
@@ -91,6 +97,50 @@ public sealed partial class HumanMatch {
         if(weapon!=null)BeginAttack(unit,weapon,HutTarget(producer));
         PulseAt(point,3.2f,PepeRules.ReedGreen,"Подмена!",1.1f,"pepe:PGSh");
         return true;
+    }
+
+    internal Vector2 QuackRescueAim(){
+        Unit front=null;
+        foreach(var unit in Units)
+            if(unit.team==0&&unit.hp>0&&(front==null||unit.position.x>front.position.x))front=unit;
+        return front?.position??Builders[0].position;
+    }
+
+    void BeginQuackRescueBackfire(Vector2 requested){
+        Unit target=null;
+        float distance=float.PositiveInfinity;
+        foreach(var unit in Units){
+            if(unit.team!=0||unit.hp<=0)continue;
+            float squared=(unit.position-requested).sqrMagnitude;
+            if(squared>=distance)continue;
+            target=unit;
+            distance=squared;
+        }
+        quackBackfirePoint=target?.position??Builders[0].position;
+        quackBackfireAt=Elapsed+QuackBackfireDelay;
+        QuackRescueBackfires++;
+        if(quackInfiltratorKind>=0){
+            quackBackfireFrog=Spawn(1,quackInfiltratorKind,quackBackfirePoint);
+            quackBackfireFrog.noBounty=quackBackfireFrog.noCorpse=true;
+            quackBackfireFrog.stun=QuackBackfireDelay+.1f;
+            quackBackfireFrog.abilities.Add("Avul");
+        }
+        PulseAt(quackBackfirePoint,QuackBackfireRadius,PepeRules.ReedGreen,"КВАА!",QuackBackfireDelay);
+    }
+
+    void TickQuackRescueBackfire(){
+        if(quackBackfireAt<=0||Elapsed<quackBackfireAt)return;
+        quackBackfireAt=0;
+        var frog=quackBackfireFrog;
+        quackBackfireFrog=null;
+        using(var victims=SimulationBuffers035.Take(Units)){
+            foreach(var victim in victims)
+                if(victim.team==0&&victim.hp>0&&
+                   (victim.position-quackBackfirePoint).sqrMagnitude<=QuackBackfireRadius*QuackBackfireRadius)
+                    DamageUnit(victim,victim.maxHp+1,1,"chaos",true,true,frog);
+        }
+        if(frog!=null){frog.hp=0;frog.deathProcessed=true;frog.pose="Death";InvalidateArmyCounts035();}
+        PulseAt(quackBackfirePoint,QuackBackfireRadius,PepeRules.ReedGreen,"Обратный взрыв",1.267f,"wisp");
     }
 
     void StrengthenQuackUnit(Unit unit){
@@ -178,6 +228,7 @@ public sealed partial class HumanMatch {
             return;
         }
 
+        TickQuackRescueBackfire();
         if(quackRainKind<0)return;
         if(quackRainLeft==0&&Elapsed>=quackRainAt-QuackRainWarning){
             quackRainLeft=2;

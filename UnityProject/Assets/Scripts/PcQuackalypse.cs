@@ -296,8 +296,9 @@ public sealed partial class PcGame {
     }
 
     void UpdateQuackEmoji(){
-        if(match.QuackInfiltrations==quackEmojiSeen)return;
-        quackEmojiSeen=match.QuackInfiltrations;quackEmojiAt=Time.unscaledTime;
+        int quackTricks=match.QuackInfiltrations+match.QuackRescueBackfires;
+        if(quackTricks==quackEmojiSeen)return;
+        quackEmojiSeen=quackTricks;quackEmojiAt=Time.unscaledTime;
         PlayQuackCroak(.83f);
     }
 
@@ -441,9 +442,9 @@ public sealed partial class PcGame {
         GL.Vertex3(guiOrigin.x+moved.x*guiScale,guiOrigin.y+moved.y*guiScale,0);
     }
 
-    void DrawQuackRain(){
+    void DrawQuackRain(bool? spectatorDownpour=null){
         if(!quackSwampRevealed||Event.current.type!=EventType.Repaint)return;
-        bool storm=match.QuackDownpour;
+        bool storm=spectatorDownpour??match.QuackDownpour;
         var rain=storm?quackDownpour:quackDrizzle;
         if(!rain)return;
         var screen=QuackScreenRect();

@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.Video;
 namespace CastleFight {
 public sealed partial class PcGame {
-    const float IntroMusicOffset=70.52f;
     const string IntroShownKey="cf-intro-shown", IntroCompletedKey="cf-intro-completed";
     VideoPlayer introPlayer;RenderTexture introTexture;AudioSource introAudio;
     bool introPlaying,introLeaving,introCaptureDone;
@@ -22,7 +21,7 @@ public sealed partial class PcGame {
         string video=Path.Combine(MobileContent.MediaRoot,"Frontend/startup_intro.mp4");var clip=File.Exists(video)?null:ContentResources.Load<VideoClip>("PcIntro");
         if(!clip&&!File.Exists(video)){Debug.Log("CF_PC_INTRO_MISSING");return false;}
         if(BattleLab.Arg("--pc-intro")==""){PlayerPrefs.SetInt(IntroShownKey,1);PlayerPrefs.Save();}
-        if(menuAudio)menuAudio.Stop();introLeaving=false;controls.InputBlocked=true;
+        introLeaving=false;controls.InputBlocked=true;
         introCapturePath=capturePath;introPlaying=true;introFurthest=0;introStall=0;introFade=0;introCaptureDone=false;
         introTexture=new RenderTexture(1280,720,0){name="Startup intro"};introTexture.Create();
         var host=new GameObject("Startup intro");host.transform.SetParent(transform,false);
@@ -57,10 +56,8 @@ public sealed partial class PcGame {
         if(completed&&BattleLab.Arg("--pc-intro")==""){PlayerPrefs.SetInt(IntroCompletedKey,1);PlayerPrefs.Save();}
         if(introPlayer){introPlayer.Stop();introPlayer.targetTexture=null;Destroy(introPlayer.gameObject);introPlayer=null;introAudio=null;}
         if(introTexture){introTexture.Release();Destroy(introTexture);introTexture=null;}
-        introResumeMusic=IntroMusicOffset+played;
-        Debug.Log("CF_PC_INTRO_END completed="+completed+" played="+played.ToString("F2")+" music="+introResumeMusic.ToString("F2"));
+        Debug.Log("CF_PC_INTRO_END completed="+completed+" played="+played.ToString("F2"));
     }
-    float introResumeMusic;
     void UpdateIntro() {
         if(!introPlaying)return;
         if(introPlayer) {
@@ -82,8 +79,7 @@ public sealed partial class PcGame {
         if(introLeaving) {
             introFade=Mathf.Clamp01(introFade+Time.unscaledDeltaTime/.18f);
             if(introFade>=1f) {
-                introPlaying=false;page=Page.Main;BeginMenuMusic(introResumeMusic);
-                Debug.Log("CF_PC_INTRO_MENU_MUSIC offset="+introResumeMusic.ToString("F2"));
+                introPlaying=false;page=Page.Main;
                 if(!introCaptureDone&&!string.IsNullOrEmpty(introCapturePath)){introCaptureDone=true;StartCoroutine(CaptureIntro(introCapturePath));}
             }
         }
