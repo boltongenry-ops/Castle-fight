@@ -23,7 +23,7 @@ public sealed partial class PcGame {
             while(guideLoading&&Time.realtimeSinceStartup<deadline)yield return null;
             Check(guideRace==race&&guideAuthority!=null,"Opened "+GuideRaceName(race));
             if(guideRace!=race)continue;
-            var portrait=GuideArtworkFor(race);
+            var portrait=RaceArtworkFor(race);
             Check(portrait&&portrait.width*2==portrait.height*3,"Dedicated full-frame portrait loaded for "+GuideRaceName(race));
             var entries=GuideEntries().ToArray();
             Check(entries.Length>0&&entries.All(k=>GuideIcon(k)),"Construction icons loaded for "+GuideRaceName(race));

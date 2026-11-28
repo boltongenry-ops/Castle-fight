@@ -142,10 +142,33 @@ public sealed partial class HumanMatch {
         if(BotPlace(affordable.kind)){botChoice++;botPlan=(botAir>.35f&&BotWeapons(affordable.kind).Any(w=>w.air)?"Против воздуха: ":"Строит: ")+Lines[affordable.kind].name;}
     }
     bool BotPlace(int k){
-        var line=Lines[k];bool tower=line.buildingWeapons.Length>0;float desiredX=tower?3:line.Producer?18:21;float best=float.MaxValue;int bx=-1,by=-1;
-        var occupied=new bool[32,24];foreach(var h in Huts)if(h.team==1&&h.x>=0&&h.x<32&&h.y>=0&&h.y<24)occupied[h.x,h.y]=true;
-        for(int y=0;y<24;y++)for(int x=0;x<32;x++){
-            if(!LegalCell(1,x,y)||occupied[x,y]||ProtocolBlocksPlot(1,x,y)||Vector2.Distance(Plot(1,x,y),CastlePosition(1))<CastleCollision+Cell*.5f)continue;float dy=Mathf.Min(Mathf.Abs(y-11),Mathf.Abs(y-12));float score=Mathf.Abs(x-desiredX)*1.3f+dy*1.4f+Vector2.Distance(Builders[1].position,Plot(1,x,y))*.015f;
+        bool epochal=IsEpochalTrial(ChallengeFamily)&&!ExpertTrial;
+        var line=Lines[k];
+        bool tower=epochal?line.buildingWeapons.Length>0:
+            line.category=="tower"||(!line.Producer&&line.buildingWeapons.Length>0);
+        const int rearStart=26;
+        int preferredColumn=tower?3:epochal?(line.Producer?18:21):28;
+        float best=float.MaxValue;
+        int bx=-1,by=-1;
+        int rows=epochal?24:26;
+        var occupied=new bool[32,rows];
+        foreach(var h in Huts)
+            if(h.team==1&&h.x>=0&&h.x<32&&h.y>=0&&h.y<rows)occupied[h.x,h.y]=true;
+
+        // The bot builds on the east. Larger columns are farther from the enemy approach.
+        int first=tower||epochal?0:rearStart,last=tower&&!epochal?rearStart:32;
+        var castle=CastlePosition(1);
+        var builder=Builders[1].position;
+        float clearance=CastleCollision+Cell*.5f;
+        for(int y=0;y<rows;y++)for(int x=first;x<last;x++){
+            if(!LegalCell(1,x,y)||occupied[x,y]||ProtocolBlocksPlot(1,x,y))continue;
+            var plot=Plot(1,x,y);
+            if((plot-castle).sqrMagnitude<clearance*clearance)continue;
+            int rowOffset=Mathf.Min(Mathf.Abs(y-11),Mathf.Abs(y-12));
+            int rowDistance=y>=24?0:rowOffset+1;
+            float score=(epochal?Mathf.Abs(x-preferredColumn)*1.3f+rowOffset*1.4f:
+                Mathf.Abs(x-preferredColumn)*(tower?2.5f:1.7f)+Mathf.Abs(rowDistance-(tower?0:3))*(tower?2f:1.25f))
+                +Vector2.Distance(builder,plot)*.015f;
             if(score<best){best=score;bx=x;by=y;}
         }
         return bx>=0&&TryBuild(1,k,bx,by,out _);

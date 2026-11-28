@@ -54,7 +54,7 @@ public sealed partial class HumanMatch {
     public Vector2 HordeChargeEnd=>hordeChargeEnd;
 
     void BeginCursedHorde(){
-        CursedHorde=(string)ChallengeRules?["id"]==HordeTrial;
+        CursedHorde=ChallengeFamily==HordeTrial;
         if(!CursedHorde)return;
         hordeShamanKind=Array.FindIndex(Lines,l=>l.unit=="o003");
         hordeWarchiefKind=Array.FindIndex(Lines,l=>l.unit=="o005");
@@ -102,7 +102,7 @@ public sealed partial class HumanMatch {
     }
 
     void TickCursedHorde(){
-        if(!CursedHorde)return;
+        if(!CursedHorde||ExpertCastleFallen)return;
         for(int i=hordeShamans.Count-1;i>=0;i--){
             var shaman=hordeShamans[i];
             if(shaman.carrier.hp<=0||shaman.carrier.team!=HordeBossTeam){hordeShamans.RemoveAt(i);continue;}

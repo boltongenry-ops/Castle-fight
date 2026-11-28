@@ -17,7 +17,7 @@ public sealed partial class PcGame {
         Check(ConstructionKinds().Select(k=>match.Lines[k].hotkey).Distinct().Count()==10,"Every build hotkey unique");
         foreach(int k in ConstructionKinds()){
             var line=match.Lines[k];Check(MatchBuildingIcon(k)&&RaceModel(0,k,true)&&RaceModel(1,k,true),"Both teams building art/model / "+line.building);
-            if(line.building!="h008")Check(MatchBuildingIcon(k).name=="Building-"+line.building,"Construction uses actual building thumbnail / "+line.building);
+            if(line.building!="h008")Check(MatchBuildingIcon(k).name is string icon&&(icon=="Building-"+line.building||icon=="AuthoredBuilding-"+line.building),"Construction uses the corresponding building illustration / "+line.building);
         }
         FocusBuilder();buildMenu=true;yield return Shot(folder,"nerubian-ordered-build-menu");
         Check(!match.TryBuild(0,match.Kind("hNO1"),17,14,out _),"Direct Matriarch construction rejected");
@@ -32,7 +32,7 @@ public sealed partial class PcGame {
         int n=match.Units.Count;hut.spawnLeft=0;match.Step(.05f);Check(match.Units.Skip(n).Any(u=>match.Lines[u.kind].unit=="nN0D"),"Upgraded building actually produces the Matriarch");
         Check(match.Sell(0,hut.id)&&match.LegendaryUsed(0)==0,"Selling upgraded Matriarch frees legendary limit");
         MainMenu();OpenGuide();GuideChooseRace(13);int legend=Array.FindIndex(guideAuthority.Lines,l=>l.building=="hNO1");GuideSelectEntry(legend);
-        Check(GuideInvestment(legend)==520&&GuideIcon(legend).name=="Building-hNO1","Guide preserves cumulative cost and building icon");yield return Shot(folder,"nerubian-matriarch-guide");
+        Check(GuideInvestment(legend)==520&&(GuideIcon(legend).name is "Building-hNO1" or "AuthoredBuilding-hNO1"),"Guide preserves cumulative cost and building icon");yield return Shot(folder,"nerubian-matriarch-guide");
         MainMenu();raceChoice=12;botRaceChoice=0;NewMatch();testHoldAuthority=true;var ultimate=JObject.Parse(RaceCatalog(12));
         Check(!ultimate["ultimateSlots"].SelectMany(s=>(JArray)s["groups"]).Any(g=>((JArray)g["buildings"]).Any(b=>(string)b=="hNO1")),"Ultimate cannot draw Matriarch directly");
         Check(ultimate["lines"].First(l=>(string)l["building"]=="hNS2")["upgrades"].Any(v=>(string)v=="hNO1"),"Ultimate retains Matriarch dependency chain");
@@ -49,4 +49,3 @@ public sealed partial class PcGame {
     }
 }
 }
-

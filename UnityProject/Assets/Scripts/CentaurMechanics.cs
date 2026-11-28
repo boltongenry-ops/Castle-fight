@@ -4,6 +4,10 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace CastleFight {
 public sealed partial class HumanMatch {
+    const string CentaurReserve="CTCR";
+    static readonly Newtonsoft.Json.Linq.JObject SpareCharge=new Newtonsoft.Json.Linq.JObject{
+        ["id"]=CentaurReserve,["name"]="Запасной натиск",["kind"]="buff",["duration"]=48
+    };
     sealed class CentaurStride {public int team;public float running,quiet,after;public Vector2 point;}
     public sealed class CentaurCloud {public int team;public Vector2 point;public float left=5;}
     public sealed class CentaurSand {public int team,rank;public Vector2 point;public float left=6;}
@@ -28,7 +32,13 @@ public sealed partial class HumanMatch {
         s.point=u.position;
     }
     void CentaurOpening(Unit u){
-        if(CentaurChargeProgress(u)<1)return;var s=centaurStrides[u.id];s.running=0;s.quiet=0;s.after=Elapsed+6;
+        if(!centaurStrides.TryGetValue(u.id,out var stride)||stride.team!=u.team)return;
+        if(CentaurChargeProgress(u)<1){
+            var reserve=u.effects.Find(effect=>effect.id==CentaurReserve&&effect.left>0&&effect.sourceTeam==u.team);
+            if(reserve==null||stride.after<=0||Elapsed<stride.after)return;
+            u.effects.Remove(reserve);
+        }
+        var s=stride;s.running=0;s.quiet=0;s.after=Elapsed+6;
         u.shotDamage*=IsCentaur(u.team)&&Aspects[u.team]==0?1.6f:1.4f;CentaurCharges++;
         PulseAt(u.position,1.8f,new Color(.95f,.75f,.3f),"Натиск",.45f,"steppe:charge");
         if(u.abilities.Contains("CT02"))ApplyEffect(u,"CT13",u.team);
@@ -76,9 +86,22 @@ public sealed partial class HumanMatch {
         }
         foreach(var u in Units)if(u.hp>0&&u.spellResist<1&&!Invulnerable(u)&&Lines[u.kind].weapons.Any(w=>w.type!="normal")&&CentaurClouds.Any(c=>c.team!=u.team&&Vector2.Distance(c.point,u.position)<=6))ApplyEffect(u,"CT11",1-u.team);
         if(centaurHealing<=0){centaurHealing=2;for(int team=0;team<2;team++)if(IsCentaur(team)){
-            int supplies=Huts.Count(h=>h.team==team&&h.paid&&h.hp>0&&!h.paused&&BuildingDisabled(h)<=0&&Lines[h.kind].building=="c009");
-            foreach(var u in Units.Where(v=>v.team==team&&v.hp>0&&v.hp<v.maxHp&&!Invulnerable(v)&&!Hidden(v)&&InsideBase(team,v.position)).OrderBy(v=>v.hp/v.maxHp).Take(Math.Min(ArmyLimit,supplies*5))){u.hp=Mathf.Min(u.maxHp,u.hp+8);CentaurHeals++;}
+            var supplies=Huts.Where(h=>h.team==team&&h.paid&&h.hp>0&&!h.paused&&BuildingDisabled(h)<=0&&Lines[h.kind].building=="c009").ToArray();
+            foreach(var u in Units.Where(v=>v.team==team&&v.hp>0&&v.hp<v.maxHp&&!Invulnerable(v)&&!Hidden(v)&&InsideBase(team,v.position)).OrderBy(v=>v.hp/v.maxHp).Take(Math.Min(ArmyLimit,supplies.Length*5))){u.hp=Mathf.Min(u.maxHp,u.hp+8);CentaurHeals++;}
+            if(F(Abilities["CT06"],"reserve_duration")>0)foreach(var wagon in supplies)RestockCentaurCharge(wagon);
         }}
+    }
+
+    void RestockCentaurCharge(Hut wagon){
+        const string ability="CT06";
+        if(wagon.spellTimers.TryGetValue(ability,out float wait)&&wait>0)return;
+        var riders=Units.Where(u=>u.team==wagon.team&&u.hp>0&&!u.summoned&&u.abilities.Contains("CT01")&&
+            !u.effects.Any(effect=>effect.id==CentaurReserve&&effect.left>0)&&
+            (u.position-wagon.position).sqrMagnitude<=24*24).OrderBy(u=>(u.position-wagon.position).sqrMagnitude).Take(3).ToArray();
+        if(riders.Length==0)return;
+        foreach(var rider in riders)ApplyEffectData(rider,SpareCharge,wagon.team);
+        wagon.spellTimers[ability]=F(Abilities[ability],"cd",16);
+        PulseAt(wagon.position,3,new Color(.93f,.69f,.28f),"Запасной натиск",.62f,"steppe:charge");
     }
 }
 }

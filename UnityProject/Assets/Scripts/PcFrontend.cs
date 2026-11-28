@@ -72,7 +72,7 @@ public sealed partial class PcGame {
     void DrawMenuBackground() {
         Fill(new Rect(0,0,1280,720),new Color(0,0,0,.18f));
     }
-    void DisposeFrontend(){StopDirectory();DisposeAccountAvatars();DisposeStickers();DisposeCampaignArtwork();ReleaseRaceArtwork();DisposeLoadingArt();if(menuMist)Destroy(menuMist);if(notificationChime)Destroy(notificationChime);DisposeWinterArtwork();DisposeHordeArtwork();}
+    void DisposeFrontend(){ReleaseStartCameraPreview();StopDirectory();DisposeAccountAvatars();DisposeStickers();DisposeCampaignArtwork();DisposeAuthoredBuildingIcons();ReleaseRaceArtwork();DisposeLoadingArt();if(menuMist)Destroy(menuMist);if(notificationChime)Destroy(notificationChime);DisposeWinterArtwork();DisposeHordeArtwork();}
     // Only the current pair is decoded; fifteen source paintings stay on disk.
     static readonly string[] VersusKeys={"human","orc","naga","nature","chaos","northern","mech","undead","corrupted","elemental","night","elven","ultimate","nerubian","pandaren","centaur","pepe","blackhand"};
     static readonly string[] VersusNames={"Альянс людей","Орочья Орда","Наги","Силы природы","Легионы Хаоса","Северные королевства","Коалиция механизмов","Силы нежити","Осквернённые","Мир элементалей","Ночные эльфы","Союз эльфов","Высший строитель","Рой нерубов","Орден пандаренов","Ханства Пустошей","Болотное братство Пепе","Клан Чёрной Руки"};
@@ -96,12 +96,12 @@ public sealed partial class PcGame {
     void BeginVersus(int a,int b,bool online){
         DisposeVersusArt();versusSerial++;versusA=Mathf.Clamp(a,0,VersusKeys.Length-1);versusB=Mathf.Clamp(b,0,VersusKeys.Length-1);versusActive=true;versusPrepared=false;versusNetwork=online;versusAt=Time.realtimeSinceStartup;versusReadyVisible=0;versusReadyDrawFrame=-1;
         versusNameA=online?ResultPlayerName(networkSlot):"Вы";versusNameB=online?ResultPlayerName(1-networkSlot):"Компьютер";
-        choirVersus=!online&&(string)activeChallenge?["id"]==HumanMatch.ChoirTrial;
-        hordeVersus=!online&&(string)activeChallenge?["id"]==HumanMatch.HordeTrial;
+        choirVersus=!online&&ActiveChallengeFamily==HumanMatch.ChoirTrial;
+        hordeVersus=!online&&ActiveChallengeFamily==HumanMatch.HordeTrial;
         protocolVersus=!online&&ActiveProtocolTrial;
         abyssVersus=!online&&ActiveAbyssTrial;
-        quackVersus=!online&&(string)activeChallenge?["id"]==HumanMatch.QuackTrial;
-        versusWinter=quackVersus||abyssVersus||protocolVersus||choirVersus||hordeVersus||!online&&(string)activeChallenge?["id"]==HumanMatch.WinterTrial;
+        quackVersus=!online&&ActiveChallengeFamily==HumanMatch.QuackTrial;
+        versusWinter=quackVersus||abyssVersus||protocolVersus||choirVersus||hordeVersus||!online&&ActiveChallengeFamily==HumanMatch.WinterTrial;
         winterVersusFrame=-1;winterVersusReveal=0;
         if(versusWinter&&!quackVersus&&!choirVersus&&!hordeVersus&&!protocolVersus&&!abyssVersus)WinterArtwork();
         if(MobileContent.Active){
@@ -149,7 +149,7 @@ public sealed partial class PcGame {
             yield return null;
         }
     }
-    void BeginOfflineVersus(bool next=false){if(versusActive)return;if(testing&&(string)activeChallenge?["id"]!=HumanMatch.WinterTrial&&(string)activeChallenge?["id"]!=HumanMatch.ChoirTrial&&(string)activeChallenge?["id"]!=HumanMatch.HordeTrial&&!ActiveProtocolTrial&&!ActiveAbyssTrial&&(string)activeChallenge?["id"]!=HumanMatch.QuackTrial){if(next)StartRound();else NewMatch();return;}StartCoroutine(OfflineVersus(next));}
+    void BeginOfflineVersus(bool next=false){if(versusActive)return;if(testing&&!HumanMatch.IsEpochalTrial(ActiveChallengeId)){if(next)StartRound();else NewMatch();return;}StartCoroutine(OfflineVersus(next));}
     IEnumerator OfflineVersus(bool next){
         if(matchMode==1){raceChoice=RandomStagedRace(-1);botRaceChoice=RandomStagedRace(raceChoice);mobileRoundPrepared=true;}
         BeginVersus(raceChoice,matchMode==2?raceChoice:botRaceChoice<0?raceChoice:botRaceChoice,false);int generation=versusSerial;
@@ -157,14 +157,18 @@ public sealed partial class PcGame {
         if(MobileContent.Active){yield return PrepareMobileMatch(versusA,versusB);yield return PrepareUltimateDraw034(versusA,versusB);MobileContent.Current.Ready();}
         else yield return PrepareDesktopMatch(versusA,versusB,generation);
         if(generation!=versusSerial){mobileRoundPrepared=false;yield break;}
+        yield return PrepareWardrobeModel(versusA,generation);
+        if(generation!=versusSerial){mobileRoundPrepared=false;yield break;}
         if(next)StartRound();else NewMatch();
         if(matchRace!=versusA||matchBotRace!=versusB){DisposeVersusArt();versusA=matchRace;versusB=matchBotRace;if(MobileContent.Active)PrepareVersusFallbacks();yield return LoadVersusArt(generation);}
-        if(matchRace==PepeContent.Race||matchBotRace==PepeContent.Race){
+        if((!match.QuackActive||match.ExpertTrial)&&(matchRace==PepeContent.Race||matchBotRace==PepeContent.Race)){
             yield return LoadGreatQuackArt(generation);
             if(generation!=versusSerial)yield break;
         }
         if(match.FuneralChoir){yield return PrepareRitualGround(generation,true);if(generation!=versusSerial)yield break;yield return PrepareChoirMusic(generation);if(generation!=versusSerial)yield break;}
         if(match.CursedHorde){
+            if(match.ExpertTrial)yield return PrepareYurneroArt(generation);
+            if(generation!=versusSerial)yield break;
             yield return PrepareHordeGround(generation);
             if(generation!=versusSerial)yield break;
             yield return PrepareBossSoundtrack(generation);
@@ -204,6 +208,8 @@ public sealed partial class PcGame {
         yield return LoadVersusArt(generation);yield return new WaitForEndOfFrame();if(generation!=versusSerial)yield break;
         if(MobileContent.Active){yield return PrepareMobileMatch(a,b);yield return PrepareUltimateDraw034(a,b,packet["ultimate_loadouts"] as JArray);MobileContent.Current.Ready();}
         else yield return PrepareDesktopMatch(a,b,generation);
+        if(generation!=versusSerial)yield break;
+        yield return PrepareWardrobeModel(a,generation);
         if(generation!=versusSerial)yield break;
         NetworkLoadCore(packet);if(!onlineMatch){CloseVersus();yield break;}
         if(a==PepeContent.Race||b==PepeContent.Race){

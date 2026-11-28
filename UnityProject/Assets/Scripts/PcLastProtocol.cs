@@ -36,7 +36,7 @@ public sealed partial class PcGame {
         ["difficulty"]=2,["reward"]=0,["xp"]=0
     };
 
-    bool ActiveProtocolTrial=>(string)activeChallenge?["id"]==HumanMatch.ProtocolTrial;
+    bool ActiveProtocolTrial=>ActiveChallengeFamily==HumanMatch.ProtocolTrial;
     bool CurrentMythic=>match!=null&&(match.EternalWinter||match.FuneralChoir||match.CursedHorde||match.LastProtocol||match.AbyssTrialActive||match.QuackActive);
 
     void DrawProtocolPainting(Rect area){
@@ -262,7 +262,7 @@ public sealed partial class PcGame {
         accumulator=0;
         controls.InputBlocked=false;
         UpdateFog(true);ApplyFogViews();
-        controls.FocusWorld(World(match.Builders[0].position),40);
+        FocusOpeningBuilder();
     }
 
     static AudioClip ProtocolSound(bool shot){

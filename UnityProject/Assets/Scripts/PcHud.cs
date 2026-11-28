@@ -375,6 +375,8 @@ public sealed partial class PcGame {
         if(portraitRaw!=prefab.name) {
             if(portraitModel){portraitModel.gameObject.SetActive(false);Destroy(portraitModel.gameObject);}
             portraitModel=Instantiate(prefab,portraitStage.transform).GetComponent<PcModel>();portraitRaw=prefab.name;
+            var subject=SelectedUnit;
+            if(builderSelected||subject!=null)DressBattleActor(portraitModel,builderSelected?0:subject.team,builderSelected);
             foreach(var tr in portraitModel.GetComponentsInChildren<Transform>())tr.gameObject.layer=31;
             portraitModel.transform.localRotation=Quaternion.identity;
             portraitModel.SamplePose();var head=portraitModel.GetComponentsInChildren<Transform>().FirstOrDefault(t=>string.Equals(t.name,"Bone_Head",StringComparison.OrdinalIgnoreCase));
@@ -399,6 +401,12 @@ public sealed partial class PcGame {
                 var offset=portraitModel.raw=="hfoo"?new Vector3(-distance*.625f,span*.6f,distance):new Vector3(0,span*.03f,distance);
                 portraitCamera.transform.position=point+offset;portraitCamera.transform.LookAt(point);
                 Debug.Log("CF_REFORGED_PORTRAIT raw="+portraitModel.raw+" head="+face.center+" size="+face.size+" camera="+portraitCamera.transform.position);
+            }
+            else if(prefab.name=="Moonleaf Artisan"&&portraitModel.HeadBounds(out var moonleafHead)){
+                float width=Mathf.Max(moonleafHead.size.x,moonleafHead.size.y);
+                var focus=moonleafHead.center+Vector3.up*.03f;
+                portraitCamera.transform.position=focus+new Vector3(-width*.55f,width*.18f,width*2.35f);
+                portraitCamera.transform.LookAt(focus);
             }
             else if(!portraitModel.reforged&&raw=="h00P"&&head){var point=head.position+Vector3.up*.04f;portraitCamera.transform.position=point+new Vector3(0,.02f,Mathf.Max(.8f,portraitModel.ClassicHeight*.65f));portraitCamera.transform.LookAt(point);}
             else if(!portraitModel.reforged&&raw=="h018"&&head) {

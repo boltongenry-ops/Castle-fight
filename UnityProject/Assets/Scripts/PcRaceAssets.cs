@@ -89,8 +89,7 @@ public sealed partial class PcGame {
     void ClearPortraits(){
         if(portraitCamera)portraitCamera.enabled=false;
         if(portraitModel){portraitModel.gameObject.SetActive(false);Destroy(portraitModel.gameObject);}
-        if(menuPortraitModel){menuPortraitModel.gameObject.SetActive(false);Destroy(menuPortraitModel.gameObject);}
-        portraitModel=menuPortraitModel=null;portraitRaw=menuPortraitRaw=null;
+        portraitModel=null;portraitRaw=null;
     }
 
     void PreserveAssetAuditForHistoricalTests(){

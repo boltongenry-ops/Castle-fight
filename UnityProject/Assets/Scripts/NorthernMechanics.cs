@@ -109,15 +109,15 @@ public sealed partial class HumanMatch {
         if(shot.chaosSpell.StartsWith("north_frost:",StringComparison.Ordinal)) {
             float radius=F(cfg,"area");
             using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_2)if(u.hp>0&&u.team!=shot.team&&!Hidden(u)&&(bool?)Lines[u.kind].stats["invulnerable"]!=true&&!Flying(u)&&(id=="A04L"&&Vector2.Distance(u.position,shot.end)<=radius))DamageUnit(u,F(cfg,"power"),shot.team,"chaos",false);
-            using(var snapshot035_3=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_3)if(h.paid&&h.hp>0&&h.team!=shot.team&&(HutTarget(h)==shot.target||id=="A04L"&&Vector2.Distance(h.position,shot.end)<=radius)){DamageHut(h,F(cfg,"power"),"chaos",shot.team);if(h.hp>0)FreezeNorthernStructure(HutTarget(h),shot.team,"Bfrz",F(cfg,"freeze"));}
-            if(id=="A04L"&&Vector2.Distance(BattleCastlePosition(1-shot.team),shot.end)<=radius)DamageCastle(1-shot.team,F(cfg,"power"),"chaos");
+            using(var snapshot035_3=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_3)if(h.paid&&h.hp>0&&h.team!=shot.team&&(HutTarget(h)==shot.target||id=="A04L"&&Vector2.Distance(h.position,shot.end)<=radius)){DamageHut(h,F(cfg,"power"),"chaos",shot.team,sourceId:shot.sourceId);if(h.hp>0)FreezeNorthernStructure(HutTarget(h),shot.team,"Bfrz",F(cfg,"freeze"));}
+            if(id=="A04L"&&Vector2.Distance(BattleCastlePosition(1-shot.team),shot.end)<=radius)DamageCastle(1-shot.team,F(cfg,"power"),"chaos",sourceId:shot.sourceId);
             PulseAt(shot.end,Mathf.Max(2,radius),Color.cyan,"Заморозка");return true;
         }
         var target=FindUnit(shot.target);
         if(target!=null&&Valid(target,shot.team,cfg,false)) {
             DamageUnit(target,F(cfg,"power"),shot.team);
             if(target.hp>0&&F(cfg,"stun")>0){target.stun=Mathf.Max(target.stun,F(cfg,ShortNorthernControl(target)?"hero_duration":"stun"));NorthernControls++;}
-        } else if(id=="A080"&&target==null&&TargetAlive(shot.target)) {var hut=FindHut(shot.target);if(hut!=null)DamageHut(hut,F(cfg,"power"),"magic",shot.team,true);else if(shot.target==-1)DamageCastle(1-shot.team,F(cfg,"power"),"magic",true);}
+        } else if(id=="A080"&&target==null&&TargetAlive(shot.target)) {var hut=FindHut(shot.target);if(hut!=null)DamageHut(hut,F(cfg,"power"),"magic",shot.team,true,sourceId:shot.sourceId);else if(shot.target==-1)DamageCastle(1-shot.team,F(cfg,"power"),"magic",true,shot.sourceId);}
         PulseAt(shot.end,1,Color.cyan,"Лёд");return true;
     }
     void NorthernBarrage(Unit source,Weapon active) {

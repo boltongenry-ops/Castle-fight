@@ -10,8 +10,8 @@ public sealed partial class PcGame {
     IEnumerator ExerciseWorkshop038(){
         string output=BattleLab.Arg("--pc-results");
         Directory.CreateDirectory(output);
-        var catalog=(JArray)progression.Catalog["items"];
-        Check(catalog.Count==27&&catalog.Select(item=>(string)item["id"]).Distinct().Count()==27,"27 distinct cosmetics and existing purchases");
+        var catalog=((JArray)progression.Catalog["items"]).OfType<JObject>().Where(row=>!WardrobeCatalog.IsWardrobeProduct(row)).ToArray();
+        Check(catalog.Length==27&&catalog.Select(item=>(string)item["id"]).Distinct().Count()==27,"27 distinct cosmetics and existing purchases");
         Check(catalog.Count(item=>(string)item["kind"]=="aura")==8&&catalog.Count(item=>(string)item["kind"]=="effect")==6&&
             catalog.Count(item=>(string)item["kind"]=="skin")==8,"Aura, effects, and skin catalog counts");
         Check(progression.Coins==0&&!progression.Buy("skin_emerald",out _),"Fresh wallet rejects unaffordable items");
@@ -45,6 +45,7 @@ public sealed partial class PcGame {
         yield return Shot(output,"02-workshop-effects");
 
         yield return Action("workshop.tab.2");
+        yield return Action("workshop.wardrobe.2");
         yield return Action("workshop.pick.skin_emerald");
         yield return Action("workshop.race.next");
         Check(Workshop.mannequin&&Workshop.mannequin.raw=="h019","Race selector swaps the shop model to the Orc builder");
@@ -84,7 +85,7 @@ public sealed partial class PcGame {
         yield return CheckSiegeChallenges038(output,human);
         var report=new JObject{
             ["status"]=testFailures==0?"PASS":"FAIL",["build"]=Version,["checks"]=testChecks,["failures"]=testFailures,
-            ["items"]=catalog.Count,["challenges"]=((JArray)progression.Catalog["challenges"]).Count
+            ["items"]=catalog.Length,["challenges"]=((JArray)progression.Catalog["challenges"]).Count
         };
         File.WriteAllText(Path.Combine(output,"workshop-verification.json"),report.ToString());
         Debug.Log("CF_WORKSHOP038_"+(testFailures==0?"PASS":"FAIL")+" checks="+testChecks.Count);

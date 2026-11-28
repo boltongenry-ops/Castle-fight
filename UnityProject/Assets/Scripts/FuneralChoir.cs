@@ -9,7 +9,15 @@ public sealed partial class HumanMatch {
     public const string ChoirTrial="mythic_funeral_choir";
     public const float ChoirPreparation=240f;
     public const float ChoirBar=4*60f/130, ChoirLead=4*ChoirBar, ChoirPass=24;
-    public enum ChoirMovement {Verse, First, Interlude, Second, Wail, Rest}
+    public enum ChoirMovement {Verse, First, Interlude, Second, Wail, Rest, FinalSiege, TombExposed}
+    public const float ChoirFinalDuration=90;
+    public const int ChoirTombHealth=2500;
+    const float ChoirFinalInterval=30,ChoirHauntDuration=12;
+    public bool ChoirTomb=>Movement==ChoirMovement.FinalSiege||Movement==ChoirMovement.TombExposed;
+    public bool ChoirTombSealed=>Movement==ChoirMovement.FinalSiege;
+    public float ChoirFinalLeft=>ChoirTombSealed?Mathf.Max(0,ChoirFinalDuration-MovementAge):0;
+    public int ChoirFinalWave {get;private set;}
+    float choirHauntAt;
     public bool FuneralChoir {get;private set;}
     public ChoirMovement Movement {get;private set;}
     public float MovementAge=>Elapsed-choirStart;
@@ -24,15 +32,15 @@ public sealed partial class HumanMatch {
     static readonly Color GraveGreen=new Color(.38f,.88f,.49f);
     static readonly JObject ChoirBleed=new JObject{["id"]="grave_bleed",["kind"]="debuff",["duration"]=4,["dps"]=9,["interval"]=1};
     public bool IsCrawler(Unit u)=>crawlers.ContainsKey(u.id);
-    public float Burial(Unit u)=>haunts.TryGetValue(u.id,out var ghost)&&ghost.hp>0?Mathf.Clamp01(MovementAge/12):0;
+    public float Burial(Unit u)=>haunts.TryGetValue(u.id,out var ghost)&&ghost.hp>0?Mathf.Clamp01((Elapsed-choirHauntAt)/ChoirHauntDuration):0;
 
     bool ChoirCastleEvades(int defender){
-        if(!FuneralChoir||defender!=1||Roll()>=.20f)return false;
+        if(!FuneralChoir||ChoirTomb||defender!=1||Roll()>=.20f)return false;
         PulseAt(CastlePosition(defender),1.6f,GraveGreen,"Промах",.6f);
         return true;
     }
     void BeginChoir(){
-        FuneralChoir=(string)ChallengeRules?["id"]==ChoirTrial;
+        FuneralChoir=ChallengeFamily==ChoirTrial;
         if(!FuneralChoir)return;
         nextToll=ChoirPreparation+8*ChoirBar;
         nextVerseEnd=ChoirPreparation;
@@ -42,9 +50,9 @@ public sealed partial class HumanMatch {
         if(next==ChoirMovement.Interlude||next==ChoirMovement.Rest)nextVerseEnd=Elapsed+8*ChoirBar;
     }
     bool ChoirVictim(Unit u)=>u.team==0&&ChaosFighter(u)&&!Invulnerable(u);
-    Unit GraveSpawn(string raw,Vector2 at){
+    Unit GraveSpawn(string raw,Vector2 at,bool markGrave=true){
         int kind=Array.FindIndex(Lines,line=>line.unit==raw);
-        if(ChoirRevealed)GraveSites.Add(at);
+        if(ChoirRevealed&&markGrave)GraveSites.Add(at);
         var unit=Spawn(1,kind,at);unit.onRoad=true;unit.noBounty=unit.noCorpse=unit.summoned=true;
         PulseAt(at,2,GraveGreen,"",1,"undead_raise");return unit;
     }
@@ -56,9 +64,18 @@ public sealed partial class HumanMatch {
             for(int i=0;i<3;i++)invaders.Add(GraveSpawn(i==1?"u007":"n00E",keep+new Vector2(11,i*5-5)));
             return;
         }
-        foreach(var target in Units.Where(ChoirVictim).OrderByDescending(u=>u.position.x).Take(6).ToArray()){
-            var ghoul=GraveSpawn("n00B",target.position+Vector2.right*2);
-            crawlers.Add(ghoul.id,target);ghoul.combatTarget=target.id;invaders.Add(ghoul);
+        SpawnChoirCrawlers(false);
+    }
+    void SpawnChoirCrawlers(bool finale){
+        var targets=Units.Where(ChoirVictim).OrderByDescending(u=>u.position.x).Take(6).ToArray();
+        int count=finale?6:targets.Length;
+        for(int i=0;i<count;i++){
+            var target=i<targets.Length?targets[i]:null;
+            var position=target!=null?target.position+Vector2.right*2:CastlePosition(0)+new Vector2(20+i,5*(i%3-1));
+            var ghoul=GraveSpawn("n00B",position);
+            crawlers.Add(ghoul.id,target);
+            if(target!=null)ghoul.combatTarget=target.id;
+            invaders.Add(ghoul);
         }
     }
     void EndGraves(){
@@ -71,26 +88,72 @@ public sealed partial class HumanMatch {
     }
     void StartHaunts(){
         NextChoir(ChoirMovement.Wail);
-        foreach(var target in Units.Where(ChoirVictim).ToArray()){
-            var ghost=GraveSpawn("u001",target.position+Vector2.right);
+        SpawnChoirHaunts(Units.Where(ChoirVictim).ToArray());
+    }
+    void SpawnChoirHaunts(Unit[] victims){
+        choirHauntAt=Elapsed;
+        foreach(var target in victims){
+            var ghost=GraveSpawn("u001",target.position+Vector2.right,false);
             ghost.maxHp=ghost.hp=Mathf.Clamp(Lines[target.kind].damage*2,20,400);
             ghost.armor=0;ghost.abilities.Clear();target.combatTarget=ghost.id;
             haunts.Add(target.id,ghost);
         }
     }
     void TickHaunts(){
+        float age=Elapsed-choirHauntAt;
         foreach(var pair in haunts){
             var target=FindUnit(pair.Key);var ghost=pair.Value;
             if(ghost.hp<=0||target==null||!ChoirVictim(target)){DismissChoir(ghost);continue;}
-            float angle=MovementAge*1.57f+target.id;
+            float angle=age*1.57f+target.id;
             ghost.position=target.position+new Vector2(Mathf.Cos(angle),Mathf.Sin(angle))*1.1f;
             target.combatTarget=ghost.id;ghost.castPause=.2f;
-            if(MovementAge<12)continue;
+            if(age<ChoirHauntDuration)continue;
             DamageUnit(target,target.hp,1,execute:true,killer:ghost,suppressUndead:true);
-            if(target.hp<=0)GraveSpawn("u002",target.position);
+            if(target.hp<=0){
+                var skeleton=GraveSpawn("u002",target.position,false);
+                if(ChoirTombSealed)invaders.Add(skeleton);
+            }
             DismissChoir(ghost);
         }
-        if(MovementAge>=12.92f){haunts.Clear();NextChoir(ChoirMovement.Rest);}
+        if(age>=12.92f){
+            ClearChoirHaunts();
+            if(!ChoirTombSealed)NextChoir(ChoirMovement.Rest);
+        }
+    }
+    void ClearChoirHaunts(){
+        foreach(var ghost in haunts.Values)DismissChoir(ghost);
+        haunts.Clear();
+    }
+    bool ChoirCastleHit(int team,float amount){
+        if(!FuneralChoir||!ExpertTrial||team!=1)return false;
+        if(ChoirTombSealed)return true;
+        if(ChoirTomb||amount<CastleHp[team])return false;
+        ClearChoirHaunts();
+        EndGraves();
+        NextChoir(ChoirMovement.FinalSiege);
+        CastleHp[team]=ChoirTombHealth;
+        PulseAt(CastlePosition(team),12,GraveGreen,"НАДГРОБИЕ ПРОБУДИЛОСЬ",2.6f,"undead_raise");
+        return true;
+    }
+    void TickChoirFinale(){
+        if(ChoirFinalLeft<=.001f){
+            ClearChoirHaunts();
+            EndGraves();
+            NextChoir(ChoirMovement.TombExposed);
+            PulseAt(CastlePosition(1),10,GraveGreen,"НАДГРОБИЕ УЯЗВИМО",2.6f);
+            return;
+        }
+        if(MovementAge+.001f>=ChoirFinalWave*ChoirFinalInterval){
+            ChoirFinalWave++;
+            ClearChoirHaunts();
+            EndGraves();
+            ChoirRevealed=true;
+            var keep=CastlePosition(0);
+            for(int i=0;i<3;i++)invaders.Add(GraveSpawn(i==1?"u007":"n00E",keep+new Vector2(11,i*7-7)));
+            SpawnChoirCrawlers(true);
+            SpawnChoirHaunts(Units.Where(ChoirVictim).OrderByDescending(u=>u.position.x).Take(8).ToArray());
+        }
+        if(haunts.Count>0)TickHaunts();
     }
     void ChoirOnHit(Unit owner,Unit target){
         if(owner==null||target.hp<=0||!crawlers.ContainsKey(owner.id))return;
@@ -99,6 +162,10 @@ public sealed partial class HumanMatch {
     }
     internal void TickChoir(){
         if(!FuneralChoir||Finished)return;
+        if(ChoirTomb){
+            if(ChoirTombSealed)TickChoirFinale();
+            return;
+        }
         if(Elapsed>=nextToll){
             ChoirTolls++;nextToll+=8*ChoirBar;
             foreach(var u in Units)if(ChoirVictim(u)&&u.hp>1)u.hp=Mathf.Max(1,u.hp*.94f);

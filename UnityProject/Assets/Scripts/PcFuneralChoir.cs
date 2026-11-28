@@ -3,6 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using GLTFast;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -39,7 +42,19 @@ public sealed partial class PcGame {
     const float SacrificeTime=4.25f,MusicEntrance=9.4f,ChoirIntroLength=14f;
     bool choirIntro,choirVersus,gravesShown;
     float choirIntroAge;
-    int choirTrack=-1;
+    int choirTrack=-1,shownChoirWave=-1;
+    GameObject choirTombModel,choirTombTemplate;
+    GltfImport choirTombImport;
+    Material[] choirTombMaterials;
+    Material choirTombRunes;
+    bool? choirSealVisible;
+    HumanMatch.ChoirMovement CurrentChoirMovement=>SpectatorSceneReady?SpectatorChoirMovement:match.Movement;
+    bool ChoirTombPresentation=>CurrentChoirMovement==HumanMatch.ChoirMovement.FinalSiege||
+        CurrentChoirMovement==HumanMatch.ChoirMovement.TombExposed;
+    static int ChoirBattleTrack(HumanMatch.ChoirMovement phase)=>phase switch {
+        HumanMatch.ChoirMovement.First=>1,HumanMatch.ChoirMovement.Second=>2,
+        HumanMatch.ChoirMovement.Wail=>3,HumanMatch.ChoirMovement.FinalSiege=>3,_=>0
+    };
     HumanMatch.ChoirMovement choirLastMovement;
     void DrawChoirPainting(Rect r){
         if(!choirPainting){
@@ -73,6 +88,7 @@ public sealed partial class PcGame {
                 }
             }
         }
+        if(ActiveExpertTrial||HumanMatch.IsExpertTrial(SpectatorChallengeId))yield return PrepareChoirTomb(generation);
     }
     LineRenderer bellBolt;
     int lastChoirToll;
@@ -137,6 +153,10 @@ public sealed partial class PcGame {
     }
     void ChoirTrack(int index,float time,bool loop){
         choirTrack=index;if(!choirMusic||!choirClips[index])return;
+        if(index==3&&loop&&choirMusic.clip==choirClips[index]&&choirMusic.isPlaying){
+            choirMusic.loop=true;
+            return;
+        }
         choirMusic.Stop();choirMusic.clip=choirClips[index];choirMusic.loop=loop;
         choirMusic.time=Mathf.Repeat(time,choirMusic.clip.length);choirMusic.Play();
     }
@@ -182,7 +202,7 @@ public sealed partial class PcGame {
         SpreadRitualGround(1);ChoirNight(1);
         choirIntro=false;if(choirQueen)Destroy(choirQueen.gameObject);if(choirGolem)Destroy(choirGolem.gameObject);
         choirQueen=choirGolem=null;Destroy(sacrificeOrb);sacrificeOrb=null;ClearChoirFaults();
-        UpdateFog(true);ApplyFogViews();controls.InputBlocked=false;controls.FocusWorld(World(match.Builders[0].position),40);
+        UpdateFog(true);ApplyFogViews();controls.InputBlocked=false;FocusOpeningBuilder();
         if(choirTrack!=0)ChoirTrack(0,0,true);accumulator=0;
     }
     void DrawChoirIntro(){
@@ -222,8 +242,9 @@ public sealed partial class PcGame {
         }
         if(bellBolt&&(Time.unscaledTime-boltAt>.16f||!FogVisible(HumanMatch.CastlePosition(1))))bellBolt.enabled=false;
         var phase=match.Movement;
-        int track=phase==HumanMatch.ChoirMovement.First?1:phase==HumanMatch.ChoirMovement.Second?2:phase==HumanMatch.ChoirMovement.Wail?3:0;
-        if(track!=choirTrack||phase!=choirLastMovement)ChoirTrack(track,match.MovementAge,track==0);
+        int track=ChoirBattleTrack(phase);
+        if(track!=choirTrack||phase!=choirLastMovement)
+            ChoirTrack(track,match.MovementAge,track==0||match.ChoirTombSealed);
         choirLastMovement=phase;
         if(choirMusic){
             choirMusic.volume=track==0?.52f:track==3?.8f:match.MovementAge<HumanMatch.ChoirLead?.62f:1;
@@ -231,7 +252,9 @@ public sealed partial class PcGame {
                 if(!choirMusic.isPlaying&&choirMusic.clip)choirMusic.UnPause();
             }else choirMusic.Pause();
         }
+        if(gravesShown&&shownChoirWave!=match.ChoirFinalWave)ClearChoirGraves();
         if(match.ChoirRevealed&&!gravesShown){
+            shownChoirWave=match.ChoirFinalWave;
             gravesShown=true;
             var prefab=RaceModel(1,match.Kind("h01P"),true);
             foreach(var position in match.GraveSites){
@@ -246,7 +269,8 @@ public sealed partial class PcGame {
                 bool visible=FogVisible(match.GraveSites[i]);
                 if(graveFogZones[i].activeSelf!=visible)graveFogZones[i].SetActive(visible);
             }
-            float t=match.MovementAge-HumanMatch.ChoirLead;
+            float t=match.ChoirTombSealed?match.MovementAge-Mathf.Max(0,match.ChoirFinalWave-1)*30:
+                match.MovementAge-HumanMatch.ChoirLead;
             if(t<1.2f){
                 float rise=Mathf.SmoothStep(0,1,t/1.2f);
                 for(int i=0;i<choirGraves.Count;i++)
@@ -256,7 +280,7 @@ public sealed partial class PcGame {
     }
     void DrawChoirHud(){
         DrawBellFlash();
-        var movement=SpectatorSceneReady?SpectatorChoirMovement:match.Movement;
+        var movement=CurrentChoirMovement;
         float age=SpectatorSceneReady?(float?)spectatorBoss?["age"]??0:match.MovementAge;
         float t=age-HumanMatch.ChoirLead;
         bool chorus=movement==HumanMatch.ChoirMovement.First||movement==HumanMatch.ChoirMovement.Second;
@@ -276,6 +300,13 @@ public sealed partial class PcGame {
             span=t<0?HumanMatch.ChoirLead:HumanMatch.ChoirPass-HumanMatch.ChoirLead;
         }else if(movement==HumanMatch.ChoirMovement.Wail){
             caption="Плач банши";signal="До погребения";span=12;left=span-age;
+        }else if(movement==HumanMatch.ChoirMovement.FinalSiege){
+            caption="Последнее восстание";signal="До уязвимости надгробия";
+            span=HumanMatch.ChoirFinalDuration;left=Mathf.Max(0,span-age);
+        }else if(movement==HumanMatch.ChoirMovement.TombExposed){
+            caption="Надгробие уязвимо";
+            signal=Mathf.CeilToInt(match.CastleHp[1])+" / "+HumanMatch.ChoirTombHealth+" HP";
+            span=0;left=0;
         }
         DrawBossMeter(false,caption,signal,left,span);
         if(chorus){
@@ -293,6 +324,10 @@ public sealed partial class PcGame {
     float spectralPower=-1;
 
     void RenderChoirCastle(){
+        if(ChoirTombPresentation){
+            RenderChoirTomb();
+            return;
+        }
         float power=choirIntro?Mathf.SmoothStep(0,1,Mathf.InverseLerp(SacrificeTime+.6f,8.2f,choirIntroAge)):1;
         if(power<=0)return;
         var keep=castleViews[1]?castleViews[1].transform:castleObjects[1].transform;
@@ -334,6 +369,109 @@ public sealed partial class PcGame {
         if(visible&&!graveMist.isPlaying)graveMist.Play();
         if(!visible&&graveMist.isPlaying)graveMist.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
     }
+    void RenderChoirTomb(){
+        bool sealedTomb=CurrentChoirMovement==HumanMatch.ChoirMovement.FinalSiege;
+        if(!choirTombModel)CreateChoirTomb();
+        bool visible=!FogActive||fog!=null&&fog.Known(HumanMatch.CastlePosition(1));
+        if(choirTombModel.activeSelf!=visible)choirTombModel.SetActive(visible);
+        if(choirSealVisible!=sealedTomb){
+            choirSealVisible=sealedTomb;
+            if(choirTombRunes)choirTombRunes.color=sealedTomb?new Color(.42f,1,.61f):new Color(.22f,.34f,.30f);
+        }
+        if(graveMist){
+            bool showMist=sealedTomb&&visible;
+            if(showMist&&!graveMist.isPlaying)graveMist.Play();
+            if(!showMist&&graveMist.isPlaying)graveMist.Stop(true,ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+    }
+
+    IEnumerator PrepareChoirTomb(int generation){
+        if(choirTombTemplate)yield break;
+        var embedded=Resources.Load<TextAsset>("WinterBattle/ChoirTomb");
+        byte[] data=null;
+        if(embedded){
+            data=embedded.bytes;
+            Resources.UnloadAsset(embedded);
+        }else if(!Application.isMobilePlatform){
+            string path=MobileContent.Media("Frontend/ChoirTomb.glb");
+            if(File.Exists(path))data=File.ReadAllBytes(path);
+        }
+        if(data==null)yield break;
+        var world=match;
+        var job=ImportChoirTomb(data);
+        while(!job.IsCompleted)yield return null;
+        if(job.IsFaulted){
+            Debug.LogWarning("Choir tomb: "+job.Exception.GetBaseException().Message);
+            yield break;
+        }
+        var (template,importer,materials)=job.Result;
+        if(generation!=versusSerial||world!=match||choirTombTemplate){
+            ReleaseRitualArt(template,importer,materials);
+            yield break;
+        }
+        choirTombTemplate=template;choirTombImport=importer;choirTombMaterials=materials;
+        choirTombRunes=materials.FirstOrDefault(material=>material.name=="Tomb_Seal");
+    }
+
+    async Task<(GameObject,GltfImport,Material[])> ImportChoirTomb(byte[] data){
+        var importer=new GltfImport();
+        var host=new GameObject("Choir tomb library");
+        host.SetActive(false);
+        var model=new GameObject("Надгробие Погребального хора");
+        model.transform.SetParent(host.transform,false);
+        var materials=new List<Material>();
+        try{
+            if(!await importer.LoadGltfBinary(data)||!await importer.InstantiateMainSceneAsync(model.transform))
+                throw new InvalidDataException("Choir tomb GLB is unreadable");
+            var json=JObject.Parse(Encoding.UTF8.GetString(data,20,BitConverter.ToInt32(data,12)));
+            var primitives=(JArray)json["meshes"][0]["primitives"];
+            var shader=Shader.Find("CastleFight/NativeMapProp");
+            var renderer=model.GetComponentInChildren<MeshRenderer>(true);
+            if(!renderer||renderer.sharedMaterials.Length!=primitives.Count)
+                throw new InvalidDataException("Choir tomb material slots differ from its GLB");
+            foreach(var primitive in primitives){
+                var spec=json["materials"][(int)primitive["material"]];
+                string name=(string)spec["name"];
+                var material=new Material(shader){name=name};
+                materials.Add(material);
+                int? tex=(int?)spec["pbrMetallicRoughness"]?["baseColorTexture"]?["index"];
+                material.mainTexture=tex.HasValue?importer.GetTexture(tex.Value):Texture2D.whiteTexture;
+                material.color=ChoirTombTint(name);
+                material.SetFloat("_Unlit",name=="Tomb_Seal"?1:.5f);
+            }
+            renderer.sharedMaterials=materials.ToArray();
+            return (model,importer,materials.ToArray());
+        }catch{
+            Destroy(host);
+            foreach(var material in materials)Destroy(material);
+            importer.Dispose();
+            throw;
+        }
+    }
+
+    static Color ChoirTombTint(string surface)=>surface switch{
+        "Tomb_Stone"=>new Color(.46f,.56f,.56f),
+        "Tomb_Trim"=>new Color(.60f,.66f,.61f),
+        "Tomb_Dark"=>new Color(.23f,.31f,.32f),
+        "Tomb_Bronze"=>new Color(.69f,.51f,.30f),
+        "Tomb_Bone"=>new Color(.85f,.81f,.68f),
+        _=>new Color(.44f,1,.60f)
+    };
+
+    void CreateChoirTomb(){
+        var position=World(HumanMatch.CastlePosition(1));
+        if(choirTombTemplate)
+            choirTombModel=Instantiate(choirTombTemplate,position,Quaternion.Euler(0,58,0),visuals.transform);
+        else{
+            int kind=match.Kind("h01P");
+            var prefab=kind>=0?RaceModel(1,kind,true):null;
+            choirTombModel=prefab?Instantiate(prefab,position,Quaternion.identity,visuals.transform):new GameObject("Надгробие");
+            choirTombModel.transform.localScale*=3;
+        }
+        if(!graveMist)CreateGraveMist();
+        var emission=graveMist.emission;emission.rateOverTime=Application.isMobilePlatform?6:10;
+    }
+
     void CreateGraveMist(){
         const int side=48;
         graveCloud=new Texture2D(side,side,TextureFormat.RGBA32,false){wrapMode=TextureWrapMode.Clamp};
@@ -360,6 +498,8 @@ public sealed partial class PcGame {
         graveMist.GetComponent<ParticleSystemRenderer>().sharedMaterial=graveMistMaterial;
     }
     void ClearChoirCastle(){
+        if(choirTombModel){choirTombModel.SetActive(false);Destroy(choirTombModel);}
+        choirTombModel=null;choirSealVisible=null;
         foreach(var pair in spectralOriginals)if(pair.Key)pair.Key.sharedMaterials=pair.Value;
         foreach(var ghost in spectralMats.Values)if(ghost)Destroy(ghost);
         spectralOriginals.Clear();spectralMats.Clear();
@@ -443,6 +583,8 @@ public sealed partial class PcGame {
         choirFaultMaterial=null;
     }
     void ClearChoir(){
+        ReleaseRitualArt(choirTombTemplate,choirTombImport,choirTombMaterials);
+        choirTombTemplate=null;choirTombImport=null;choirTombMaterials=null;choirTombRunes=null;
         if(bellBolt)Destroy(bellBolt.gameObject);bellBolt=null;boltAt=-10;
         if(choirHasLighting){ChoirNight(0);choirHasLighting=false;}
         ClearChoirFaults();

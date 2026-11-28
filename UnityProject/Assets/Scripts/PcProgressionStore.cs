@@ -17,7 +17,7 @@ public sealed class PcProgressionStore {
     public int NextLevelExperience=>ChallengeCatalog034.Threshold(MasteryLevel+1);
     public string MasteryTitle=>ChallengeCatalog034.Title(MasteryLevel);
     public JObject Challenge(string id)=>((JArray)Catalog["challenges"]).OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id)
-        ??(Catalog["mythic"] as JArray)?.OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id);
+        ??(Catalog[HumanMatch.IsExpertTrial(id)?"expert":"mythic"] as JArray)?.OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id);
     public JObject Item(string id)=>((JArray)Catalog["items"]).OfType<JObject>().FirstOrDefault(v=>(string)v["id"]==id);
     public bool Completed(string id)=>((JArray)state["completed"]).Any(v=>(string)v==id);
     public bool Owned(string id)=>((JArray)state["unlocked"]).Any(v=>(string)v==id);
@@ -25,7 +25,35 @@ public sealed class PcProgressionStore {
     public float Best(string id)=>(float?)state["best"][id]??0;
     void Commit(JObject next){Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));string temp=path+".tmp";File.WriteAllText(temp,next.ToString());if(File.Exists(path))File.Replace(temp,path,path+".bak");else File.Move(temp,path);state=next;}
     public int Complete(string id,float seconds){var row=Challenge(id);if(row==null||seconds<0||float.IsNaN(seconds)||float.IsInfinity(seconds))return 0;var next=(JObject)state.DeepClone();int reward=Completed(id)?0:(int)row["reward"];if(!Completed(id))((JArray)next["completed"]).Add(id);next["coins"]=checked(Coins+reward);float best=Best(id);if(best<=0||seconds<best)next["best"][id]=seconds;Commit(next);return reward;}
-    public bool Buy(string id,out string error){error="";var row=Item(id);if(row==null){error="Неизвестный товар";return false;}if(Owned(id)){error="Уже куплено";return false;}int cost=(int)row["cost"];if(Coins<cost){error="Не хватает жетонов: нужно "+cost;return false;}var next=(JObject)state.DeepClone();next["coins"]=Coins-cost;((JArray)next["unlocked"]).Add(id);Commit(next);return true;}
-    public bool Equip(string id,bool equip){var row=Item(id);if(row==null||!Owned(id))return false;var next=(JObject)state.DeepClone();string kind=(string)row["kind"];if(equip)next["equipped"][kind]=id;else if(Equipped(kind)==id)((JObject)next["equipped"]).Remove(kind);Commit(next);return true;}
+    public bool Buy(string id,out string error){
+        error="";
+        var row=Item(id);
+        if(row==null){error="Неизвестный товар";return false;}
+        if(Owned(id)){error="Уже куплено";return false;}
+        int cost=WardrobeCatalog.Price(row,Owned,Item);
+        if(Coins<cost){error="Не хватает жетонов: нужно "+cost;return false;}
+        var next=(JObject)state.DeepClone();
+        next["coins"]=Coins-cost;
+        var unlocked=(JArray)next["unlocked"];
+        unlocked.Add(id);
+        foreach(string piece in WardrobeCatalog.Pieces(row))
+            if(!Owned(piece)) unlocked.Add(piece);
+        Commit(next);
+        return true;
+    }
+    public bool Equip(string id,bool equip){
+        var row=Item(id);
+        if(row==null||!Owned(id))return false;
+        var next=(JObject)state.DeepClone();
+        var equipped=(JObject)next["equipped"];
+        var targets=WardrobeCatalog.Pieces(row).DefaultIfEmpty(id).Select(Item);
+        foreach(var target in targets){
+            string kind=(string)target["kind"],piece=(string)target["id"];
+            if(equip)equipped[kind]=piece;
+            else if(Equipped(kind)==piece)equipped.Remove(kind);
+        }
+        Commit(next);
+        return true;
+    }
 }
 }

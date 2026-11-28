@@ -6,9 +6,20 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame {
     PcProgressionStore progression;bool progressShop,challengeSettled;Vector2 progressionScroll;string purchaseConfirm;
-    JObject activeChallenge;int challengeReward;int[] savedChallengeSetup;
+    JObject activeChallenge;
+    string ActiveChallengeId=>(string)activeChallenge?["id"];
+    string ActiveChallengeFamily=>HumanMatch.EpochalFamily(ActiveChallengeId);
+    bool ActiveExpertTrial=>HumanMatch.IsExpertTrial(ActiveChallengeId);
+    int challengeReward;int[] savedChallengeSetup;
     GameObject builderCosmetic;Material builderCosmeticMaterial;
     static readonly string[] ProgressRaces={"Human Alliance","Orcish Horde","Naga Faction","Nature Force","Chaos Legions","Northern Realms","Mech Coalition","Undead Forces","Corrupted Conglomerate","Elementals' Universe","Night Elfs","Elven Union","Ultimate Builder","Nerubian Swarm","Pandaren Order","Centaur Khanates","Pepe Brotherhood"};
+    static JObject ExpertDefinition(JObject row,string summary=null,string description=null){
+        row["id"]=HumanMatch.ExpertId((string)row["id"]);
+        if(summary!=null)row["summary"]=summary;
+        if(description!=null)row["description"]=description;
+        return row;
+    }
+
     void LoadProgression(){
         var asset=ContentResources.Load<TextAsset>("PcProgression");
         if(!asset)throw new InvalidOperationException("Missing progression catalog");
@@ -16,14 +27,22 @@ public sealed partial class PcGame {
         ChallengeCatalog034.Extend(data);
         ChallengeCampaign038.Extend(data);
         data["mythic"]=new JArray(WinterTrialDefinition(),ChoirDefinition(),HordeDefinition(),ProtocolDefinition(),AbyssDefinition(),QuackDefinition());
+        data["expert"]=new JArray(
+            ExpertDefinition(WinterTrialDefinition(),"Выживите в метели и остановите Ледяную королеву.","Метель замедляет ваших бойцов, а каждые 10 секунд одного сковывает лёд. При первом падении замок вмерзает в лёд, и Джайна уничтожает вашу армию. Остановите королеву, чтобы снова атаковать замок."),
+            ExpertDefinition(ChoirDefinition(),"После падения замка пробуждается надгробие.","На 4:00 начинается Восстание. Из могил в дымке выходят гули. После подготовки десятина отнимает 6% текущего здоровья бойцов каждые 15 секунд. По призрачному некрополю промахиваются 20% атак. При 50% здоровья босса могилы откроются у вашего замка. Падение замка пробуждает надгробие. Выдержите 90 секунд общего наступления и разрушьте его."),
+            ExpertDefinition(HordeDefinition(),"После гибели цитадели Юрнеро штурмует ваш замок.","Уничтожьте цитадель Орды. Багровый Юрнеро с 5000 HP появится у вашего замка. Он призывает два зеркальных образа, а его вихрь наносит урон и вызывает кровотечение. Для победы нужно одолеть самого Юрнеро."),
+            ExpertDefinition(ProtocolDefinition(),"Постройки защищены от осады и отражают урон.","Замок и постройки босса получают на 60% меньше осадного урона и отражают 40% полученного урона. Две электростанции дают замку по 35% защиты. После залпа ворота открываются на 12 с. На 7:00 Терминатор идёт к вашему замку."),
+            ExpertDefinition(AbyssDefinition(),"Гидра Бездны охраняет руины трона.","Выдержите приливы и натиск наг. Когда трон падёт, его место займёт Гидра Бездны с 4000 HP. Она стреляет ядом по трём целям за атаку и замедляет поражённых бойцов. Победите гидру, чтобы завершить бой."),
+            ExpertDefinition(QuackDefinition()));
         var items=(JArray)data["items"];
         items.Add(new JObject{["id"]=MemePackId,["kind"]="stickers",["title"]="Рофлопак · местные легенды",["description"]="4 стикера: наги, гриб, вышки и Терминатор. Для личного чата и сетевого боя.",["cost"]=300});
         WorkshopCatalog038.Extend(items);
+        WardrobeCatalog.Extend(items);
         progression=new PcProgressionStore(data,BattleLab.Arg("--pc-profile-file",Path.Combine(Application.persistentDataPath,"pc-profile-v1.json")));
     }
     void OpenProgression(bool shop){
         progressShop=shop;progressionScroll=Vector2.zero;purchaseConfirm=null;page=Page.Progression;
-        mythicTab=false;mythicSelection=null;
+        mythicTab=expertTab=false;mythicSelection=null;
         Workshop.dragFinger=-1;Workshop.dragged=false;
         if(shop)OpenWorkshop();
     }
@@ -85,16 +104,14 @@ public sealed partial class PcGame {
         }
         if(HasNetworkProfile)DrawFriendsShortcut(new Rect(1011,38,49,42));
         if(Button("progress.challenges",new Rect(42,116,208,42),"Все испытания",!state.siegeOnly&&!mythicTab)){
-            state.siegeOnly=mythicTab=false;mythicSelection=null;progressionScroll=Vector2.zero;
+            state.siegeOnly=mythicTab=expertTab=false;mythicSelection=null;progressionScroll=Vector2.zero;
         }
         if(Button("progress.siege",new Rect(260,116,180,42),"Осадные",state.siegeOnly&&!mythicTab)){
-            state.siegeOnly=true;mythicTab=false;mythicSelection=null;progressionScroll=Vector2.zero;
+            state.siegeOnly=true;mythicTab=expertTab=false;mythicSelection=null;progressionScroll=Vector2.zero;
         }
-        if(Button("progress.mythic",new Rect(450,116,205,42),"Эпохальные",mythicTab)){
-            mythicTab=true;mythicSelection=null;progressionScroll=Vector2.zero;mythicBoardPage=0;
-            StartCoroutine(LoadMythicLeaderboard());
-        }
-        if(Button("progress.shop",new Rect(665,116,180,42),"Магазин")){OpenProgression(true);return;}
+        if(Button("progress.mythic",new Rect(450,116,205,42),"Эпохальные",mythicTab&&!expertTab))OpenMythicTab(false);
+        if(Button("progress.expert",new Rect(665,116,160,42),"Эксперт",mythicTab&&expertTab))OpenMythicTab(true);
+        if(Button("progress.shop",new Rect(835,116,180,42),"Магазин")){OpenProgression(true);return;}
         if(MythicRacePicker){DrawMythicRacePicker();return;}
         if(mythicTab){DrawMythicChallenges();return;}
         var rows=all.OfType<JObject>().Where(row=>!state.siegeOnly||ChallengeCampaign038.IsSiege(row)).ToArray();

@@ -70,12 +70,13 @@ public sealed partial class PcGame {
 
     void DrawMythicTrialRow(JObject row,Rect tile){
         string id=(string)row["id"];
-        if(id==HumanMatch.WinterTrial)DrawWinterPainting(tile,true);
-        else if(id==HumanMatch.ChoirTrial)DrawChoirPainting(tile);
-        else if(id==HumanMatch.HordeTrial)DrawHordePainting(tile);
-        else if(id==HumanMatch.ProtocolTrial)DrawProtocolPainting(tile);
-        else if(id==HumanMatch.AbyssTrial)DrawAbyssPainting(tile);
-        else if(id==HumanMatch.QuackTrial)DrawQuackPainting(tile);
+        string family=HumanMatch.EpochalFamily(id);
+        if(family==HumanMatch.WinterTrial)DrawWinterPainting(tile,true);
+        else if(family==HumanMatch.ChoirTrial)DrawChoirPainting(tile);
+        else if(family==HumanMatch.HordeTrial)DrawHordePainting(tile);
+        else if(family==HumanMatch.ProtocolTrial)DrawProtocolPainting(tile);
+        else if(family==HumanMatch.AbyssTrial)DrawAbyssPainting(tile);
+        else if(family==HumanMatch.QuackTrial)DrawQuackPainting(tile);
         else Fill(tile,WinterInk);
         WinterGradient(tile,true,new Color(.01f,.02f,.03f,.99f));
         Border(tile,id==selectedMythicId?WinterBlue:WinterLine,id==selectedMythicId?2:1);

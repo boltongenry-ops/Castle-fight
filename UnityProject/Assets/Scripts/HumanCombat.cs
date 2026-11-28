@@ -77,7 +77,7 @@ public sealed partial class HumanMatch {
         if(u.pandaSplit||Hidden(u)||Lines[u.kind].category=="visual")return;
         if(TickNatureBear(u,dt)||TickWarlock(u,dt))return;
         if(u.stun>0||Disabled(u)){u.strikeLeft=-1;u.pendingSpell=null;u.castLeft=-1;u.pose="Stand";return;}
-        if(TickHordeActor(u,dt)||TickAbyssHunter(u,dt))return;
+        if(TickExpertBoss(u,dt)||TickHordeActor(u,dt)||TickAbyssHunter(u,dt))return;
         TickAbyssPanzer(u);
         if(TickElementalWind(u,dt))return;TickMechPassiveFire(u);TickElvenPassive(u);if(TickMechUnit(u,dt))return;
         if(u.castLeft>=0){u.castLeft-=dt;u.pose=u.finalCastPose??"Spell";if(u.castLeft<=0){var id=u.pendingSpell;u.pendingSpell=null;u.castLeft=-1;bool ok=Cast(u,id,u.spellTarget);u.spellTimers[id]=ok?SpellCooldown(u,id):.25f;}return;}
@@ -107,6 +107,7 @@ public sealed partial class HumanMatch {
             target=best;
         }
         target=NerubHuntTarget(u,QuackFocusMarked(u,target));if(target!=null)u.skirmish=true;
+        if(target==null&&ExpertFinaleFocus(u)&&WeaponFor(u,expertFinalBoss)!=null)target=expertFinalBoss;
         int targetId=target?.id??-1;
         Weapon weapon=WeaponFor(u,target,target==null);
         float acquire=l.acquisitionRange;
@@ -170,6 +171,7 @@ public sealed partial class HumanMatch {
         if(BlackHandRelease(u))return;
         if(ChaosFighter(u))u.chaosAttackingUntil=Elapsed+1;Vector2 end=TargetPosition(u.attackTarget,u.team);bool storm=ElementalStormReleased(u,u.attackTarget);bool heat=MechHeatReleased(u,u.attackTarget);float miss=WeaponMissChance(u,w);if(miss>0&&Roll()<miss){if(storm){if(w.type=="normal"||w.type=="instant")ElementalStormBurst(u.team,end,u.attackTarget,u);else{var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="elemental_miss";failed.elementalStorm=true;failed.elementalStormSource=u;}}if(heat){if(w.type=="normal"||w.type=="instant")MechHeatBurst(u.team,end,u.attackTarget);else {var failed=AddShot(u.team,u.kind,u.id,u.attackTarget,u.position,end,0,w,0,3);failed.chaosSpell="mech_miss";failed.mechHeat=true;}}ChaosMisses++;PulseAt(u.position,1,Color.white,"Промах");return;}
         AbyssWeaponReleased(u,w);
+        if(ExpertHydraAttack(u,w))return;
         if(w.type=="normal")BattleAudio.For(this)?.Swing(Lines[u.kind].unit,u.position);
         if(w.type=="normal"||w.type=="instant") {
             if(Vector2.Distance(u.position,end)<=w.range+(u.attackTarget==-1?CastleCollision:u.attackTarget< -1?2:1))ResolveAttack(u.id,u.team,u.attackTarget,u.shotDamage,w,u.shotStun);
@@ -200,9 +202,11 @@ public sealed partial class HumanMatch {
             if(Lines[shot.line].building=="pB10"&&victim!=null&&victim.team!=shot.team&&victim.hp>0)
                 PulseAt(victim.position,1.35f,PepeRules.ReedGreen,"",.42f,"pepe:reed-tower",victim.id);
             bool raven=shot.chaosSpell=="hand-raven"&&victim!=null;
-            float healthBefore=raven?victim.hp:0;
+            bool hydraVenom=Lines[shot.line].unit==HydraRaw;
+            float healthBefore=raven||hydraVenom?victim?.hp??0:0;
             HandBolt(shot);
             if(!artillery&&TargetAlive(shot.target))ResolveAttack(shot.sourceId,shot.team,shot.target,shot.damage,w,shot.stun,!shot.nightSecondary,HandFighter(Lines[shot.line]));
+            if(hydraVenom)ExpertHydraImpact(shot,victim,healthBefore);
             if(raven&&victim.hp<healthBefore&&HandTarget(victim,shot.team)){
                 HandEffect(victim,shot.team,"BHSl",3);
                 victim.effects.Find(e=>e.id=="BHSl").speed=-.35f;
@@ -210,11 +214,11 @@ public sealed partial class HumanMatch {
             }
             if(!ElvenWeaponPattern(shot))NightBounce(shot);if(w.full>0||w.half>0||w.quarter>0) {
                 using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_2)if(u.team!=shot.team&&u.hp>0&&(artillery||u.id!=shot.target)&&(Flying(u)?w.air:w.ground)){float f=Splash(w,Vector2.Distance(u.position,shot.end));if(f>0)ResolveAttack(shot.sourceId,shot.team,u.id,shot.damage*f,w,shot.stun,false);}
-                using(var snapshot035_3=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_3)if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&h.team!=shot.team&&h.hp>0&&h.paid&&w.structure&&(artillery||HutTarget(h)!=shot.target)){float f=Splash(w,Vector2.Distance(h.position,shot.end));if(f>0){DamageHut(h,shot.damage*f,w.attack,shot.team);var owner=FindUnit(shot.sourceId);if(h.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")h.dragonArmorRank=Mathf.Min(3,h.dragonArmorRank+1);}}
-                int enemy=1-shot.team;float factor=Splash(w,Vector2.Distance(BattleCastlePosition(enemy),shot.end));if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&w.structure&&factor>0&&(artillery||shot.target!=-1)&&!ChoirCastleEvades(enemy))DamageCastle(enemy,shot.damage*factor,w.attack);
+                using(var snapshot035_3=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_3)if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&h.team!=shot.team&&h.hp>0&&h.paid&&w.structure&&(artillery||HutTarget(h)!=shot.target)){float f=Splash(w,Vector2.Distance(h.position,shot.end));if(f>0){DamageHut(h,shot.damage*f,w.attack,shot.team,sourceId:shot.sourceId);var owner=FindUnit(shot.sourceId);if(h.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")h.dragonArmorRank=Mathf.Min(3,h.dragonArmorRank+1);}}
+                int enemy=1-shot.team;float factor=Splash(w,Vector2.Distance(BattleCastlePosition(enemy),shot.end));if(!(w.missile??"").StartsWith("corrupted:")&&Lines[shot.line].building!="n01J"&&w.structure&&factor>0&&(artillery||shot.target!=-1)&&!ChoirCastleEvades(enemy))DamageCastle(enemy,shot.damage*factor,w.attack,sourceId:shot.sourceId);
             }
             if(artillery&&Lines[shot.line].unit?.StartsWith("pU",StringComparison.Ordinal)==true)PepeArtilleryImpact(shot);
-            if(artillery&&shot.incendiary)AddFire(shot.team,shot.end,Lines[shot.line].unit=="o001"?"A02J":"A02K");
+            if(artillery&&shot.incendiary)AddFire(shot.team,shot.end,Lines[shot.line].unit=="o001"?"A02J":"A02K",shot.sourceId);
         }
     }
     float Splash(Weapon w,float distance)=>distance<=w.full?1:distance<=w.half?w.halfFactor:distance<=w.quarter?w.quarterFactor:0;
@@ -240,26 +244,39 @@ public sealed partial class HumanMatch {
         if(victim.hp<=0&&!victim.deathProcessed){victim.deathProcessed=true;WinterQueenDeath(victim);ForgetAbyssHunter(victim);bool winterDefection=QueueWinterDefection(victim);BattleAudio.For(this)?.Death(Lines[victim.kind].unit,victim.position);victim.pose="Death";victim.pendingSpell=null;victim.strikeLeft=-1;Kills++;if(team>=0&&team<2&&team!=victim.team){TeamKills[team]++;if(!victim.noBounty)Gold[team]+=Mathf.Max(1,(int)(victim.maxHp/50));}
             NerubDied(victim);ElvenDied(victim,team);NightKilled(killer,victim);NightDeathAspect(victim);ElementalDied(victim,killer,team);CorruptedDied(victim);UndeadDied(victim,killer);MechDied(victim);OrcKilled(killer,victim);NagaOnDeath(victim);ChaosDeath(victim);
             if(winterDefection)victim.deadAge=4;
-            else if(!victim.noCorpse&&!ElementalIllusion(victim)&&((int?)Lines[victim.kind].stats["death_type"]??0)%2==1&&Organic(victim))Corpses.Add(new Corpse {unit=victim,left=F(Lines[victim.kind].stats,"corpse_duration",90)});
+            else if(CanLeaveCorpse(victim))Corpses.Add(new Corpse {unit=victim,left=F(Lines[victim.kind].stats,"corpse_duration",90)});
         }
         return before-victim.hp;
     }
     public float Multiplier(string attack,string armorType)=>(float?)damageTable[attack]?[armorType]??1;
     public static float ArmorFactor(float armor)=>armor>=0?1/(1+.06f*armor):2-Mathf.Pow(.94f,-armor);
-    void DamageHut(Hut h,float amount,string attack,int team,bool spell=false,bool ignoreArmor=false){
+    void DamageHut(Hut h,float amount,string attack,int team,bool spell=false,bool ignoreArmor=false,int sourceId=0){
         if(h==null||h.hp<=0)return;
+        amount*=ProtocolStructureDamageScale(h.team,attack);
         var line=Lines[h.kind];
         amount*=Multiplier(spell&&attack=="magic"?"spells":attack,(string)line.buildingStats["armor_type"]??"fortified");
         if(!ignoreArmor&&!(spell&&attack=="magic"))amount*=ArmorFactor(BuildingArmor(h));
+        float before=h.hp;
+        ApplyHutDamage(h,amount,team);
+        if(h.team==1)ReflectProtocolHit(sourceId,Mathf.Min(before,amount));
+    }
+    void ApplyHutDamage(Hut h,float amount,int team){
         h.hp-=amount;
         if(h.hp>0)return;
         int bounty=h.paid&&team>=0&&team<Gold.Length&&team!=h.team?BuildingBounty(h):0;
         if(bounty>0)Gold[team]+=bounty;
-        BattleAudio.For(this)?.Death(line.building,h.position,true);
+        BattleAudio.For(this)?.Death(Lines[h.kind].building,h.position,true);
         RemoveHut(h);
         PulseAt(h.position,4,bounty>0?Color.yellow:new Color(1,.4f,.1f),bounty>0?"+ "+bounty+" золота":"Здание разрушено");
     }
-    void DamageCastle(int team,float amount,string attack,bool spell=false){amount*=Multiplier(spell&&attack=="magic"?"spells":attack,CastleArmorType);if(!(spell&&attack=="magic"))amount*=ArmorFactor(CastleArmorFor(team));ApplyCastleDamage(team,amount);}
+    void DamageCastle(int team,float amount,string attack,bool spell=false,int sourceId=0,bool ignoreArmor=false){
+        amount*=ProtocolStructureDamageScale(team,attack);
+        amount*=Multiplier(spell&&attack=="magic"?"spells":attack,CastleArmorType);
+        if(!ignoreArmor&&!(spell&&attack=="magic"))amount*=ArmorFactor(CastleArmorFor(team));
+        float before=CastleHp[team];
+        ApplyCastleDamage(team,amount);
+        if(team==1)ReflectProtocolHit(sourceId,before-CastleHp[team]);
+    }
     void ResolveAttack(int ownerId,int team,int target,float amount,Weapon w,float stun,bool passives=true,bool handProjectile=false) {
         var victim=FindUnit(target);var owner=FindUnit(ownerId);
         if(victim!=null) {
@@ -276,7 +293,7 @@ public sealed partial class HumanMatch {
             if(target==-1&&ChoirCastleEvades(1-team))return;
             if(Aspects[team]==1&&(handProjectile||owner!=null&&owner.team==team&&HandFighter(Lines[owner.kind])))amount*=1.15f;
             Vector2 center=TargetPosition(target,team);if(w.type=="normal")BattleAudio.For(this)?.Contact(owner!=null?Lines[owner.kind].unit:null,null,true,center);float elementalBefore=target==-1?CastleHp[1-team]:FindHut(target)?.hp??0;
-            if(owner!=null)foreach(var id in owner.abilities)if((string)Abilities[id]?["kind"]=="demolish")amount*=F(Abilities[id],"multiplier",1);if(target==-1){if(owner!=null&&passives)UndeadStructureHit(owner,target);DamageCastle(1-team,amount,w.attack);}else {var hut=FindHut(target);if(hut!=null&&owner!=null&&passives)UndeadStructureHit(owner,target);DamageHut(hut,amount,w.attack,team);if(hut!=null&&hut.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")hut.dragonArmorRank=Mathf.Min(3,hut.dragonArmorRank+1);}
+            if(owner!=null)foreach(var id in owner.abilities)if((string)Abilities[id]?["kind"]=="demolish")amount*=F(Abilities[id],"multiplier",1);if(target==-1){if(owner!=null&&passives)UndeadStructureHit(owner,target);DamageCastle(1-team,amount,w.attack,sourceId:ownerId);}else {var hut=FindHut(target);if(hut!=null&&owner!=null&&passives)UndeadStructureHit(owner,target);DamageHut(hut,amount,w.attack,team,sourceId:ownerId);if(hut!=null&&hut.hp>0&&owner!=null&&Lines[owner.kind].unit=="n02A")hut.dragonArmorRank=Mathf.Min(3,hut.dragonArmorRank+1);}
             if(owner!=null&&owner.hp>0&&passives){ElementalStructureHit(owner,target,elementalBefore-(target==-1?CastleHp[1-team]:FindHut(target)?.hp??0));CorruptedStructureHit(owner,target);NorthernStructureHit(owner,target);Pulverize(owner,center,w);if(Lines[owner.kind].unit=="n02B")owner.abilities.Remove("A0C8");}
         }
     }

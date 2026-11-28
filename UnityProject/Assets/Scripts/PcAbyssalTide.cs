@@ -310,7 +310,7 @@ public sealed partial class PcGame {
         accumulator=0;
         controls.InputBlocked=false;
         controls.GameplayViewport(true);
-        controls.FocusWorld(World(match.Builders[0].position),40);
+        FocusOpeningBuilder();
         UpdateFog(true);
         ApplyFogViews();
     }
@@ -434,6 +434,12 @@ public sealed partial class PcGame {
             abyssHudCopy=new GUIStyle(small){fontSize=13,alignment=TextAnchor.MiddleLeft,padding=new RectOffset()};
         }
         float x=AbyssHud.x+29,y=AbyssHud.y,w=AbyssHud.width-44;
+          if(ExpertCastleHidden){
+              GUI.Label(new Rect(x,y+9,w,23),"Гидра Бездны",abyssHudTitle);
+              GUI.Label(new Rect(x,y+32,w,19),Mathf.CeilToInt(ExpertFinalBossHp)+" / "+HumanMatch.HydraHealth+" HP",abyssHudCopy);
+              GUI.Label(new Rect(x,y+50,w,22),"Замедляющий яд · до 3 целей",abyssHudCopy);
+              return;
+          }
         GUI.Label(new Rect(x,y+9,w,23),"Дыхание Бездны",abyssHudTitle);
         GUI.Label(new Rect(x,y+32,w,19),"−25% движения  ·  10% промаха",abyssHudCopy);
         bool warning=SpectatorSceneReady?(bool?)spectatorBoss?["warning"]==true:match.AbyssRaidWarning;

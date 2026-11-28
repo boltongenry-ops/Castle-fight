@@ -132,11 +132,11 @@ public sealed partial class HumanMatch {
         check(mirrored.Upgrade(0,house.id,mirrored.Kind("pB12"),out _)&&
             !mirrored.Upgrade(0,house.id,mirrored.Kind("pB13"),out _),"Actual upgrade enforces the reserved slot");
         mirrored.Sell(0,mirrored.Huts.First().id);
-        check(mirrored.Upgrade(0,house.id,mirrored.Kind("pB13"),out _)&&mirrored.Interval(house)==41,
-            "Finishing the legendary chain produces Quak at 41 seconds");
+        check(mirrored.Upgrade(0,house.id,mirrored.Kind("pB13"),out _)&&mirrored.Interval(house)==47.25f,
+            "Finishing the legendary chain produces Quak at 47.25 seconds");
         check(mirrored.BaseKinds.Length==11&&mirrored.Lines.Count(x=>x.Producer)==12,
             "The race catalog exposes eleven base buildings and twelve fighters");
-        foreach(var pair in new[]{("pB04","pB17",35f),("pB05","pB18",31.75f)}){
+        foreach(var pair in new[]{("pB04","pB17",36.25f),("pB05","pB18",33f)}){
             var trial=new HumanMatch(pepe,250,1,0,-1,humans);trial.Gold[0]=2000;
             bool built=trial.TryBuild(0,trial.Kind(pair.Item1),17,15,out _);
             var hut=trial.Huts.Last();hut.paid=true;
@@ -216,10 +216,11 @@ public sealed partial class PcGame {
             var nock=bones.First(t=>t.name=="ReedNock");
             var shaft=bones.First(t=>t.name=="ReedShaft");
             var drawHand=bones.First(t=>t.name=="Arrow");
+            bool fitted=model.GetComponentsInChildren<SkinnedMeshRenderer>().Any(r=>r.sharedMesh.name.EndsWith("Retargeted"));
             foreach(var clip in model.clips.Where(c=>c.name=="Attack"||c.name=="Walk"||c.name=="Stand")){
                 foreach(float t in new[]{.02f,.16f,.27f,.41f,.85f}){
                     clip.SampleAnimation(model.animatedRoot,t);
-                    bool loose=clip.name=="Attack"&&t>.31f&&t<.79f;
+                    bool loose=fitted?clip.name!="Attack"||t<.08f||t>.30f:clip.name=="Attack"&&t>.31f&&t<.79f;
                     Check(loose ? shaft.localScale.x<.005f :
                         Vector3.Distance(nock.position,shaft.position)<.025f && Vector3.Distance(shaft.position,drawHand.position)<.025f,
                         raw+" arrow "+clip.name+" at "+t.ToString("F2"));

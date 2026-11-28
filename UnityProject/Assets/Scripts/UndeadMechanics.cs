@@ -29,7 +29,37 @@ public sealed partial class HumanMatch {
     public bool UndeadArmy(int team)=>TeamUndead[team]&&Aspects[team]==0;
     bool UndeadRaiser(Hut h)=>Lines[h.kind].abilities.Any(id=>(string)Abilities[id]?["kind"]=="undead_raise_building");
     void UndeadCreated(Unit u) {if(UndeadArmy(u.team)&&UndeadSkeletons.Contains(Lines[u.kind].unit)){u.maxHp*=1.2f;u.hp*=1.2f;}}
-    Corpse[] UndeadBodies(Vector2 point,JToken cfg,bool building)=>Corpses.Where(c=>c.left>0&&(building?((string)Lines[c.unit.kind].stats["unit_types"]??"").ToLowerInvariant().Contains("sapper")&&!((string)Lines[c.unit.kind].stats["unit_types"]??"").ToLowerInvariant().Contains("undead"):Vector2.Distance(point,c.unit.position)<=F(cfg,"range"))).OrderBy(c=>(c.unit.position-point).sqrMagnitude).ToArray();
+
+    // Authored catalogs use different death flags and several predate the native sapper tag.
+    // Classify remains independently so the change does not alter targeting or live-unit abilities.
+    static bool? AuthoredCorpseRule(Line line){
+        string raw=line.unit??"";
+        if(raw.StartsWith("cU",StringComparison.Ordinal)||raw.StartsWith("pU",StringComparison.Ordinal))
+            return line.category=="producer";
+        if(raw.StartsWith("nP",StringComparison.Ordinal)||raw.StartsWith("nN",StringComparison.Ordinal))
+            return line.category=="producer"&&raw!="nN04";
+        if(raw.StartsWith("bU",StringComparison.Ordinal))return raw is not ("bU11" or "bU12" or "bU13" or "bU14");
+        return null;
+    }
+
+    bool CanLeaveCorpse(Unit unit){
+        if(unit.noCorpse||ElementalIllusion(unit)||!Organic(unit))return false;
+        var line=Lines[unit.kind];
+        bool? authored=AuthoredCorpseRule(line);
+        if(authored.HasValue)return authored.Value&&!unit.summoned&&unit.summonLeft<=0;
+        return ((int?)line.stats["death_type"]??0)%2==1;
+    }
+
+    bool SkullPileAccepts(Unit unit){
+        bool? authored=AuthoredCorpseRule(Lines[unit.kind]);
+        if(authored.HasValue)return CanLeaveCorpse(unit);
+        var traits=UnitConfig035(unit.kind);
+        return traits.sapper&&!traits.types.Contains("undead");
+    }
+
+    Corpse[] UndeadBodies(Vector2 point,JToken cfg,bool building)=>Corpses.Where(c=>c.left>0&&
+        (building?SkullPileAccepts(c.unit):Vector2.Distance(point,c.unit.position)<=F(cfg,"range")))
+        .OrderBy(c=>(c.unit.position-point).sqrMagnitude).ToArray();
     bool UndeadExecuteTarget(Unit u,int side)=>u!=null&&u.hp>0&&u.team!=side&&!Hidden(u)&&!Invulnerable(u)&&((string)Lines[u.kind].stats["unit_types"]??"").ToLowerInvariant().Contains("sapper")&&!u.abilities.Contains("A08H");
     bool UndeadReady(Unit u,JToken cfg)=>UndeadBodies(u.position,cfg,false).Length>0;
     bool CastUndeadUnit(Unit u,JToken cfg)=>RaiseUndead(u.team,u.position,cfg,false);
@@ -60,7 +90,7 @@ public sealed partial class HumanMatch {
         if(n<15&&!victim.abilities.Contains("A070")&&!mechanical){Heal(source,previous*.5f);DamageUnit(victim,10000,source.team,"chaos",true,false,source,true,true);PulseAt(victim.position,2,Color.green,"Похищение жизни",1,"undead_soul");}
         else if(n<25)UndeadDecay(source.team,victim.position);
     }
-    public void UndeadStructureHit(Unit source,int target,int roll=-1) {if(source==null||source.hp<=0||Lines[source.kind].unit!="u00D"||!source.abilities.Contains("A03Q")||ElementalIllusion(source))return;int n=roll<0?(int)(Roll()*100):roll;var h=FindHut(target);if(target!=-1&&h==null)return;bool mechanical=target==-1||h==null||((string)Lines[h.kind].buildingStats["unit_types"]??"").ToLowerInvariant().Contains("mechanical");if(n<15&&!mechanical&&!Lines[h.kind].abilities.Contains("A070")){Heal(source,h.hp*.5f);DamageHut(h,10000,"chaos",source.team,true,true);}else if(n<25)UndeadDecay(source.team,target==-1?new Vector2(BattleCastlePosition(1-source.team).x,0):TargetPosition(target,source.team));}
+    public void UndeadStructureHit(Unit source,int target,int roll=-1) {if(source==null||source.hp<=0||Lines[source.kind].unit!="u00D"||!source.abilities.Contains("A03Q")||ElementalIllusion(source))return;int n=roll<0?(int)(Roll()*100):roll;var h=FindHut(target);if(target!=-1&&h==null)return;bool mechanical=target==-1||h==null||((string)Lines[h.kind].buildingStats["unit_types"]??"").ToLowerInvariant().Contains("mechanical");if(n<15&&!mechanical&&!Lines[h.kind].abilities.Contains("A070")){Heal(source,h.hp*.5f);DamageHut(h,10000,"chaos",source.team,true,true,source.id);}else if(n<25)UndeadDecay(source.team,target==-1?new Vector2(BattleCastlePosition(1-source.team).x,0):TargetPosition(target,source.team));}
     public void UndeadDecay(int team,Vector2 at){UndeadZones.Add(new UndeadZone{id=nextId++,team=team,kind="decay",point=at,left=F(Abilities["A086"],"duration")});UndeadDecays++;PulseAt(at,F(Abilities["A086"],"area"),new Color(.4f,.8f,.25f),"Порча",F(Abilities["A086"],"duration"),"undead_decay");}
     bool UndeadPlagueTarget(Unit u,int team,JToken cfg)=>u.hp>0&&u.team!=team&&!Hidden(u)&&Lines[u.kind].unit!="YTct"&&!Invulnerable(u)&&!((string)Lines[u.kind].stats["unit_types"]??"").ToLowerInvariant().Contains("undead")&&Organic(u)&&!Ethereal(u)&&!u.effects.Any(e=>e.left>0&&(bool?)e.config?["untargetable"]==true)&&(!Flying(u)||((string)cfg["targets"]??"").Contains("air"));
     public void UndeadInfect(Vector2 point,int team,JToken cfg){using(var snapshot035_2=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_2)if(UndeadPlagueTarget(u,team,cfg)&&Vector2.Distance(point,u.position)<=F(cfg,"area")){ApplyEffectData(u,new JObject{["id"]="A05R",["kind"]="poison",["name"]="Чума",["duration"]=F(cfg["fields"],"Apl1"),["dps"]=F(cfg["fields"],"Apl2"),["damage_type"]="chaos",["ignore_armor"]=true,["minimum_hp"]=2,["undispellable"]=true,["stack_group"]="undead_plague",["stack_strength"]=F(cfg["fields"],"Apl2")},team);UndeadInfections++;}}

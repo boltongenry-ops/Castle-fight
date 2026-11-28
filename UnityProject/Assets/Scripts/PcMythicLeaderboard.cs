@@ -54,6 +54,7 @@ public sealed partial class PcGame {
     void SelectMythicTrial(string id){
         if(selectedMythicId==id)return;
         selectedMythicId=id;
+        if(HumanMatch.IsExpertTrial(id))lastExpertId=id;else lastEpochalId=id;
         mythicRequestGeneration++;
         mythicBoardLoading=false;
         mythicLeaderboard=new JArray();
@@ -177,8 +178,18 @@ public sealed partial class PcGame {
         GUI.enabled=enabled;
     }
 
+    bool expertTab;
+    string lastEpochalId=HumanMatch.WinterTrial,lastExpertId=HumanMatch.ExpertId(HumanMatch.WinterTrial);
+
+    void OpenMythicTab(bool expert){
+        mythicTab=true;expertTab=expert;mythicSelection=null;progressionScroll=Vector2.zero;mythicBoardPage=0;
+        string id=expert?lastExpertId:lastEpochalId;
+        if(selectedMythicId==id)StartCoroutine(LoadMythicLeaderboard());
+        else SelectMythicTrial(id);
+    }
+
     void DrawMythicChallenges(){
-        var trials=(JArray)progression.Catalog["mythic"];
+        var trials=(JArray)progression.Catalog[expertTab?"expert":"mythic"];
         const int stride=85;
         Workshop.maxChallengeScroll=Mathf.Max(0,trials.Count*stride-500);
         bool scrolling=Workshop.maxChallengeScroll>0;
@@ -201,7 +212,7 @@ public sealed partial class PcGame {
             mythicNicknameStyle=new GUIStyle(label){fontSize=17,alignment=TextAnchor.MiddleLeft,padding=new RectOffset(),clipping=TextClipping.Clip};
             mythicRaceStyle=new GUIStyle(small){fontSize=13,alignment=TextAnchor.MiddleLeft,padding=new RectOffset(),clipping=TextClipping.Clip};
         }
-        Text(689,186,393,48,"Таблица лидеров",mythicBoardHeading);
+        Text(689,186,393,48,expertTab?"Таблица экспертов":"Таблица лидеров",mythicBoardHeading);
         if(LobbyButton("mythic.board.refresh",new Rect(1090,188,126,38),"Обновить"))StartCoroutine(LoadMythicLeaderboard());
         Text(689,226,520,25,(string)progression.Challenge(selectedMythicId)?["title"],small);
         if(mythicLeaderboard.Count==0)

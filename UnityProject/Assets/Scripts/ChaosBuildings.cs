@@ -5,8 +5,8 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace CastleFight {
 public sealed partial class HumanMatch {
-    public sealed class ChaosFlame {public int id,team,phase=-1;public Vector2 center;public float age,nextFull,nextTail;}
-    public sealed class HellCurse {public int target,team;public float left,dps,tick;}
+    public sealed class ChaosFlame {public int id,team,sourceId,phase=-1;public Vector2 center;public float age,nextFull,nextTail;}
+    public sealed class HellCurse {public int target,team,sourceId;public float left,dps,tick;}
     public readonly List<ChaosFlame> ChaosFlames=new List<ChaosFlame>();
     public readonly List<HellCurse> HellCurses=new List<HellCurse>();
     public int ChaosGifts,ChaosErases,ChaosEruptions,ChaosFists,ChaosMisses;
@@ -46,7 +46,7 @@ public sealed partial class HumanMatch {
                 }
                 ChaosErases++;
             } else {
-                ChaosFlames.Add(new ChaosFlame {id=nextId++,team=source.team,center=target.position,nextFull=F(cfg,"interval"),nextTail=F(cfg,"full_duration")+F(cfg,"tail_interval")});ChaosEruptions++;
+                ChaosFlames.Add(new ChaosFlame {id=nextId++,team=source.team,sourceId=source.id,center=target.position,nextFull=F(cfg,"interval"),nextTail=F(cfg,"full_duration")+F(cfg,"tail_interval")});ChaosEruptions++;
             }
         }
         source.mana-=F(cfg,"mana");source.spellTimers[id]=BuildingCooldown(source,F(cfg,"cd"));source.attackSerial++;source.attackPoseLeft=.35f;SpellsCast++;return true;
@@ -71,7 +71,7 @@ public sealed partial class HumanMatch {
         using(var snapshot035_2=SimulationBuffers035.Take(HellCurses))foreach(var curse in snapshot035_2) {
             var target=Huts.FirstOrDefault(h=>h.id==curse.target&&h.hp>0);if(target==null){HellCurses.Remove(curse);continue;}
             float step=Mathf.Min(dt,Mathf.Max(0,curse.left));curse.left-=dt;curse.tick+=step;float due=curse.left<=0?curse.tick:Mathf.Floor(curse.tick);
-            if(due>0){curse.tick-=due;DamageHut(target,curse.dps*due,"chaos",curse.team,true);}
+            if(due>0){curse.tick-=due;DamageHut(target,curse.dps*due,"chaos",curse.team,true,sourceId:curse.sourceId);}
             if(curse.left<=0)HellCurses.Remove(curse);
         }
         var cfg=Abilities["A01J"];if(cfg==null)return;
@@ -88,14 +88,14 @@ public sealed partial class HumanMatch {
         var buildings=Huts.Where(h=>h.paid&&h.hp>0&&h.team!=flame.team&&Vector2.Distance(h.position,flame.center)<=radius).ToArray();bool castle=Vector2.Distance(CastlePosition(1-flame.team),flame.center)<=radius;
         float per=Mathf.Min(amount,F(cfg,"damage_cap")/Mathf.Max(1,actors.Length+buildings.Length+(castle?1:0)));
         foreach(var u in actors)DamageUnit(u,per,flame.team);
-        foreach(var h in buildings)DamageHut(h,per*F(cfg,"building_factor"),"magic",flame.team,true);
-        if(castle)DamageCastle(1-flame.team,per*F(cfg,"building_factor"),"magic",true);
+        foreach(var h in buildings)DamageHut(h,per*F(cfg,"building_factor"),"magic",flame.team,true,sourceId:flame.sourceId);
+        if(castle)DamageCastle(1-flame.team,per*F(cfg,"building_factor"),"magic",true,flame.sourceId);
     }
     void ImpactChaosFist(Shot shot) {
         var target=FindHut(shot.target);if(target==null)return;
         float duration=shot.chaosDuration;var curse=HellCurses.FirstOrDefault(c=>c.target==target.id);
-        if(curse==null){curse=new HellCurse {target=target.id};HellCurses.Add(curse);}curse.team=shot.team;curse.left=duration;curse.dps=shot.chaosDps;target.strikeLeft=-1;target.pendingWeapon=null;
-        DamageHut(target,shot.damage,"chaos",shot.team,true);PulseAt(target.position,3,new Color(1,.2f,.05f),"Кулак ада · "+duration+" сек.");
+        if(curse==null){curse=new HellCurse {target=target.id};HellCurses.Add(curse);}curse.team=shot.team;curse.sourceId=shot.sourceId;curse.left=duration;curse.dps=shot.chaosDps;target.strikeLeft=-1;target.pendingWeapon=null;
+        DamageHut(target,shot.damage,"chaos",shot.team,true,sourceId:shot.sourceId);PulseAt(target.position,3,new Color(1,.2f,.05f),"Кулак ада · "+duration+" сек.");
     }
     bool CastChaosCurse(Unit source,Unit target) {
         var cfg=Abilities["A01G"];if(!Valid(target,source.team,cfg,false)||Vector2.Distance(source.position,target.position)>F(cfg,"range"))return false;

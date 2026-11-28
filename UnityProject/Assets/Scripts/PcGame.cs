@@ -10,7 +10,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class PcGame : MonoBehaviour {
     public GameObject[] unitModels,buildingModels,builderModels,castleObjects;public Material overlayMaterial;
-    string Version=>MobileContent.Active?Application.version:"0.49.9";
+    string Version=>MobileContent.Active?Application.version:"0.50.0";
     public GameObject[] reforgedUnits,reforgedBuildings,reforgedBuilders,reforgedCastles;
     readonly PcModel[] castleViews=new PcModel[2];
     GameObject[] UnitModels=>OrcsInMatch?(options.hdTextures?orcPack.hdUnits:orcPack.units):options.hdTextures&&reforgedUnits!=null&&reforgedUnits.Length>0?reforgedUnits:unitModels;
@@ -89,6 +89,59 @@ public sealed partial class PcGame : MonoBehaviour {
         string startupShot=BattleLab.Arg("--pc-startup-shot");if(startupShot!="")StartCoroutine(CaptureStartup(startupShot));
     }
     IEnumerator CaptureStartup(string path){yield return new WaitForEndOfFrame();ScreenCapture.CaptureScreenshot(path);Debug.Log("CF_PC_STARTUP_CAPTURE page="+page);}
+    const float DefaultStartDistance = 1f;
+    const float MinimumStartDistance = .6f;
+    const float MaximumStartDistance = 1.6f;
+    sealed class StartCameraPreference { public float Distance = DefaultStartDistance; }
+    static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Options, StartCameraPreference> startCameraPreferences = new();
+    static StartCameraPreference StartCamera(Options value) => startCameraPreferences.GetOrCreateValue(value);
+
+    static float ReadStartCameraDistance(JToken value) {
+        if(value?.Type!=JTokenType.Float && value?.Type!=JTokenType.Integer)return DefaultStartDistance;
+        double distance=(double)value;
+        return double.IsNaN(distance)||double.IsInfinity(distance)||distance<MinimumStartDistance-.00001f||distance>MaximumStartDistance+.00001f
+            ? DefaultStartDistance : Mathf.Clamp((float)distance, MinimumStartDistance, MaximumStartDistance);
+    }
+
+    Camera startCameraPreview;
+    RenderTexture startCameraImage;
+    float renderedStartDistance;
+    void DrawStartCameraPreview() {
+        var setting = StartCamera(draft);
+        setting.Distance = Mathf.Round(AtlasSlider(1,"Стартовое расстояние",setting.Distance,
+            MinimumStartDistance,MaximumStartDistance,setting.Distance.ToString("P0",System.Globalization.CultureInfo.InvariantCulture))*100)/100;
+        Text(415,271,680,30,"Предпросмотр · начало сражения",small);
+        Rect frame = new Rect(415,305,696,263);
+        Fill(frame,AtlasGold);
+        Rect image = new Rect(frame.x+2,frame.y+2,frame.width-4,frame.height-4);
+        Fill(image,new Color(.04f,.06f,.04f));
+        if(Event.current.type!=EventType.Repaint || !controls || controls.Terrain==null)return;
+        if(!startCameraPreview){
+            var preview = new GameObject("Start camera preview");
+            preview.hideFlags=HideFlags.HideAndDontSave;
+            startCameraPreview=preview.AddComponent<Camera>();
+            startCameraPreview.enabled=false;
+            float aspect=Camera.main?Camera.main.aspect:16f/9;
+            int width=SettingsLayout035.Mobile?480:640;
+            startCameraImage=new RenderTexture(width,Mathf.RoundToInt(width/Mathf.Clamp(aspect,1.3f,2.6f)),16);
+            renderedStartDistance=0;
+        }
+        if(renderedStartDistance!=setting.Distance){
+            controls.RenderStartPreview(startCameraPreview,startCameraImage,setting.Distance);
+            renderedStartDistance=setting.Distance;
+        }
+        GUI.DrawTexture(image,startCameraImage,ScaleMode.ScaleToFit,false);
+    }
+
+    void ReleaseStartCameraPreview() {
+        if(startCameraPreview)Destroy(startCameraPreview.gameObject);
+        if(startCameraImage){startCameraImage.Release();Destroy(startCameraImage);}
+        startCameraPreview=null;startCameraImage=null;
+    }
+
+    void FocusOpeningBuilder() =>
+        controls.FocusWorld(World(match.Builders[0].position),40*StartCamera(options).Distance);
+
     void LoadSettings() {
         try {if(File.Exists(settingsPath)){string json=File.ReadAllText(settingsPath);options=JsonUtility.FromJson<Options>(json)??new Options();if(!json.Contains("\"fogOfWar\""))options.fogOfWar=true;}}
         catch(Exception e){Debug.LogWarning("Settings reset: "+e.Message);options=new Options();}
@@ -97,9 +150,12 @@ public sealed partial class PcGame : MonoBehaviour {
         if(File.Exists(settingsPath)&&!File.ReadAllText(settingsPath).Contains("\"musicVolume\""))options.musicVolume=.7f;
         // Soft fog is opt-in: older settings files keep the original opaque shroud.
         if(File.Exists(settingsPath))try{options.softFog=(bool?)JObject.Parse(File.ReadAllText(settingsPath))["softFog"]??false;}catch(Exception){options.softFog=false;}
+        StartCamera(options).Distance=DefaultStartDistance;
         HudThemePreference.For(options).Choice=0;
         if(File.Exists(settingsPath))try{
-            var choice=JObject.Parse(File.ReadAllText(settingsPath))["hudTheme"];
+            var saved=JObject.Parse(File.ReadAllText(settingsPath));
+            StartCamera(options).Distance=ReadStartCameraDistance(saved["startCameraDistance"]);
+            var choice=saved["hudTheme"];
             HudThemePreference.For(options).Choice=HudTheme.Parse(choice?.Type==JTokenType.String?(string)choice:null);
         }catch(Newtonsoft.Json.JsonException){}
         options.resolution=Mathf.Clamp(options.resolution,0,sizes.Length-1);options.quality=Mathf.Clamp(options.quality,0,2);
@@ -120,13 +176,14 @@ public sealed partial class PcGame : MonoBehaviour {
     Options Copy(Options value){
         var result=JsonUtility.FromJson<Options>(JsonUtility.ToJson(value));result.softFog=value.softFog;
         HudThemePreference.For(result).Choice=HudThemePreference.For(value).Choice;
+        StartCamera(result).Distance=StartCamera(value).Distance;
         return result;
     }
     void OpenSettings(){settingsReturn=page;campaignSettingsTab=0;draft=Copy(options);MapArt.Draft=MapArt.Preferred;MapArt.Panel=false;HdModels.Draft=HdModels.Preferred;HdModels.Panel=false;page=Page.Settings;}
     void SaveSettings() {
         options=Copy(draft);Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(settingsPath)));
         string temp=settingsPath+".tmp";var saved=JObject.Parse(JsonUtility.ToJson(options,true));saved["softFog"]=options.softFog;saved["modelStyle"]=HdModels.Draft?"reforged":"classic";
-        saved["mapStyle"]=MapArt.Draft?"reforged":"classic";saved["hudTheme"]=HudTheme.Keys[HudThemeIndex];File.WriteAllText(temp,saved.ToString());
+        saved["mapStyle"]=MapArt.Draft?"reforged":"classic";saved["hudTheme"]=HudTheme.Keys[HudThemeIndex];saved["startCameraDistance"]=StartCamera(options).Distance;File.WriteAllText(temp,saved.ToString());
         if(File.Exists(settingsPath))File.Replace(temp,settingsPath,null);else File.Move(temp,settingsPath);
         MapArt.Preferred=MapArt.Draft;StartCoroutine(MapArt.Apply(controls));HdModels.Select(HdModels.Draft);if(HdModels.Preferred)StartCoroutine(HdModels.OpenCached());else ReleaseOptionalVortex();
         Apply(options,false);confirmDisplay=false;page=settingsReturn;Notice("Настройки сохранены");
@@ -148,10 +205,11 @@ public sealed partial class PcGame : MonoBehaviour {
         PrepareRaceIndices();
         var first=JObject.Parse(RaceCatalog(matchRace));var second=matchRace==matchBotRace?first:JObject.Parse(RaceCatalog(matchBotRace));
         ApplyUltimateRound(ref first,ref second);
-        bool winter=(string)activeChallenge?["id"]==HumanMatch.WinterTrial;
-        if(winter)second=HumanMatch.WinterBossCatalog(second);
+        if(ActiveExpertTrial&&ActiveChallengeFamily==HumanMatch.WinterTrial)second=HumanMatch.WinterBossCatalog(second);
+        if(HasExpertFinale(ActiveChallengeId))second=HumanMatch.ExpertFinaleCatalog(second,ActiveChallengeFamily);
         bool aspectRound=aspectsOn&&AspectCount(matchRace)==2&&AspectCount(matchBotRace)==2;
-        match=new HumanMatch(first,startGold,difficulty,-1,-1,second);
+        match=new HumanMatch(first,startGold,difficulty,-1,-1,second,
+            legacyEpochal:HumanMatch.IsEpochalTrial(ActiveChallengeId)&&!ActiveExpertTrial);
         if(activeChallenge!=null)match.BeginChallengeRules(activeChallenge);
         if(match.LastProtocol&&AspectCount(matchRace)==2)match.Aspects[0]=Mathf.Clamp((int?)activeChallenge["player_aspect"]??-1,-1,1);
         challengeReward=0;challengeSettled=false;AspectBeginRound(aspectRound);
@@ -160,7 +218,7 @@ public sealed partial class PcGame : MonoBehaviour {
         visuals.AddComponent<BattleAudio>().Bind(match,World,FogVisible);
         constructionPage=0;builderSelected=true;selectedCastle=false;selectedItem=-1;selectedHut=selectedUnit=-1;targetedSpell=null;buildMenu=false;moveOrder=false;
         foreach(var c in castleObjects)c.SetActive(true);
-        controls.Focus("west");controls.buildGrid.SetActive(false);Notice("Рабочий выбран.");
+        controls.FocusMatchStart(StartCamera(options).Distance);controls.buildGrid.SetActive(false);Notice("Рабочий выбран.");
         if(match.EternalWinter)BeginWinterIntro();
         if(match.FuneralChoir)BeginChoirIntro();
         if(match.CursedHorde)BeginHordeIntro();
@@ -174,7 +232,7 @@ public sealed partial class PcGame : MonoBehaviour {
 
     void ClearMatch() {
         ClearChoirCastle();castleThemes.Clear();
-        ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();ClearAbyss();ClearQuack();ClearGreatQuackArt();
+        ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();ClearAbyss();ClearQuack();ClearGreatQuackArt();ClearExpertBossArt();
         ClearWorkshopBattle();
         ClearOnlineProjectiles();
         aspectInfoOpen=false;skillCardUnit=-1;skillCardPage=0;
@@ -208,8 +266,9 @@ public sealed partial class PcGame : MonoBehaviour {
         if(localGrid)localGrid.SetActive(false);
         return true;
     }
-    void Tick(float dt) {match.Step(dt);if(match.QuackRitualPending&&!match.Finished){BeginQuackReversal();return;}if(match.WinterAwakeningPending&&!match.Finished){BeginWinterFinale();return;}if(match.ProtocolMarch&&!protocolMarchSeen&&!match.Finished)BeginProtocolMarchIntro();if(match.Finished&&(page==Page.Match||page==Page.Teams)){series.FinishRound(match.Winner);SettleChallenge();page=Page.Result;chosen=-1;controls.buildGrid.SetActive(false);Debug.Log("CF_PC_MATCH_END winner="+match.Winner+" time="+match.Elapsed);}}
+    void Tick(float dt) {match.Step(dt);if(match.ExpertEmergencePending&&!match.Finished){BeginYurneroScene();return;}if(match.QuackRitualPending&&!match.Finished){BeginQuackReversal();return;}if(match.WinterAwakeningPending&&!match.Finished){BeginWinterFinale();return;}if(match.ProtocolMarch&&!protocolMarchSeen&&!match.Finished)BeginProtocolMarchIntro();if(match.Finished&&(page==Page.Match||page==Page.Teams)){series.FinishRound(match.Winner);SettleChallenge();page=Page.Result;chosen=-1;controls.buildGrid.SetActive(false);Debug.Log("CF_PC_MATCH_END winner="+match.Winner+" time="+match.Elapsed);}}
     void Update() {
+        if(startCameraPreview&&(page!=Page.Settings||campaignSettingsTab!=2))ReleaseStartCameraPreview();
         if(MobileContent.Active&&MobileContent.Current.Busy){controls.InputBlocked=true;if(network!=null)PollLobby();UpdateVoiceControls();return;}
         if(terrain==null)return;
         if(introPlaying){UpdateIntro();return;}
@@ -220,6 +279,7 @@ public sealed partial class PcGame : MonoBehaviour {
         if(page==Page.Spectator)return;
         if(versusActive){controls.InputBlocked=true;controls.EdgePan=false;return;}
         if(hordeIntro){UpdateHordeIntro();return;}
+        if(yurneroScene){UpdateYurneroScene();return;}
         if(protocolIntro){UpdateProtocolIntro();return;}
         if(abyssIntro){UpdateAbyssIntro();return;}
         if(quackScene!=QuackScene.None){UpdateQuackScene();return;}
@@ -283,8 +343,8 @@ public sealed partial class PcGame : MonoBehaviour {
         if(page!=Page.Match){aspectWaiting=false;selectionPending=selectionDragging=false;}
         if((page==Page.Match||page==Page.Teams)&&!aspectWaiting&&!NetworkBlocked) {
             if(!onlineMatch){if(!testing||!testHoldAuthority)accumulator+=Mathf.Min(Time.unscaledDeltaTime,.2f);
-            while(accumulator>=.05f&&!winterFinale&&!protocolMarchIntro&&quackScene==QuackScene.None&&(page==Page.Match||page==Page.Teams)){Tick(.05f);accumulator-=.05f;}}
-            if(winterFinale||protocolMarchIntro||quackScene!=QuackScene.None)return;
+            while(accumulator>=.05f&&!yurneroScene&&!winterFinale&&!protocolMarchIntro&&quackScene==QuackScene.None&&(page==Page.Match||page==Page.Teams)){Tick(.05f);accumulator-=.05f;}}
+            if(yurneroScene||winterFinale||protocolMarchIntro||quackScene!=QuackScene.None)return;
             if(HelpOpen){
                 if(preview)preview.SetActive(false);if(localGrid)localGrid.SetActive(false);
                 if(Application.isMobilePlatform)foreach(var finger in Input.touches)
@@ -333,7 +393,12 @@ public sealed partial class PcGame : MonoBehaviour {
         if(renderedHd!=options.hdTextures||HdModels.RenderRevision!=HdModels.Revision){ResetModelViews();renderedHd=options.hdTextures;HdModels.RenderRevision=HdModels.Revision;}
         for(int t=0;t<2;t++){
             var prefab=HdModels.Model("hcas",t);
-            castleObjects[t].SetActive(!prefab);
+            bool replaced=t==1&&(ChoirTombPresentation||ExpertCastleHidden);
+            castleObjects[t].SetActive(!prefab&&!replaced);
+            if(replaced){
+                if(castleViews[t])castleViews[t].gameObject.SetActive(false);
+                continue;
+            }
             if(prefab&&!castleViews[t]){
                 castleViews[t]=Instantiate(prefab,visuals.transform).GetComponent<PcModel>();
                 castleViews[t].transform.position=World(HumanMatch.CastlePosition(t));
@@ -347,7 +412,7 @@ public sealed partial class PcGame : MonoBehaviour {
         }
         float alpha=(onlineMatch||SpectatorSceneReady)?Mathf.Clamp01((Time.unscaledTime-onlineSnapshotAt)/(SpectatorSceneReady?SpectatorFrameInterval:.1f)):page==Page.Match&&(!testing||!testHoldAuthority)?Mathf.Clamp01(accumulator/.05f):1;
         for(int team=0;team<2;team++) {
-            bool born=!builders[team];if(born)builders[team]=Instantiate(RaceBuilder(team),visuals.transform).GetComponent<PcModel>();
+            bool born=!builders[team];if(born){builders[team]=Instantiate(RaceBuilder(team),visuals.transform).GetComponent<PcModel>();DressBattleActor(builders[team],team,true);}
             var builder=match.Builders[team];var model=builders[team];model.transform.position=World(Vector2.Lerp(builder.previous,builder.position,alpha));
             model.Face(builder.direction,born);model.Play(builder.pose,builder.pose=="Walk"?match.BuilderWalkRate:1);
         }
@@ -371,7 +436,7 @@ public sealed partial class PcGame : MonoBehaviour {
             if(u.hp<=0&&u.deadAge>3){if(units.TryGetValue(u.id,out var consumed))consumed.gameObject.SetActive(false);continue;}
             if(match.Hidden(u)&&!match.MechMine(u)){if(units.TryGetValue(u.id,out var hidden))hidden.gameObject.SetActive(false);continue;}
             if(units.TryGetValue(u.id,out var oldView)&&(!art036.unitKinds.TryGetValue(u.id,out int oldKind)||oldKind!=u.kind||unitViewTeams.TryGetValue(u.id,out int oldTeam)&&oldTeam!=u.team)){if(match.CursedHorde)ForgetHordeView(oldView);oldView.gameObject.SetActive(false);Destroy(oldView.gameObject);units.Remove(u.id);unitViewTeams.Remove(u.id);effectAnchors.Remove(u.id);}
-            bool born=!units.TryGetValue(u.id,out var view);if(born){var prefab=RaceModel(u.team,u.kind,false);if(!prefab)continue;view=Instantiate(prefab,visuals.transform).GetComponent<PcModel>();units.Add(u.id,view);unitViewTeams[u.id]=u.team;art036.unitKinds[u.id]=u.kind;if(match.AbyssTrialActive)StyleAbyssActor(view,u);}
+            bool born=!units.TryGetValue(u.id,out var view);if(born){var prefab=RaceModel(u.team,u.kind,false);if(!prefab)continue;view=Instantiate(prefab,visuals.transform).GetComponent<PcModel>();units.Add(u.id,view);unitViewTeams[u.id]=u.team;art036.unitKinds[u.id]=u.kind;if(match.AbyssTrialActive)StyleAbyssActor(view,u);DressBattleActor(view,u.team,false);if(match.Lines[u.kind].unit==HumanMatch.HydraRaw)view.transform.localScale*=2.15f;}
             float height=SpectatorSceneReady?SpectatorUnitHeight(u):match.Height(u);
             view.transform.position=World(Vector2.Lerp(u.previous,u.position,alpha))+Vector3.up*height;
             if(match.FuneralChoir){
@@ -408,12 +473,12 @@ public sealed partial class PcGame : MonoBehaviour {
         RenderProtocol(alpha);
         RenderAbyssTide();
         RenderWinterCastle();
-        if(match.EternalWinter||SpectatorChallengeId==HumanMatch.WinterTrial)RenderWinterFinale();
-        if(match.FuneralChoir)RenderChoirCastle();
+        if(match.EternalWinter||SpectatorChallengeFamily==HumanMatch.WinterTrial)RenderWinterFinale();
+        if(match.FuneralChoir||SpectatorSceneReady&&SpectatorChallengeFamily==HumanMatch.ChoirTrial)RenderChoirCastle();
         SweepHdEffects040();
         foreach(int id in projectiles.Keys.Where(id=>!match.Shots.Any(s=>s.id==id)).ToArray()){projectiles[id].Finish();Destroy(projectiles[id].gameObject);projectiles.Remove(id);}
     }
-    void FocusBuilder(){ClearGroupSelection();selectedCastle=false;selectedItem=-1;selectedHut=selectedUnit=-1;builderSelected=true;controls.FocusWorld(World(match.Builders[0].position),40);Notice("Рабочий выбран.");}
+    void FocusBuilder(bool atRoundStart=false){ClearGroupSelection();selectedCastle=false;selectedItem=-1;selectedHut=selectedUnit=-1;builderSelected=true;if(atRoundStart)FocusOpeningBuilder();else controls.FocusWorld(World(match.Builders[0].position),40);Notice("Рабочий выбран.");}
     bool PointerOnTerrain(out Vector3 hit) {
         Ray ray=Camera.main.ScreenPointToRay(ActivePointer);float surface=terrain.Height(-4500,0,true);hit=Vector3.zero;
         for(int i=0;i<8;i++){var plane=new Plane(Vector3.up,new Vector3(0,surface,0));if(!plane.Raycast(ray,out float distance))return false;hit=ray.GetPoint(distance);surface=terrain.Height(hit.x*30,-hit.z*30,true);}
@@ -547,6 +612,7 @@ public sealed partial class PcGame : MonoBehaviour {
             return;
         }
         if(hordeIntro){DrawHordeIntro();GUI.matrix=previous;return;}
+        if(yurneroScene){DrawYurneroScene();GUI.matrix=previous;return;}
         if(protocolIntro){DrawProtocolIntro();GUI.matrix=previous;return;}
         if(abyssIntro){DrawAbyssIntro();GUI.matrix=previous;return;}
         if(match!=null&&match.QuackActive)DrawQuackRain();
@@ -639,7 +705,7 @@ public sealed partial class PcGame : MonoBehaviour {
             if(Button("result.menu",new Rect(450,450,380,48),onlineMatch?"Вернуться в комнату":"Главное меню")){if(onlineMatch){onlineDecision=true;SendNetwork(new JObject { ["type"]="return_lobby" });}else MainMenu();}GUI.enabled=true;
         }
     }
-    void OnDestroy(){DisposeQuack();ClearChoirCastle();castleThemes.Clear();ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();ClearAbyss();if(abyssPainting)Destroy(abyssPainting);if(protocolPainting)Destroy(protocolPainting);MapArt.Abort();MapArt.Restore();HdModels.Cancel();HdModels.Select(false);if(ownChatBubble)Destroy(ownChatBubble);if(peerChatBubble)Destroy(peerChatBubble);if(chatToolbarIcon)Destroy(chatToolbarIcon);if(micToolbarIcon)Destroy(micToolbarIcon);CloseVersus();if(resultEmblem)Destroy(resultEmblem);if(rankSheet)Destroy(rankSheet);if(castleLogo)Destroy(castleLogo);DisposeVoice();DisposeFrontend();DisposeWorkshop();DisposeRichAura();DisposeFog();DisposeGuide();if(Art036.bundle)Art036.bundle.Unload(false);if(builderCosmeticMaterial)Destroy(builderCosmeticMaterial);DisposeReforgedFx();if(flameMaterial)Destroy(flameMaterial);if(wispMaterial)Destroy(wispMaterial);if(wispMeshMaterial)Destroy(wispMeshMaterial);if(armorAuraMaterial)Destroy(armorAuraMaterial);if(orcRuneMaterial)Destroy(orcRuneMaterial);DestroyHud();foreach(var t in new[]{panel,normal,hot,active})if(t)Destroy(t);if(ringMesh)Destroy(ringMesh);}
+    void OnDestroy(){ClearExpertBossArt();DisposeQuack();ClearChoirCastle();castleThemes.Clear();ClearWinterTrial();ClearChoir();ClearHorde();ClearProtocol();ClearAbyss();if(abyssPainting)Destroy(abyssPainting);if(protocolPainting)Destroy(protocolPainting);MapArt.Abort();MapArt.Restore();HdModels.Cancel();HdModels.Select(false);if(ownChatBubble)Destroy(ownChatBubble);if(peerChatBubble)Destroy(peerChatBubble);if(chatToolbarIcon)Destroy(chatToolbarIcon);if(micToolbarIcon)Destroy(micToolbarIcon);CloseVersus();if(resultEmblem)Destroy(resultEmblem);if(rankSheet)Destroy(rankSheet);if(castleLogo)Destroy(castleLogo);DisposeVoice();DisposeFrontend();DisposeWorkshop();DisposeOutfits();DisposeRichAura();DisposeFog();DisposeGuide();if(Art036.bundle)Art036.bundle.Unload(false);if(builderCosmeticMaterial)Destroy(builderCosmeticMaterial);DisposeReforgedFx();if(flameMaterial)Destroy(flameMaterial);if(wispMaterial)Destroy(wispMaterial);if(wispMeshMaterial)Destroy(wispMeshMaterial);if(armorAuraMaterial)Destroy(armorAuraMaterial);if(orcRuneMaterial)Destroy(orcRuneMaterial);DestroyHud();foreach(var t in new[]{panel,normal,hot,active})if(t)Destroy(t);if(ringMesh)Destroy(ringMesh);}
 
     // Exercises the same GUI button branches as a click, using the rendered native player.
     IEnumerator Action(string id) {Debug.Log("CF_QA_ACTION "+id);pendingTestAction=id;float until=Time.realtimeSinceStartup+3;while(pendingTestAction!=null&&Time.realtimeSinceStartup<until)yield return null;Check(pendingTestAction==null,"button "+id);yield return null;}

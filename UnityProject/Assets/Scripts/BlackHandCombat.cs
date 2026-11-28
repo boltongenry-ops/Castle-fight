@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace CastleFight {
 public sealed partial class HumanMatch {
-    sealed class Shrapnel { public Vector2 center; public string ammo; public int team,ticks; public Unit cursedVictim; public float age,radius; }
+    sealed class Shrapnel { public Vector2 center; public string ammo; public int team,ticks; public Unit cursedVictim; public float age,radius,damage,finale,firstTick; }
     readonly List<Shrapnel> shrapnel = new List<Shrapnel>();
     static readonly Color iron = new Color(.56f,.48f,.62f);
     static Color StoneColor(string ammo) => ammo=="bU12"?Color.green:ammo=="bU13"?new Color(1,.42f,.08f):ammo=="bU14"?new Color(.72f,.24f,.88f):Color.gray;
@@ -144,6 +144,30 @@ public sealed partial class HumanMatch {
         }
         // The split is drawn by the in-flight shard views. Ground effects start on impact.
     }
+    readonly float[] handReserveReady=new float[2];
+
+    void CallHandReserve(Hut hut,string skill,JObject config){
+        int team=hut.team;
+        if(Elapsed<handReserveReady[team]){
+            hut.spellTimers[skill]=handReserveReady[team]-Elapsed;
+            return;
+        }
+        int guard=Kind("bH00"),pike=Kind("bH05");
+        bool threatened=PepeInRange(hut.position,F(config,"range")).Count(u=>HandTarget(u,team)&&!Flying(u)&&PepeVisible(u,team))>=2;
+        if(!threatened||guard<0||pike<0||ArmyCount(team)+3>ArmyLimit){hut.spellTimers[skill]=.75f;return;}
+        for(int i=-1;i<=1;i++){
+            Vector2 point=hut.position+new Vector2(team==0?3:-3,i*2.2f);
+            var fighter=Spawn(team,i==0?guard:pike,point);
+            fighter.summoned=fighter.noBounty=fighter.noCorpse=true;
+            fighter.summonLeft=F(config,"reserve_duration");
+            fighter.onRoad=true;
+        }
+        float cooldown=F(config,"cd");
+        handReserveReady[team]=Elapsed+cooldown;
+        hut.spellTimers[skill]=cooldown;
+        PulseAt(hut.position,3,iron,"Контрмарш",.9f,"blackhand:bell");
+    }
+
     void BlackHandBuilding(Hut hut) {
         string id=Lines[hut.kind].building;
         if(id!="bH15"&&id!="bH16"&&id!="bH17")return;
@@ -158,6 +182,7 @@ public sealed partial class HumanMatch {
             return;
         }
         if(id=="bH15"){
+            if(Abilities[skill] is JObject config&&F(config,"reserve_duration")>0){CallHandReserve(hut,skill,config);return;}
             var targets=Units.Where(v=>HandTarget(v,team)&&!v.effects.Any(e=>e.id=="BHKn"&&e.left>0))
                 .OrderBy(v=>(v.position-hut.position).sqrMagnitude).ThenBy(v=>v.id).Take(5).ToArray();
             foreach(var enemy in targets){
@@ -189,7 +214,13 @@ public sealed partial class HumanMatch {
         var struck=directHit && ammo=="bU14" ? FindUnit(shot.target) : null;
         if(struck!=null && struck.hp>0 && struck.team!=shot.team && !Invulnerable(struck))
             HandEffect(struck,shot.team,"BHCr",3,-.2f);
-        shrapnel.Add(new Shrapnel{team=shot.team,ammo=ammo,center=shot.end,radius=radius,cursedVictim=struck});
+        var rules=Abilities["BH"+ammo.Substring(2)];
+        shrapnel.Add(new Shrapnel{
+            team=shot.team,ammo=ammo,center=shot.end,radius=radius,cursedVictim=struck,
+            damage=F(rules,"fragment_damage",ammo=="bU13"?24:ammo=="bU11"?10:12),
+            finale=F(rules,"fragment_finale",ammo=="bU13"?18:0),
+            firstTick=F(rules,"fragment_first_tick",1)
+        });
         PulseAt(shot.end,radius,StoneColor(ammo),"",.48f,AmmoFx(ammo));
         return true;
     }
@@ -197,7 +228,7 @@ public sealed partial class HumanMatch {
     void BlackHandZones(float dt) {
         for(int i=shrapnel.Count-1;i>=0;i--){
             var zone=shrapnel[i];zone.age+=dt;
-            while(zone.ticks<3&&zone.age>=zone.ticks+1){
+            while(zone.ticks<3&&zone.age>=zone.ticks+zone.firstTick){
                 zone.ticks++;
                 bool fire=zone.ammo=="bU13",poison=zone.ammo=="bU12",curse=zone.ammo=="bU14";
                 var targets=PepeInRange(zone.center,zone.radius).Where(v=>v.team!=zone.team&&v.hp>0&&!Flying(v)&&!Invulnerable(v)).ToList();
@@ -205,7 +236,7 @@ public sealed partial class HumanMatch {
                 if(struck!=null && struck.team!=zone.team && struck.hp>0 && !Flying(struck) && !Invulnerable(struck) && !targets.Contains(struck))
                     targets.Add(struck);
                 foreach(var v in targets){
-                    DamageUnit(v,fire?(zone.ticks==3?42:24):poison||curse?12:10,zone.team,fire?"magic":poison?"pierce":curse?"chaos":"siege",true);
+                    DamageUnit(v,zone.damage+(zone.ticks==3?zone.finale:0),zone.team,fire?"magic":poison?"pierce":curse?"chaos":"siege",true);
                     if(v.hp<=0)continue;
                     if(poison&&Organic(v))HandEffect(v,zone.team,"BHPs",3);
                     if(curse){

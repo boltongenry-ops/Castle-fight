@@ -392,7 +392,7 @@ public sealed partial class PcGame {
                 break;
             case 2:
                 draft.cameraSpeed=AtlasSlider(0,"Скорость камеры",draft.cameraSpeed,.5f,2,draft.cameraSpeed.ToString("F1")+"×");
-                Text(415,231,670,52,SettingsLayout035.Mobile?"Камера · проведите по полю одним пальцем":"Камера · подведите курсор к краю экрана",small);
+                DrawStartCameraPreview();
                 break;
             case 4:
                 if(AtlasToggle(0,"settings.friend-viewing","Друзья могут смотреть мои испытания",!draft.disableFriendViewing))

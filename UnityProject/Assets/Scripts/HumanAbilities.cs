@@ -6,7 +6,7 @@ using UnityEngine;
 namespace CastleFight {
 public sealed partial class HumanMatch {
     sealed class HumanJob {public string kind;public int source,target,team,count;public Vector2 center;public float left;}
-    public sealed class Fire {public int id,team;public string ability;public Vector2 center;public float age,nextFull,nextTail;}
+    public sealed class Fire {public int id,team,sourceId;public string ability;public Vector2 center;public float age,nextFull,nextTail;}
     readonly List<HumanJob> humanJobs=new List<HumanJob>();public readonly List<Fire> Fires=new List<Fire>();
     bool Valid(Unit u,int team,JToken cfg,bool ally) {
         if(u==null||u.hp<=0||!ally&&!NightCanDetect(team,u)||Hidden(u)||CorruptedAirborne(u)||Lines[u.kind].unit=="n02E"||(u.team==team)!=ally||Invulnerable(u))return false;string flags=(string)cfg?["targets"]??"";
@@ -230,12 +230,12 @@ public sealed partial class HumanMatch {
         if(!towerIndexed)target=Units.Where(u=>u.team!=h.team&&u.hp>0&&!CorruptedAirborne(u)&&!Invulnerable(u)&&!Hidden(u)&&NightCanDetect(h.team,u)&&l.buildingWeapons.Any(w=>!HordeImmuneToWeapon(u,w)&&(Flying(u)?w.air:w.ground)&&(u.position-h.position).sqrMagnitude<=Mathf.Min(w.range,l.buildingAcquisitionRange)*Mathf.Min(w.range,l.buildingAcquisitionRange))).OrderBy(u=>(u.position-h.position).sqrMagnitude).FirstOrDefault();
         if(target==null)return;h.pendingWeapon=l.buildingWeapons.First(w=>!HordeImmuneToWeapon(target,w)&&(Flying(target)?w.air:w.ground)&&Vector2.Distance(target.position,h.position)<=w.range);h.cooldown=h.pendingWeapon.cooldown;h.strikeLeft=h.pendingWeapon.point;h.attackTarget=target.id;h.attackSerial++;h.attackPoseLeft=h.pendingWeapon.point+h.pendingWeapon.backswing+.2f;
     }
-    void AddFire(int team,Vector2 center,string id="A02K"){var c=Abilities[id];Fires.Add(new Fire {id=nextId++,team=team,ability=id,center=center,nextFull=F(c,"interval",.25f),nextTail=F(c?["fields"],"ahdu",1.01f)+F(c?["fields"],"Hfs4",1)});ArtilleryFires++;PulseAt(center,F(c,"area",5),new Color(1,.3f,.02f),"Горючая смесь",F(c?["fields"],"adur",1.01f));}
+    void AddFire(int team,Vector2 center,string id="A02K",int sourceId=0){var c=Abilities[id];Fires.Add(new Fire {id=nextId++,team=team,sourceId=sourceId,ability=id,center=center,nextFull=F(c,"interval",.25f),nextTail=F(c?["fields"],"ahdu",1.01f)+F(c?["fields"],"Hfs4",1)});ArtilleryFires++;PulseAt(center,F(c,"area",5),new Color(1,.3f,.02f),"Горючая смесь",F(c?["fields"],"adur",1.01f));}
     void FirePulse(Fire fire,float amount) {
         var cfg=Abilities[fire.ability];float radius=F(cfg,"area",5);
         using(var snapshot035_8=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_8)if(Valid(u,fire.team,cfg,false)&&Vector2.Distance(u.position,fire.center)<=radius)DamageUnit(u,amount,fire.team);
-        using(var snapshot035_9=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_9)if(h.team!=fire.team&&h.paid&&h.hp>0&&Vector2.Distance(h.position,fire.center)<=radius)DamageHut(h,amount,"magic",fire.team,true);
-        if(Vector2.Distance(BattleCastlePosition(1-fire.team),fire.center)<=radius)DamageCastle(1-fire.team,amount,"magic",true);
+        using(var snapshot035_9=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_9)if(h.team!=fire.team&&h.paid&&h.hp>0&&Vector2.Distance(h.position,fire.center)<=radius)DamageHut(h,amount,"magic",fire.team,true,sourceId:fire.sourceId);
+        if(Vector2.Distance(BattleCastlePosition(1-fire.team),fire.center)<=radius)DamageCastle(1-fire.team,amount,"magic",true,fire.sourceId);
     }
     public float BuildingArmor(Hut h)=>F(Lines[h.kind].buildingStats,"armor")-h.dragonArmorRank*2+MechBuildingArmor(h)+(TeamHuman[h.team]&&Aspects[h.team]==0&&Lines[h.kind].building=="h006"?2:0);
     void TickAspects(float dt) {
@@ -252,6 +252,6 @@ public sealed partial class HumanMatch {
         BotDefend();
     }
     public bool BuyRescue(int team){if(!ChallengeShopAllowed(team)||!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||AvailableGold(team)<1000)return false;Gold[team]-=1000;RescueCharges[team]++;return true;}
-    public bool Rescue(int team,Vector2 p){if(!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||RescueCharges[team]<=0||RescueCooldown[team]>0||float.IsNaN(p.x)||float.IsNaN(p.y)||Mathf.Abs(p.x)>6144f/30||Mathf.Abs(p.y)>2048f/30)return false;RescueCharges[team]--;RescueCooldown[team]=60;if(team==0&&QuackDownpour){BeginQuackRescueBackfire(p);return true;}using(var snapshot035_10=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_10)if(u.hp>0&&u.team!=team&&Vector2.Distance(p,u.position)<=1000f/30)DamageUnit(u,u.maxHp+1,team,"chaos",true,true);PulseAt(p,1000f/30,Color.cyan,"Спасительный удар",1.267f,"wisp");return true;}
+    public bool Rescue(int team,Vector2 p){if(!ChallengeRescueAllowed)return false;if(Finished||team<0||team>1||RescueCharges[team]<=0||RescueCooldown[team]>0||float.IsNaN(p.x)||float.IsNaN(p.y)||Mathf.Abs(p.x)>6144f/30||Mathf.Abs(p.y)>2048f/30)return false;RescueCharges[team]--;RescueCooldown[team]=60;if(team==0&&QuackDownpour){BeginQuackRescueBackfire(p);return true;}using(var snapshot035_10=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_10)if(u.hp>0&&u.team!=team&&!RescueImmune(u)&&Vector2.Distance(p,u.position)<=1000f/30)DamageUnit(u,u.maxHp+1,team,"chaos",true,true);PulseAt(p,1000f/30,Color.cyan,"Спасительный удар",1.267f,"wisp");return true;}
 }
 }

@@ -62,9 +62,8 @@ public sealed partial class PcGame {
             yield break;
         }
         Check(quackKing&&quackGuards.Count(guard=>guard)==3&&quackEmoji&&quackReveal,"Opening has the Great Quack, guards and both generated textures");
-        Check(greatQuackTemplate&&quackKing&&quackKing.clips.Length==4&&
-            greatQuackMaterials.Any(material=>material.name=="Royal hammered brass"),
-            "The opening loads the remodeled Great Quack with its crown and all four animations");
+        Check(!greatQuackTemplate&&quackKing&&quackKing.clips.Length>0,
+            "Epochal opening uses the original Great Quack presentation");
         Check(quackCroak&&quackCroak.frequency==24000&&quackCroak.length>.5f,"Speech has the recorded croak");
         Check(quackHudFrame&&quackHudFrame.width>quackHudFrame.height*3,"The frog-medallion banner is loaded");
         Check(bossSoundtrack&&bossSoundtrack.isPlaying&&bossSoundtrack.loop&&bossSoundtrack.clip.name==EpochalBossTrack&&
@@ -114,6 +113,7 @@ public sealed partial class PcGame {
         var humans=JObject.Parse(RaceCatalog(0));
         var pepe=JObject.Parse(RaceCatalog(PepeContent.Race));
         new HumanMatch(humans,500,2,-1,-1,pepe).CheckQuackRules(QuackDefinition(),Check);
+        new HumanMatch(humans,500,2,-1,-1,pepe).CheckQuackRules(ExpertDefinition(QuackDefinition()),Check);
         new HumanMatch(humans,500,2,-1,-1,pepe).CheckQuackReplacementRate(QuackDefinition(),Check);
         var strategy=new HumanMatch(humans,500,2,-1,-1,pepe);
         strategy.BeginChallengeRules(QuackDefinition());
@@ -342,9 +342,10 @@ public sealed partial class HumanMatch {
             "Intermission resets the boss castle, removes player units and preserves production buildings");
         check(QuackRainAlive()==0,"Opening downpour queues the groups without spawning them");
         for(int i=0;i<12;i++){Elapsed+=.65f;TickQuackTrial();}
+        string rainBuilding=ExpertTrial?QuackKingBuilding:"pB06";
         check(QuackRainAlive()==QuackRainLimit&&Units.Count(unit=>unit.hp>0&&unit.team==1&&
-            unit.noBounty&&unit.noCorpse&&Lines[unit.kind].unit=="pU13")==QuackRainLimit,
-            "The initial downpour spawns thirty Great Quacks in the original pool groups");
+            unit.noBounty&&unit.noCorpse&&Lines[unit.kind].building==rainBuilding)==QuackRainLimit,
+            ExpertTrial?"Expert rain spawns thirty Great Quacks":"Epochal rain spawns thirty tadpoles");
         float rain=quackRainAt;
         Elapsed=rain-QuackRainWarning-.01f;TickQuackTrial();
         bool waited=quackRainLeft==0;

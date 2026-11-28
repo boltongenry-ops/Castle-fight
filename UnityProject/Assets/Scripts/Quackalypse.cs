@@ -36,11 +36,11 @@ public sealed partial class HumanMatch {
     public int QuackRescueBackfires {get;private set;}
 
     void BeginQuackTrial(){
-        quackActive=(string)ChallengeRules?["id"]==QuackTrial&&teamBaseBuildings[1].Contains("pB31");
+        quackActive=ChallengeFamily==QuackTrial&&teamBaseBuildings[1].Contains("pB31");
         if(!quackActive)return;
         quackStage=0;
         quackBellAt=Elapsed+QuackWaveInterval;
-        quackRainKind=Kind(QuackKingBuilding);
+        quackRainKind=Kind(ExpertTrial?QuackKingBuilding:"pB06");
         quackBellKinds=Array.ConvertAll(QuackBellRoster,Kind);
         LegendaryLimit[1]=2;
         quackInfiltratorKind=Kind("pB31");

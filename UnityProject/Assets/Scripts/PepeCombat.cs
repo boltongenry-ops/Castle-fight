@@ -47,8 +47,13 @@ public sealed partial class HumanMatch {
         effect.left > 0 && effect.power > 0 && effect.sourceTeam == unit.team);
 
     void PepeGiveShield(Unit unit, float points, float seconds, string sourceSkill = "PShd") {
+        var config=(JObject)Abilities[PepeShieldId];
+        if(sourceSkill=="PBll"&&F(Abilities["PBll"],"break_slow")>0){
+            config=(JObject)config.DeepClone();
+            config["break_slow"]=Abilities["PBll"]["break_slow"].DeepClone();
+        }
         unit.effects.Add(new Effect {id=PepeShieldId, group=PepeShieldId, left=seconds, lifetime=seconds,
-            power=points, sourceTeam=unit.team, config=(JObject)Abilities[PepeShieldId],
+            power=points, sourceTeam=unit.team, config=config,
             rainRelay=QuackActive&&unit.team==1&&sourceSkill=="PGSh"});
         PulseAt(unit.position, 1.2f, ReedGreen, "", .65f, "pepe:"+sourceSkill,unit.id);
     }
@@ -66,9 +71,21 @@ public sealed partial class HumanMatch {
             float absorbed = Mathf.Min(shield.power, amount);
             shield.power -= absorbed;
             amount -= absorbed;
-            if (shield.power <= .001f) victim.effects.Remove(shield);
+            if (shield.power <= .001f){
+                victim.effects.Remove(shield);
+                if(F(shield.config,"break_slow")>0)PepeBellShock(victim,F(shield.config,"break_slow"));
+            }
         }
         return amount;
+    }
+
+    void PepeBellShock(Unit bearer,float slow){
+        var status=new JObject{["id"]="PBel",["name"]="Отзвук болотного колокола",["kind"]="debuff",
+            ["duration"]=2.5f,["speed"]=-slow,["stack_group"]="pepe_bell_shock"};
+        foreach(var enemy in PepeInRange(bearer.position,5).Where(u=>PepeGround(u,bearer.team)&&u.spellResist<1)
+            .OrderBy(u=>(u.position-bearer.position).sqrMagnitude).Take(3).ToArray())
+            ApplyEffectData(enemy,status,bearer.team);
+        PulseAt(bearer.position,5,ReedGreen,"Отзвук колокола",.70f,"pepe:PBll");
     }
 
     void PepeChangeTeam(Unit unit) {
@@ -207,7 +224,7 @@ public sealed partial class HumanMatch {
                     && PepeShield(unit) == null).OrderBy(unit => unit.hp / unit.maxHp)
                     .ThenBy(unit => unit.id).Take(count).ToArray();
                 if (shielded.Length < 2) return;
-                foreach (var unit in shielded) PepeGiveShield(unit, F(cfg, "power"), 6);
+                foreach (var unit in shielded) PepeGiveShield(unit,F(cfg,"power"),6,F(cfg,"break_slow")>0?"PBll":"PShd");
                 break;
         }
         building.mana -= mana;

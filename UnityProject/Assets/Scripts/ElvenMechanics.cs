@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 using UnityEngine;
 namespace CastleFight {
 public sealed partial class HumanMatch {
-    public sealed class ElvenJob {public string kind,ability;public Unit body;public int team,target,ticks;public float left,power;public int roll=-1;}
+    public sealed class ElvenJob {public string kind,ability;public Unit body;public int team,target,ticks,sourceId;public float left,power;public int roll=-1;}
     public readonly List<ElvenJob> ElvenJobs=new List<ElvenJob>();
     public int ElvenReturns,ElvenHeals,ElvenSolarHits,ElvenHexes,ElvenFireHits,ElvenBarrages;
     public int ElvenGraceChance(int team)=>Mathf.Min(40,20*Huts.Count(h=>h.team==team&&h.paid&&h.hp>0&&Lines[h.kind].building=="h059"));
@@ -23,7 +23,7 @@ public sealed partial class HumanMatch {
                 var fresh=Spawn(old.team,old.kind,old.position);fresh.onRoad=true;fresh.leaveCastleLane=false;Corpses.RemoveAll(c=>c.unit==old);old.deadAge=100;Resurrections++;ElvenReturns++;PulseAt(fresh.position,1,Color.yellow,"Благодать",1.5f,"elven:elven_resurrect:effect");continue;
             }
             int count=Mathf.Min(job.ticks,1+Mathf.FloorToInt(-job.left));
-            for(int i=0;i<count;i++)if(job.target==-1){if(CastleHp[1-job.team]>0)DamageCastle(1-job.team,job.power,"magic",true);}else DamageHut(FindHut(job.target),job.power,"magic",job.team,true);
+            for(int i=0;i<count;i++)if(job.target==-1){if(CastleHp[1-job.team]>0)DamageCastle(1-job.team,job.power,"magic",true,job.sourceId);}else DamageHut(FindHut(job.target),job.power,"magic",job.team,true,sourceId:job.sourceId);
             job.ticks-=count;if(job.ticks>0){job.left+=count;ElvenJobs.Add(job);}
         }
     }
@@ -81,8 +81,8 @@ public sealed partial class HumanMatch {
         if(!(shot.chaosSpell??"").StartsWith("elven:"))return false;string id=shot.chaosSpell.Substring(6);var cfg=Abilities[id];var target=FindUnit(shot.target);
         if(target!=null){if(!Valid(target,shot.team,cfg,false)||id=="A08U"&&NagaShieldBlock(target))return true;DamageUnit(target,shot.damage,shot.team);if(target.hp>0){if(id=="A08U"){target.stun=Mathf.Max(target.stun,F(cfg,IsNagaHero(target)||target.abilities.Any(a=>(string)Abilities[a]?["kind"]=="resistant_skin")?"hero_duration":"duration"));ElvenSolarHits++;}else if(F(cfg,"dps")>0){var status=(JObject)cfg.DeepClone();status["power"]=0;status["kind"]="debuff";ApplyEffectData(target,status,shot.team);}}}
         else if(shot.target<0&&ElvenStructureAlive(shot.target,shot.team)&&((string)cfg["targets"]??"").Contains("structure")){
-            if(shot.target==-1)DamageCastle(1-shot.team,shot.damage,"magic",true);else DamageHut(FindHut(shot.target),shot.damage,"magic",shot.team,true);
-            if(F(cfg,"dps")>0&&ElvenStructureAlive(shot.target,shot.team))ElvenJobs.Add(new ElvenJob{kind="burn",team=shot.team,target=shot.target,ability=id,power=F(cfg,"dps"),ticks=(int)F(cfg,"duration"),left=1});
+            if(shot.target==-1)DamageCastle(1-shot.team,shot.damage,"magic",true,shot.sourceId);else DamageHut(FindHut(shot.target),shot.damage,"magic",shot.team,true,sourceId:shot.sourceId);
+            if(F(cfg,"dps")>0&&ElvenStructureAlive(shot.target,shot.team))ElvenJobs.Add(new ElvenJob{kind="burn",team=shot.team,target=shot.target,sourceId=shot.sourceId,ability=id,power=F(cfg,"dps"),ticks=(int)F(cfg,"duration"),left=1});
         }else return true;
         ElvenFireHits++;PulseAt(shot.end,1,Color.yellow,"",1,"elven:"+id+":target");return true;
     }

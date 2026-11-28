@@ -14,7 +14,7 @@ public sealed partial class HumanMatch {
     public int NagaControls {get;private set;}
     public int NagaWaves {get;private set;}
     bool NagaCandidate(Unit u,int team)=>u.hp>0&&u.team!=team&&((bool?)Lines[u.kind].stats["invulnerable"]??false)==false&&((string)Lines[u.kind].stats["unit_types"]??"").ToLowerInvariant().Contains("sapper")&&!u.abilities.Contains("A08H");
-    bool IsNagaHero(Unit unit) {string raw=(string)Lines[unit.kind].stats["base"]??Lines[unit.kind].unit;return !string.IsNullOrEmpty(raw)&&char.IsLetter(raw[0])&&char.IsUpper(raw[0]);}
+    bool IsNagaHero(Unit unit) {string raw=(string)Lines[unit.kind].stats["base"]??Lines[unit.kind].unit;return unit==expertFinalBoss||!string.IsNullOrEmpty(raw)&&char.IsLetter(raw[0])&&char.IsUpper(raw[0]);}
     bool NagaShieldBlock(Unit unit) {
         if(unit.abilities.Contains("A10A")) {
             int shield=unit.abilityLevels.TryGetValue("A10A",out int v)?v:1;

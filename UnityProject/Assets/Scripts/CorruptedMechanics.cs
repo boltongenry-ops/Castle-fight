@@ -7,7 +7,7 @@ namespace CastleFight {
 public sealed partial class HumanMatch {
     public sealed class CorruptedRay {public int id,team,source;public Vector2 origin,direction;public float distance,artDistance;public readonly HashSet<int> struck=new HashSet<int>();}
     public sealed class CorruptedFlight {public Unit unit;public int source,team;public float age;}
-    public sealed class CorruptedWave {public int id,team;public Vector2 origin,direction;public float distance;public readonly HashSet<int> struck=new HashSet<int>();}
+    public sealed class CorruptedWave {public int id,team,sourceId;public Vector2 origin,direction;public float distance;public readonly HashSet<int> struck=new HashSet<int>();}
     public sealed class CorruptedJob {public string kind;public int team;public Vector2 point;public float left;public JObject config;public Unit body;}
     public readonly List<CorruptedRay> CorruptedRays=new List<CorruptedRay>();
     public readonly List<CorruptedFlight> CorruptedFlights=new List<CorruptedFlight>();
@@ -54,7 +54,7 @@ public sealed partial class HumanMatch {
         }
         if(id=="A04X"){if(Valid(target,source.team,child,false))LaunchCorruptedWave(source,target.position);return true;}return false;
     }
-    void LaunchCorruptedWave(Unit source,Vector2 target){var direction=target-source.position;if(direction.sqrMagnitude<.001f)direction=source.team==0?Vector2.right:Vector2.left;CorruptedWaves.Add(new CorruptedWave{id=nextId++,team=source.team,origin=source.position,direction=direction.normalized});}
+    void LaunchCorruptedWave(Unit source,Vector2 target){var direction=target-source.position;if(direction.sqrMagnitude<.001f)direction=source.team==0?Vector2.right:Vector2.left;CorruptedWaves.Add(new CorruptedWave{id=nextId++,team=source.team,sourceId=source.id,origin=source.position,direction=direction.normalized});}
     void CorruptedStructureHit(Unit source,int target){if(source.hp>0&&(target==-1||FindHut(target)!=null)&&!ElementalIllusion(source)&&source.abilities.Contains("A04W"))LaunchCorruptedWave(source,target==-1?new Vector2(BattleCastlePosition(1-source.team).x,0):TargetPosition(target,source.team));}
     float CorruptedIncinerate(Unit source,Unit target) {
         if(source==null||ElementalIllusion(source))return 0;
@@ -88,8 +88,8 @@ public sealed partial class HumanMatch {
         }}
         var cfg=Abilities["A04X"];using(var snapshot035_6=SimulationBuffers035.Take(CorruptedWaves))foreach(var wave in snapshot035_6){float previous=wave.distance;wave.distance=Mathf.Min(F(cfg,"wave_length"),wave.distance+F(cfg,"missile_speed")*dt);
             using(var snapshot035_7=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_7)if(!wave.struck.Contains(u.id)&&Valid(u,wave.team,cfg,false)&&CorruptedTouches(u.position-wave.origin,wave.direction,previous,wave.distance,F(Lines[u.kind].stats,"collision"),F(cfg,"start_width"))){wave.struck.Add(u.id);DamageUnit(u,F(cfg,"power"),wave.team);}
-            using(var snapshot035_8=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_8)if(h.team!=wave.team&&h.paid&&h.hp>0&&!wave.struck.Contains(HutTarget(h))&&CorruptedTouches(h.position-wave.origin,wave.direction,previous,wave.distance,F(Lines[h.kind].buildingStats,"collision"),F(cfg,"start_width"))){wave.struck.Add(HutTarget(h));DamageHut(h,F(cfg,"power"),"magic",wave.team,true);}
-            Vector2 castle=new Vector2(BattleCastlePosition(1-wave.team).x,0);if(!wave.struck.Contains(-1)&&CorruptedTouches(castle-wave.origin,wave.direction,previous,wave.distance,0,F(cfg,"start_width"))){wave.struck.Add(-1);DamageCastle(1-wave.team,F(cfg,"power"),"magic",true);}if(wave.distance>=F(cfg,"wave_length"))CorruptedWaves.Remove(wave);
+            using(var snapshot035_8=SimulationBuffers035.Take(Huts))foreach(var h in snapshot035_8)if(h.team!=wave.team&&h.paid&&h.hp>0&&!wave.struck.Contains(HutTarget(h))&&CorruptedTouches(h.position-wave.origin,wave.direction,previous,wave.distance,F(Lines[h.kind].buildingStats,"collision"),F(cfg,"start_width"))){wave.struck.Add(HutTarget(h));DamageHut(h,F(cfg,"power"),"magic",wave.team,true,sourceId:wave.sourceId);}
+            Vector2 castle=new Vector2(BattleCastlePosition(1-wave.team).x,0);if(!wave.struck.Contains(-1)&&CorruptedTouches(castle-wave.origin,wave.direction,previous,wave.distance,0,F(cfg,"start_width"))){wave.struck.Add(-1);DamageCastle(1-wave.team,F(cfg,"power"),"magic",true,wave.sourceId);}if(wave.distance>=F(cfg,"wave_length"))CorruptedWaves.Remove(wave);
         }
         using(var snapshot035_9=SimulationBuffers035.Take(CorruptedJobs))foreach(var job in snapshot035_9)if((job.left-=dt)<=0){CorruptedJobs.Remove(job);if(job.kind=="incinerate"){if(job.body!=null)job.body.deadAge=100;CorruptedBlast(job.team,job.point,job.config,true);}else if(job.kind=="parasite"){
             var u=NatureSummon(job.team,"n01I",job.point,25);u.corruptedThrall=true;u.noBounty=true;u.abilities.Clear();u.abilityLevels.Clear();u.effects.Clear();u.armor=0;u.maxHp=u.hp=180;u.attackOverride=12;u.cooldownOverride=1;u.critChance=u.evasion=u.spellResist=0;CorruptedParasites++;

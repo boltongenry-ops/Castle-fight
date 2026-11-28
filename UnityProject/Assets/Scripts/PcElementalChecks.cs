@@ -15,8 +15,8 @@ public sealed partial class PcGame {
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"elemental-validation"));Directory.CreateDirectory(folder);MainMenu();aspectsOn=false;botRaceChoice=0;yield return Action("main.play");yield return Action("setup.elemental");
         Check(raceChoice==9&&elementalPack&&AllRaceIds[RaceOfUnity(9)]=="elementals","Elementals source menu card and separate race pack");yield return Shot(folder,"01-elemental-selection");
         if(BattleLab.Arg("--pc-wisp-preview")=="1"){
-            Check(menuPortraitModel&&menuPortraitModel.TryGetComponent<ClassicWispBody040>(out var menuWisp)&&menuWisp.FacingPlanes>0&&menuWisp.Alignment(portraitCamera)>.99f,
-                "Race selection faces the imported Wisp planes toward the portrait camera");
+            Check(raceArtworkRace==9&&raceArtwork&&raceArtwork.width*2==raceArtwork.height*3,
+                "Race selection displays the dedicated Elemental illustration");
         }
         startGold=1000;yield return Action("setup.start");testHoldAuthority=true;
         Check(match.TeamElemental[0]&&!match.TeamHuman[0]&&match.TeamHuman[1]&&builders[0].raw=="h051","Wisp builder and mixed offline identities");Check(match.BaseKinds.Length==11&&elementalPack.buildingIcons.Length==22&&AspectCount(9)==2,"Twenty-one native rows, one retained lava actor row, both aspects");Check(CommandIcon(0)==elementalPack.builderIcon&&CommandIcon(6)==elementalPack.buildIcon,"Builder and construction command art");Check(builders[0].GetComponentsInChildren<ParticleSystem>().Length>0,"Wisp uses its own source particle emitters");Check(!builders[0].clips.Any(c=>c.name.StartsWith("Walk",StringComparison.OrdinalIgnoreCase)),"No invented Wisp walking clip");

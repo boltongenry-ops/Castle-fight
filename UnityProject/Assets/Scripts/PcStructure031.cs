@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
@@ -47,7 +49,34 @@ public sealed partial class PcGame {
         var modelPrefab=arr[team*count+row];
         return classic?modelPrefab:OptionalModel(modelPrefab,team);
     }
-    Texture2D CatalogBuildingIcon(int race,int row,string raw){if(race==BlackHand.Race){var icon=BlackHandBuildings.Icon(row);if(icon)return icon;row=BlackHand.ArtRow(row);}var revised=ContentResources.Load<Texture2D>("NerubianBuildingIcon/"+raw);if(revised)return revised;if(MobileContent.Active&&race==12)return UltimateIcon034(row);var pack=Pack(race);var icons=pack?pack.buildingIcons:buildingIcons;return raw=="h008"&&row>=icons.Length?buildingIcons[SharedChestRow]:icons[row];}
+    readonly Dictionary<string,Texture2D> authoredBuildingIcons=new Dictionary<string,Texture2D>(StringComparer.Ordinal);
+    Texture2D AuthoredBuildingIcon(string raw){
+        if(string.IsNullOrEmpty(raw))return null;
+        if(authoredBuildingIcons.TryGetValue(raw,out var icon))return icon;
+        var asset=Resources.Load<TextAsset>("AuthoredBuildingIcons/"+raw);
+        byte[] png=null;
+        if(asset){
+            png=asset.bytes;
+            Resources.UnloadAsset(asset);
+        }else if(!Application.isMobilePlatform){
+            var path=MobileContent.Media("Frontend/AuthoredBuildingIcons/"+raw+".png");
+            if(File.Exists(path))png=File.ReadAllBytes(path);
+        }
+        if(png!=null){
+            icon=new Texture2D(2,2,TextureFormat.RGBA32,false){name="AuthoredBuilding-"+raw,wrapMode=TextureWrapMode.Clamp};
+            if(!ImageConversion.LoadImage(icon,png,true)){
+                Destroy(icon);
+                icon=null;
+            }
+        }
+        authoredBuildingIcons.Add(raw,icon);
+        return icon;
+    }
+    void DisposeAuthoredBuildingIcons(){
+        foreach(var icon in authoredBuildingIcons.Values)if(icon)Destroy(icon);
+        authoredBuildingIcons.Clear();
+    }
+    Texture2D CatalogBuildingIcon(int race,int row,string raw){var generated=AuthoredBuildingIcon(raw);if(generated)return generated;if(race==BlackHand.Race){var icon=BlackHandBuildings.Icon(row);if(icon)return icon;row=BlackHand.ArtRow(row);}var revised=ContentResources.Load<Texture2D>("NerubianBuildingIcon/"+raw);if(revised)return revised;if(MobileContent.Active&&race==12)return UltimateIcon034(row);var pack=Pack(race);var icons=pack?pack.buildingIcons:buildingIcons;return raw=="h008"&&row>=icons.Length?buildingIcons[SharedChestRow]:icons[row];}
     Texture2D MatchBuildingIcon(int kind){string raw=match.Lines[kind].building;int race=raceIndices[matchRace].ContainsKey(raw)?matchRace:matchBotRace;return CatalogBuildingIcon(race,raceIndices[race][raw],raw);}
 }
 }

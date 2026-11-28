@@ -68,15 +68,17 @@ public sealed partial class HumanMatch {
     public bool Finished=>Winner!=-2;
     public static float F(JToken s,string k,float fallback=0)=>(float?)s?[k]??fallback;
     public static string[] Strings(JToken s)=>s is JArray a?a.Select(v=>(string)v).ToArray():new string[0];
-    public HumanMatch(JObject catalog,int startGold=250,int botDifficulty=1,int playerAspect=-1,int botAspect=-1,JObject botCatalog=null) {
+    public HumanMatch(JObject catalog,int startGold=250,int botDifficulty=1,int playerAspect=-1,int botAspect=-1,JObject botCatalog=null,bool legacyEpochal=false) {
         botCatalog=botCatalog??catalog;InitCentaur((string)catalog["race"],(string)botCatalog["race"]);for(int side=0;side<2;side++){var raceName=(string)(side==0?catalog:botCatalog)["race"];TeamUltimate[side]=raceName=="Ultimate Builder";TeamNerubian[side]=raceName=="Nerubian Swarm";TeamPandaren[side]=raceName=="Pandaren Order";var rows=(JArray)(side==0?catalog:botCatalog)["lines"];teamBaseBuildings[side]=new HashSet<string>(rows.Where(v=>(bool?)v["base"]!=false&&(bool?)v["allowed"]!=false).Select(v=>(string)v["building"]));}TeamOrc[0]=(string)catalog["race"]=="Orcish Horde";TeamOrc[1]=(string)botCatalog["race"]=="Orcish Horde";TeamNaga[0]=(string)catalog["race"]=="Naga Faction";TeamNaga[1]=(string)botCatalog["race"]=="Naga Faction";
         TeamNature[0]=(string)catalog["race"]=="Nature Force";TeamNature[1]=(string)botCatalog["race"]=="Nature Force";TeamChaos[0]=(string)catalog["race"]=="Chaos Legions";TeamChaos[1]=(string)botCatalog["race"]=="Chaos Legions";TeamNorthern[0]=(string)catalog["race"]=="Northern Realms";TeamNorthern[1]=(string)botCatalog["race"]=="Northern Realms";TeamMech[0]=(string)catalog["race"]=="Mech Coalition";TeamMech[1]=(string)botCatalog["race"]=="Mech Coalition";TeamHuman[0]=((string)catalog["race"]??"Human Alliance")=="Human Alliance";TeamHuman[1]=((string)botCatalog["race"]??"Human Alliance")=="Human Alliance";mechRepairValues=(JObject)(catalog["mechRepairValues"]??botCatalog["mechRepairValues"]??new JObject());mechPayloads=(JObject)(catalog["mechPayloads"]??botCatalog["mechPayloads"]??new JObject());TeamUndead[0]=(string)catalog["race"]=="Undead Forces";TeamUndead[1]=(string)botCatalog["race"]=="Undead Forces";TeamCorrupted[0]=(string)catalog["race"]=="Corrupted Conglomerate";TeamCorrupted[1]=(string)botCatalog["race"]=="Corrupted Conglomerate";TeamElemental[0]=(string)catalog["race"]=="Elementals' Universe";TeamElemental[1]=(string)botCatalog["race"]=="Elementals' Universe";elementalBuildings=(JObject)(catalog["elementalBuildings"]??botCatalog["elementalBuildings"]??new JObject());TeamNight[0]=(string)catalog["race"]=="Night Elfs";TeamNight[1]=(string)botCatalog["race"]=="Night Elfs";TeamElven[0]=(string)catalog["race"]=="Elven Union";TeamElven[1]=(string)botCatalog["race"]=="Elven Union";var playerCatalog=catalog;teamBuildings[0]=new HashSet<string>(((JArray)catalog["lines"]).Where(v=>(bool?)v["allowed"]!=false).Select(v=>(string)v["building"]));teamBuildings[1]=new HashSet<string>(((JArray)botCatalog["lines"]).Where(v=>(bool?)v["allowed"]!=false).Select(v=>(string)v["building"]));
         if(!ReferenceEquals(botCatalog,catalog)){catalog=(JObject)catalog.DeepClone();var combined=(JArray)catalog["lines"];foreach(var line in (JArray)botCatalog["lines"])if(!combined.Any(v=>(string)v["building"]==(string)line["building"]))combined.Add(line.DeepClone());foreach(var prop in ((JObject)botCatalog["abilities"]).Properties())if(catalog["abilities"][prop.Name]==null)((JObject)catalog["abilities"])[prop.Name]=prop.Value.DeepClone();}
+        if(!legacyEpochal)catalog=AuthoredRaceBalance.Apply(catalog);
         IsOrc=TeamOrc[0];Aspects[0]=playerAspect;Aspects[1]=botAspect;AspectCatalog=(JArray)catalog["aspects"]??new JArray();
         difficulty=Mathf.Clamp(botDifficulty,0,2);Gold[0]=Gold[1]=startGold;CastleHp[0]=CastleHp[1]=CastleMax;
         for(int t=0;t<2;t++){var p=new Vector2(t==0?-155:155,12);Builders[t]=new Builder {team=t,position=p,previous=p,goal=p};}
         InitInventory(catalog);damageTable=(JObject)catalog["damageTable"];Abilities=(JObject)catalog["abilities"]??new JObject();
         NameUndeadPlagueAuras(Abilities);
+        ConfigureNerubNets(Abilities);
         CastleRegen=F(catalog["castleStats"],"hp_regen",.5f);CastleArmor=F(catalog["castleStats"],"armor",5);CastleCollision=F(catalog["castleStats"],"collision",172f/30);CastleArmorType=(string)catalog["castleStats"]?["armor_type"]??"fortified";
         BuilderSpeed=Mathf.Clamp(F(catalog["builderStats"],"speed",18.333333f),F(catalog["builderStats"],"min_speed",5),F(catalog["builderStats"],"max_speed",13.333333f));BuilderWalkRate=BuilderSpeed*30/Mathf.Max(1,F(catalog["builderStats"],"walk_animation_speed",300));
         Lines=((JArray)catalog["lines"]).Select(v=>{var s=(JObject)v["stats"];var b=(JObject)v["buildingStats"]??s;var w=((JArray)s["weapons"]??new JArray()).Select(Weapon.Read).ToArray();var first=w.FirstOrDefault();
@@ -281,7 +283,7 @@ public sealed partial class HumanMatch {
     }
     void Bot(){if(!PlayerVersusPlayer)ThinkBot();}
     public void Step(float dt) {
-        if(Finished||dt<=0||QuackRitualPending||WinterAwakeningPending)return;AdvanceWinterPhase();SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
+        if(Finished||dt<=0||QuackRitualPending||WinterAwakeningPending||ExpertEmergencePending)return;AdvanceWinterPhase();SimulationPhase035.Begin();Elapsed+=dt;TickCount++;RebuildMechPowerCache();RebuildIdCache033();incomeAge+=dt;botAge-=dt;
         while(incomeAge>=10){incomeAge-=10;for(int t=0;t<2;t++){incomeFraction[t]+=Income(t);int payment=(int)(incomeFraction[t]+.00001f);incomeFraction[t]-=payment;Gold[t]+=payment;}}
         float recovery=NaturalCastleRecovery*dt;
         for(int t=0;t<2;t++)RestoreCastleHealth(t,recovery);
@@ -296,7 +298,9 @@ public sealed partial class HumanMatch {
         SimulationPhase035.Mark("unit_statuses");auraAge-=dt;if(auraAge<=0){auraAge=.5f;UpdateAuras();}
         SimulationPhase035.Mark("auras");BlackHandZones(dt);TickShots(dt);SimulationPhase035.Mark("projectiles");BeginUnitBatch033();using(var snapshot035_4=SimulationBuffers035.Take(Units))foreach(var u in snapshot035_4)if(u.hp>0){TickUnit(u,dt);UnitMoved033(u);}EndUnitBatch033();SimulationPhase035.Mark("unit_decisions_movement");FlushUndeadBirths();FlushFinalBirths();
         Units.RemoveAll(u=>u.hp<=0&&u.deadAge>3);Shots.RemoveAll(s=>s.age>s.duration+(s.kind==2||s.kind==3?.35f:0));
-        bool enemyDefeated=CastleHp[1]<=0&&!QuackRitualPending&&!WinterCastleHit(1,0);
+        if(CastleHp[1]<=0&&!expertCastleFallen)ExpertFinaleCastleHit(1,0);
+        PrepareExpertFinaleAfterCombat();
+        bool enemyDefeated=CastleHp[1]<=0&&!QuackRitualPending&&!WinterCastleHit(1,0)&&!ChoirCastleHit(1,0)&&!ExpertFinaleBlocksVictory;
         if(CastleHp[0]<=0||enemyDefeated)Winner=CastleHp[0]<=0&&enemyDefeated?-1:CastleHp[0]<=0?1:0;
         if(!WinterAwakeningPending)ResolveChallengeClock(dt);
         FlushWinterDefections();

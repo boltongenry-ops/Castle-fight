@@ -51,7 +51,7 @@ public sealed partial class HumanMatch {
     public IReadOnlyList<ProtocolMine> ProtocolMines=>protocolMines;
 
     void BeginLastProtocol(){
-        LastProtocol=(string)ChallengeRules?["id"]==ProtocolTrial;
+        LastProtocol=ChallengeFamily==ProtocolTrial;
         if(!LastProtocol)return;
         protocolActorKind=Kind("h09J");
         for(int i=0;i<protocolStations.Length;i++){
@@ -87,9 +87,30 @@ public sealed partial class HumanMatch {
         return false;
     }
 
+    const float ProtocolReflection=.4f;
+    float ProtocolStructureDamageScale(int defender,string attack)=>LastProtocol&&ExpertTrial&&defender==1&&attack=="siege"?.4f:1f;
+
+    void ReflectProtocolHit(int sourceId,float dealt){
+        if(!LastProtocol||!ExpertTrial||sourceId<=0||dealt<=0)return;
+        float reflected=dealt*ProtocolReflection;
+        var unit=FindUnit(sourceId);
+        if(unit!=null){
+            if(unit.team!=0||unit.hp<=0)return;
+            if(DamageUnit(unit,reflected,1,execute:true)>0)
+                PulseAt(unit.position,1.6f,ProtocolAmber,"Отражение",.45f);
+            return;
+        }
+        var hut=FindHut(-sourceId-2);
+        if(hut==null||hut.team!=0||!hut.paid||hut.hp<=0)return;
+        ApplyHutDamage(hut,reflected,1);
+        PulseAt(hut.position,1.6f,ProtocolAmber,"Отражение",.45f);
+    }
+
     void ApplyCastleDamage(int team,float amount){
         if(QuackCastleHit(team,amount))return;
         if(WinterCastleHit(team,amount))return;
+        if(ChoirCastleHit(team,amount))return;
+        if(ExpertFinaleCastleHit(team,amount))return;
         if(team==1&&LastProtocol&&!ProtocolMarch){
             if(!ProtocolSecondStage){
                 amount*=1-.35f*ProtocolStationsUp;

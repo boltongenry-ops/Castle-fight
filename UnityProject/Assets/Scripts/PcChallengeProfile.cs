@@ -24,7 +24,8 @@ public sealed partial class PcGame {
     string AccountMedalOwner=>(string)networkProfile?["id"]??"";
     JObject[] ProfileChallenges=>profileChallenges??(profileChallenges=
         ((JArray)progression.Catalog["challenges"]).OfType<JObject>()
-        .Concat(((JArray)progression.Catalog["mythic"]).OfType<JObject>()).ToArray());
+        .Concat(((JArray)progression.Catalog["mythic"]).OfType<JObject>())
+        .Concat(((JArray)progression.Catalog["expert"]).OfType<JObject>()).ToArray());
 
     void OpenAccountProfile(){
         page=Page.Profile;profileMedalPage=0;showAllProfileChallenges=false;medalSyncStatus="";
@@ -176,9 +177,10 @@ public sealed partial class PcGame {
             var row=rows[currentPage*MedalsPerPage+slot];
             string id=(string)row["id"];
             bool earned=!own||IsProfileChallengeComplete(id);
-            bool mythic=id.StartsWith("mythic_",StringComparison.Ordinal);
+            bool expert=HumanMatch.IsExpertTrial(id);
+            bool mythic=HumanMatch.IsEpochalTrial(id);
             bool siege=ChallengeCampaign038.IsSiege(row);
-            var color=mythic?new Color(.43f,.77f,.92f):siege?new Color(.70f,.62f,.90f):new Color(.82f,.67f,.38f);
+            var color=expert?new Color(.91f,.58f,.29f):mythic?new Color(.43f,.77f,.92f):siege?new Color(.70f,.62f,.90f):new Color(.82f,.67f,.38f);
             if(!earned)color=new Color(.31f,.37f,.39f);
             float x=45+(slot%2)*600,y=top+(slot/2)*(height+8);
             var card=new Rect(x,y,590,height);
@@ -189,7 +191,7 @@ public sealed partial class PcGame {
             var emblem=RaceEmblem(Array.IndexOf(ProgressRaces,(string)row[mythic?"opponent":"race"]));
             if(emblem){var old=GUI.color;if(!earned)GUI.color=new Color(.58f,.61f,.63f,.72f);GUI.DrawTexture(new Rect(sign.x+3,sign.y+3,sign.width-6,sign.height-6),emblem,ScaleMode.ScaleToFit);GUI.color=old;}
             Text(x+height+9,y+5,560-height,height-33,(string)row["title"],titleStyle);
-            string type=mythic?"Эпохальное":siege?"Осадное":"Кампания";
+            string type=expert?"Эксперт":mythic?"Эпохальное":siege?"Осадное":"Кампания";
             string state=earned?!own||CloudProgression||IsPublishedMedal(id)?"Получено":"На устройстве":"Не пройдено";
             float best=own?AccountBest(id):((int?)socialPlayer?["best_ms"]?[id]??0)/1000f;
             Text(x+height+9,y+height-33,560-height,26,type+" · "+state+(best>0?" · "+TimeSpan.FromSeconds(best).ToString(best>=3600?@"h\:mm\:ss":@"mm\:ss"):""),detailStyle);

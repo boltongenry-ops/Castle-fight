@@ -13,6 +13,12 @@ public sealed partial class HumanMatch {
     public readonly List<PandaSplit> PandaSplits=new List<PandaSplit>();public readonly List<PandaKeg> PandaKegs=new List<PandaKeg>();public readonly List<NerubBirth> NerubBirths=new List<NerubBirth>();
     public int NerubSpawned,NerubCasts,NerubHunts,NerubScatters,NerubTransfers,PandaCasts,PandaBlasts,PandaCombos,PandaFocusHits,PandaSplitsCreated,PandaDebtDeaths;public float PandaDeferred,PandaPurified;
     static readonly string[] NerubNets={"AUW1","AUW2","AUWB","AUMW"};
+    static void ConfigureNerubNets(JObject abilities){
+        if(!(abilities["AUMW"] is JObject volley))return;
+        volley["targets"]="air,ground,enemies";
+        volley["ground"]=true;
+        volley["description"]="Опутывает до 3 целей в радиусе 180 на 2,5 с. Сначала ловит летающих и опускает их на землю. Накладывает метку добычи на 4 с. Перезарядка 22 с. Устойчивые цели удерживаются вдвое меньше.";
+    }
     static readonly string[] PandaMelee={"nP01","nP02","nP09","nP0A","nP0D"};
     static readonly string[] FinalActive={"nerub_cocoon","nerub_command","nerub_fissure","nerub_brood","nerub_acid","nerub_plague","panda_brew","panda_heal","panda_stomp","panda_gust","panda_split","panda_fountain","panda_gong","panda_keg"};
     bool FinalFighter(Unit u)=>u!=null&&u.hp>0&&!Hidden(u)&&!Invulnerable(u)&&!ElementalIllusion(u)&&Lines[u.kind].unit!="YTct"&&Lines[u.kind].unit!="n02E";
@@ -60,7 +66,21 @@ public sealed partial class HumanMatch {
         NerubCasts++;PulseAt(point,1.5f,Color.green,"",1,"final:"+(string)cfg["id"]+":effect");return true;
     }
     bool CastNerubNet(Unit source,JToken cfg,bool preview=false)=>CastNerubNetAt(source.team,source.position,cfg,preview);
-    bool CastNerubNetAt(int side,Vector2 point,JToken cfg,bool preview=false){var targets=FinalTargets(side,point,cfg,false,false).Where(u=>!u.effects.Any(e=>e.id==(string)cfg["id"]&&e.left>0)).ToArray();if(targets.Length==0)return false;if(preview)return true;var center=targets[0];foreach(var u in targets.Where(u=>(bool?)cfg["multi"]!=true||Vector2.Distance(u.position,center.position)<=F(cfg,"area")).Take((bool?)cfg["multi"]==true?(int)F(cfg,"count",1):1)){ApplyEffectData(u,(JObject)cfg,side);PulseAt(u.position,1,Color.cyan,"Паутина",F(cfg,"duration"),"final:"+(string)cfg["id"]+":buff");}return true;}
+    bool CastNerubNetAt(int side,Vector2 point,JToken cfg,bool preview=false){
+        var targets=FinalTargets(side,point,cfg,false,false)
+            .Where(u=>!u.effects.Any(e=>e.left>0&&NerubNets.Contains(e.id)))
+            .OrderByDescending(Flying).ThenBy(u=>(u.position-point).sqrMagnitude).ThenBy(u=>u.id).ToArray();
+        if(targets.Length==0)return false;
+        if(preview)return true;
+        bool multi=(bool?)cfg["multi"]==true;
+        var center=targets[0].position;
+        float radius=F(cfg,"area");
+        foreach(var unit in targets.Where(u=>!multi||(u.position-center).sqrMagnitude<=radius*radius).Take(multi?(int)F(cfg,"count",1):1)){
+            ApplyEffectData(unit,(JObject)cfg,side);
+            PulseAt(unit.position,1,Color.cyan,"Паутина",F(cfg,"duration"),"final:"+(string)cfg["id"]+":buff",unit.id);
+        }
+        return true;
+    }
     void NerubAfterDamage(Unit u,float amount,bool spell){if(spell||amount<=0||!Nerub(u))return;foreach(string id in u.abilities)if((string)Abilities[id]?["kind"]=="nerub_chitin"){ApplyEffectData(u,new JObject{["id"]="ANCH",["name"]="Живой хитин",["kind"]="buff",["duration"]=3,["armor"]=F(Abilities[id],"armor"),["stack_group"]="nerub_chitin"},u.team);break;}}
     void NerubAfterWeapon(Unit source,Hut tower,Unit target,float dealt){
         if(dealt<=0||target==null||target.team==(source?.team??tower?.team)||Hidden(target)||Invulnerable(target)||ElementalIllusion(target)||source!=null&&(!Nerub(source)||ElementalIllusion(source))||source==null&&(tower==null||tower.hp<=0||!new[]{"hNT1","hNT2"}.Contains(Lines[tower.kind].building)))return;
@@ -82,10 +102,34 @@ public sealed partial class HumanMatch {
     void TickNerubQueen(float step){PruneNerubPlague();}
     public float PandaStagger(Unit u)=>u.pandaDebts.Sum(d=>d.amount);
     float PandaDefer(Unit u,float amount,int side,Unit killer){if(amount<=0||ElementalIllusion(u)||!PandaMelee.Contains(Lines[u.kind].unit))return amount;float deferred=Mathf.Min(amount*(TeamPandaren[u.team]&&Aspects[u.team]==0?.35f:.2f),Mathf.Max(0,u.maxHp*.7f-PandaStagger(u)));if(deferred<=0)return amount;var debt=u.pandaDebts.FirstOrDefault(d=>d.team==side&&d.left>=3.75f);if(debt!=null)debt.amount+=deferred;else u.pandaDebts.Add(new PandaDebt{amount=deferred,team=side,killer=killer});PandaDeferred+=deferred;return amount-deferred;}
-    public float PandaPurify(Unit u,float cap){float before=PandaStagger(u),amount=Mathf.Min(cap,before*.25f);if(TeamPandaren[u.team]&&Aspects[u.team]==0)amount*=1.3f;amount=Mathf.Min(before,amount);float factor=Mathf.Max(0,1-amount/Mathf.Max(.001f,before));foreach(var debt in u.pandaDebts)debt.amount*=factor;PandaPurified+=amount;return amount;}
+    public float PandaPurify(Unit u,float cap){
+        float before=PandaStagger(u),amount=Mathf.Min(cap,before*.25f);
+        if(TeamPandaren[u.team]&&Aspects[u.team]==0)amount*=1.3f;
+        return ReducePandaDebt(u,before,amount);
+    }
+    float ReducePandaDebt(Unit u,float before,float amount){
+        amount=Mathf.Min(before,amount);
+        float factor=Mathf.Max(0,1-amount/Mathf.Max(.001f,before));
+        foreach(var debt in u.pandaDebts)debt.amount*=factor;
+        PandaPurified+=amount;
+        return amount;
+    }
     void TickPandaDebt(Unit u,float dt){if(u.hp<=0||Invulnerable(u)||CorruptedAirborne(u))return;using(var snapshot035_2=SimulationBuffers035.Take(u.pandaDebts))foreach(var debt in snapshot035_2){float paid=Mathf.Min(debt.amount,debt.amount*dt/Mathf.Max(.001f,debt.left));debt.amount=Mathf.Max(0,debt.amount-paid);debt.left=Mathf.Max(0,debt.left-dt);if(debt.amount<=.001f)u.pandaDebts.Remove(debt);DamageUnit(u,paid,debt.team!=u.team?debt.team:-1,"magic",true,false,debt.killer!=null&&Units.Contains(debt.killer)?debt.killer:null,true,false,0,true,null,true,true);if(u.hp<=0){u.pandaDebts.Clear();PandaDebtDeaths++;return;}}}
     bool CastPanda(int side,Vector2 point,JToken cfg,Unit source=null,Hut building=null,Unit suggested=null,bool preview=false){
         string kind=(string)cfg["kind"];bool ally=kind=="panda_heal"||kind=="panda_fountain"||kind=="panda_gong";var targets=FinalTargets(side,point,cfg,ally,building!=null);
+        if(kind=="panda_gong"&&F(cfg,"purify_debt")>0){
+            float radius=F(cfg,"range"),cap=F(cfg,"purify_debt");
+            var treated=targets.Where(u=>PandaStagger(u)>.01f&&(u.position-point).sqrMagnitude<=radius*radius)
+                .OrderBy(u=>(u.position-point).sqrMagnitude).Take((int)F(cfg,"count")).ToArray();
+            if(treated.Length==0)return false;
+            if(preview)return true;
+            foreach(var unit in treated){
+                ReducePandaDebt(unit,PandaStagger(unit),cap);
+                PulseAt(unit.position,1,Color.yellow,"Очищение",1,"final:APGo:effect");
+            }
+            PandaCasts++;
+            return true;
+        }
         if(kind=="panda_split"){if(source==null||source.hp>=source.maxHp*.6f||source.pandaSplit||PandaSplits.Count(row=>row.parent.team==side)>=2)return false;if(preview)return true;var spirits=new List<Unit>();for(int i=0;i<3;i++){string raw=new[]{"nP0E","nP0F","nP0G"}[i];int k=Array.FindIndex(Lines,l=>l.unit==raw);if(k<0)throw new InvalidOperationException("Missing Panda spirit "+raw);var spirit=Spawn(side,k,point+Vector2.down*(i-1)*1.8f);spirit.summoned=spirit.spellBorn=spirit.noBounty=true;spirit.summonLeft=13;spirit.onRoad=true;spirits.Add(spirit);}source.pandaSplit=true;source.strikeLeft=-1;source.pendingSpell=null;source.castLeft=-1;source.combatTarget=-1;ApplyEffectData(source,new JObject{["id"]="APPS",["name"]="Буря, земля и огонь",["kind"]="debuff",["duration"]=12.1f,["disable"]=true,["untargetable"]=true,["undispellable"]=true},side);PandaSplits.Add(new PandaSplit{parent=source,team=side,spirits=spirits.ToArray()});PandaSplitsCreated++;PulseAt(point,2,Color.yellow,"Буря, земля и огонь",1,"final:APL1:effect");
         }else {
             if(kind=="panda_heal"||kind=="panda_fountain")targets=targets.Where(u=>u.hp<u.maxHp||kind=="panda_heal"&&PandaStagger(u)>0).OrderBy(u=>(u.hp-PandaStagger(u))/u.maxHp).ToArray();

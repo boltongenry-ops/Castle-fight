@@ -47,7 +47,7 @@ public sealed partial class HumanMatch {
     public bool AbyssRaidWarning=>AbyssTrialActive&&AbyssRaidIn<=AbyssUndertowWarning;
 
     void BeginAbyssTrial(){
-        AbyssTrialActive=(string)ChallengeRules?["id"]==AbyssTrial&&TeamNaga[1];
+        AbyssTrialActive=ChallengeFamily==AbyssTrial&&TeamNaga[1];
         if(!AbyssTrialActive)return;
         AbyssRaids=0;
         abyssNextRaid=AbyssFirstUndertow;
@@ -63,7 +63,7 @@ public sealed partial class HumanMatch {
     float AbyssMoveFactor(Unit unit)=>AbyssWaterAffects(unit)?1-AbyssSlow:1;
     float WeaponMissChance(Unit unit,Weapon weapon)=>Mathf.Clamp01(CentaurMissChance(unit,weapon)+(AbyssWaterAffects(unit)?AbyssMiss:0));
     public bool AbyssDeepForm(Unit unit)=>AbyssTrialActive&&unit.team==1&&unit.hp>0&&
-        teamBuildings[1].Contains(Lines[unit.kind].building)&&Lines[unit.kind].category!="visual"&&
+        teamBuildings[1].Contains(Lines[unit.kind].building)&&Lines[unit.kind].category!="visual"&&Lines[unit.kind].unit!=HydraRaw&&
         !unit.effects.Exists(effect=>effect.id=="mythic_abyss_bond");
     public bool AbyssSeaHunter(Unit unit)=>AbyssTrialActive&&abyssHunters.ContainsKey(unit.id);
     float AbyssAttackHaste(Unit unit)=>AbyssDeepForm(unit)?AbyssHaste:0;

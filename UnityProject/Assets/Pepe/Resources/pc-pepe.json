@@ -1640,13 +1640,31 @@
             "missile_homing": true,
             "damage_point": 0.3,
             "backswing": 0.3
+          },
+          {
+            "slot": 2,
+            "damage": 44,
+            "cooldown": 0.75,
+            "range": 29,
+            "attack_type": "pierce",
+            "can_air": false,
+            "can_ground": true,
+            "can_structure": false,
+            "targets": "ground",
+            "weapon_type": "missile",
+            "missile": "Abilities\\Weapons\\TuskarSpear\\TuskarSpear.mdl",
+            "missile_speed": 42,
+            "missile_arc": 0.1,
+            "missile_homing": true,
+            "damage_point": 0.3,
+            "backswing": 0.3
           }
         ],
         "aggro_range": 26.666666666666668,
         "max_mana": 0,
         "start_mana": 0,
         "mana_regen": 0,
-        "can_ground": false,
+        "can_ground": true,
         "can_structure": false,
         "model_scale": 0.5,
         "cast_point": 0,
@@ -2361,6 +2379,10 @@
           "PDiv",
           "PEva"
         ],
+        "ability_ranks": {
+          "PDiv": 2,
+          "PEva": 2
+        },
         "weapons": [
           {
             "slot": 1,
@@ -2709,7 +2731,25 @@
       "description": "Обычный удар по наземному врагу с Ряской добавляет 18 колющего урона. Метка остаётся.",
       "card_description": true,
       "power": 18,
-      "cd": 9
+      "cd": 9,
+      "ranks": [
+        {
+          "name": "Низкий заход",
+          "description": "Обычный удар по наземному врагу с Ряской добавляет 18 колющего урона. Метка остаётся.",
+          "kind": "marker",
+          "card_description": true,
+          "power": 18,
+          "cd": 9
+        },
+        {
+          "name": "Низкий заход стража",
+          "description": "Обычный удар по наземному врагу с Ряской добавляет 27 колющего урона. Метка остаётся.",
+          "kind": "marker",
+          "card_description": true,
+          "power": 27,
+          "cd": 9
+        }
+      ]
     },
     "PEva": {
       "id": "PEva",
@@ -2718,7 +2758,23 @@
       "name": "Вираж",
       "description": "В полёте уклоняется от 8% обычных атак.",
       "card_description": true,
-      "chance": 0.08
+      "chance": 0.08,
+      "ranks": [
+        {
+          "name": "Вираж",
+          "description": "В полёте уклоняется от 8% обычных атак.",
+          "kind": "marker",
+          "card_description": true,
+          "chance": 0.08
+        },
+        {
+          "name": "Вираж стража",
+          "description": "В полёте уклоняется от 12% обычных атак.",
+          "kind": "marker",
+          "card_description": true,
+          "chance": 0.12
+        }
+      ]
     },
     "PHea": {
       "id": "PHea",
@@ -2837,12 +2893,13 @@
       "code": "PBll",
       "kind": "marker",
       "name": "Звон трясины",
-      "description": "Поглощает по 170 урона в течение 6 с на пяти союзных бойцах в радиусе 1080. Нужны хотя бы два союзника в бою без щита.",
+      "description": "Поглощает по 170 урона в течение 6 с на пяти союзных бойцах по всей карте. Нужны хотя бы два союзника в бою без щита.",
       "card_description": true,
       "mana": 24,
       "cd": 22,
       "power": 170,
-      "area": 36,
+      "area": 0,
+      "global": true,
       "count": 5,
       "custom_autocast": true
     },

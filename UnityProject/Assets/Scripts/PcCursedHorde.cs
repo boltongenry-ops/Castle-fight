@@ -519,7 +519,7 @@ public sealed partial class PcGame {
         ClearHordeActors();
         hordeIntro=false;accumulator=0;
         controls.InputBlocked=false;
-        UpdateFog(true);ApplyFogViews();controls.FocusWorld(World(match.Builders[0].position),40);
+        UpdateFog(true);ApplyFogViews();FocusOpeningBuilder();
     }
 
     void ClearHordeActors(){
@@ -629,6 +629,11 @@ public sealed partial class PcGame {
         Fill(new Rect(HordeHud.x+1,HordeHud.y+1,HordeHud.width-2,HordeHud.height-2),new Color(.10f,.026f,.02f,.96f));
         var icon=HordeStatusArt(HumanMatch.HordeRageId);
         if(icon)GUI.DrawTexture(new Rect(HordeHud.x+7,HordeHud.y+8,45,45),icon,ScaleMode.ScaleToFit);
+        if(ExpertCastleHidden){
+            Text(HordeHud.x+59,HordeHud.y+4,205,27,"Багровый Юрнеро",hudText);
+            Text(HordeHud.x+59,HordeHud.y+29,205,24,Mathf.CeilToInt(ExpertFinalBossHp)+" / "+HumanMatch.YurneroHealth+" HP",hudSmall);
+            return;
+        }
         bool second=SpectatorSceneReady?(bool?)spectatorBoss?["second"]==true:match.HordeSecondStage;
         Text(HordeHud.x+59,HordeHud.y+4,190,27,second?"Разбитый котёл":"Проклятая Орда",hudText);
         float? left=SpectatorSceneReady?(float?)spectatorBoss?["left"]:match.HordeNextWaveIn;

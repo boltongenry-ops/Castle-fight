@@ -144,7 +144,7 @@ public sealed partial class PcGame {
         quackScene=QuackScene.None;
         RestoreQuackCastle();ClearQuackGlass();
         ClearQuackActors();
-        FocusBuilder();
+        FocusBuilder(opening);
     }
 
     void CacheQuackKingHead(){

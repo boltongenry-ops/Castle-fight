@@ -3,14 +3,23 @@ using UnityEngine;
 
 namespace CastleFight {
 public sealed partial class HumanMatch {
+    const string ExpertPrefix="expert_";
+    internal static string ExpertId(string id)=>ExpertPrefix+id;
+    internal static bool IsExpertTrial(string id)=>id?.StartsWith(ExpertPrefix,System.StringComparison.Ordinal)==true;
+    internal static string EpochalFamily(string id)=>IsExpertTrial(id)?id.Substring(ExpertPrefix.Length):id;
+    internal static bool IsEpochalTrial(string id)=>EpochalFamily(id) is WinterTrial or ChoirTrial or HordeTrial or ProtocolTrial or AbyssTrial or QuackTrial;
+    internal bool ExpertTrial=>IsExpertTrial((string)ChallengeRules?["id"]);
+    string ChallengeFamily=>EpochalFamily((string)ChallengeRules?["id"]);
+
     public float CastleHealthLimit(int team){
+        if(team==1&&ChoirTomb)return ChoirTombHealth;
         if(ChallengeRules==null)return CastleMax;
         float shared=F(ChallengeRules,"castle_hp",CastleMax);
         return Mathf.Max(1,F(ChallengeRules,team==0?"player_castle_hp":"opponent_castle_hp",shared));
     }
 
     public float NaturalCastleRecovery=>(bool?)ChallengeRules?["no_castle_regen"]==true?0:CastleRegen;
-    public bool ChallengeBuilderRepairAllowed(int team)=>team==1?!LastProtocol:(bool?)ChallengeRules?["no_builder_repair"]!=true;
+    public bool ChallengeBuilderRepairAllowed(int team)=>team==1?!LastProtocol&&!ChoirTomb:(bool?)ChallengeRules?["no_builder_repair"]!=true;
     public float ChallengeSurvivalTime=>F(ChallengeRules,"survive_seconds");
 
     public void BeginChallengeRules(JObject rules){
@@ -27,7 +36,7 @@ public sealed partial class HumanMatch {
     }
 
     public float RestoreCastleHealth(int team,float amount){
-        if(amount<=0||CastleHp[team]<=0||team==WinterBossTeam&&WinterCastleFrozen)return 0;
+        if(amount<=0||CastleHp[team]<=0||team==1&&(WinterCastleFrozen||ChoirTomb))return 0;
         float before=CastleHp[team];
         CastleHp[team]=Mathf.Min(CastleHealthLimit(team),before+amount);
         return Mathf.Max(0,CastleHp[team]-before);

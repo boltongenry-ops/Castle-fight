@@ -40,7 +40,7 @@ public sealed class NativeMapCamera : MonoBehaviour {
     public void Focus(string preset) {
         activeView=preset;top=preset=="top";view.orthographic=top;gateAngle=false;
         if(top){view.orthographicSize=140;transform.position=new Vector3(0,500,0);transform.LookAt(new Vector3(0,10,0),Vector3.forward);return;}
-        target=terrain.Position(-4544,448);distance=2000f/30;
+        target=MatchStartTarget();distance=MatchStartDistance;
         if(preset=="east")target=terrain.Position(4544,448);
         if(preset=="west-gate"){target=terrain.Position(-2016,0);distance=58;gateAngle=true;gateOffset=new Vector3(55,11,34);}
         if(preset=="east-gate"){target=terrain.Position(2016,0);distance=58;gateAngle=true;gateOffset=new Vector3(-55,11,34);}
@@ -53,7 +53,32 @@ public sealed class NativeMapCamera : MonoBehaviour {
         }
         shown=target;shownDistance=distance;Apply();
     }
-    void Apply(){float pitch=56*Mathf.Deg2Rad;transform.position=shown+(gateAngle?gateOffset*shownDistance/58:new Vector3(0,shownDistance*Mathf.Sin(pitch),-shownDistance*Mathf.Cos(pitch)));transform.LookAt(shown);}
+    const float MatchStartDistance=2000f/30;
+    Vector3 MatchStartTarget()=>terrain.Position(-4544,448);
+    public void FocusMatchStart(float zoomFactor)=>FocusWorld(MatchStartTarget(),MatchStartDistance*zoomFactor);
+
+    static void SetMapPose(Transform cameraTransform,Vector3 aim,Vector3 offset) {
+        cameraTransform.position=aim+offset;
+        cameraTransform.LookAt(aim);
+    }
+    static Vector3 MapCameraOffset(float zoom) {
+        const float pitch=56*Mathf.Deg2Rad;
+        return new Vector3(0,zoom*Mathf.Sin(pitch),-zoom*Mathf.Cos(pitch));
+    }
+    void Apply()=>SetMapPose(transform,shown,gateAngle?gateOffset*shownDistance/58:MapCameraOffset(shownDistance));
+
+    public void RenderStartPreview(Camera preview,RenderTexture image,float zoomFactor) {
+        preview.CopyFrom(view);
+        preview.enabled=false;
+        preview.targetTexture=image;
+        preview.rect=new Rect(0,0,1,1);
+        preview.aspect=image.width/(float)image.height;
+        preview.ResetProjectionMatrix();
+        preview.ResetWorldToCameraMatrix();
+        preview.orthographic=false;
+        SetMapPose(preview.transform,MatchStartTarget(),MapCameraOffset(MatchStartDistance*zoomFactor));
+        preview.Render();
+    }
     public void GameplayViewport(bool active,float blend=1) {
         if(!view)return;
         // Keep rendering behind the console's transparent leaves. Shift the optical

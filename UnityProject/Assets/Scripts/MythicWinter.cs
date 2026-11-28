@@ -63,7 +63,7 @@ public sealed partial class HumanMatch {
     }
 
     bool WinterCastleHit(int team,float damage){
-        if(team!=WinterBossTeam||!EternalWinter||WinterQueenFelled)return false;
+        if(team!=WinterBossTeam||!EternalWinter||!ExpertTrial||WinterQueenFelled)return false;
         if(!WinterCastleFrozen&&damage<CastleHp[team])return false;
         if(!WinterCastleFrozen){
             WinterCastleFrozen=WinterAwakeningPending=true;
@@ -188,7 +188,7 @@ public sealed partial class HumanMatch {
     }
 
     void PrepareEternalWinter(){
-        if((string)ChallengeRules?["id"]!=WinterTrial)return;
+        if(ChallengeFamily!=WinterTrial)return;
         winterChain=new JObject{
             ["id"]=WinterChain,["name"]="Ледяные оковы",
             ["kind"]="debuff",["stack_group"]=WinterChain,["duration"]=WinterChainDuration,

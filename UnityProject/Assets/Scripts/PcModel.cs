@@ -110,6 +110,7 @@ public sealed class PcModel : MonoBehaviour {
     }
     Vector3 BoundsVertex(SkinnedMeshRenderer skin,Vector3 point)=>appearanceKey=="pepe"||appearanceKey=="blackhand"||reforged&&godotHeight>0?
         skin.transform.TransformPoint(point):skin.transform.position+skin.transform.rotation*point;
+
     public void Face(Vector2 direction,bool instant=false) {
         if(direction.sqrMagnitude<.001f)return;
         // The source Godot actor faces local +Z; glTFast preserves that axis.

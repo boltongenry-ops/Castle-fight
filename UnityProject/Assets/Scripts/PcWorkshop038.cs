@@ -12,7 +12,7 @@ public sealed partial class PcGame {
     sealed class WorkshopState {
         public readonly Dictionary<string,Texture2D> glyphs=new Dictionary<string,Texture2D>();
         public readonly WorkshopDye038 fittingDye=new WorkshopDye038(),battleDye=new WorkshopDye038();
-        public int category,previewRace,dragFinger=-1;
+        public int category,previewRace,wardrobeFilter,dragFinger=-1;
         public float scrollY,maxScroll,maxChallengeScroll;
         public Vector2 dragStart;
         public bool collection,dragged,loading,siegeOnly;
@@ -32,8 +32,10 @@ public sealed partial class PcGame {
 
     static readonly ConditionalWeakTable<PcGame,WorkshopState> workshops038=new ConditionalWeakTable<PcGame,WorkshopState>();
     WorkshopState Workshop=>workshops038.GetValue(this,_=>new WorkshopState());
-    static readonly string[] WorkshopCategories={"Ауры","Эффекты","Скины","Профиль","Стикеры"};
+    static readonly string[] WorkshopCategories={"Ауры","Эффекты","Гардероб","Профиль","Стикеры"};
     static readonly Rect WorkshopShelf=new Rect(35,173,706,469);
+    static readonly Rect OutfitShelf=new Rect(35,217,706,425);
+    static readonly string[] WardrobeFilters={"Все","Облики","Окраски","Наборы","Надето"};
     static readonly Rect WorkshopLook=new Rect(772,132,475,339);
     static readonly Color WorkshopGold=new Color(.88f,.69f,.42f),WorkshopIvory=new Color(.94f,.88f,.76f),WorkshopText=new Color(.72f,.76f,.74f);
     bool WorkshopVisible=>page==Page.Progression&&progressShop;
@@ -66,7 +68,7 @@ public sealed partial class PcGame {
         switch(category){
             case 0:return kind=="aura";
             case 1:return kind=="effect";
-            case 2:return kind=="skin";
+            case 2:return kind=="skin"||WardrobeCatalog.IsWardrobeProduct(item);
             case 3:return kind=="frame"||kind=="avatar";
             default:return kind=="stickers";
         }
@@ -78,10 +80,24 @@ public sealed partial class PcGame {
         state.item=null;state.scrollY=0;purchaseConfirm=null;
     }
 
+    bool WardrobeFilter(JObject row,int filter){
+        switch(filter){
+            case 1:return row["model"]!=null;
+            case 2:return row["model"]==null&&(string)row["role"]!="set";
+            case 3:return (string)row["role"]=="set";
+            case 4:return WorkshopEquipped(row);
+            default:return true;
+        }
+    }
+
     List<JObject> WorkshopItems(){
         var state=Workshop;
         return ((JArray)progression.Catalog["items"]).OfType<JObject>()
-            .Where(row=>WorkshopInCategory(row,state.category)&&(!state.collection||AccountOwns((string)row["id"]))).ToList();
+            .Where(row=>WorkshopInCategory(row,state.category)&&(!state.collection||AccountOwns((string)row["id"])))
+            .Where(row=>state.category!=2||WardrobeFilter(row,state.wardrobeFilter))
+            .OrderByDescending(row=>row["model"]!=null)
+            .ThenByDescending(WardrobeCatalog.IsWardrobeProduct)
+            .ToList();
     }
 
     void DrawWorkshopBleed(){
@@ -118,49 +134,74 @@ public sealed partial class PcGame {
             state.collection=!state.collection;state.scrollY=0;state.item=null;purchaseConfirm=null;
         }
 
+        var shelf=state.category==2?OutfitShelf:WorkshopShelf;
+        if(state.category==2){
+            for(int i=0;i<WardrobeFilters.Length;i++){
+                if(Button("workshop.wardrobe."+i,new Rect(39+i*137,165,130,40),WardrobeFilters[i],state.wardrobeFilter==i)){
+                    state.wardrobeFilter=i;state.scrollY=0;state.item=null;purchaseConfirm=null;
+                }
+            }
+        }
         var rows=WorkshopItems();
         if(!rows.Any(row=>(string)row["id"]==state.item))state.item=rows.Count==0?null:(string)rows[0]["id"];
         bool enabled=GUI.enabled;
         GUI.enabled=enabled&&!state.dragged;
-        float contentHeight=Mathf.Max(WorkshopShelf.height,Mathf.Ceil(rows.Count/3f)*150);
-        state.maxScroll=contentHeight-WorkshopShelf.height;
+        float contentHeight=Mathf.Max(shelf.height,Mathf.Ceil(rows.Count/3f)*150);
+        state.maxScroll=contentHeight-shelf.height;
         state.scrollY=Mathf.Clamp(state.scrollY,0,state.maxScroll);
-        var scroll=GUI.BeginScrollView(WorkshopShelf,new Vector2(0,state.scrollY),new Rect(0,0,685,contentHeight));
+        var scroll=GUI.BeginScrollView(shelf,new Vector2(0,state.scrollY),new Rect(0,0,685,contentHeight));
         state.scrollY=scroll.y;
         for(int i=0;i<rows.Count;i++){
             var card=new Rect(4+(i%3)*230,(i/3)*150,218,140);
             DrawWorkshopCard(card,rows[i]);
         }
-        if(rows.Count==0)Text(18,71,640,34,"В этой категории пока нет покупок",state.description);
+        if(rows.Count==0)Text(18,71,640,34,state.collection?"В этой категории пока нет покупок":"В этой категории пока нет товаров",state.description);
         GUI.EndScrollView();
         GUI.enabled=enabled;
-        Text(39,658,670,31,state.collection?"Коллекция  ·  "+rows.Count:rows.Count+" товаров",state.caption);
+        Text(39,658,670,31,state.collection?"В коллекции  ·  "+rows.Count:"Товаров  ·  "+rows.Count,state.caption);
         DrawWorkshopSelection(progression.Item(state.item));
     }
 
     void DrawWorkshopCard(Rect card,JObject item){
         var state=Workshop;
-        string id=(string)item["id"],kind=(string)item["kind"];
-        bool selected=state.item==id,owned=AccountOwns(id),equipped=owned&&AccountEquipment(kind)==id;
+        string id=(string)item["id"];
+        bool outfit=WardrobeCatalog.IsWardrobeProduct(item);
+        bool selected=state.item==id,owned=AccountOwns(id),equipped=WorkshopEquipped(item);
         var tint=CosmeticColor(item);
         AtlasTile(card,selected,false);
-        Fill(new Rect(card.x+1,card.y+1,card.width-2,73),new Color(tint.r*.16f,tint.g*.16f,tint.b*.19f,.93f));
-        Border(card,selected?WorkshopGold:new Color(.25f,.31f,.30f),selected?2:1);
-        DrawWorkshopIcon(new Rect(card.x+77,card.y+7,64,64),item);
+        Fill(new Rect(card.x+1,card.y+1,card.width-2,outfit?78:73),new Color(tint.r*.16f,tint.g*.16f,tint.b*.19f,.93f));
+        Border(card,selected?WorkshopGold:outfit?tint:new Color(.25f,.31f,.30f),selected?2:1);
+        if(outfit) Fill(new Rect(card.x+8,card.y+9,22,3),tint);
+        DrawWorkshopIcon(outfit?new Rect(card.x+43,card.y+2,132,79):new Rect(card.x+77,card.y+7,64,64),item);
         Text(card.x+8,card.y+79,card.width-16,28,(string)item["title"],state.center);
-        string info=equipped?"Надето":owned?"Куплено":item["cost"]+" жетонов";
-        Text(card.x+8,card.y+111,card.width-16,22,info,state.center);
+        int price=WorkshopPrice(item);
+        string info=equipped?"Надето":owned?"Куплено":price==0?"Получить":price+" жетонов";
+        if(outfit){
+            Text(card.x+10,card.y+111,112,23,WardrobeCatalog.Rarity(item),state.caption);
+            if(!owned&&price>0){
+                WorkshopCoin(new Rect(card.x+146,card.y+113,18,18));
+                Text(card.x+169,card.y+111,41,23,price.ToString(),state.center);
+            }else Text(card.x+129,card.y+111,81,23,info,state.center);
+        }else Text(card.x+8,card.y+111,card.width-16,22,info,state.center);
         if(Button("workshop.pick."+id,card,"",false,raceCardStyle)){state.item=id;purchaseConfirm=null;state.status=null;}
     }
 
     void DrawWorkshopSelection(JObject row){
         var state=Workshop;
-        bool fitting=state.category<=2&&row!=null;
+        bool outfit=WardrobeCatalog.IsWardrobeProduct(row);
+        bool fitting=state.category<=2&&row!=null&&!outfit;
         var goldEdge=new Color(.52f,.39f,.23f);
         Fill(new Rect(769,101,481,370),new Color(.037f,.044f,.038f,.22f));
         Border(new Rect(768,100,483,371),goldEdge,1);
         if(fitting&&state.image)GUI.DrawTexture(WorkshopLook,state.image,ScaleMode.ScaleToFit,true);
-        if(!fitting&&row!=null){
+        if(outfit){
+            var tint=CosmeticColor(row);
+            Fill(new Rect(782,113,454,302),new Color(tint.r*.15f,tint.g*.15f,tint.b*.15f,.9f));
+            DrawOutfitImage(new Rect(800,115,417,297),row);
+            string productType=row["model"]!=null?"Облик строителя":(string)row["role"]=="set"?"Набор окрасок":
+                (string)row["role"]=="builder"?"Окраска строителя":"Окраска бойца";
+            Text(783,422,453,40,RaceTitle((int)row["race"])+"  ·  "+productType,state.center);
+        }else if(!fitting&&row!=null){
             Fill(new Rect(915,169,190,190),new Color(.042f,.066f,.07f,.9f));
             Border(new Rect(915,169,190,190),goldEdge,2);
             DrawWorkshopIcon(new Rect(931,185,158,158),row);
@@ -178,19 +219,23 @@ public sealed partial class PcGame {
         AtlasSurface(detail);
         if(row==null){Text(790,503,425,49,"Выбери товар в этой категории",state.details);return;}
         string id=(string)row["id"],kind=(string)row["kind"];
-        bool owned=AccountOwns(id),equipped=owned&&AccountEquipment(kind)==id;
+        bool owned=AccountOwns(id),equipped=WorkshopEquipped(row);
+        int price=WorkshopPrice(row);
         Text(791,489,430,40,(string)row["title"],state.details);
         Text(791,536,429,71,(string)row["description"],state.description);
         if(fitting)Text(791,599,432,31,"Оформление для боёв с ботом",state.caption);
-        if(state.status!=null&&Time.unscaledTime<state.statusUntil)
-            Text(791,633,227,58,state.status,state.description);
-        else Text(791,643,227,37,equipped?"Надето":owned?"В коллекции":row["cost"]+" жетонов",state.description);
+        if(HasNetworkProfile&&AccountHub.result!="")
+            Text(791,637,227,51,AccountHub.result,state.description);
+        else if(state.status!=null&&Time.unscaledTime<state.statusUntil)
+            Text(791,637,227,51,state.status,state.description);
+        else Text(791,643,227,37,equipped?"Надето":owned?"В коллекции":price==0?"Оба облика куплены":price+" жетонов",state.description);
         string action=owned?kind=="stickers"?"Открыть набор":equipped?"Снять":"Надеть":
-            purchaseConfirm==id?"Подтвердить":"Купить";
-        if(HasNetworkProfile&&AccountHub.result!="")Text(791,633,227,58,AccountHub.result,state.description);
+            purchaseConfirm==id?"Подтвердить":price==0?"Получить":"Купить";
         bool enabled=GUI.enabled;
         bool cloudBusy=(HasEndpointToken&&!HasNetworkProfile)||AccountHub.operation!=null||AccountHub.changes.Count>0;
-        GUI.enabled=enabled&&!cloudBusy&&(owned||AccountCoins>=(int)row["cost"]);
+        bool catalogReady=!outfit||!CloudProgression||(int?)networkProfile["wardrobe"]==1;
+        if(!catalogReady)Text(791,614,422,24,"Покупки появятся после обновления сервера",state.caption);
+        GUI.enabled=enabled&&!cloudBusy&&catalogReady&&(owned||AccountCoins>=price);
         if(Button("progress.item."+id,new Rect(1026,637,204,47),action,true))WorkshopPurchase(row,equipped);
         GUI.enabled=enabled;
     }
@@ -234,6 +279,7 @@ public sealed partial class PcGame {
 
     void DrawWorkshopIcon(Rect frame,JObject row){
         string id=(string)row["id"],kind=(string)row["kind"];
+        if(WardrobeCatalog.IsWardrobeProduct(row)){DrawOutfitImage(frame,row);return;}
         if(kind=="stickers"){
             LoadStickerCatalog();
             if(stickerPacks.Count>0&&stickerPacks.Last().items.Count>0)StickerImage(frame,stickerPacks.Last().items[0]);
@@ -254,7 +300,7 @@ public sealed partial class PcGame {
 
     void UpdateProgressionTouch(){
         if(page!=Page.Progression||showStickerPicker||!workshops038.TryGetValue(this,out var state))return;
-        var viewport=progressShop?WorkshopShelf:new Rect(40,176,1200,502);
+        var viewport=progressShop?(state.category==2?OutfitShelf:WorkshopShelf):new Rect(40,176,1200,502);
         for(int i=0;i<Input.touchCount;i++){
             var touch=Input.GetTouch(i);
             if(touch.phase==TouchPhase.Began&&state.dragFinger<0){
@@ -274,7 +320,7 @@ public sealed partial class PcGame {
 
     void UpdateWorkshopPreview(){
         if(!workshops038.TryGetValue(this,out var state))return;
-        if(!WorkshopVisible||showStickerPicker||state.category>2||state.item==null){
+        if(!WorkshopVisible||showStickerPicker||state.category>2||state.item==null||WardrobeCatalog.IsWardrobeProduct(progression.Item(state.item))){
             if(state.stage)CloseWorkshopPreview(state);
             return;
         }
@@ -335,7 +381,7 @@ public sealed partial class PcGame {
     }
 
     void UpdateWorkshopBattle(PcModel worker,string auraId){
-        string dye=AccountEquipment("skin"),effect=AccountEquipment("effect");
+        string dye=!worker.reforged&&EquippedOutfit(matchRace,true)!=null?"":AccountEquipment("skin"),effect=AccountEquipment("effect");
         bool legacyAura=auraId=="aura_jade"||auraId=="aura_flame";
         string customAura=legacyAura?"":auraId;
         if(dye.Length==0&&effect.Length==0&&customAura.Length==0){ClearWorkshopBattle();return;}

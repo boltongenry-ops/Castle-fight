@@ -41,7 +41,7 @@ public sealed partial class PcGame {
     static JObject WinterTrialDefinition()=>new JObject{
         ["id"]=HumanMatch.WinterTrial,["title"]="Вечная зима",["opponent"]="Northern Realms",
         ["summary"]="Метель замедляет армию. Лёд сковывает бойцов.",
-        ["description"]="Метель замедляет ваших бойцов, а каждые 10 секунд одного сковывает лёд. При первом падении замок вмерзает в лёд, и Джайна уничтожает вашу армию. Остановите королеву, чтобы снова атаковать замок.",
+        ["description"]="Ледяная королева накрывает поле боя метелью. Ваши бойцы замедлены, а каждые 10 секунд одного сковывает лёд. При 2500 HP замка босса павшие в оковах переходят к Северянам.",
         ["start_gold"]=500,["difficulty"]=2,["reward"]=0,["xp"]=0
     };
 
@@ -78,11 +78,12 @@ public sealed partial class PcGame {
     string mythicRulesId="";
     void DrawMythicRacePicker(){
         var card=new Rect(42,176,1196,500);
-        bool choir=(string)mythicSelection["id"]==HumanMatch.ChoirTrial;
-        bool horde=(string)mythicSelection["id"]==HumanMatch.HordeTrial;
-        bool protocol=(string)mythicSelection["id"]==HumanMatch.ProtocolTrial;
-        bool abyssTrial=(string)mythicSelection["id"]==HumanMatch.AbyssTrial;
-        bool quackTrial=(string)mythicSelection["id"]==HumanMatch.QuackTrial;
+        string family=HumanMatch.EpochalFamily((string)mythicSelection["id"]);
+        bool choir=family==HumanMatch.ChoirTrial;
+        bool horde=family==HumanMatch.HordeTrial;
+        bool protocol=family==HumanMatch.ProtocolTrial;
+        bool abyssTrial=family==HumanMatch.AbyssTrial;
+        bool quackTrial=family==HumanMatch.QuackTrial;
         if(quackTrial)DrawQuackPainting(card);else if(abyssTrial)DrawAbyssPainting(card);else if(protocol)DrawProtocolPainting(card);else if(horde)DrawHordePainting(card);else if(choir)DrawChoirPainting(card);else DrawWinterPainting(card,true);
         AtlasSurface(MythicRacePanel);
         WinterGradient(new Rect(683,176,282,500),true,new Color(.070f,.104f,.076f,.98f));
@@ -181,9 +182,11 @@ public sealed partial class PcGame {
     }
 
     IEnumerator PrepareWinterPresentation(int generation){
-        yield return LoadWinterQueenArt(generation);
-        if(generation!=versusSerial)yield break;
-        ReplaceWinterOpeningQueen();
+        if(ActiveExpertTrial){
+            yield return LoadWinterQueenArt(generation);
+            if(generation!=versusSerial)yield break;
+            ReplaceWinterOpeningQueen();
+        }
         yield return PrepareRitualGround(generation,false);
         if(generation!=versusSerial)yield break;
         yield return PrepareWinterStorm(generation);
@@ -294,7 +297,7 @@ public sealed partial class PcGame {
         winterIntro=false;accumulator=0;
         if(winterQueen){winterQueen.gameObject.SetActive(false);Destroy(winterQueen.gameObject);}
         winterQueen=null;
-        controls.FocusWorld(World(match.Builders[0].position),40);
+        FocusOpeningBuilder();
         UpdateFog(true);
         Debug.Log("CF_WINTER_BATTLE elapsed="+match.Elapsed+" snow="+winterOverrides.Count);
     }
@@ -557,22 +560,23 @@ public sealed partial class PcGame {
         string folder=BattleLab.Arg("--pc-results",Path.Combine(Application.persistentDataPath,"winter-validation"));
         Directory.CreateDirectory(folder);
         OpenProgression(false);
-        yield return Action("progress.mythic");
+        yield return Action("progress.expert");
+        string expertWinter=HumanMatch.ExpertId(HumanMatch.WinterTrial);
         var sharedArt=WinterArtwork();
         Check(sharedArt&&sharedArt.width>800,"Epochal tile loads the embedded or local boss painting");
         yield return Shot(folder,"00-epochal-list");
-        yield return Action("challenge."+HumanMatch.WinterTrial);
-        Check(!MythicRacePicker&&selectedMythicId==HumanMatch.WinterTrial,"Selecting a row stays on its leaderboard");
-        yield return Action("mythic.play."+HumanMatch.WinterTrial);
-        Check(MythicRacePicker&&match==null,"The epochal list opens a race picker before starting the fight");
+        yield return Action("challenge."+expertWinter);
+        Check(!MythicRacePicker&&selectedMythicId==expertWinter,"Selecting a row stays on its own leaderboard");
+        yield return Action("mythic.play."+expertWinter);
+        Check(MythicRacePicker&&match==null,"The Expert list opens a race picker before starting the fight");
         yield return Action("mythic.race.0");
         yield return Shot(folder,"01-winter-race-selection");
         testHoldAuthority=true;
         yield return Action("mythic.begin");
         Check(versusWinter&&WinterArtwork()==sharedArt&&winterVersusReveal<.8f,
             "Boss VS starts its reveal with the same painting as the trial detail");
-        yield return RecoveryWait(()=>versusActive&&winterAtlases.Count>0,"Versus prepares snow before revealing the introduction",12);
-        Check(versusActive&&winterIntroAge==0&&winterOverrides.Count==0&&match.Elapsed==0&&
+        yield return RecoveryWait(()=>versusActive&&match!=null&&winterAtlases.Count>0,"Versus prepares snow before revealing the introduction",45);
+        Check(versusActive&&winterIntroAge==0&&winterOverrides.Count==0&&match?.Elapsed==0&&
             !winterCast&&!northernSnow,"Loading creates textures while the map and snowfall remain untouched");
         yield return Shot(folder,"01b-winter-preparation");
         yield return RecoveryWait(()=>versusActive&&versusReadyDrawFrame>=0,"The ready VS screen actually renders",15);
@@ -756,6 +760,13 @@ public sealed partial class PcGame {
         var start=queen.position;
         for(int i=0;i<5;i++)Tick(.05f);
         Check(queen.position.x<start.x&&match.WinterCastleFrozen&&!match.Finished,"Jaina advances towards the player's castle");
+        var nearby=match.Spawn(1,northKind,queen.position);
+        float queenHp=queen.hp;
+        int charges=match.RescueCharges[0];
+        Check(match.Rescue(0,queen.position)&&queen.hp==queenHp&&nearby.hp<=0&&
+            match.RescueCharges[0]==charges-1&&match.WinterCastleFrozen,
+            "Rescue kills a nearby Northern fighter but leaves Jaina and the frozen castle intact");
+        match.RescueCharges[0]=charges;match.RescueCooldown[0]=0;
         match.CheckWinterQueenSpells(Check);
         UpdateFog(true);
         RenderMatch();
@@ -782,7 +793,7 @@ public sealed partial class PcGame {
             Check(mythicLeaderboard.Any(row=>(string)row["nickname"]=="Тестовый рыцарь"&&(int?)row["race"]==0),
                 "Leaderboard includes nickname, battle time and the played race");
         }
-        Check(progression.Completed(HumanMatch.WinterTrial)&&progression.Best(HumanMatch.WinterTrial)>0&&
+        Check(progression.Completed(expertWinter)&&progression.Best(expertWinter)>0&&
             progression.Coins==coins&&progression.Experience==xp,"Winning records the time without granting coins or experience");
         var wind = winterWindAudio;
         var covered=winterOverrides.Select(layer=>layer.renderer).ToArray();

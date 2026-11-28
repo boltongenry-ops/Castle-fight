@@ -27,7 +27,7 @@ public sealed partial class PcGame {
         !versusActive&&!SpectatorOpen&&spectatorRequestDeadline==0;
     bool SpectatorOpen=>spectatorId.Length>0;
     bool SpectatorSceneReady=>SpectatorOpen&&!spectatorPreparing&&spectatorReplica!=null;
-    bool ChallengePresentationPlaying=>winterIntro||winterFinale||choirIntro||hordeIntro||protocolIntro||
+    bool ChallengePresentationPlaying=>winterIntro||winterFinale||choirIntro||hordeIntro||yurneroScene||protocolIntro||
         protocolMarchIntro||abyssIntro||quackScene!=QuackScene.None;
 
     void RequestSpectator(string friend){
@@ -127,6 +127,8 @@ public sealed partial class PcGame {
     IEnumerator PrepareSpectatorScene(JObject packet,string id){
         string challenge=(string)packet["challenge"];
         var row=progression.Challenge(challenge);
+        bool expert=HumanMatch.IsExpertTrial(challenge);
+        string family=HumanMatch.EpochalFamily(challenge);
         if(row==null||(string)packet["version"]!=Version||!(packet["races"] is JArray races)||races.Count!=2)
             throw new InvalidDataException("Испытание недоступно в этой версии.");
         int a=(int)races[0],b=(int)races[1];
@@ -147,8 +149,10 @@ public sealed partial class PcGame {
         JObject first=JObject.Parse(RaceCatalog(a)),second=JObject.Parse(RaceCatalog(b));
         ApplySpectatorUltimate(ref first,a,draw,0);
         ApplySpectatorUltimate(ref second,b,draw,1);
-        if(challenge==HumanMatch.WinterTrial)second=HumanMatch.WinterBossCatalog(second);
-        match=new HumanMatch(first,(int?)row["start_gold"]??250,botCatalog:second){NetworkReplica=true};
+        if(expert&&family==HumanMatch.WinterTrial)second=HumanMatch.WinterBossCatalog(second);
+        if(HasExpertFinale(challenge))second=HumanMatch.ExpertFinaleCatalog(second,family);
+        match=new HumanMatch(first,(int?)row["start_gold"]??250,botCatalog:second,
+            legacyEpochal:HumanMatch.IsEpochalTrial(challenge)&&!expert){NetworkReplica=true};
         visuals=new GameObject("Просмотр матча");
         visuals.AddComponent<BattleAudio>().Bind(match,World,FogVisible);
         var unitKinds=new System.Collections.Generic.Dictionary<(int,string),int>();
@@ -166,13 +170,13 @@ public sealed partial class PcGame {
         ClearGroupSelection();
         controls.Focus("west");
         controls.GameplayViewport(false);
-        if(a==PepeContent.Race||b==PepeContent.Race){
+        if((family!=HumanMatch.QuackTrial||expert)&&(a==PepeContent.Race||b==PepeContent.Race)){
             yield return LoadGreatQuackArt(versusSerial);
             if(spectatorId!=id){LeaveSpectator(spectatorState);yield break;}
         }
-        if(challenge==HumanMatch.WinterTrial||challenge==HumanMatch.ChoirTrial){
-            bool blight=challenge==HumanMatch.ChoirTrial;
-            if(!blight){
+        if(family==HumanMatch.WinterTrial||family==HumanMatch.ChoirTrial){
+            bool blight=family==HumanMatch.ChoirTrial;
+            if(!blight&&expert){
                 yield return LoadWinterQueenArt(versusSerial);
                 if(spectatorId!=id){LeaveSpectator(spectatorState);yield break;}
             }
@@ -185,23 +189,25 @@ public sealed partial class PcGame {
                 choirMusic=visuals.AddComponent<AudioSource>();choirMusic.playOnAwake=false;
                 yield return PrepareChoirMusic(versusSerial);
             }
-        }else if(challenge==HumanMatch.HordeTrial){
+        }else if(family==HumanMatch.HordeTrial){
+            if(expert)yield return PrepareYurneroArt(versusSerial);
+            if(spectatorId!=id){LeaveSpectator(spectatorState);yield break;}
             yield return PrepareHordeGround(versusSerial);
             if(spectatorId!=id){LeaveSpectator(spectatorState);yield break;}
-        }else if(challenge==HumanMatch.AbyssTrial){
+        }else if(family==HumanMatch.AbyssTrial){
             PrepareAbyssWaterPresentation();
             SetAbyssShore(1);
-        }else if(challenge==HumanMatch.QuackTrial){
+        }else if(family==HumanMatch.QuackTrial){
             PrepareQuackSwamp();
             quackDrizzle=quackDrizzle?quackDrizzle:MakeQuackRain(false);
             quackDownpour=quackDownpour?quackDownpour:MakeQuackRain(true);
             if(!quackHudFrame)quackHudFrame=LoadProtocolTexture("QuackHudFrame","png",TextureFormat.RGBA32,false);
-        }else if(challenge==HumanMatch.ProtocolTrial){
+        }else if(family==HumanMatch.ProtocolTrial){
             protocolHudFrame=LoadProtocolTexture("ProtocolMeter","png",TextureFormat.RGBA32,false);
             protocolHudLight=MakeProtocolHudLight();
         }
-        if(SpectatorUsesBossSoundtrack(challenge)){
-            yield return PrepareBossSoundtrack(versusSerial,challenge==HumanMatch.ProtocolTrial);
+        if(SpectatorUsesBossSoundtrack(family)){
+            yield return PrepareBossSoundtrack(versusSerial,family==HumanMatch.ProtocolTrial);
         }
         if(spectatorId!=id){LeaveSpectator(spectatorState);yield break;}
         spectatorPreparing=false;
@@ -317,10 +323,13 @@ public sealed partial class PcGame {
         if(match.EternalWinter)return new JObject{["left"]=match.WinterChainIn,["second"]=match.WinterPhaseTwo,
             ["frozen"]=match.WinterCastleFrozen,["defeated"]=match.WinterQueenFelled,["storm"]=match.WinterStormActive,
             ["queen_id"]=match.WinterBoss?.id??-1,["queen_hp"]=match.WinterBoss?.hp??0};
-        if(match.FuneralChoir)return new JObject{["movement"]=(int)match.Movement,["age"]=match.MovementAge,["left"]=match.TollIn};
+        if(match.FuneralChoir)return new JObject{["movement"]=(int)match.Movement,["age"]=match.MovementAge,
+            ["left"]=match.ChoirTomb?match.ChoirFinalLeft:match.TollIn};
         if(match.CursedHorde)return new JObject{["left"]=match.HordeNextWaveIn,["second"]=match.HordeSecondStage,
-            ["shamans"]=match.HordeShamansAlive,["rage"]=match.HordeAnyRage};
-        if(match.AbyssTrialActive)return new JObject{["left"]=match.AbyssRaidIn,["second"]=match.AbyssSecondPhase,["warning"]=match.AbyssRaidWarning};
+            ["shamans"]=match.HordeShamansAlive,["rage"]=match.HordeAnyRage,
+            ["fallen"]=match.ExpertCastleFallen,["final_hp"]=match.ExpertFinalBoss?.hp??0};
+        if(match.AbyssTrialActive)return new JObject{["left"]=match.AbyssRaidIn,["second"]=match.AbyssSecondPhase,["warning"]=match.AbyssRaidWarning,
+            ["fallen"]=match.ExpertCastleFallen,["final_hp"]=match.ExpertFinalBoss?.hp??0};
         if(match.LastProtocol)return new JObject{["left"]=match.ProtocolTimeLeft,["march"]=match.ProtocolMarch,
             ["mask"]=(match.ProtocolStationAlive(0)?1:0)|(match.ProtocolStationAlive(1)?2:0),["second"]=match.ProtocolSecondStage,
             ["open"]=match.ProtocolGatesOpen,["open_for"]=match.ProtocolOpenFor,["shot"]=match.ProtocolShotIn,["warning"]=match.ProtocolWarningActive};
@@ -329,7 +338,8 @@ public sealed partial class PcGame {
 
     string SpectatorChallengeId=>(string)spectatorChallenge?["id"]??"";
     HumanMatch.ChoirMovement SpectatorChoirMovement=>(HumanMatch.ChoirMovement)((int?)spectatorBoss?["movement"]??0);
-    Rect SpectatorBossRect=>SpectatorChallengeId switch{
+    string SpectatorChallengeFamily=>HumanMatch.EpochalFamily(SpectatorChallengeId);
+    Rect SpectatorBossRect=>SpectatorChallengeFamily switch{
         HumanMatch.WinterTrial or HumanMatch.ChoirTrial=>new Rect(218,22,350,101),
         HumanMatch.HordeTrial=>HordeHud,
         HumanMatch.ProtocolTrial=>ProtocolHud,
@@ -341,7 +351,7 @@ public sealed partial class PcGame {
         SelectedUnit!=null&&SpectatorTargetStrip.Contains(p)&&SpectatorAttackTarget(SelectedUnit)!=null;
 
     void DrawSpectatorBoss(){
-        switch(SpectatorChallengeId){
+        switch(SpectatorChallengeFamily){
             case HumanMatch.WinterTrial:DrawWinterHud();break;
             case HumanMatch.ChoirTrial:DrawChoirHud();break;
             case HumanMatch.HordeTrial:DrawHordeHud();break;
@@ -353,21 +363,23 @@ public sealed partial class PcGame {
 
     void UpdateSpectatorMusic(){
         if(choirMusic){
-            int track=SpectatorChoirMovement switch{
-                HumanMatch.ChoirMovement.First=>1,HumanMatch.ChoirMovement.Second=>2,HumanMatch.ChoirMovement.Wail=>3,_=>0
-            };
-            if(choirTrack!=track)ChoirTrack(track,(float?)spectatorBoss?["age"]??match.Elapsed,track==0);
+            int track=ChoirBattleTrack(SpectatorChoirMovement);
+            if(choirTrack!=track||choirLastMovement!=SpectatorChoirMovement){
+                ChoirTrack(track,(float?)spectatorBoss?["age"]??match.Elapsed,
+                    track==0||SpectatorChoirMovement==HumanMatch.ChoirMovement.FinalSiege);
+                choirLastMovement=SpectatorChoirMovement;
+            }
             choirMusic.volume=track==0?.52f:track==3?.8f:(float?)spectatorBoss?["age"]<HumanMatch.ChoirLead?.62f:1;
             if(spectatorPaused)choirMusic.Pause();else choirMusic.UnPause();
         }
         if(!bossSoundtrack)return;
         if(!spectatorMusicStarted){
             spectatorMusicStarted=true;
-            bossSoundtrack.volume=SpectatorChallengeId==HumanMatch.ProtocolTrial?ProtocolBattleMusicVolume:WinterBattleMusicVolume;
+            bossSoundtrack.volume=SpectatorChallengeFamily==HumanMatch.ProtocolTrial?ProtocolBattleMusicVolume:WinterBattleMusicVolume;
             bossSoundtrack.time=Mathf.Repeat(match.Elapsed,bossSoundtrack.clip.length);
             StartBossSoundtrack();
         }
-        bool faster=(SpectatorChallengeId==HumanMatch.WinterTrial||SpectatorChallengeId==HumanMatch.HordeTrial)&&
+        bool faster=(SpectatorChallengeFamily==HumanMatch.WinterTrial||SpectatorChallengeFamily==HumanMatch.HordeTrial)&&
             (bool?)spectatorBoss?["second"]==true;
         bossSoundtrack.pitch=Mathf.MoveTowards(bossSoundtrack.pitch,faster?WinterPhaseTwoPitch:1,Time.unscaledDeltaTime*.5f);
         if(spectatorPaused)bossSoundtrack.Pause();else bossSoundtrack.UnPause();

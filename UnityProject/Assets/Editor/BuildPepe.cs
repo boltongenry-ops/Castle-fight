@@ -144,6 +144,8 @@ public static class BuildPepe {
             if (renderers.Length == 0) throw new InvalidDataException(raw + " has no geometry");
             var bounds = renderers[0].bounds;
             foreach (var renderer in renderers) bounds.Encapsulate(renderer.bounds);
+            if (model is "06-sage" or "07-tadpole" or "08-great-quak")
+                bounds = SampledStandBounds(renderers);
             float scale = building ? Mathf.Min((float)art["size"] / Mathf.Max(bounds.size.x, bounds.size.z),
                 (raw == "pB10" ? 5.25f : 4.25f) / bounds.size.y)
                 : (float)art["height"] / bounds.size.y;
@@ -161,6 +163,29 @@ public static class BuildPepe {
             return PrefabUtility.SaveAsPrefabAsset(root, prefab);
         } finally {
             UnityEngine.Object.DestroyImmediate(root);
+        }
+    }
+
+    static Bounds SampledStandBounds(Renderer[] renderers) {
+        var mesh = new Mesh();
+        var bounds = new Bounds();
+        bool hasPoint = false;
+        try {
+            foreach (var renderer in renderers) {
+                if (!(renderer is SkinnedMeshRenderer skin)) continue;
+                skin.BakeMesh(mesh);
+                var vertices = mesh.vertices;
+                foreach (int index in skin.sharedMesh.triangles.Distinct()) {
+                    var point = skin.transform.TransformPoint(vertices[index]);
+                    if (hasPoint) bounds.Encapsulate(point);
+                    else { bounds = new Bounds(point, Vector3.zero); hasPoint = true; }
+                }
+                mesh.Clear();
+            }
+            if (!hasPoint) throw new InvalidDataException("The fitted Pepe model has no weighted geometry");
+            return bounds;
+        } finally {
+            UnityEngine.Object.DestroyImmediate(mesh);
         }
     }
 
@@ -218,6 +243,16 @@ public static class BuildPepe {
         BuildFrontendRich.RebuildPlayerOnlyWindows();
     }
     public static void WindowsContent() {
+        var bundlePath = WindowsRaceBundle();
+        string media = "Builds/MapWindows/CastleFightMap_Data/StreamingAssets/Frontend";
+        Directory.CreateDirectory(media);
+        File.Copy(bundlePath, media + "/" + WindowsBundle, true);
+        BuildFrontendRich.RebuildPlayerOnlyWindows();
+    }
+
+    public static void WindowsRaceBundleOnly() => WindowsRaceBundle();
+
+    static string WindowsRaceBundle() {
         Prepare();
         string directory = "Builds/PepeWindows";
         Directory.CreateDirectory(directory);
@@ -232,9 +267,6 @@ public static class BuildPepe {
         if (!BuildPipeline.BuildAssetBundles(directory, new[] {bundle}, BuildAssetBundleOptions.UncompressedAssetBundle |
             BuildAssetBundleOptions.StrictMode, BuildTarget.StandaloneWindows64))
             throw new IOException("Pepe Windows asset bundle did not build");
-        string media = "Builds/MapWindows/CastleFightMap_Data/StreamingAssets/Frontend";
-        Directory.CreateDirectory(media);
-        File.Copy(directory + "/" + WindowsBundle, media + "/" + WindowsBundle, true);
-        BuildFrontendRich.RebuildPlayerOnlyWindows();
+        return directory + "/" + WindowsBundle;
     }
 }

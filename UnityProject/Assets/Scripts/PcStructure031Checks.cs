@@ -22,7 +22,7 @@ public sealed partial class PcGame {
         }
         MainMenu();raceChoice=12;botRaceChoice=0;NewMatch();testHoldAuthority=true;
         var canonical=JObject.Parse(RaceCatalog(12));var draw031=new UltimateLoadout((JArray)canonical["ultimateSlots"],n=>n-1);var ids031=draw031.Draw();var playable031=draw031.Playable(canonical,ids031);var world031=new HumanMatch(playable031,100000);
-        Check(ids031.Contains("pK01")&&!ids031.Contains("pL01")&&world031.Lines[world031.Kind("pH02")].upgrades.Contains("pL01")&&world031.Lines[world031.Kind("pL01")].cost==160,"Ultimate Panda draw uses legendary barrel and complete brew upgrade chain");
+        Check(ids031.Contains("pK01")&&!ids031.Contains("pL01")&&world031.Lines[world031.Kind("pH02")].upgrades.Contains("pL01")&&world031.Lines[world031.Kind("pL01")].cost==315,"Ultimate Panda draw uses legendary barrel and the adjusted complete brew upgrade chain");
         Check(world031.Lines[world031.Kind("pK01")].cost==550&&HumanMatch.F(world031.Abilities["APKg"],"power")==180,"Ultimate shares Panda prices and actual legendary spell data");
         foreach(int race in new[]{14,15}){
             MainMenu();raceChoice=botRaceChoice=race;NewMatch();testHoldAuthority=true;options.fogOfWar=false;match.Wood[0]=match.Wood[1]=100000;
@@ -33,7 +33,7 @@ public sealed partial class PcGame {
             int tower=match.Kind(race==14?"pT01":"c008");match.Wood[0]=0;Check(!match.TryBuild(0,tower,17,14,out var noWood)&&noWood.Contains("дерева"),"Real authority rejects a tower without lumber / "+race);match.Wood[0]=100000;
             FocusBuilder();buildMenu=true;yield return Shot(folder,"race-"+race+"-ordered-buildings");
             var h=QaBuild(match.Kind(root),17,14);QaSelect(h);yield return Action("upgrade."+middle);yield return Action("upgrade."+legend);
-            Check(match.Lines[h.kind].building==legend&&h.spent==(race==14?550:1200)&&Mathf.Abs(match.Interval(h)-(race==14?42.5f:75))<.01f,"Cumulative legendary investment and production interval preserved / "+race);
+            Check(match.Lines[h.kind].building==legend&&h.spent==(race==14?720:885)&&Mathf.Abs(match.Interval(h)-(race==14?51:59.25f))<.01f,"Cumulative legendary investment and its production interval / "+race);
             Check(match.LegendaryUsed(0)==1&&match.PurchaseError(0,match.Kind(special)).Contains("легендарного"),"Fighter and legendary special share the same limited slot / "+race);
             Check(match.Sell(0,h.id)&&match.LegendaryUsed(0)==0,"Sale releases legendary slot / "+race);
             var specialHut=QaBuild(match.Kind(race==14?"pK01":"c00B"),17,14);QaSelect(specialHut);if(race==15)yield return Action("upgrade.c01B");
@@ -45,7 +45,7 @@ public sealed partial class PcGame {
             CorruptedCall(race==14?"TickFinalBuilding":"TickCentaur",race==14?(object)specialHut:(object).25f);
             if(race==14){Check(match.PandaKegs.Count==1&&specialHut.mana==60,"Legendary barrel releases a real keg and spends forty mana");CorruptedCall("TickFinal",.15f);Check(Mathf.Abs(10000-target.hp+match.PandaStagger(target)-180)<.01f,"Legendary keg really deals 180 magic damage");}
             else {Check(match.CentaurSands.Count==1&&specialHut.mana==55&&target.hp==9994,"Legendary sand deals real bounded damage and spends forty-five mana");var before=target.hp;match.CentaurSands.Add(new HumanMatch.CentaurSand{team=0,rank=2,point=target.position});CorruptedCall("TickCentaur",.25f);Check(Mathf.Abs(before-target.hp-6)<.001f,"Overlapping legendary fields do not multiply damage");}
-            MainMenu();OpenGuide();GuideChooseRace(race);int k=Array.FindIndex(guideAuthority.Lines,l=>l.building==legend);GuideSelectEntry(k);Check(GuideInvestment(k)==(race==14?550:1200),"Guide follows complete legendary upgrade investment / "+race);yield return Shot(folder,"race-"+race+"-legend-guide");
+            MainMenu();OpenGuide();GuideChooseRace(race);int k=Array.FindIndex(guideAuthority.Lines,l=>l.building==legend);GuideSelectEntry(k);Check(GuideInvestment(k)==(race==14?720:885),"Guide follows complete legendary upgrade investment / "+race);yield return Shot(folder,"race-"+race+"-legend-guide");
             int chest=Array.FindIndex(guideAuthority.Lines,l=>l.building=="h008");GuideSelectEntry(chest);Check(guideEntry==chest&&GuideIcon(chest),"Shared chest is illustrated in the reference book / "+race);
         }
         MainMenu();raceChoice=15;botRaceChoice=0;NewMatch();testHoldAuthority=true;var witch=match.Spawn(0,match.Kind("c005"),new Vector2(-145,24));witch.mana=5;QaSelect(ChaosHut(0,"c009",new Vector2(-155,24)));selectedHut=-1;selectedUnit=witch.id;builderSelected=false;RenderMatch();controls.FocusWorld(World(witch.position),30);

@@ -9,7 +9,9 @@ const catalog=catalogFile?JSON.parse(fs.readFileSync(catalogFile,'utf8')):{chall
 const accountCatalogFile=path.join(__dirname,'account_progression.json');
 const accountCatalog=fs.existsSync(accountCatalogFile)?JSON.parse(fs.readFileSync(accountCatalogFile,'utf8')):{challenges:[],items:[]};
 const challenges=new Map([...catalog.challenges,...accountCatalog.challenges].map(row=>[row.id,row]));
-const items=new Map([...catalog.items,...accountCatalog.items].map(row=>[row.id,row]));
+const wardrobeFile=path.join(__dirname,'wardrobe_catalog.json');
+const wardrobe=fs.existsSync(wardrobeFile)?JSON.parse(fs.readFileSync(wardrobeFile,'utf8')).items:[];
+const items=new Map([...catalog.items,...accountCatalog.items,...wardrobe].map(row=>[row.id,row]));
 let db=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):{users:[],sessions:[],results:[]};
 const social=require('./server_social.cjs');
 const emotesFile=process.env.CF_EMOTES_CATALOG||path.join(__dirname,'match_emotes.json');
@@ -18,7 +20,7 @@ if(fs.existsSync(emotesFile))for(const pack of JSON.parse(fs.readFileSync(emotes
 let busy=0;const attempts=new Map();
 function save(){fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file+'.tmp',JSON.stringify(db),{mode:0o600});fs.renameSync(file+'.tmp',file);}
 function tokenHash(value){return crypto.createHash('sha256').update(String(value)).digest('hex');}
-function publicUser(user){return{id:user.id,name:user.nickname||user.name,login:user.guest?'':user.name,guest:!!user.guest,avatar:user.avatar,avatar_ref:user.avatar_ref||'',wins:user.wins||0,games:user.games||0,solo_wins:user.solo_wins||0,solo_games:user.solo_games||0,admin:!!user.admin,coins:user.coins||0,unlocked:user.unlocked||[],completed:user.completed||[],best_ms:user.best_ms||{},equipped:user.equipped||{},account_progression:accountCatalog.challenges.length>0?1:0};}
+function publicUser(user){return{id:user.id,name:user.nickname||user.name,login:user.guest?'':user.name,guest:!!user.guest,avatar:user.avatar,avatar_ref:user.avatar_ref||'',wins:user.wins||0,games:user.games||0,solo_wins:user.solo_wins||0,solo_games:user.solo_games||0,admin:!!user.admin,coins:user.coins||0,unlocked:user.unlocked||[],completed:user.completed||[],best_ms:user.best_ms||{},equipped:user.equipped||{},account_progression:accountCatalog.challenges.length>0?1:0,wardrobe:wardrobe.length>0?1:0};}
 function active(s){return s.expires===null||s.expires>Date.now();}
 function session(token){const found=db.sessions.find(s=>s.hash===tokenHash(token)&&active(s));return found&&db.users.find(u=>u.id===found.user);}
 function issue(user){
@@ -112,16 +114,22 @@ async function handle(route,data){
  if(route==='/cosmetic'){
   const item=items.get(data.item);if(!item)fail('Неизвестное оформление');
   user.unlocked ||= [];user.equipped ||= {};
+  const pieces=(item.includes||[]).map(id=>items.get(id));
+  const targets=pieces.length?pieces:[item];
   if(data.action==='buy'){
    if(!user.unlocked.includes(item.id)){
-    if((user.coins||0)<item.cost)fail('Недостаточно жетонов');
-    user.coins-=item.cost;user.unlocked.push(item.id);
+    const missing=pieces.filter(piece=>!user.unlocked.includes(piece.id));
+    const cost=pieces.length?Math.min(item.cost,missing.reduce((sum,piece)=>sum+piece.cost,0)):item.cost;
+    if((user.coins||0)<cost)fail('Недостаточно жетонов');
+    user.coins=(user.coins||0)-cost;
+    user.unlocked.push(item.id,...missing.map(piece=>piece.id));
    }
   }else if(data.action==='equip'){
    if(!user.unlocked.includes(item.id))fail('Сначала откройте оформление');
-   user.equipped[item.kind]=item.id;
+   for(const target of targets)user.equipped[target.kind]=target.id;
   }else if(data.action==='unequip'){
-   if(user.equipped[item.kind]===item.id)delete user.equipped[item.kind];
+   for(const target of targets)
+    if(user.equipped[target.kind]===target.id)delete user.equipped[target.kind];
   }else fail('Неизвестное действие');
   save();return{ok:true,profile:publicUser(user)};
  }
